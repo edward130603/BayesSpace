@@ -1,13 +1,13 @@
 library(tidyverse)
 library(patchwork)
-set.seed(100)
+set.seed(101)
 
 #Generate truth
 df = expand.grid(x = 1:100, y = 1:100)
-df$z = -1
+df$z = 1
 
 rect_center = sample(10:90, 2, replace = T)
-df$z[df$x %in% seq(rect_center[1] - 5, rect_center[1]+5) & df$y %in% seq(rect_center[2] - 5, rect_center[2]+5)] = 1
+df$z[df$x %in% seq(rect_center[1] - 5, rect_center[1]+5) & df$y %in% seq(rect_center[2] - 5, rect_center[2]+5)] = 2
 
 circ_center = sample(10:90, 2, replace = T)
 r = 10 #radius
@@ -16,30 +16,31 @@ l = sqrt(2*(r-s)*r-(r-s)^2) #half chord length
 for (i in s){
   df$z[(df$x %in% c(circ_center[1] + c(i, -i))) & 
          (df$y > circ_center[2] - l[i+1]) & 
-         (df$y < circ_center[2] + l[i+1])] = 1
+         (df$y < circ_center[2] + l[i+1])] = 3
 }
 
 #Plot truth
-p1 = ggplot(df, aes(x,y,fill = factor(z, levels = c(1,-1)))) + 
+p1 = ggplot(df, aes(x,y,fill = factor(z))) + 
   geom_tile() +
-  scale_fill_manual(values = c("#b2182b", "#2166ac")) +
+  scale_fill_manual(values = c("#f6f6f6", "#b2182b", "#2166ac")) +
   theme_classic() +
   labs(fill = "State", x = NULL, y = NULL)
 
 #Generate simulated expression
-set.seed(100)  
-mu = 5
+set.seed(101)  
+mu2 = 5
+mu3 = -5
 lambda = 0.5
 df$Y = rnorm(n = nrow(df), 
-             mean = (df$z==1)*mu, 
+             mean = (df$z==2)*mu2 + (df$z==3)*mu3, 
              sd = 1/sqrt(lambda))
 
 df$j = 1:nrow(df)+3
 
 #Plots
-p2 = ggplot(df, aes(x,y,fill = ifelse(Y>5, 5, ifelse(Y<0,0, Y)))) + 
+p2 = ggplot(df, aes(x,y,fill = ifelse(Y>5, 5, ifelse(Y< -5,-5, Y)))) + 
   geom_tile() +
-  scale_fill_distiller(palette = "RdBu", labels = c(expression(""<= 0), 1:4, expression("">=5)))+
+  scale_fill_distiller(palette = "RdBu", labels = c(expression(""<= -5), seq(-2.5, 2.5, 2.5), expression("">=5)))+
   theme_classic()+
   labs(fill = "Expression", x = NULL, y = NULL)
 
