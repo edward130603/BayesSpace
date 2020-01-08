@@ -71,38 +71,48 @@ z_6 = ggplot(df, aes(x,y,fill = z_gamma6)) +
   theme_classic() +
   labs(x = NULL, y = NULL, fill = "State")
 
+reg1 = lm(data = df, Y~I(z == 1) - 1)
+mu_mle = reg1$coefficients[2]
+lambda_mle = 1/summary(reg1)$sigma^2
+
 mu_2 = ggplot(as_tibble(df_sim_gamma2[-(1:100),]), aes(x = i, y = mu)) + geom_line() +
   theme_classic() +
   labs(x = NULL, y = expression(mu)) + 
   geom_hline(yintercept = 5, color = "red") +
+  geom_hline(yintercept = mu_mle, color = "blue") +
   coord_cartesian(ylim = c(4.6, 5.3))
 mu_4 = ggplot(as_tibble(df_sim_gamma4[-(1:100),]), aes(x = i, y = mu)) + geom_line() +
   theme_classic() +
   labs(x = NULL, y = expression(mu)) + 
   geom_hline(yintercept = 5, color = "red") +
+  geom_hline(yintercept = mu_mle, color = "blue") +
   coord_cartesian(ylim = c(4.6, 5.3))
 mu_6 = ggplot(as_tibble(df_sim_gamma6[-(1:100),]), aes(x = i, y = mu)) + geom_line() +
   theme_classic() +
   labs(x = NULL, y = expression(mu)) + 
   geom_hline(yintercept = 5, color = "red") +
+  geom_hline(yintercept = mu_mle, color = "blue") +
   coord_cartesian(ylim = c(4.6, 5.3))
 
 lambda_2 = ggplot(as_tibble(df_sim_gamma2[-(1:100),]), aes(x = i, y = lambda)) + geom_line() +
   theme_classic() +
   labs(x = NULL, y = expression(lambda)) + 
   geom_hline(yintercept = 0.5, color = "red") +
+  geom_hline(yintercept = lambda_mle, color = "blue") +
   coord_cartesian(ylim = c(0.48, 0.55))
 
 lambda_4 = ggplot(as_tibble(df_sim_gamma4[-(1:100),]), aes(x = i, y = lambda)) + geom_line() +
   theme_classic() +
   labs(x = NULL, y = expression(lambda)) + 
   geom_hline(yintercept = 0.5, color = "red") +
+  geom_hline(yintercept = lambda_mle, color = "blue") +
   coord_cartesian(ylim = c(0.48, 0.55))
 
 lambda_6 = ggplot(as_tibble(df_sim_gamma6[-(1:100),]), aes(x = i, y = lambda)) + geom_line() +
   theme_classic() +
   labs(x = NULL, y = expression(lambda)) + 
   geom_hline(yintercept = 0.5, color = "red") +
+  geom_hline(yintercept = lambda_mle, color = "blue") +
   coord_cartesian(ylim = c(0.48, 0.55))
 
 ((z_2+z_4+z_6) +plot_layout(guides = 'collect')) / (mu_2 + mu_4 + mu_6) / (lambda_2 + lambda_4 + lambda_6) + 
