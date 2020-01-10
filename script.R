@@ -2,6 +2,7 @@ run_mcmc = function(df, nrep = 1000, mu0 = mean(df[,"Y"]), lambda0 = 1/100, alph
   set.seed(seed)
   
   n = nrow(df)
+  df$j = 1:nrow(df)+3
   df_j = sapply(1:n, function(x){df[abs(df[,"x"] -df[x,"x"]) + abs(df[,"y"] - df[x,"y"]) == 1,"j"]})
   
   #Initialize matrix storing iterations
@@ -53,6 +54,7 @@ run_mcmc_potts = function(df, nrep = 1000, q = 3, mu0 = mean(df[,"Y"]), lambda0 
   set.seed(seed)
   
   n = nrow(df)
+  df$j = 1:nrow(df)+3
   df_j = sapply(1:n, function(x){df[abs(df[,"x"] -df[x,"x"]) + abs(df[,"y"] - df[x,"y"]) == 1,"j"]})
   
   #Initialize matrix storing iterations
@@ -65,7 +67,7 @@ run_mcmc_potts = function(df, nrep = 1000, q = 3, mu0 = mean(df[,"Y"]), lambda0 
   #Initialize parameters
   df_sim[1,2:(q+1)] = mu0
   df_sim[1,"lambda"] = 1/var(df[,"Y"])
-  df_sim[1,(q+3):ncol(df_sim)] = 1
+  df_sim[1,(q+3):ncol(df_sim)] = sample(1:3, n, replace = T)
   
   #Iterate
   for (i in 2:nrep){
@@ -92,14 +94,15 @@ run_mcmc_potts = function(df, nrep = 1000, q = 3, mu0 = mean(df[,"Y"]), lambda0 
     df_sim[i, (q+3):ncol(df_sim)] = df_sim[i-1, (q+3):ncol(df_sim)]
     for (j in 1:n){
       z_j_prev = df_sim[i,j+2+q]
-      z_j_new = z_j_prev*-1
-      x_j = df$x[j]
-      y_j = df$y[j]
+      qlessk = setdiff(1:q, z_j_prev)
+      z_j_new = sample(qlessk, 1)
+      #x_j = df$x[j]
+      #y_j = df$y[j]
       j_vector = df_j[[j]]
-      h_z_prev = gamma/length(j_vector)* sum(z_j_prev * df_sim[i, j_vector]) + dnorm(df$Y[j], mean = mu_i * (z_j_prev == 1), sd = 1/sqrt(lambda_i), log = T)
-      h_z_new = gamma/length(j_vector) * sum(z_j_new * df_sim[i, j_vector]) + dnorm(df$Y[j], mean = mu_i * (z_j_new == 1), sd = 1/sqrt(lambda_i), log = T)
+      h_z_prev = gamma/length(j_vector)* sum(z_j_prev * df_sim[i, j_vector]) + dnorm(df$Y[j], mean = mu_i[z_j_prev], sd = 1/sqrt(lambda_i), log = T)
+      h_z_new = gamma/length(j_vector) * sum(z_j_new * df_sim[i, j_vector]) + dnorm(df$Y[j], mean = mu_i[z_j_new], sd = 1/sqrt(lambda_i), log = T)
       prob_j = min(exp(h_z_new - h_z_prev),1)
-      df_sim[i, j+3] = sample(x = c(z_j_new, z_j_prev), size = 1, prob = c(prob_j, 1-prob_j))
+      df_sim[i, j+2+q] = sample(x = c(z_j_prev, qlessk), size = 1, prob = c(1-prob_j, rep(prob_j/(q-1), q-1)))
     }
   }
   return(df_sim)
