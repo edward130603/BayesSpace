@@ -72,8 +72,8 @@ run_mcmc_potts = function(df, nrep = 1000, q = 3, mu0 = mean(df[,"Y"]), lambda0 
   #Initialize parameters
   df_sim[1,2:(q+1)] = mu0
   df_sim[1,"lambda"] = 1/var(df[,"Y"])
-  #df_sim[1,(q+3):ncol(df_sim)] = 1 #initialize to all 1
-  df_sim[1,(q+3):ncol(df_sim)] = df$z #initialize with truth (testing only)
+  df_sim[1,(q+3):ncol(df_sim)] = 1 #initialize to all 1
+  #df_sim[1,(q+3):ncol(df_sim)] = df$z #initialize with truth (testing only)
   #df_sim[1,(q+3):ncol(df_sim)] = sample(1:3, n, replace = T) #random init
   
   #Iterate
