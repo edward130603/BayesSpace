@@ -45,12 +45,23 @@ p2 = ggplot(df, aes(x,y,fill = ifelse(Y>5, 5, ifelse(Y< -5,-5, Y)))) +
 p1+p2 + plot_annotation(tag_levels = "A")
 
 #Run mcmc
+
+df_sim_gamma1 = run_mcmc_potts(df = df, gamma = 1, q = 3)
 df_sim_gamma2 = run_mcmc_potts(df = df, gamma = 2, q = 3)
 df_sim_gamma3 = run_mcmc_potts(df = df, gamma = 3, q = 3)
 df_sim_gamma4 = run_mcmc_potts(df = df, gamma = 4, q = 3)
 df_sim_gamma6 = run_mcmc_potts(df = df, gamma = 6, q = 3)
 
  #Plot mcmc means
+df$z_gamma1 = apply(df_sim_gamma1[-(1:100),-(1:5)], 2, Mode)
+df$z_gamma1_alpha = pmax(colMeans(df_sim_gamma1[-(1:100),-(1:5)]==1),
+                         colMeans(df_sim_gamma1[-(1:100),-(1:5)]==2),
+                         colMeans(df_sim_gamma1[-(1:100),-(1:5)]==3))
+df$z_gamma3 = apply(df_sim_gamma3[-(1:100),-(1:5)], 2, Mode)
+df$z_gamma3_alpha = pmax(colMeans(df_sim_gamma3[-(1:100),-(1:5)]==1),
+                         colMeans(df_sim_gamma3[-(1:100),-(1:5)]==2),
+                         colMeans(df_sim_gamma3[-(1:100),-(1:5)]==3))
+
 df$z_gamma2 = apply(df_sim_gamma2[-(1:100),-(1:5)], 2, Mode)
 df$z_gamma2_alpha = pmax(colMeans(df_sim_gamma2[-(1:100),-(1:5)]==1),
                          colMeans(df_sim_gamma2[-(1:100),-(1:5)]==2),
