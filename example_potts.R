@@ -22,7 +22,7 @@ for (i in s){
 #Plot truth
 p1 = ggplot(df, aes(x,y,fill = factor(z))) + 
   geom_tile() +
-  scale_fill_manual(values = c("#f6f6f6", "#b2182b", "#2166ac")) +
+  #scale_fill_manual(values = c("#f6f6f6", "#b2182b", "#2166ac")) +
   theme_classic() +
   labs(fill = "State", x = NULL, y = NULL)
 
@@ -45,8 +45,73 @@ p2 = ggplot(df, aes(x,y,fill = ifelse(Y>5, 5, ifelse(Y< -5,-5, Y)))) +
 p1+p2 + plot_annotation(tag_levels = "A")
 
 #Run mcmc
-df_sim_gamma1 = run_mcmc_potts(df = df, gamma = 2, q = 3, nrep = 1000)
+df_sim_gamma2 = run_mcmc_potts(df = df, gamma = 2, q = 3)
+df_sim_gamma3 = run_mcmc_potts(df = df, gamma = 3, q = 3)
+df_sim_gamma4 = run_mcmc_potts(df = df, gamma = 4, q = 3)
+df_sim_gamma6 = run_mcmc_potts(df = df, gamma = 6, q = 3)
 
-df$test2 = df_sim_gamma1[nrow(df_sim_gamma1), 6:ncol(df_sim_gamma1)]
-ggplot(df, aes(x,y,fill = factor(test2))) + 
-  geom_tile()
+ #Plot mcmc means
+df$z_gamma2 = apply(df_sim_gamma2[-(1:100),-(1:5)], 2, Mode)
+df$z_gamma2_alpha = pmax(colMeans(df_sim_gamma2[-(1:100),-(1:5)]==1),
+                         colMeans(df_sim_gamma2[-(1:100),-(1:5)]==2),
+                         colMeans(df_sim_gamma2[-(1:100),-(1:5)]==3))
+df$z_gamma3 = apply(df_sim_gamma3[-(1:100),-(1:5)], 2, Mode)
+df$z_gamma3_alpha = pmax(colMeans(df_sim_gamma3[-(1:100),-(1:5)]==1),
+                         colMeans(df_sim_gamma3[-(1:100),-(1:5)]==2),
+                         colMeans(df_sim_gamma3[-(1:100),-(1:5)]==3))
+df$z_gamma4 = apply(df_sim_gamma4[-(1:100),-(1:5)], 2, Mode)
+df$z_gamma4_alpha = pmax(colMeans(df_sim_gamma4[-(1:100),-(1:5)]==1),
+                         colMeans(df_sim_gamma4[-(1:100),-(1:5)]==2),
+                         colMeans(df_sim_gamma4[-(1:100),-(1:5)]==3))
+df$z_gamma6 = apply(df_sim_gamma6[-(1:100),-(1:5)], 2, Mode)
+df$z_gamma6_alpha = pmax(colMeans(df_sim_gamma6[-(1:100),-(1:5)]==1),
+                         colMeans(df_sim_gamma6[-(1:100),-(1:5)]==2),
+                         colMeans(df_sim_gamma6[-(1:100),-(1:5)]==3))
+
+potts2 = ggplot(df, aes(x, y)) +
+  geom_tile(aes(fill = factor(z_gamma2), alpha = z_gamma2_alpha)) +
+  labs(fill = "State", alpha = "Proportion", x = NULL, y = NULL) +
+  scale_alpha_continuous(limits = c(0,1), breaks = seq(0.3,1,0.1), range = c(0,1))+
+  theme_classic()
+potts3 = ggplot(df, aes(x, y)) +
+  geom_tile(aes(fill = factor(z_gamma3), alpha = z_gamma3_alpha)) +
+  labs(fill = "State", alpha = "Proportion", x = NULL, y = NULL) +
+  scale_alpha_continuous(limits = c(0,1), breaks = seq(0.3,1,0.1), range = c(0,1))+
+  theme_classic()
+potts4 = ggplot(df, aes(x, y)) +
+  geom_tile(aes(fill = factor(z_gamma4), alpha = z_gamma4_alpha)) +
+  labs(fill = "State", alpha = "Proportion", x = NULL, y = NULL) +
+  scale_alpha_continuous(limits = c(0,1), breaks = seq(0.3,1,0.1), range = c(0,1))+
+  theme_classic()
+
+#Calculate MLEs
+reg1 = lm(data = df, Y~factor(z))
+mu1_mle = sum(reg1$coefficients[c(1)])
+mu2_mle = sum(reg1$coefficients[c(1,2)])
+mu3_mle = sum(reg1$coefficients[c(1,3)])
+lambda_mle = 1/summary(reg1)$sigma^2
+
+#Trace plots
+mu2_2 = ggplot(as_tibble(df_sim_gamma2[-(1:100),]), aes(x = i, y = mu2)) + geom_line() +
+  theme_classic() +
+  labs(x = NULL, y = expression(mu[2])) + 
+  geom_hline(yintercept = 5, color = "red") +
+  geom_hline(yintercept = mu2_mle, color = "blue") +
+  coord_cartesian(ylim = c(-5, 5))
+mu2_3 = ggplot(as_tibble(df_sim_gamma3[-(1:100),]), aes(x = i, y = mu2)) + geom_line() +
+  theme_classic() +
+  labs(x = NULL, y = expression(mu[2])) + 
+  geom_hline(yintercept = 5, color = "red") +
+  geom_hline(yintercept = mu2_mle, color = "blue") +
+  coord_cartesian(ylim = c(-5, 5))
+mu2_4 = ggplot(as_tibble(df_sim_gamma4[-(1:100),]), aes(x = i, y = mu3)) + geom_line() +
+  theme_classic() +
+  labs(x = NULL, y = expression(mu[2])) + 
+  geom_hline(yintercept = 5, color = "red") +
+  geom_hline(yintercept = mu2_mle, color = "blue") +
+  coord_cartesian(ylim = c(-5, 5))
+
+((potts2+potts3+potts4)) /
+  (mu2_2 + mu2_3 + mu2_4) +
+  plot_layout(guides = 'collect')+
+  plot_annotation(tag_levels = "A")
