@@ -59,8 +59,8 @@ run_mcmc_potts = function(df, nrep = 1000, q = 3, mu0 = mean(df[,"Y"]), lambda0 
   set.seed(seed)
   
   n = nrow(df)
-  df$j = 1:nrow(df)+3
-  df_j = sapply(1:n, function(x){df[abs(df[,"x"] -df[x,"x"]) + abs(df[,"y"] - df[x,"y"]) == 1,"j"]})
+  df$j = 1:nrow(df)+q+2
+  df_j = sapply(1:n, function(x){df[(abs(df[,"x"] -df[x,"x"]) + abs(df[,"y"] - df[x,"y"])) == 1,"j"]})
   
   #Initialize matrix storing iterations
   df_sim = matrix(NA, nrow = nrep, ncol = nrow(df)+2+q)
@@ -72,8 +72,9 @@ run_mcmc_potts = function(df, nrep = 1000, q = 3, mu0 = mean(df[,"Y"]), lambda0 
   #Initialize parameters
   df_sim[1,2:(q+1)] = mu0
   df_sim[1,"lambda"] = 1/var(df[,"Y"])
-  df_sim[1,(q+3):ncol(df_sim)] = 1
-  #df_sim[1,(q+3):ncol(df_sim)] = sample(1:3, n, replace = T)
+  #df_sim[1,(q+3):ncol(df_sim)] = 1 #initialize to all 1
+  df_sim[1,(q+3):ncol(df_sim)] = df$z #initialize with truth (testing only)
+  #df_sim[1,(q+3):ncol(df_sim)] = sample(1:3, n, replace = T) #random init
   
   #Iterate
   for (i in 2:nrep){
@@ -91,8 +92,7 @@ run_mcmc_potts = function(df, nrep = 1000, q = 3, mu0 = mean(df[,"Y"]), lambda0 
     }
     
     #lambda
-    sapply(1:q, function(x){sum((df$Y[index_1[x,]]-mu_i[x])^2)/2})
-    beta_i = beta + sum(sapply(1:q, function(x){sum((df$Y[index_1[x,]]-mu_i[x])^2)/2}))
+    beta_i = beta + sum(sapply(1:q, function(x){sum((df$Y[index_1[x,]]-mu_i[x])^2)}))/2
     lambda_i = rgamma(1, alpha_n, beta_i)
     df_sim[i,q+2] = lambda_i
     
