@@ -1,3 +1,8 @@
+Mode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+
 run_mcmc = function(df, nrep = 1000, mu0 = mean(df[,"Y"]), lambda0 = 1/100, alpha = 1, beta = 0.01, gamma = 2, seed = 100){
   set.seed(seed)
   
@@ -98,8 +103,8 @@ run_mcmc_potts = function(df, nrep = 1000, q = 3, mu0 = mean(df[,"Y"]), lambda0 
       qlessk = setdiff(1:q, z_j_prev)
       z_j_new = sample(qlessk, 1)
       j_vector = df_j[[j]]
-      h_z_prev = gamma/length(j_vector)* sum(((z_j_prev == df_sim[i, j_vector])-0.5)*2) + dnorm(df$Y[j], mean = mu_i[z_j_prev], sd = 1/sqrt(lambda_i), log = T)
-      h_z_new = gamma/length(j_vector) * sum(((z_j_new  == df_sim[i, j_vector])-0.5)*2) + dnorm(df$Y[j], mean = mu_i[z_j_new] , sd = 1/sqrt(lambda_i), log = T)
+      h_z_prev = gamma/length(j_vector)* 2*sum(((z_j_prev == df_sim[i, j_vector])-0.5)) + dnorm(df$Y[j], mean = mu_i[z_j_prev], sd = 1/sqrt(lambda_i), log = T)
+      h_z_new = gamma/length(j_vector) * 2*sum(((z_j_new  == df_sim[i, j_vector])-0.5)) + dnorm(df$Y[j], mean = mu_i[z_j_new] , sd = 1/sqrt(lambda_i), log = T)
       prob_j = min(exp(h_z_new - h_z_prev),1)
       df_sim[i, j+2+q] = sample(x = c(z_j_prev, z_j_new), size = 1, prob = c(1-prob_j, prob_j))
     }
