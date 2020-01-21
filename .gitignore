@@ -17,6 +17,10 @@
 # Output files from R CMD check
 /*.Rcheck/
 
+# Raw data
+/data-raw/
+data-raw/
+
 # RStudio files
 .Rproj.user/
 
