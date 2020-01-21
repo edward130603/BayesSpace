@@ -52,7 +52,14 @@ df_sim_gamma3 = run_mcmc_potts(df = df, gamma = 3, q = 3)
 df_sim_gamma4 = run_mcmc_potts(df = df, gamma = 4, q = 3)
 df_sim_gamma6 = run_mcmc_potts(df = df, gamma = 6, q = 3)
 
- #Plot mcmc states
+#Save files
+saveRDS(df, "data/data_q3_s100.RDS")
+saveRDS(df_sim_gamma1, "data/mcmc_q3_s100_g1.RDS")
+saveRDS(df_sim_gamma2, "data/mcmc_q3_s100_g2.RDS")
+saveRDS(df_sim_gamma3, "data/mcmc_q3_s100_g3.RDS")
+saveRDS(df_sim_gamma4, "data/mcmc_q3_s100_g4.RDS")
+
+#Plot mcmc states
 df$z_gamma1 = apply(df_sim_gamma1[-(1:100),-(1:5)], 2, Mode)
 df$z_gamma1_alpha = pmax(colMeans(df_sim_gamma1[-(1:100),-(1:5)]==1),
                          colMeans(df_sim_gamma1[-(1:100),-(1:5)]==2),
