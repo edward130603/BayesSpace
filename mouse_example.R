@@ -5,6 +5,8 @@ library(ggbeeswarm)
 library(tibble)
 library(AnnotationHub)
 library(scran)
+library(viridis)
+library(patchwork)
 
 
 #Make sce
@@ -17,8 +19,6 @@ colnames(sce_A2) = paste0(sce_A2$Sample, '.', sce_A2$Barcode)
 pos = read.csv("data-raw/A2/tissue_positions_list.txt", header=FALSE)
 colnames(pos) = c("Barcode", "tissue", "Y1", "X1", "Y2", "X2")
 colData(sce_A2) = merge(colData(sce_A2), pos, by = "Barcode")
-ggplot(as.data.frame(colData(sce_A2)), aes(x = X1, y = Y1, col = discard)) + 
-  geom_point(size = 4) 
 
 #Preprocess
 ens.mm.v97 = AnnotationHub()[["AH73905"]]
@@ -31,6 +31,8 @@ df_qc = perCellQCMetrics(sce_A2, subsets = list(Mito = is.mito,
                                           RBC = is.RBC))
 qc = quickPerCellQC(df_qc, percent_subsets = "subsets_Mito_percent")
 sce_A2$discard = qc$discard
+ggplot(as.data.frame(colData(sce_A2)), aes(x = X1, y = Y1, col = discard)) + 
+  geom_point(size = 4)
 
 #Normalization
 clusters = quickCluster(sce_A2)
@@ -51,7 +53,32 @@ curve(curfit$trend(x), col='dodgerblue', add=TRUE, lwd=2)
 sce_A2 <- denoisePCA(sce_A2, technical=dec, subset.row=top)
 sce_A2 <- runTSNE(sce_A2, dimred="PCA")
 
-snn.gr <- buildSNNGraph(sce_A2, use.dimred="PCA", k=25)
+snn.gr <- buildSNNGraph(sce_A2, use.dimred="PCA", k=100)
 sce_A2$cluster <- factor(igraph::cluster_walktrap(snn.gr)$membership)
 table(sce_A2$cluster)
-plotTSNE(sce_A2, colour_by="cluster")
+
+tsne1 = ggplot(as.data.frame(reducedDim(sce_A2, "TSNE")), aes(x = V1, y = V2, col = sce_A2$cluster))+
+  geom_point() +
+  labs(x = NULL, y = NULL, color = "Cluster") +
+  theme_classic()
+  
+spatial1 = ggplot(as.data.frame(colData(sce_A2)), aes(x = X1, y = Y1, col = cluster)) + 
+  geom_point() +
+  labs(x = NULL, y = NULL, color = "Cluster") +
+  theme_classic()
+
+tsne1 + spatial1 +
+  plot_layout(guides = 'collect')+
+  plot_annotation(tag_levels = "A")
+  
+ggplot(as.data.frame(colData(sce_A2)), aes(x = X1, y = Y1, col = logcounts(sce_A2)["Hpca",])) + 
+  geom_point(size = 4) + scale_color_viridis(option = "A")
+pc1 = ggplot(as.data.frame(reducedDim(sce_A2, "PCA")), aes(x = PC1))+geom_histogram(bins = 20)+
+  facet_wrap(~sce_A2$cluster, scales = "free") +
+  labs(y = NULL) +
+  theme_classic()
+pc2 = ggplot(as.data.frame(reducedDim(sce_A2, "PCA")), aes(x = PC2))+geom_histogram(bins = 20)+
+  facet_wrap(~sce_A2$cluster, scales = "free") +
+  labs(y = NULL) +
+  theme_classic()
+pc1 / pc2 + plot_annotation(tag_levels = "A")
