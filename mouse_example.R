@@ -6,11 +6,19 @@ library(tibble)
 library(AnnotationHub)
 library(scran)
 
+
 #Make sce
 sce_A2 = read10xCounts("data-raw/A2")
 sce_A2$Sample = "A2"
 rownames(sce_A2) = uniquifyFeatureNames(rowData(sce_A2)$ID, rowData(sce_A2)$Symbol)
 colnames(sce_A2) = paste0(sce_A2$Sample, '.', sce_A2$Barcode)
+
+#Add position
+pos = read.csv("data-raw/A2/tissue_positions_list.txt", header=FALSE)
+colnames(pos) = c("Barcode", "tissue", "Y1", "X1", "Y2", "X2")
+colData(sce_A2) = merge(colData(sce_A2), pos, by = "Barcode")
+ggplot(as.data.frame(colData(sce_A2)), aes(x = X1, y = Y1, col = discard)) + 
+  geom_point(size = 4) 
 
 #Preprocess
 ens.mm.v97 = AnnotationHub()[["AH73905"]]
@@ -47,4 +55,3 @@ snn.gr <- buildSNNGraph(sce_A2, use.dimred="PCA", k=25)
 sce_A2$cluster <- factor(igraph::cluster_walktrap(snn.gr)$membership)
 table(sce_A2$cluster)
 plotTSNE(sce_A2, colour_by="cluster")
-
