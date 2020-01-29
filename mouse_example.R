@@ -8,6 +8,7 @@ library(scran)
 library(SingleR)
 library(viridis)
 library(patchwork)
+library(scrattch.io)
 
 
 #Make sce
@@ -130,6 +131,14 @@ tsne3 = ggplot(as.data.frame(reducedDim(sce_A2, "TSNE")), aes(x = V1, y = V2, co
 #annotation with allen mouse brain atlas reference
 #https://github.com/AllenInstitute/scrattch.io
 #https://portal.brain-map.org/atlases-and-data/rnaseq
+
+options(stringsAsFactors = FALSE)
+atlas = as_tibble(read.csv("data-raw/sample-annotations/sample_annotations.csv"))
+gene_info = as_tibble(read.csv("data-raw/sample-annotations/mouse_VISp_2018-06-14_genes-rows.csv"))
+
+tome = "transcrip.tome"
+#use subclass_label for cluster
+#working on cluster
 
 #Principal components
 pc2 = ggplot(as.data.frame(reducedDim(sce_A2, "PCA")), aes(x = PC2))+geom_histogram(bins = 20)+
