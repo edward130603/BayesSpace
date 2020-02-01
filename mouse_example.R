@@ -58,6 +58,7 @@ set.seed(102)
 sce_A2 <- denoisePCA(sce_A2, technical=dec, subset.row=top)
 sce_A2 <- runTSNE(sce_A2, dimred="PCA")
 
+#snn.gr <- buildSNNGraph(sce_A2, use.dimred="PCA", k = 25)
 snn.gr <- buildSNNGraph(sce_A2, use.dimred="PCA", k=100)
 sce_A2$cluster <- factor(igraph::cluster_walktrap(snn.gr)$membership)
 table(sce_A2$cluster)
@@ -76,73 +77,33 @@ tsne1 + spatial1 +
   plot_layout(guides = 'collect')+
   plot_annotation(tag_levels = "A")
   
-ggplot(as.data.frame(colData(sce_A2)), aes(x = X1, y = Y1, col = logcounts(sce_A2)["Hpca",])) + 
-  geom_point(size = 4) + scale_color_viridis(option = "A")
+#ggplot(as.data.frame(colData(sce_A2)), aes(x = X1, y = Y1, col = logcounts(sce_A2)["Hpca",])) + 
+#  geom_point(size = 4) + scale_color_viridis(option = "A")
+
+#Principal components
 pc1 = ggplot(as.data.frame(reducedDim(sce_A2, "PCA")), aes(x = PC1))+geom_histogram(bins = 20)+
   facet_wrap(~sce_A2$cluster, scales = "free") +
   labs(y = NULL) +
   theme_classic()
-
-#SingleR annotation
-mouse_ref = MouseRNAseqData()
-pred_main = SingleR(test = sce_A2, ref = mouse_ref, labels = mouse_ref$label.main)
-pred_main$pruned.labels[is.na(pred_main$pruned.labels)] = "Unknown"
-spatial2 = ggplot(as.data.frame(colData(sce_A2)), aes(x = X1, y = Y1, col = pred_main$pruned.labels)) + 
-  geom_point() +
-  labs(x = NULL, y = NULL, color = "SingleR main label")+
-  scale_color_manual(values = c("Astrocytes" = "#de2d26", "Epithelial cells" = "#756bb1",
-                                "Fibroblasts" = "#e6550d", "Neurons" = "#3182bd",
-                                "Oligodendrocytes" = "#31a354", "Unknown" = "#000000")) +
-  theme_classic()
-
-tsne2 = ggplot(as.data.frame(reducedDim(sce_A2, "TSNE")), aes(x = V1, y = V2, col = pred_main$pruned.labels))+
-  geom_point() +
-  labs(x = NULL, y = NULL, color = "SingleR main label") +
-  scale_color_manual(values = c("Astrocytes" = "#de2d26", "Epithelial cells" = "#756bb1",
-                                "Fibroblasts" = "#e6550d", "Neurons" = "#3182bd",
-                                "Oligodendrocytes" = "#31a354", "Unknown" = "#000000")) +
-  theme_classic()
-
-
-pred_fine = SingleR(test = sce_A2, ref = mouse_ref, labels = mouse_ref$label.fine)
-pred_fine$pruned.labels[is.na(pred_fine$pruned.labels)] = "Unknown"
-spatial3 = ggplot(as.data.frame(colData(sce_A2)), aes(x = X1, y = Y1, col = pred_fine$pruned.labels)) + 
-  geom_point() +
-  labs(x = NULL, y = NULL, color = "SingleR fine label")+
-  scale_color_manual(values = c("aNSCs" = "#6baed6", "Astrocytes" = "#de2d26", "Ependymal" = "#756bb1",
-                                "Neurons" = "#3182bd", "NPCs" = "#08519c",
-                                "Oligodendrocytes" = "#31a354", "qNSCs" = "#bdd7e7","Unknown" = "#000000")) +
-  theme_classic()
-
-tsne3 = ggplot(as.data.frame(reducedDim(sce_A2, "TSNE")), aes(x = V1, y = V2, col = pred_fine$pruned.labels))+
-  geom_point() +
-  labs(x = NULL, y = NULL, color = "SingleR fine label") +
-  scale_color_manual(values = c("aNSCs" = "#6baed6", "Astrocytes" = "#de2d26", "Ependymal" = "#756bb1",
-                                "Neurons" = "#3182bd", "NPCs" = "#08519c",
-                                "Oligodendrocytes" = "#31a354", "qNSCs" = "#bdd7e7","Unknown" = "#000000")) +
-  theme_classic()
-
-(tsne2 + spatial2 + plot_layout(guides = 'collect')) /
-  (tsne3 + spatial3 + plot_layout(guides = 'collect'))+
-  plot_annotation(tag_levels = "A")
-
-
-#Next steps
-#annotation with allen mouse brain atlas reference
-#https://github.com/AllenInstitute/scrattch.io
-#https://portal.brain-map.org/atlases-and-data/rnaseq
-
-options(stringsAsFactors = FALSE)
-atlas = as_tibble(read.csv("data-raw/sample-annotations/sample_annotations.csv"))
-gene_info = as_tibble(read.csv("data-raw/sample-annotations/mouse_VISp_2018-06-14_genes-rows.csv"))
-
-tome = "transcrip.tome"
-#use subclass_label for cluster
-#working on cluster
-
-#Principal components
 pc2 = ggplot(as.data.frame(reducedDim(sce_A2, "PCA")), aes(x = PC2))+geom_histogram(bins = 20)+
   facet_wrap(~sce_A2$cluster, scales = "free") +
   labs(y = NULL) +
   theme_classic()
 pc1 / pc2 + plot_annotation(tag_levels = "A")
+pc1_spatial = ggplot(as.data.frame(colData(sce_A2)), aes(x = X1, y = Y1, col = reducedDim(sce_A2, "PCA")[,"PC1"])) + 
+  geom_point() +
+  labs(x = NULL, y = NULL, color = "PC1")+scale_color_viridis()+theme_classic()
+pc2_spatial = ggplot(as.data.frame(colData(sce_A2)), aes(x = X1, y = Y1, col = reducedDim(sce_A2, "PCA")[,"PC2"])) + 
+  geom_point() +
+  labs(x = NULL, y = NULL, color = "PC2")+scale_color_viridis()+theme_classic()
+pc3_spatial = ggplot(as.data.frame(colData(sce_A2)), aes(x = X1, y = Y1, col = reducedDim(sce_A2, "PCA")[,"PC3"])) + 
+  geom_point() +
+  labs(x = NULL, y = NULL, color = "PC3")+scale_color_viridis()+theme_classic()
+pc4_spatial = ggplot(as.data.frame(colData(sce_A2)), aes(x = X1, y = Y1, col = reducedDim(sce_A2, "PCA")[,"PC4"])) + 
+  geom_point() +
+  labs(x = NULL, y = NULL, color = "PC4")+scale_color_viridis()+theme_classic()
+pc5_spatial = ggplot(as.data.frame(colData(sce_A2)), aes(x = X1, y = Y1, col = reducedDim(sce_A2, "PCA")[,"PC5"])) + 
+  geom_point() +
+  labs(x = NULL, y = NULL, color = "PC5")+scale_color_viridis()+theme_classic()
+pc1_spatial + pc2_spatial 
+pc3_spatial + pc4_spatial + pc5_spatial
