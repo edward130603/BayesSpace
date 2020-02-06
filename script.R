@@ -1,3 +1,5 @@
+library(mvtnorm)
+
 Mode <- function(x) {
   ux <- unique(x)
   ux[which.max(tabulate(match(x, ux)))]
@@ -97,9 +99,9 @@ run_mcmc_potts = function(df, nrep = 1000, q = 3, mu0 = mean(df[,"Y"]), lambda0 
     df_sim[i,q+2] = lambda_i
     
     #z
-    df_sim[i, (q+3):ncol(df_sim)] = df_sim[i-1, (q+3):ncol(df_sim)]
+    df_sim_z[i,] = df_sim_z[i-1,]
     for (j in 1:n){
-      z_j_prev = df_sim[i,j+2+q]
+      z_j_prev = df_sim_z[i,j]
       qlessk = setdiff(1:q, z_j_prev)
       z_j_new = sample(qlessk, 1)
       j_vector = df_j[[j]]
@@ -135,6 +137,8 @@ run_mcmc_multi = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,grep
   }
   df_sim_lambda[[1]] = solve(cov(df[,grep("Y", colnames(df))]))
   df_sim_z[1,] = 1 #initialize to all 1
+  #df_sim_z[1,] = df$z #initialize to all truth (testing only)
+  #df_sim_z[1,] = sample(3, n, replace = T) #initialize to all truth (testing only)
   
   Y = as.matrix(df[,grep("Y", colnames(df))])
   #Iterate
@@ -146,7 +150,7 @@ run_mcmc_multi = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,grep
     for(k in 1:q){
       index_1[k,] = df_sim_z[i-1,]==k
       n_i = sum(index_1[k,])
-      mean_i = solve(lambda0 + n_i * lambda_prev) %*% (lambda0 %*% mu0 + lambda_prev %*% colSums(Y[index_1[k,],]))
+      mean_i = solve(lambda0 + n_i * lambda_prev) %*% (lambda0 %*% mu0 + lambda_prev %*% colSums(Y[index_1[k,],, drop = F]))
       var_i = solve(lambda0 + n_i * lambda_prev)
       mu_i[k,] = rmvnorm(1, mean = mean_i, sigma = var_i)
     }
@@ -156,24 +160,25 @@ run_mcmc_multi = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,grep
     mu_i_long = mu_i[df_sim_z[i-1,],]
     sumofsq = crossprod(Y-mu_i_long)
     Vinv = diag(beta, d)
-    lambda_i = rWishart(1, df = n + alpha, Sigma = solve(Vinv + sumofsq))
-    
+    lambda_i = rWishart(1, df = n + alpha, Sigma = solve(Vinv + sumofsq))[,,1]
+    df_sim_lambda[[i]] = lambda_i
+    sigma_i = solve(lambda_i)
     #beta_i = beta + sum(sapply(1:q, function(x){sum((df$Y[index_1[x,]]-mu_i[x])^2)}))/2
     #lambda_i = rgamma(1, alpha_n, beta_i)
     #df_sim[i,q+2] = lambda_i
     
     #z
-    df_sim[i, (q+3):ncol(df_sim)] = df_sim[i-1, (q+3):ncol(df_sim)]
+    df_sim_z[i,] = df_sim_z[i-1, ]
     for (j in 1:n){
-      z_j_prev = df_sim[i,j+2+q]
+      z_j_prev = df_sim_z[i,j]
       qlessk = setdiff(1:q, z_j_prev)
       z_j_new = sample(qlessk, 1)
       j_vector = df_j[[j]]
-      h_z_prev = gamma/length(j_vector)* 2*sum(((z_j_prev == df_sim[i, j_vector])-0.5)) + dnorm(df$Y[j], mean = mu_i[z_j_prev], sd = 1/sqrt(lambda_i), log = T)
-      h_z_new = gamma/length(j_vector) * 2*sum(((z_j_new  == df_sim[i, j_vector])-0.5)) + dnorm(df$Y[j], mean = mu_i[z_j_new] , sd = 1/sqrt(lambda_i), log = T)
+      h_z_prev = gamma/length(j_vector)* 2*sum(((z_j_prev == df_sim_z[i, j_vector])-0.5)) + dmvnorm(Y[j,], mean = mu_i[z_j_prev,], sigma = sigma_i, log = T)
+      h_z_new = gamma/length(j_vector) * 2*sum(((z_j_new  == df_sim_z[i, j_vector])-0.5)) + dmvnorm(Y[j,], mean = mu_i[z_j_new, ] , sigma = sigma_i, log = T)
       prob_j = min(exp(h_z_new - h_z_prev),1)
-      df_sim[i, j+2+q] = sample(x = c(z_j_prev, z_j_new), size = 1, prob = c(1-prob_j, prob_j))
+      df_sim_z[i, j] = sample(x = c(z_j_prev, z_j_new), size = 1, prob = c(1-prob_j, prob_j))
     }
   }
-  return(df_sim)
+  return(list(df_sim_z, df_sim_mu, df_sim_lambda))
 }

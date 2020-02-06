@@ -66,4 +66,3 @@ p3 = ggplot(df, aes(x,y, color = Y2)) +
 
 p1+p2+p3 + plot_annotation(tag_levels = "A")
 
-
