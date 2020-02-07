@@ -95,21 +95,21 @@ df$z_gamma6_alpha = pmax(colMeans(df_sim_gamma6$z[-(1:100),]==1),
                          colMeans(df_sim_gamma6$z[-(1:100),]==3))
 
 multi2 = ggplot(df, aes(x, y)) +
-  geom_point(aes(color = factor(z_gamma2), alpha = z_gamma2_alpha)) +
+  geom_point(aes(color = factor(z_gamma2), alpha = z_gamma2_alpha), size = 2) +
   labs(color = "State", alpha = "Proportion", x = NULL, y = NULL) +
   guides(alpha = F) + 
   scale_alpha_continuous(limits = c(0,1), breaks = seq(0.3,1,0.1), range = c(0,1))+
   theme_classic()
 
 multi4 = ggplot(df, aes(x, y)) +
-  geom_point(aes(color = factor(z_gamma4), alpha = z_gamma4_alpha)) +
+  geom_point(aes(color = factor(z_gamma4), alpha = z_gamma4_alpha), size = 2) +
   labs(color = "State", alpha = "Proportion", x = NULL, y = NULL) +
   guides(alpha = F) + 
   scale_alpha_continuous(limits = c(0,1), breaks = seq(0.3,1,0.1), range = c(0,1))+
   theme_classic()
 
 multi6 = ggplot(df, aes(x, y)) +
-  geom_point(aes(color = factor(z_gamma6), alpha = z_gamma6_alpha)) +
+  geom_point(aes(color = factor(z_gamma6), alpha = z_gamma6_alpha), size = 2) +
   labs(color = "State", alpha = "Proportion", x = NULL, y = NULL) +
   guides(alpha = F) + 
   scale_alpha_continuous(limits = c(0,1), breaks = seq(0.3,1,0.1), range = c(0,1))+
@@ -118,9 +118,3 @@ multi6 = ggplot(df, aes(x, y)) +
 (multi2 + multi4 + multi6)+
   plot_layout(guides = 'collect')+
   plot_annotation(tag_levels = "A")
-
-ggplot(df, aes(x,y,color = factor(df_sim_gamma6$z[1000, ]))) + 
-  geom_point() +
-  theme_classic() +
-  theme(legend.position = "bottom")+
-  labs(color = "State", x = NULL, y = NULL)
