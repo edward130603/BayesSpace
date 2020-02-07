@@ -138,7 +138,7 @@ run_mcmc_multi = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,grep
   df_sim_lambda[[1]] = solve(cov(df[,grep("Y", colnames(df))]))
   df_sim_z[1,] = 1 #initialize to all 1
   #df_sim_z[1,] = df$z #initialize to all truth (testing only)
-  #df_sim_z[1,] = sample(3, n, replace = T) #initialize to all truth (testing only)
+  #df_sim_z[1,] = sample(3, n, replace = T) #initialize to random
   
   Y = as.matrix(df[,grep("Y", colnames(df))])
   #Iterate
