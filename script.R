@@ -180,5 +180,5 @@ run_mcmc_multi = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,grep
       df_sim_z[i, j] = sample(x = c(z_j_prev, z_j_new), size = 1, prob = c(1-prob_j, prob_j))
     }
   }
-  return(list(df_sim_z, df_sim_mu, df_sim_lambda))
+  return(list(z = df_sim_z, mu = df_sim_mu, lambda = df_sim_lambda))
 }
