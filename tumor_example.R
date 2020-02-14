@@ -2,10 +2,10 @@ library(tidyverse)
 library(DropletUtils)
 library(scater)
 library(ggbeeswarm)
-#library(EnsDb.Hsapiens.v86)
 library(scran)
 library(viridis)
 library(patchwork)
+library(SingleR)
 
 
 #Make sce
@@ -99,6 +99,7 @@ num_neighbors = sapply(sapply(1:nrow(df_A), function(x){df_A[(abs(df_A[,"x"] -df
 df_A = df_A[num_neighbors >0, ] #all have at least 1 neighbor (in fact at least 3)
 
 df_A_gamma2_q5 = run_mcmc_multi(df = df_A, gamma = 2, q = 5, d = 5,nrep = 1000)
+saveRDS(df_A_gamma2_q5, "mcmc_d5_q5_A.RDS")
 df_A2_gamma6_q3 = run_mcmc_multi(df = df_A2, gamma = 6, q = 3, d = 5,nrep = 1000)
 df_A2_gamma2_q5 = run_mcmc_multi(df = df_A2, gamma = 2, q = 5, d = 5,nrep = 1000)
 df_A2_gamma4_q5 = run_mcmc_multi(df = df_A2, gamma = 4, q = 5, d = 5,nrep = 1000)
@@ -121,26 +122,31 @@ ggplot(as.data.frame(reducedDim(sce_A, "TSNE")[num_neighbors>0,]), aes(x = V1, y
   labs(x = NULL, y = NULL, color = "Cluster") +
   theme_classic()
 
-#5 states, gamma = 4
-df_A2$z_gamma4_q5 = apply(df_A2_gamma4_q5$z[-(1:500),], 2, Mode)
-df_A2$z_gamma4_q5_alpha = pmax(colMeans(df_A2_gamma4_q5$z[-(1:500),]==1),
-                               colMeans(df_A2_gamma4_q5$z[-(1:500),]==2),
-                               colMeans(df_A2_gamma4_q5$z[-(1:500),]==3),
-                               colMeans(df_A2_gamma4_q5$z[-(1:500),]==4),
-                               colMeans(df_A2_gamma4_q5$z[-(1:500),]==5))
-ggplot(df_A2, aes(x, y)) +
-  geom_point(aes(color = factor(z_gamma4_q5), alpha = z_gamma4_q5_alpha), size = 4) +
-  labs(color = "State", alpha = "Proportion", x = NULL, y = NULL) +
-  guides(alpha = F) + 
-  scale_alpha_continuous(limits = c(0,1), breaks = seq(0.2,1,0.1), range = c(0,1))+
+
+ggplot(df_A, aes(x, y)) +
+  geom_point(aes(color = logcounts(sce_A)[grep("CD19", rownames(sce_A)),]), size = 2) +
+  labs(color = "CD62L", x = NULL, y = NULL) +
+  scale_color_viridis()+
   theme_classic()
-ggplot(as.data.frame(reducedDim(sce_A2, "TSNE")[num_neighbors>0,]), aes(x = V1, y = V2, col = factor(df_A2$z_gamma4_q5)))+
+
+ggplot(as.data.frame(reducedDim(sce_A, "TSNE")[num_neighbors>0,]), aes(x = V1, y = V2, col = logcounts(sce_A)[grep("CD3D", rownames(sce_A)),]))+
   geom_point() +
+  scale_color_viridis() +
   labs(x = NULL, y = NULL, color = "Cluster") +
   theme_classic()
 
-plot(df_A2_gamma4_q5$mu[,5], type = "l", ylab = "mu5")
-plot(sapply(df_A2_gamma4_q5$lambda,"[[",7), type = "l", ylab = "lambda2.2")
+library(SingleR)
+BPE = BlueprintEncodeData()
+pred = SingleR(test = sce_A, ref = BPE, labels = BPE$label.main)
+pred$pruned.labels[is.na(pred$pruned.labels)] = "Unknown"
+ggplot(df_A, aes(x, y)) +
+  geom_point(aes(color = pred$pruned.labels), size = 4) +
+  labs(color = "State", x = NULL, y = NULL) +
+  theme_classic()
 
-plot(df_A2_gamma6_q3$mu[,2], type = "l", ylab = "mu5")
-
+pred.cluster = SingleR(test = sce_A, ref = BPE, labels = BPE$label.main, method = "cluster", clusters = df_A$z_gamma2_q5)
+pred.cluster$pruned.labels[is.na(pred.cluster$pruned.labels)] = "Unknown"
+ggplot(df_A, aes(x, y)) +
+  geom_point(aes(color = pred$pruned.labels), size = 4) +
+  labs(color = "State", x = NULL, y = NULL) +
+  theme_classic()
