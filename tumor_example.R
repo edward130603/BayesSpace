@@ -124,12 +124,12 @@ ggplot(as.data.frame(reducedDim(sce_A, "TSNE")[num_neighbors>0,]), aes(x = V1, y
 
 
 ggplot(df_A, aes(x, y)) +
-  geom_point(aes(color = logcounts(sce_A)[grep("CD19", rownames(sce_A)),]), size = 2) +
+  geom_point(aes(color = logcounts(sce_A)[grep("NCAM1$", rownames(sce_A)),]), size = 2) +
   labs(color = "CD62L", x = NULL, y = NULL) +
   scale_color_viridis()+
   theme_classic()
 
-ggplot(as.data.frame(reducedDim(sce_A, "TSNE")[num_neighbors>0,]), aes(x = V1, y = V2, col = logcounts(sce_A)[grep("CD3D", rownames(sce_A)),]))+
+ggplot(as.data.frame(reducedDim(sce_A, "TSNE")[num_neighbors>0,]), aes(x = V1, y = V2, col = logcounts(sce_A)[grep("KRT20", rownames(sce_A)),]))+
   geom_point() +
   scale_color_viridis() +
   labs(x = NULL, y = NULL, color = "Cluster") +
