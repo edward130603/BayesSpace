@@ -183,7 +183,7 @@ run_mcmc_multi = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,grep
   return(list(z = df_sim_z, mu = df_sim_mu, lambda = df_sim_lambda))
 }
 
-run_mcmc_deconv = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,grep("Y",colnames(df))]), lambda0 = diag(0.01, nrow = d), alpha = 1, beta = 0.01, gamma = 2, seed = 100){
+run_mcmc_deconv = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,grep("Y",colnames(df))]), lambda0 = diag(0.01, nrow = d), alpha = 1, beta = 0.01, gamma = 2, seed = 100, prev){
   set.seed(seed)
   n = nrow(df)
   df$j = 1:n
@@ -200,6 +200,7 @@ run_mcmc_deconv = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,gre
   df2_j = sapply(1:(4*n), function(x){df2[(abs(df2[,"x"] -df2[x,"x"]) + abs(df2[,"y"] - df2[x,"y"])) <= 2/3 + 0.01 &
                                             (abs(df2[,"x"] -df2[x,"x"]) + abs(df2[,"y"] - df2[x,"y"])) > 0,"j2"]})
   n = nrow(df2)
+  n0 = nrow(df)
   
   #Initialize matrices storing iterations
   df_sim_z = matrix(NA, nrow = nrep, ncol = n)
@@ -208,20 +209,19 @@ run_mcmc_deconv = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,gre
   qd = expand.grid(d = 1:d, q = 1:q)
   colnames(df_sim_mu) = sapply(1:(q*d), function(x){paste0("muq", qd[x,2],"_d",qd[x,1])})
   df_sim_lambda = replicate(nrep, matrix(NA, nrow = d, ncol = d), simplify = F)
+  df_sim_Y = replicate(nrep, matrix(NA, nrow = n, ncol = d), simplify = F)
   
   lambdamu0 = lambda0*mu0
   alpha_n = alpha + n/2
   
   #Initialize parameters
-  for (pc in 1:d){
-    df_sim_mu[1, grep(paste0("d", pc), colnames(df_sim_mu))] = mu0[pc]
-  }
-  df_sim_lambda[[1]] = solve(cov(df[,grep("Y", colnames(df))]))
-  df_sim_z[1,] = 1 #initialize to all 1
-  #df_sim_z[1,] = df$z #initialize to all truth (testing only)
-  #df_sim_z[1,] = sample(3, n, replace = T) #initialize to random
-  
+  df_sim_mu[1, ] = prev$mu[nrow(prev$mu),]/4
+  df_sim_lambda[[1]] = prev$lambda[[length(prev$lambda)]]/4
+  df_sim_z[1,] = rep(prev$z[nrow(prev$z),], 4)
+  df_sim_Y[[1]] = as.matrix(df2[,grep("Y", colnames(df2))]/4)
+    
   Y = as.matrix(df[,grep("Y", colnames(df))])
+  
   #Iterate
   for (i in 2:nrep){
     #mu
@@ -231,7 +231,7 @@ run_mcmc_deconv = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,gre
     for(k in 1:q){
       index_1[k,] = df_sim_z[i-1,]==k
       n_i = sum(index_1[k,])
-      mean_i = solve(lambda0 + n_i * lambda_prev) %*% (lambda0 %*% mu0 + lambda_prev %*% colSums(Y[index_1[k,],, drop = F]))
+      mean_i = solve(lambda0 + n_i * lambda_prev) %*% (lambda0 %*% mu0 + lambda_prev %*% colSums(df_sim_Y[[i-1]][index_1[k,],, drop = F]))
       var_i = solve(lambda0 + n_i * lambda_prev)
       mu_i[k,] = rmvnorm(1, mean = mean_i, sigma = var_i)
     }
@@ -239,16 +239,31 @@ run_mcmc_deconv = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,gre
     
     #lambda
     mu_i_long = mu_i[df_sim_z[i-1,],]
-    sumofsq = crossprod(Y-mu_i_long)
+    sumofsq = crossprod(df_sim_Y[[i-1]]-mu_i_long)
     Vinv = diag(beta, d)
     lambda_i = rWishart(1, df = n + alpha, Sigma = solve(Vinv + sumofsq))[,,1]
     df_sim_lambda[[i]] = lambda_i
     sigma_i = solve(lambda_i)
-    #beta_i = beta + sum(sapply(1:q, function(x){sum((df$Y[index_1[x,]]-mu_i[x])^2)}))/2
-    #lambda_i = rgamma(1, alpha_n, beta_i)
-    #df_sim[i,q+2] = lambda_i
+
+    #Y
+    test = rep(NA, n0)
+    for (j in 1:n0){
+      Y_j_prev = df_sim_Y[[i-1]][df2$j == j,]
+      error = scale(rmvnorm(n = 4, rep(0, d), sigma = diag(d)/15), scale = F)
+      Y_j_new = Y_j_prev + error
+      mu_i_four = mu_i[df_sim_z[i-1,j + c(0,1500, 3000, 4500)],]
+      p_prev = prod(sapply(1:4, function(x){dmvnorm(Y_j_prev[x,], mu_i_four[x,], sigma_i)}))
+      p_new = prod(sapply(1:4, function(x){dmvnorm(Y_j_new[x,], mu_i_four[x,], sigma_i)}))
+      probY_j = min(p_new/p_prev, 1)
+      test[j] = sample(x = 0:1, size = 1, prob = c(1-probY_j, probY_j))
+      if (sample(x = 0:1, size = 1, prob = c(1-probY_j, probY_j))){
+        df_sim_Y[[i]][df2$j == j,] = Y_j_new
+      } else {
+        df_sim_Y[[i]][df2$j == j,] = Y_j_prev
+      }
+    }
     
-    #z
+    #z [CHANGE j to j2!!]
     df_sim_z[i,] = df_sim_z[i-1, ]
     for (j in 1:n){
       z_j_prev = df_sim_z[i,j]
