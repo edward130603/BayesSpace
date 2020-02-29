@@ -150,3 +150,23 @@ ggplot(df_A, aes(x, y)) +
   geom_point(aes(color = pred$pruned.labels), size = 4) +
   labs(color = "State", x = NULL, y = NULL) +
   theme_classic()
+
+
+##Deconvolution
+deconv1 = run_mcmc_deconv(df = df_A, gamma = 2, q = 5, d = 5,nrep = 1000, prev = df_A_gamma2_q5)
+save(deconv1, file = "data/deconv1.RDS")
+cairo_pdf("my_plot2.pdf", family = "Lucida Sans Unicode", 20, 10)
+ggplot(data = df2, aes(x = x, y = y))+
+  geom_point(aes(color = as.factor(deconv1$z[1000,]), shape = factor(rep(1:4, each = 1500)), size = 10))+
+  scale_shape_manual(values = c("\u25E3", "\u25E2", "\u25E4", "\u25E5")) +
+  labs(color = "State")+
+  guides(shape = F, size = F)
+dev.off()
+
+data1 = data.frame(x = shift$Var1, y = shift$Var2, shape = factor(1:4))
+
+cairo_pdf("my_plot.pdf", family = "Lucida Sans Unicode")
+ggplot(data = data1, aes(x = x, y = y, shape = shape)) + geom_point(size = 2) + 
+  scale_shape_manual(values = c("\u25E3", "\u25E2", "\u25E4", "\u25E5")) +
+  coord_cartesian(xlim = c(-30,30), ylim = c(-30,30))
+dev.off()
