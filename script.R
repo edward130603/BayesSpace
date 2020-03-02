@@ -117,7 +117,7 @@ run_mcmc_potts = function(df, nrep = 1000, q = 3, mu0 = mean(df[,"Y"]), lambda0 
 run_mcmc_multi = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,grep("Y",colnames(df))]), lambda0 = diag(0.01, nrow = d), alpha = 1, beta = 0.01, gamma = 2, seed = 100){
   set.seed(seed)
   n = nrow(df)
-  df$j = 1:n
+  df[,"j"] = 1:n
   df_j = sapply(1:n, function(x){df[(abs(df[,"x"] -df[x,"x"]) + abs(df[,"y"] - df[x,"y"])) == 2,"j"]})
   
   #Initialize matrices storing iterations
@@ -186,17 +186,18 @@ run_mcmc_multi = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,grep
 run_mcmc_deconv = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,grep("Y",colnames(df))]), lambda0 = diag(0.01, nrow = d), alpha = 1, beta = 0.01, gamma = 2, seed = 100, prev){
   set.seed(seed)
   n = nrow(df)
-  df$j = 1:n
+  df[,"j"] = 1:n
   df_j = sapply(1:n, function(x){df[(abs(df[,"x"] -df[x,"x"]) + abs(df[,"y"] - df[x,"y"])) == 2,"j"]})
   
   df2 = df[rep(seq_len(n), 4), ] #rbind 4 times
-  df2$j2 = rep(1:(4*n))
+  df2[,"j2"] = NA
+  df2[,"j2"] = rep(1:(4*n))
   
   shift = expand.grid(c(1/3, -1/3), c(1/3,-1/3))
   shift_long = shift[rep(seq_len(4), each = n), ]
   
-  df2$x = df2$x + shift_long$Var1
-  df2$y = df2$y + shift_long$Var2
+  df2[,"x"] = df2[,"x"] + shift_long$Var1
+  df2[,"y"] = df2[,"y"] + shift_long$Var2
   df2_j = sapply(1:(4*n), function(x){df2[(abs(df2[,"x"] -df2[x,"x"]) + abs(df2[,"y"] - df2[x,"y"])) <= 2/3 + 0.01 &
                                             (abs(df2[,"x"] -df2[x,"x"]) + abs(df2[,"y"] - df2[x,"y"])) > 0,"j2"]})
   n = nrow(df2)
@@ -246,13 +247,13 @@ run_mcmc_deconv = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,gre
     sigma_i = solve(lambda_i)
 
     #Y
-    four_map = lapply(1:n0, function(x){which(df2$j == x)})
+    four_map = lapply(1:n0, function(x){which(df2[,"j"] == x)})
     test = rep(NA, n0) #testing purpose only!!
     for (j in 1:n0){
       Y_j_prev = df_sim_Y[[i-1]][four_map[[j]],]
       error = scale(rmvnorm(n = 4, rep(0, d), sigma = diag(d)/15), scale = F)
       Y_j_new = Y_j_prev + error
-      mu_i_four = mu_i[df_sim_z[i-1,j + c(0,1500, 3000, 4500)],]
+      mu_i_four = mu_i[df_sim_z[i-1,j + 0:3 * n0],]
       p_prev = prod(sapply(1:4, function(x){dmvnorm(Y_j_prev[x,], mu_i_four[x,], sigma_i)}))
       p_new = prod(sapply(1:4, function(x){dmvnorm(Y_j_new[x,], mu_i_four[x,], sigma_i)}))
       probY_j = min(p_new/p_prev, 1)
