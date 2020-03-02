@@ -112,7 +112,7 @@ df_A$z_gamma2_q5_alpha = pmax(colMeans(df_A_gamma2_q5$z[-(1:500),]==1),
                                colMeans(df_A_gamma2_q5$z[-(1:500),]==4),
                                colMeans(df_A_gamma2_q5$z[-(1:500),]==5))
 ggplot(df_A, aes(x, y)) +
-  geom_point(aes(color = factor(z_gamma2_q5), alpha = z_gamma2_q5_alpha), size = 4) +
+  geom_point(aes(color = factor(z_gamma2_q5), alpha = z_gamma2_q5_alpha), size = 4, shape = 18) +
   labs(color = "State", alpha = "Proportion", x = NULL, y = NULL) +
   guides(alpha = F) + 
   scale_alpha_continuous(limits = c(0,1), breaks = seq(0.2,1,0.1), range = c(0,1))+
@@ -155,18 +155,33 @@ ggplot(df_A, aes(x, y)) +
 ##Deconvolution
 deconv1 = run_mcmc_deconv(df = df_A, gamma = 2, q = 5, d = 5,nrep = 1000, prev = df_A_gamma2_q5)
 save(deconv1, file = "data/deconv1.RDS")
-cairo_pdf("my_plot2.pdf", family = "Lucida Sans Unicode", 20, 10)
+
+df2$z_deconv1 = apply(deconv1$z[900:1000,], 2, Mode)
+df2$z_deconv1_alpha = pmax(colMeans(deconv1$z[900:1000,]==1),
+                           colMeans(deconv1$z[900:1000,]==2),
+                           colMeans(deconv1$z[900:1000,]==3),
+                           colMeans(deconv1$z[900:1000,]==4),
+                           colMeans(deconv1$z[900:1000,]==5))
+
+# cairo_pdf("output/my_plot2.pdf", family = "Lucida Sans Unicode", 10, 5)
+# ggplot(data = df2, aes(x = x, y = y))+
+#   geom_point(aes(color = factor(z_deconv1), shape = factor(rep(1:4, each = 1500)),
+#                  alpha = z_deconv1_alpha), size = 2)+
+#   scale_shape_manual(values = c("\u25E3", "\u25E2", "\u25E4", "\u25E5")) +
+#   scale_alpha_continuous(limits = c(0,1), breaks = seq(0.2,1,0.1), range = c(0,1))+
+#   labs(color = "State")+theme_classic()+
+#   guides(shape = F, size = F, alpha = F)
+# dev.off()
+
 ggplot(data = df2, aes(x = x, y = y))+
-  geom_point(aes(color = as.factor(deconv1$z[1000,]), shape = factor(rep(1:4, each = 1500)), size = 10))+
-  scale_shape_manual(values = c("\u25E3", "\u25E2", "\u25E4", "\u25E5")) +
-  labs(color = "State")+
-  guides(shape = F, size = F)
-dev.off()
+  geom_text(aes(color = factor(z_deconv1), label = rep(c("\u25E3", "\u25E2", "\u25E4", "\u25E5"), each = 1500),
+                 alpha = z_deconv1_alpha), size = 4, family = "Arial Unicode MS")+
+  scale_alpha_continuous(limits = c(0,1), breaks = seq(0.2,1,0.1), range = c(0,1))+
+  labs(color = "State")+theme_classic()+
+  guides(shape = F, size = F, alpha = F)
 
-data1 = data.frame(x = shift$Var1, y = shift$Var2, shape = factor(1:4))
 
-cairo_pdf("my_plot.pdf", family = "Lucida Sans Unicode")
-ggplot(data = data1, aes(x = x, y = y, shape = shape)) + geom_point(size = 2) + 
-  scale_shape_manual(values = c("\u25E3", "\u25E2", "\u25E4", "\u25E5")) +
-  coord_cartesian(xlim = c(-30,30), ylim = c(-30,30))
-dev.off()
+plot(deconv1$mu[,1], type = "l", ylab = "mu")
+plot(deconv1$mu[,6], type = "l", ylab = "mu")
+plot(sapply(deconv1$lambda,"[[",1), type = "l", ylab = "lambda")
+plot(sapply(deconv1$lambda,"[[",2), type = "l", ylab = "lambda")
