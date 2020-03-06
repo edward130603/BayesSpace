@@ -150,6 +150,7 @@ ggplot(df_A, aes(x, y)) +
   geom_point(aes(color = pred$pruned.labels), size = 4) +
   labs(color = "State", x = NULL, y = NULL) +
   theme_classic()
+<<<<<<< HEAD
 
 
 ##Deconvolution
@@ -185,3 +186,5 @@ plot(deconv1$mu[,1], type = "l", ylab = "mu")
 plot(deconv1$mu[,6], type = "l", ylab = "mu")
 plot(sapply(deconv1$lambda,"[[",1), type = "l", ylab = "lambda")
 plot(sapply(deconv1$lambda,"[[",2), type = "l", ylab = "lambda")
+=======
+>>>>>>> parent of d4e82ba... deconvolution

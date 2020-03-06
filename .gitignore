@@ -20,6 +20,8 @@
 # Raw data
 /data-raw/
 data-raw/
+/data/
+data/
 
 # RStudio files
 .Rproj.user/
