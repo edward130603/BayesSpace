@@ -82,9 +82,11 @@ p3 = ggplot(data = df2, aes(x = x, y = y))+
 p1+p2+p3 + plot_annotation(tag_levels = "A")
 
 df2 %>%
+  as.data.frame() %>%
   group_by(j) %>%
   summarise(x = mean(x), y = mean(y),
-            Y1= sum(Y1), Y2 = sum(Y2)) ->
+            Y1= sum(Y1), Y2 = sum(Y2)) %>%
+  mutate(j2 = NA) ->
   df2sum
 df2sum = as.matrix(df2sum)
 
@@ -99,7 +101,7 @@ df2sum$z_deconv1_alpha = pmax(colMeans(deconv_sim$z[100:1500,]==1),
                            colMeans(deconv_sim$z[100:1500,]==2),
                            colMeans(deconv_sim$z[100:1500,]==3))
 
-ggplot(df2sum, aes(x, y)) +
+pnodeconv = ggplot(as.data.frame(df2sum), aes(x, y)) +
   geom_point(aes(color = factor(z_deconv1), alpha = z_deconv1_alpha), size = 4, shape = 18) +
   labs(color = "State", alpha = "Proportion", x = NULL, y = NULL) +
   guides(alpha = F) + 
@@ -107,8 +109,6 @@ ggplot(df2sum, aes(x, y)) +
   theme_classic()
 
 #Deconvolution
-df2sum$j2 = NA
-df2sum = as.matrix(df2sum)
 deconv_sim_deconv = run_mcmc_deconv(df = df2sum, gamma = 2, q = 3, d = 2,nrep = 5000, prev = deconv_sim)
 saveRDS(deconv_sim_deconv, "data/deconv2_sim_3-2.RDS")
 
@@ -119,7 +119,7 @@ df2$z_deconv2_alpha = pmax(colMeans(deconv_sim_deconv$z[1000:5000,]==1),
                               colMeans(deconv_sim_deconv$z[1000:5000,]==3))
 
 
-ggplot(data = df2, aes(x = x, y = y))+
+ggplot(data = as.data.frame(df2), aes(x = x, y = y))+
   geom_text(aes(color = factor(z_deconv2), label = rep(c("\u25E3", "\u25E2", "\u25E4", "\u25E5"), each = 1250),
                 alpha = z_deconv2_alpha), size = 4, family = "Arial Unicode MS")+
   scale_alpha_continuous(limits = c(0,1), breaks = seq(0.2,1,0.1), range = c(0,1))+
@@ -128,45 +128,47 @@ ggplot(data = df2, aes(x = x, y = y))+
 
 plot(deconv_sim_deconv$mu[,1], type = "l", ylab = "mu1")
 plot(deconv_sim_deconv$mu[,3], type = "l", ylab = "mu1")
+plot(sapply(df_sim_Y,"[[", 8), type = "l")
+lines(sapply(df_sim_Y,"[[", 8+1250*1), type = "l", col = "red")
+lines(sapply(df_sim_Y,"[[", 8+1250*2), type = "l", col = "blue")
+lines(sapply(df_sim_Y,"[[", 8+1250*3), type = "l", col = "green")
+pdeconv = ggplot(data = as.data.frame(df2), aes(x = x, y = y))+
+  geom_text(aes(color = factor(zmode), label = rep(c("\u25E3", "\u25E2", "\u25E4", "\u25E5"), each = 1250),
+                alpha = zalpha), size = 4, family = "Arial Unicode MS")+
+  scale_alpha_continuous(limits = c(0,1), breaks = seq(0.2,1,0.1), range = c(0,1))+
+  labs(color = "State")+theme_classic()+
+  guides(shape = F, size = F, alpha = F)
+plot(df_sim_mu[,4], type = "l")
+plot(sapply(df_sim_lambda,"[[", 1), type = "l")
+plot(sapply(df_sim_Y,"[[", 1), type = "l")
+zmode=apply(df_sim_z[100:500,], 2, Mode)
+zalpha=pmax(colMeans(df_sim_z[100:500,]==1),
+            colMeans(df_sim_z[100:500,]==2),
+            colMeans(df_sim_z[100:050,]==3))
+plotY1 = ggplot(data = as.data.frame(df2), aes(x = x, y = y))+
+  geom_text(aes(color = ifelse(Y1>5,5,ifelse(Y1<0,0, Y1)), label = rep(c("\u25E3", "\u25E2", "\u25E4", "\u25E5"), each = 1250),
+                alpha = 1), size = 4, family = "Arial Unicode MS")+
+  scale_alpha_continuous(limits = c(0,1), breaks = seq(0.2,1,0.1), range = c(0,1))+
+  labs(color = "Y1")+theme_classic()+
+  guides(shape = F, size = F, alpha = F)
 
-#Plot mcmc
+plotY2 = ggplot(data = as.data.frame(df2), aes(x = x, y = y))+
+  geom_text(aes(color = ifelse(Y2>5,5,ifelse(Y2<0,0, Y2)), label = rep(c("\u25E3", "\u25E2", "\u25E4", "\u25E5"), each = 1250),
+                alpha = 1), size = 4, family = "Arial Unicode MS")+
+  scale_alpha_continuous(limits = c(0,1), breaks = seq(0.2,1,0.1), range = c(0,1))+
+  labs(color = "Y2")+theme_classic()+
+  guides(shape = F, size = F, alpha = F)
 
-df$z_gamma2 = apply(df_sim_gamma2$z[-(1:100),], 2, Mode)
-df$z_gamma2_alpha = pmax(colMeans(df_sim_gamma2$z[-(1:100),]==1),
-                         colMeans(df_sim_gamma2$z[-(1:100),]==2),
-                         colMeans(df_sim_gamma2$z[-(1:100),]==3))
+plotY1 = ggplot(data = as.data.frame(df2), aes(x = x, y = y))+
+  geom_text(aes(color = Y1, label = rep(c("\u25E3", "\u25E2", "\u25E4", "\u25E5"), each = 1250),
+                alpha = 1), size = 4, family = "Arial Unicode MS")+
+  scale_alpha_continuous(limits = c(0,1), breaks = seq(0.2,1,0.1), range = c(0,1))+
+  labs(color = "Y1")+theme_classic()+
+  guides(shape = F, size = F, alpha = F)
 
-df$z_gamma4 = apply(df_sim_gamma4$z[-(1:100),], 2, Mode)
-df$z_gamma4_alpha = pmax(colMeans(df_sim_gamma4$z[-(1:100),]==1),
-                         colMeans(df_sim_gamma4$z[-(1:100),]==2),
-                         colMeans(df_sim_gamma4$z[-(1:100),]==3))
-
-df$z_gamma6 = apply(df_sim_gamma6$z[-(1:100),], 2, Mode)
-df$z_gamma6_alpha = pmax(colMeans(df_sim_gamma6$z[-(1:100),]==1),
-                         colMeans(df_sim_gamma6$z[-(1:100),]==2),
-                         colMeans(df_sim_gamma6$z[-(1:100),]==3))
-
-multi2 = ggplot(df, aes(x, y)) +
-  geom_point(aes(color = factor(z_gamma2), alpha = z_gamma2_alpha), size = 2) +
-  labs(color = "State", alpha = "Proportion", x = NULL, y = NULL) +
-  guides(alpha = F) + 
-  scale_alpha_continuous(limits = c(0,1), breaks = seq(0.3,1,0.1), range = c(0,1))+
-  theme_classic()
-
-multi4 = ggplot(df, aes(x, y)) +
-  geom_point(aes(color = factor(z_gamma4), alpha = z_gamma4_alpha), size = 2) +
-  labs(color = "State", alpha = "Proportion", x = NULL, y = NULL) +
-  guides(alpha = F) + 
-  scale_alpha_continuous(limits = c(0,1), breaks = seq(0.3,1,0.1), range = c(0,1))+
-  theme_classic()
-
-multi6 = ggplot(df, aes(x, y)) +
-  geom_point(aes(color = factor(z_gamma6), alpha = z_gamma6_alpha), size = 2) +
-  labs(color = "State", alpha = "Proportion", x = NULL, y = NULL) +
-  guides(alpha = F) + 
-  scale_alpha_continuous(limits = c(0,1), breaks = seq(0.3,1,0.1), range = c(0,1))+
-  theme_classic()
-
-(multi2 + multi4 + multi6)+
-  plot_layout(guides = 'collect')+
-  plot_annotation(tag_levels = "A")
+plotY2 = ggplot(data = as.data.frame(df2), aes(x = x, y = y))+
+  geom_text(aes(color = Y2, label = rep(c("\u25E3", "\u25E2", "\u25E4", "\u25E5"), each = 1250),
+                alpha = 1), size = 4, family = "Arial Unicode MS")+
+  scale_alpha_continuous(limits = c(0,1), breaks = seq(0.2,1,0.1), range = c(0,1))+
+  labs(color = "Y2")+theme_classic()+
+  guides(shape = F, size = F, alpha = F)

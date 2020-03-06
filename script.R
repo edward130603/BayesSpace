@@ -217,7 +217,7 @@ run_mcmc_deconv = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,gre
   
   #Initialize parameters
   df_sim_mu[1, ] = prev$mu[nrow(prev$mu),]/4
-  df_sim_lambda[[1]] = prev$lambda[[length(prev$lambda)]]*16
+  df_sim_lambda[[1]] = prev$lambda[[length(prev$lambda)]]/4
   df_sim_z[1,] = rep(prev$z[nrow(prev$z),], 4)
   df_sim_Y[[1]] = as.matrix(df2[,grep("Y", colnames(df2))]/4)
     
@@ -245,38 +245,58 @@ run_mcmc_deconv = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,gre
     lambda_i = rWishart(1, df = n + alpha, Sigma = solve(Vinv + sumofsq))[,,1]
     df_sim_lambda[[i]] = lambda_i
     sigma_i = solve(lambda_i)
+    #sigma_i_update = sigma_i/2
 
     #Y
+<<<<<<< HEAD
     four_map = lapply(1:n0, function(x){which(df2[,"j"] == x)})
     test = rep(NA, n0) #testing purpose only!!
     for (j in 1:n0){
       Y_j_prev = df_sim_Y[[i-1]][four_map[[j]],]
-      error = scale(rmvnorm(n = 4, rep(0, d), sigma = diag(d)/15), scale = F)
+      error = scale(rmvnorm(n = 4, rep(0, d), sigma = diag(d)/5), scale = F)
+      #error = scale(rmvnorm(n = 4, rep(0, d), sigma = sigma_i_update), scale = F)
       Y_j_new = Y_j_prev + error
       mu_i_four = mu_i[df_sim_z[i-1,j + 0:3 * n0],]
+      
+      #p_prev = prod(sapply(1:4, function(x){dmvnorm(Y_j_prev[x,], mu_i_four[x,], sigma_i)}))
+      #p_new = prod(sapply(1:4, function(x){dmvnorm(Y_j_new[x,], mu_i_four[x,], sigma_i)}))
+      
+      p_prev = sum(sapply(1:4, function(x){dmvnorm(Y_j_prev[x,], mu_i_four[x,], sigma_i, log = T)}))
+      p_new =  sum(sapply(1:4, function(x){dmvnorm(Y_j_new[x,],  mu_i_four[x,], sigma_i, log = T)}))
+      
+      probY_j = min(exp(p_new-p_prev), 1)
+      test[j] = sample(x = 0:1, size = 1, prob = c(1-probY_j, probY_j)) #(testing purpose only!!)
+=======
+    test = rep(NA, n0)
+    for (j in 1:n0){
+      Y_j_prev = df_sim_Y[[i-1]][df2$j == j,]
+      error = scale(rmvnorm(n = 4, rep(0, d), sigma = diag(d)/15), scale = F)
+      Y_j_new = Y_j_prev + error
+      mu_i_four = mu_i[df_sim_z[i-1,j + c(0,1500, 3000, 4500)],]
       p_prev = prod(sapply(1:4, function(x){dmvnorm(Y_j_prev[x,], mu_i_four[x,], sigma_i)}))
       p_new = prod(sapply(1:4, function(x){dmvnorm(Y_j_new[x,], mu_i_four[x,], sigma_i)}))
       probY_j = min(p_new/p_prev, 1)
-      test[j] = sample(x = 0:1, size = 1, prob = c(1-probY_j, probY_j)) #(testing purpose only!!)
+      test[j] = sample(x = 0:1, size = 1, prob = c(1-probY_j, probY_j))
+>>>>>>> parent of d4e82ba... deconvolution
       if (sample(x = 0:1, size = 1, prob = c(1-probY_j, probY_j))){
-        df_sim_Y[[i]][four_map[[j]],] = Y_j_new
+        df_sim_Y[[i]][df2$j == j,] = Y_j_new
       } else {
-        df_sim_Y[[i]][four_map[[j]],] = Y_j_prev
+        df_sim_Y[[i]][df2$j == j,] = Y_j_prev
       }
     }
     
-    #z [CHANGE j to j2!!]
+    #z 
     df_sim_z[i,] = df_sim_z[i-1, ]
-    for (j2 in 1:n){
-      z_j_prev = df_sim_z[i,j2]
+    for (j in 1:n){
+      z_j_prev = df_sim_z[i,j]
       qlessk = setdiff(1:q, z_j_prev)
       z_j_new = sample(qlessk, 1)
-      j_vector = df2_j[[j2]]
-      h_z_prev = gamma/length(j_vector)* 2*sum(((z_j_prev == df_sim_z[i, j_vector])-0.5)) + dmvnorm(df_sim_Y[[i]][j2,], mean = mu_i[z_j_prev,], sigma = sigma_i, log = T)
-      h_z_new = gamma/length(j_vector) * 2*sum(((z_j_new  == df_sim_z[i, j_vector])-0.5)) + dmvnorm(df_sim_Y[[i]][j2,], mean = mu_i[z_j_new, ], sigma = sigma_i, log = T)
+      j_vector = df_j[[j]]
+      h_z_prev = gamma/length(j_vector)* 2*sum(((z_j_prev == df_sim_z[i, j_vector])-0.5)) + dmvnorm(Y[j,], mean = mu_i[z_j_prev,], sigma = sigma_i, log = T)
+      h_z_new = gamma/length(j_vector) * 2*sum(((z_j_new  == df_sim_z[i, j_vector])-0.5)) + dmvnorm(Y[j,], mean = mu_i[z_j_new, ] , sigma = sigma_i, log = T)
       prob_j = min(exp(h_z_new - h_z_prev),1)
-      df_sim_z[i, j2] = sample(x = c(z_j_prev, z_j_new), size = 1, prob = c(1-prob_j, prob_j))
+      df_sim_z[i, j] = sample(x = c(z_j_prev, z_j_new), size = 1, prob = c(1-prob_j, prob_j))
     }
   }
-  return(list(z = df_sim_z, mu = df_sim_mu, lambda = df_sim_lambda))
+  return(list(z = df_sim_z, mu = df_sim_mu, lambda = df_sim_lambda, Y = df_sim_Y))
 }
