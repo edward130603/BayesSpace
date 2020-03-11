@@ -138,9 +138,9 @@ pdeconv = ggplot(data = as.data.frame(df2), aes(x = x, y = y))+
   scale_alpha_continuous(limits = c(0,1), breaks = seq(0.2,1,0.1), range = c(0,1))+
   labs(color = "State")+theme_classic()+
   guides(shape = F, size = F, alpha = F)
-plot(df_sim_mu[,4], type = "l")
-plot(sapply(df_sim_lambda,"[[", 1), type = "l")
-plot(sapply(df_sim_Y,"[[", 1), type = "l")
+plot(df_sim_mu[,4], type = "l", ylab = "mu")
+plot(sapply(df_sim_lambda,"[[", 1), type = "l", ylab = "lambda")
+plot(sapply(df_sim_Y,"[[", 20), type = "l", ylab = "Y")
 zmode=apply(df_sim_z[100:500,], 2, Mode)
 zalpha=pmax(colMeans(df_sim_z[100:500,]==1),
             colMeans(df_sim_z[100:500,]==2),
