@@ -1,6 +1,7 @@
 library(tidyverse)
 library(mvtnorm)
 library(patchwork)
+library(pROC)
 set.seed(102)
 
 #Generate truth
@@ -109,17 +110,18 @@ p4+p5
 
 #Run mcmc
 
-deconv_sim = run_mcmc_multi(df = df2sum, gamma = 2, q = 3, d = 2,nrep = 1500)
-saveRDS(deconv_sim, "data/deconv_sim_3-1.RDS")
+deconv_sim = run_mcmc_multi(df = df2sum, gamma = 2, q = 3, d = 2,nrep = 1000)
+saveRDS(deconv_sim, "data/deconv_sim_3-16.RDS")
 
 df2sum = as.data.frame(df2sum)
-df2sum$z_deconv1 = apply(deconv_sim$z[100:1500,], 2, Mode)
-df2sum$z_deconv1_alpha = pmax(colMeans(deconv_sim$z[100:1500,]==1),
-                           colMeans(deconv_sim$z[100:1500,]==2),
-                           colMeans(deconv_sim$z[100:1500,]==3))
+df2sum$z_deconv1 = apply(deconv_sim$z[100:1000,], 2, Mode)
+df2sum$z_deconv1_alpha = pmax(colMeans(deconv_sim$z[100:1000,]==1),
+                           colMeans(deconv_sim$z[100:1000,]==2),
+                           colMeans(deconv_sim$z[100:1000,]==3))
 
 pnodeconv = ggplot(as.data.frame(df2sum), aes(x, y)) +
-  geom_point(aes(color = factor(z_deconv1), alpha = z_deconv1_alpha), size = 4, shape = 18) +
+  geom_text(aes(color = factor(z_deconv1), alpha = z_deconv1_alpha, label = "\u2B22"), 
+            size = 20, family = "Lucida Sans Unicode")+
   labs(color = "State", alpha = "Proportion", x = NULL, y = NULL) +
   guides(alpha = F) + 
   scale_alpha_continuous(limits = c(0,1), breaks = seq(0.3,1,0.1), range = c(0,1))+
@@ -145,47 +147,47 @@ ggplot(data = as.data.frame(df2), aes(x = x, y = y))+
 
 plot(deconv_sim_deconv$mu[,1], type = "l", ylab = "mu1")
 plot(deconv_sim_deconv$mu[,3], type = "l", ylab = "mu1")
-plot(sapply(df_sim_Y,"[[", 8), type = "l")
+plot(sapply(df_sim_Y,"[[", 118), type = "l")
 lines(sapply(df_sim_Y,"[[", 8+1250*1), type = "l", col = "red")
 lines(sapply(df_sim_Y,"[[", 8+1250*2), type = "l", col = "blue")
 lines(sapply(df_sim_Y,"[[", 8+1250*3), type = "l", col = "green")
 pdeconv = ggplot(data = as.data.frame(df2), aes(x = x, y = y))+
-  geom_text(aes(color = factor(zmode), label = rep(c("\u25E3", "\u25E2", "\u25E4", "\u25E5"), each = 1250),
-                alpha = zalpha), size = 4, family = "Arial Unicode MS")+
-  scale_alpha_continuous(limits = c(0,1), breaks = seq(0.2,1,0.1), range = c(0,1))+
+  geom_text(aes(color = factor(zmode), label = "\u2B23", alpha = zalpha), 
+            size = 7, family = "Lucida Sans Unicode")+
+  scale_alpha_continuous(limits = c(0,1), breaks = seq(0.3,1,0.1), range = c(0,1))+
   labs(color = "State")+theme_classic()+
-  guides(shape = F, size = F, alpha = F)
+  guides(shape = F, size = F, alpha = F)+
+  geom_text(data = as.data.frame(df), aes(x = x+0.05, y = y+0.2), size = 20, label = "\u2B21", alpha = 0.3, family = "Lucida Sans Unicode")
+
 plot(df_sim_mu[,4], type = "l", ylab = "mu")
-plot(sapply(df_sim_lambda,"[[", 1), type = "l", ylab = "lambda")
+plot(sapply(df_sim_lambda,"[[", 4), type = "l", ylab = "lambda")
 plot(sapply(df_sim_Y,"[[", 20), type = "l", ylab = "Y")
-zmode=apply(df_sim_z[100:500,], 2, Mode)
-zalpha=pmax(colMeans(df_sim_z[100:500,]==1),
-            colMeans(df_sim_z[100:500,]==2),
-            colMeans(df_sim_z[100:050,]==3))
-plotY1 = ggplot(data = as.data.frame(df2), aes(x = x, y = y))+
-  geom_text(aes(color = ifelse(Y1>5,5,ifelse(Y1<0,0, Y1)), label = rep(c("\u25E3", "\u25E2", "\u25E4", "\u25E5"), each = 1250),
-                alpha = 1), size = 4, family = "Arial Unicode MS")+
-  scale_alpha_continuous(limits = c(0,1), breaks = seq(0.2,1,0.1), range = c(0,1))+
-  labs(color = "Y1")+theme_classic()+
-  guides(shape = F, size = F, alpha = F)
+zmode=apply(df_sim_z[500:2000,], 2, Mode)
+zalpha=pmax(colMeans(df_sim_z[500:2000,]==1),
+            colMeans(df_sim_z[500:2000,]==2),
+            colMeans(df_sim_z[500:2000,]==3))
+z = p1$data$z
+zmode2 = zmode
+zmode2[zmode == 2] = 3
+zmode2[zmode == 3] = 2
+table(z,zmode2)
+deconv3prob = colMeans(df_sim_z[500:2000,]==2)
+deconv2prob = colMeans(df_sim_z[500:2000,]==3)
 
-plotY2 = ggplot(data = as.data.frame(df2), aes(x = x, y = y))+
-  geom_text(aes(color = ifelse(Y2>5,5,ifelse(Y2<0,0, Y2)), label = rep(c("\u25E3", "\u25E2", "\u25E4", "\u25E5"), each = 1250),
-                alpha = 1), size = 4, family = "Arial Unicode MS")+
-  scale_alpha_continuous(limits = c(0,1), breaks = seq(0.2,1,0.1), range = c(0,1))+
-  labs(color = "Y2")+theme_classic()+
-  guides(shape = F, size = F, alpha = F)
 
-plotY1 = ggplot(data = as.data.frame(df2), aes(x = x, y = y))+
-  geom_text(aes(color = Y1, label = rep(c("\u25E3", "\u25E2", "\u25E4", "\u25E5"), each = 1250),
-                alpha = 1), size = 4, family = "Arial Unicode MS")+
-  scale_alpha_continuous(limits = c(0,1), breaks = seq(0.2,1,0.1), range = c(0,1))+
-  labs(color = "Y1")+theme_classic()+
-  guides(shape = F, size = F, alpha = F)
+zmode3 = df2sum[,"z_deconv1"]
+zmode4 = zmode3
+zmode4[zmode3 == 2] = 3
+zmode4[zmode3 == 3] = 2
+table(z,rep(zmode4,7))
+nodeconv3prob = rep(colMeans(deconv_sim$z[100:1000,]==2),7)
+nodeconv2prob = rep(colMeans(deconv_sim$z[100:1000,]==3),7)
+roc2 = roc(I(z == 2)~deconv2prob, plot = T, print.auc = T, 
+           main = "State 2", col = "red", print.auc.col = "red", print.auc.x = 0.5, print.auc.y = 0.5)
+roc2b = roc(I(z == 2)~nodeconv2prob, plot = T, print.auc = T, main = "State 2", add = T,
+            col = "blue", print.auc.col = "blue", print.auc.x = 0.5, print.auc.y = 0.3)
+roc3 = roc(I(z == 3)~deconv3prob, plot = T, print.auc = T, main = "State 3",
+           col = "red", print.auc.col = "red", print.auc.x = 0.5, print.auc.y = 0.5)
+roc3b = roc(I(z == 3)~nodeconv3prob, plot = T, print.auc = T, main = "State 3", add = T,
+            col = "blue", print.auc.col = "blue", print.auc.x = 0.5, print.auc.y = 0.3)
 
-plotY2 = ggplot(data = as.data.frame(df2), aes(x = x, y = y))+
-  geom_text(aes(color = Y2, label = rep(c("\u25E3", "\u25E2", "\u25E4", "\u25E5"), each = 1250),
-                alpha = 1), size = 4, family = "Arial Unicode MS")+
-  scale_alpha_continuous(limits = c(0,1), breaks = seq(0.2,1,0.1), range = c(0,1))+
-  labs(color = "Y2")+theme_classic()+
-  guides(shape = F, size = F, alpha = F)
