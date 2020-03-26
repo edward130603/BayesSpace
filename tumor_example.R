@@ -149,10 +149,10 @@ ggplot(as.data.frame(reducedDim(sce_A, "TSNE")[num_neighbors>0,]), aes(x = V1, y
 
 ggplot(df_A, aes(x, y, color = logcounts(sce_A)[grep("CD3D", rownames(sce_A)),] +
                    logcounts(sce_A)[grep("CD3E$", rownames(sce_A)),]+
-                   logcounts(sce_A)[grep("CD3G", rownames(sce_A)),])) +
+                   logcounts(sce_A)[grep("CD3G", rownames(sce_A)),] > 0.1)) +
   geom_text(label = "\u2B25", size = 21, family = "Lucida Sans Unicode") +
   labs(color = "CD3", x = NULL, y = NULL) +
-  scale_color_viridis()+
+  scale_color_viridis_d()+
   theme_classic() + coord_fixed()
 
 ggplot(df_A, aes(x, y, color = logcounts(sce_A)[grep("CHGA", rownames(sce_A)),])) +
@@ -192,13 +192,6 @@ df_A2$z_deconv1_alpha = pmax(colMeans(deconv1$z[500:2000,]==1),
                            colMeans(deconv1$z[500:2000,]==4),
                            colMeans(deconv1$z[500:2000,]==5))
 
-# ggplot(data = df2, aes(x = x, y = y))+
-#   geom_text(aes(color = factor(z_deconv1), label = rep(c("\u25E3", "\u25E2", "\u25E4", "\u25E5"), each = 1500),
-#                  alpha = z_deconv1_alpha), size = 4, family = "Arial Unicode MS")+
-#   scale_alpha_continuous(limits = c(0,1), breaks = seq(0.2,1,0.1), range = c(0,1))+
-#   labs(color = "State")+theme_classic()+
-#   guides(shape = F, size = F, alpha = F)
-
 
 plot(deconv1$mu[,1], type = "l", ylab = "mu")
 plot(deconv1$mu[,6], type = "l", ylab = "mu")
@@ -215,3 +208,33 @@ ggplot(data = df_A2, aes(x = x, y = y))+
   geom_text(data = df_A, aes(x = x+0.03, y = y+0.2), size = 13, label = "\u2B21", alpha = 0.3, family = "Lucida Sans Unicode")+
   coord_fixed()
 
+##New coordinates
+df_Acoord2 = df_A  
+df_Acoord2$x = sce_A$X2
+df_Acoord2$y = sce_A$Y2
+# index = 2
+# test = rep(1, n)
+# test[index] = 2
+# test[df_j[[index]]] = 3
+# ggplot(df_Acoord2, aes(x, y, color = factor(test))) +
+#   geom_text(label = "\u2B22", size = 10, family = "Lucida Sans Unicode") +
+#   labs(x = NULL, y = NULL) +
+#   scale_color_viridis_d()+
+#   theme_classic() + coord_fixed()
+dfv2_A_gamma2_q5 = run_mcmc_multi(df = df_Acoord2, gamma = 2, q = 5, d = 5,nrep = 2000)
+df_Acoord2$z_gamma2_q5 = apply(dfv2_A_gamma2_q5$z[-(1:500),], 2, Mode)
+df_Acoord2$z_gamma2_q5 = factor(df_Acoord2$z_gamma2_q5, levels = c(1,2, 5, 3, 4))
+
+df_Acoord2$z_gamma2_q5_alpha = pmax(colMeans(dfv2_A_gamma2_q5$z[-(1:500),]==1),
+                              colMeans(dfv2_A_gamma2_q5$z[-(1:500),]==2),
+                              colMeans(dfv2_A_gamma2_q5$z[-(1:500),]==3),
+                              colMeans(dfv2_A_gamma2_q5$z[-(1:500),]==4),
+                              colMeans(dfv2_A_gamma2_q5$z[-(1:500),]==5))
+
+ggplot(df_Acoord2, aes(x, y)) +
+  geom_text(aes(color = factor(z_gamma2_q5), alpha = z_gamma2_q5_alpha),
+            size = 10, label = "\u2B22", family = "Lucida Sans Unicode") +
+  labs(color = "State", alpha = "Proportion", x = NULL, y = NULL) +
+  guides(alpha = F) + 
+  scale_alpha_continuous(limits = c(0,1), breaks = seq(0.2,1,0.1), range = c(0,1))+
+  theme_classic() + coord_fixed()
