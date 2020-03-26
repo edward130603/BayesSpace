@@ -9,7 +9,9 @@ run_mcmc_multi = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,grep
   set.seed(seed)
   n = nrow(df)
   df[,"j"] = 1:n
-  df_j = sapply(1:n, function(x){df[(abs(df[,"x"] -df[x,"x"]) + abs(df[,"y"] - df[x,"y"])) == 2,"j"]})
+  df_j = sapply(1:n, function(x){df[(abs(df[,"x"] -df[x,"x"]) + abs(df[,"y"] - df[x,"y"])) <= 220 & #new coordinates
+                                      (abs(df[,"x"] -df[x,"x"]) + abs(df[,"y"] - df[x,"y"])) > 0,"j"]})
+  #df_j = sapply(1:n, function(x){df[(abs(df[,"x"] -df[x,"x"]) + abs(df[,"y"] - df[x,"y"])) == 2,"j"]}) #old coordinates
   
   #Initialize matrices storing iterations
   df_sim_z = matrix(NA, nrow = nrep, ncol = n)
