@@ -33,25 +33,20 @@ data1 = data.frame(name = sce$sample_name,
 rm(sce)
 
 #Load and process mcmc
-file_list = list.files(path = "data-raw/DLPFC/")
+file_list = list.files(path = "data-raw/DLPFC2/")
 z = vector(mode = "list", length = length(file_list))
-logLik = matrix(nrow = length(file_list), ncol = 5000)
+avgCor = rep(NA, length = length(file_list))
+avgCor3 = rep(NA, length = length(file_list))
+logLik = matrix(nrow = length(file_list), ncol = 500)
 out = data.frame(matrix(nrow = 300, ncol = 6))
 colnames(out) = c("i", "sample", "input", "dim", "clusters", "ARI")
 for (i in 1:length(file_list)){
-  temp_data = readRDS(paste0("data-raw/DLPFC/",file_list[i]))
+  temp_data = readRDS(paste0("data-raw/DLPFC2/",file_list[i]))
   z[[i]] = apply(temp_data$z[4000:5000,], 2, Mode)
+  temp_cor = cov2cor(Reduce(`+`, temp_data$lambda[4000:5000]))
+  avgCor[i] = mean(abs(temp_cor[upper.tri(temp_cor)]))
+  #avgCor3[i] = mean(abs(temp_cor[upper.tri(temp_cor)][1:min(3, length(temp_cor[upper.tri(temp_cor)]))]))
   logLik[i,] = temp_data$logLik
-  
-  n_i = length(z[[i]])
-  gamma = 4
-  for (k in seq(4000,5000, 10)){
-    for(j in 1:n_i){
-      num = gamma/length(j_vector)* 2*sum(((z_j_prev == df_sim_z[i, j_vector])-0.5)) + mvtnorm::dmvnorm(df_sim_Y[[i]][j2,], mean = mu_i[z_j_prev,], sigma = sigma_i, log = T)
-      h_z_new = gamma/length(j_vector) * 2*sum(((z_j_new  == df_sim_z[i, j_vector])-0.5)) + mvtnorm::dmvnorm(df_sim_Y[[i]][j2,], mean = mu_i[z_j_new, ], sigma = sigma_i, log = T)
-      
-    }
-  }
   
   temp_row = unlist(strsplit(file_list[i], c("_|clust|q|\\.|RDS")))
   out[i,] = c(i, temp_row[2], sub("[^[:alpha:]]+", "", temp_row[3]),
@@ -80,7 +75,7 @@ out_append %>%
   out2
 
 out_snn_k10 = data.frame(i = NA, sample = samples, input = "SNN", dim = "", clusters = NA, ARI = NA)
-for (i in 1:nrow(out_snn)){
+for (i in 1:nrow(out_snn_k10)){
   snn.gr = buildSNNGraph(sce_list[[i]], use.dimred="PCA", k=10)
   snn = factor(igraph::cluster_walktrap(snn.gr)$membership)
   out_snn_k10[i, "clusters"] = length(unique(snn))
@@ -156,7 +151,7 @@ ggplot(out3[!out3$input %in% c("PCA", "TSNE"),], aes(x = factor(clusters, levels
   labs(x = "Clusters", y = "ARI", color = "Sample")
 
 
-out$logLik = rowMeans(logLik[,4000:5000])
+out$logLik = rowMeans(logLik[,400:500])
 ggplot(out, aes(x = factor(clusters), y = logLik, color = sample)) +
   geom_line(aes(group = sample)) +
   geom_point(size = 2) +
@@ -170,6 +165,20 @@ ggplot(out, aes(x = factor(clusters), y = as.numeric(ARI), color = sample)) +
   facet_wrap(nrow = 1, ~factor(input, levels = c("TSNE", "PCA"))+
                factor(dim, levels = c("Dimensions: 2", "Dimensions: 3", "Dimensions: 5", "Dimensions: 10", "Dimensions: 15")), scales = "free") +
   labs(x = "Clusters", y = "ARI", color = "Sample")
+
+ggplot(out, aes(x = factor(clusters), y = avgCor, color = sample)) +
+  geom_line(aes(group = sample)) +
+  geom_point(size = 2) +
+  facet_wrap(nrow = 1, ~factor(input, levels = c("TSNE", "PCA"))+
+               factor(dim, levels = c("Dimensions: 2", "Dimensions: 3", "Dimensions: 5", "Dimensions: 10", "Dimensions: 15")), scales = "fixed") +
+  labs(x = "Clusters", y = "Mean magnitude of correlation coefficient", color = "Sample")
+
+ggplot(out, aes(x = factor(clusters), y = avgCor3, color = sample)) +
+  geom_line(aes(group = sample)) +
+  geom_point(size = 2) +
+  facet_wrap(nrow = 1, ~factor(input, levels = c("TSNE", "PCA"))+
+               factor(dim, levels = c("Dimensions: 2", "Dimensions: 3", "Dimensions: 5", "Dimensions: 10", "Dimensions: 15")), scales = "fixed") +
+  labs(x = "Clusters", y = "Mean magnitude of correlation coefficient", color = "Sample")
 
 ggplot(out, aes(y = as.numeric(ARI), x = logLik, color = sample)) +
   geom_smooth(aes(group = sample), method = "lm", se = F) +
