@@ -5,6 +5,16 @@ Mode <- function(x) {
   ux[which.max(tabulate(match(x, ux)))]
 }
 
+cluster = function(Y, positions, nrep = 1000, gamma = 2, q, init = rep(1, nrow(Y)), seed = 100, mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01){
+  set.seed(seed)
+  d = ncol(Y)
+  n = nrow(Y)
+  colnames(positions) = c("x", "y")
+  df_j = sapply(1:n, function(x){which((abs(positions[,1] -positions[x,1]) + abs(positions[,2] - positions[x,2])) <= 38 &  
+                                      (abs(positions[,1] -positions[x,1]) + abs(positions[,2] - positions[x,2])) > 0)-1})
+  iterate(Y = as.matrix(Y), df_j = df_j, nrep = nrep, n = n, d = d, gamma = gamma, q = q, init = init, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
+}
+
 run_mcmc_multi = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,grep("Y",colnames(df))]), lambda0 = diag(0.01, nrow = d), alpha = 1, beta = 0.01, gamma = 2, init = rep(1,nrow(df)), seed = 100){
   set.seed(seed)
   n = nrow(df)
@@ -19,9 +29,6 @@ run_mcmc_multi = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,grep
   qd = expand.grid(d = 1:d, q = 1:q)
   colnames(df_sim_mu) = sapply(1:(q*d), function(x){paste0("muq", qd[x,2],"_d",qd[x,1])})
   df_sim_lambda = replicate(nrep, matrix(NA, nrow = 2, ncol = 2), simplify = F)
-  
-  lambdamu0 = lambda0*mu0
-  alpha_n = alpha + n/2
   
   #Initialize parameters
   for (pc in 1:d){
@@ -59,7 +66,7 @@ run_mcmc_multi = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,grep
     #z
     df_sim_z[i,] = df_sim_z[i-1, ]
     plogLikj = rep(NA, n)
-    denom = rep(NA, n)
+    # denom = rep(NA, n)
     for (j in 1:n){
       z_j_prev = df_sim_z[i,j]
       qlessk = setdiff(1:q, z_j_prev)
