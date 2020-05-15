@@ -191,5 +191,5 @@ List iterate2(mat Y, List df_j, int nrep, int n, int n0, int d, double gamma, in
 }
 
 /*** R
-iterate2(Y = Y, df_j = df_j, nrep = nrep, n = n, n0 = n0, d = d, gamma = gamma, q = q, init = init, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
+#iterate2(Y = Y, df_j = df_j, nrep = nrep, n = n, n0 = n0, d = d, gamma = gamma, q = q, init = init, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
 */
