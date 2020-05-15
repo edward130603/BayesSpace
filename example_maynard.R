@@ -66,6 +66,15 @@ df_151673 = data.frame(reducedDim(sce_151673v2, "PCA"))[,1:9]
 df_151673 = data.frame(reducedDim(sce_151673v2, "TSNE"))[,1:2]
 df_151673 = data.frame(reducedDim(sce_151673v2, "TSNE3"))[,1:3]
 
+
+km5 = kmeans(reducedDim(sce_151673v2, "PCA"), centers = 5)$cluster #k means initialization
+positions = cbind(sce_151673$imagerow, sce_151673$imagecol) #save positions as df
+colnames(positions) = c("x", "y") 
+xdist = coef(lm(sce_151673$imagecol~sce_151673$col))[2] #x distance between neighbors
+ydist = coef(lm(sce_151673$imagerow~sce_151673$row))[2] #y distance between neighbors
+dist = xdist + ydist + 0.2
+test = cluster(Y= PCs$components, positions = as.matrix(positions), q = 5, init = km5, nrep = 1000, gamma = 1.5, dist = dist)
+
 colnames(df_151673) = paste0("Y", 1:9)
 df_151673$kmeans = kmeans(reducedDim(sce_151673, "PCA"), centers = 7)$cluster
 df_151673$kmeans8 = kmeans(reducedDim(sce_151673, "PCA"), centers = 8)$cluster
