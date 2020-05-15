@@ -12,6 +12,7 @@ Mode <- function(x) {
 
 #Y is a matrix or dataframe with 1 row per spot and 1 column per outcome (e.g. principal component)
 #positions is a matrix or dataframe with two columns (x, y) that gives the spatial coordinates of the spot
+#q is the number of clusters
 #nrep is the number of mcmc iterations
 #gamma is the smoothing parameter, values in range of 1-3 seem to work well generally
 #init is the initial states (z's), vector of length equal to the number of rows of Y and positions
