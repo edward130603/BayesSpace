@@ -1,3 +1,5 @@
+#Process results from DLPFC benchmarking (done on rhino)
+
 library(spatialLIBD)
 library(scran)
 library(ggbeeswarm)
