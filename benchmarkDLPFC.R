@@ -1,3 +1,5 @@
+##Note: this example runs on the old non-Rcpp code
+
 .libPaths(.libPaths()[2])
 library(scater)
 library(scran)
