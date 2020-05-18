@@ -54,25 +54,40 @@ clust1alpha = pmax(colMeans(clust1$z[9000:10000,]==1),
                    colMeans(clust1$z[9000:10000,]==6),
                    colMeans(clust1$z[9000:10000,]==7))
 clust_out = ggplot(data.frame(positions), aes(y, -x)) +
-  geom_text(aes(color = factor(clust1col)), alpha = clust1alpha,
+  geom_text(aes(color = factor(clust1col, levels = c(5,1,2,7,4,6,3))), alpha = clust1alpha,
             size = 6, label = "\u2B22", family = "Lucida Sans Unicode") +
-  #geom_text(color = "black", label = "\u2B21", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
-  labs(color = "State", alpha = "Proportion", x = NULL, y = NULL) +
-  guides(alpha = F) + 
+  geom_text(color = "black", label = "\u2B21", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
+  labs(color = "Cluster", alpha = "Proportion", x = NULL, y = NULL) +
+  guides(alpha = F, col = F) + 
+  scale_color_viridis_d(option = "A") +
   scale_alpha_continuous(limits = c(0,1), breaks = seq(0.1,1,0.1), range = c(0,1))+
-  theme_classic() + coord_fixed()
+  theme_void() + coord_fixed()
 
 truth_out = ggplot(data.frame(positions), aes(y, -x)) +
-  geom_text(aes(color = factor(sce$layer_guess)),
+  geom_text(aes(color = factor(sce$layer_guess_reordered)),
             size = 6, label = "\u2B22", family = "Lucida Sans Unicode") +
-  #geom_text(color = "black", label = "\u2B21", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
-  labs(color = "State", alpha = "Proportion", x = NULL, y = NULL) +
+  geom_text(color = "black", label = "\u2B21", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
+  labs(color = "Cluster", alpha = "Proportion", x = NULL, y = NULL) +
   guides(alpha = F) + 
+  scale_color_viridis_d(option = "A") +
   scale_alpha_continuous(limits = c(0,1), breaks = seq(0.1,1,0.1), range = c(0,1))+
-  theme_classic() + coord_fixed()
+  theme_void() + coord_fixed()
 
-clust_out + truth_out
+maynardclust_out = ggplot(data.frame(positions), aes(y, -x)) +
+  geom_text(aes(color = factor(sce$HVG_PCA_spatial, levels = c(5,1,3,2,7,8,6,4))),
+            size = 6, label = "\u2B22", family = "Lucida Sans Unicode") +
+  geom_text(color = "black", label = "\u2B21", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
+  labs(color = "Cluster", alpha = "Proportion", x = NULL, y = NULL) +
+  guides(alpha = F, col = F) + 
+  scale_color_viridis_d(option = "A") +
+  scale_alpha_continuous(limits = c(0,1), breaks = seq(0.1,1,0.1), range = c(0,1))+
+  theme_void() + coord_fixed()
 
+truth_out + clust_out #Truth vs spatial clustering
+truth_out + maynardclust_out #Truth vs best clustering implementation from Maynard
+
+test = data.frame(x = rep(1:7, each = 100), y = NA)
 #calculate ARI
 mclust::adjustedRandIndex(sce$layer_guess, clust1col)
+mclust::adjustedRandIndex(sce$layer_guess, sce$HVG_PCA_spatial)
 mclust::adjustedRandIndex(sce$layer_guess, km[,7])
