@@ -1,4 +1,3 @@
-library(mvnfast)
 Rcpp::sourceCpp('script.cpp')
 
 #cluster() is used to perform spatial clustering
@@ -30,11 +29,42 @@ cluster = function(Y, positions, nrep = 1000, gamma = 2, dist, q, init = rep(1, 
     return(list(z = matrix(rep(1, n), nrow =1)))
   }
   colnames(positions) = c("x", "y")
-  df_j = sapply(1:n, function(x){which((abs(positions[,1] -positions[x,1]) + abs(positions[,2] - positions[x,2])) <= dist &  
+  df_j = sapply(1:n, function(x){which((abs(positions[,1] -positions[x,1]) + abs(positions[,2] - positions[x,2])) <= dist &  #L1 distance
                                       (abs(positions[,1] -positions[x,1]) + abs(positions[,2] - positions[x,2])) > 0)-1})
   iterate(Y = as.matrix(Y), df_j = df_j, nrep = nrep, n = n, d = d, gamma = gamma, q = q, init = init, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
 }
 
+#deconvolve (IN PROGRESS)
+
+deconvolve = function(Y, positions, nrep = 1000, every = 1, gamma = 2, xdist, ydist, q, init, seed = 100, mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01){
+  set.seed(seed)
+  
+  d = ncol(Y)
+  n0 = nrow(Y)
+  positions = as.matrix(positions)
+  Y = as.matrix(Y)
+  colnames(positions) = c("x", "y")
+  # j0 = rep(1:n0, 9)
+
+  init = rep(init, 7)
+  Y2 = Y[rep(seq_len(n0), 7), ] #rbind 7 times
+  positions2 = positions[rep(seq_len(n0), 7), ] #rbind 7 times
+  shift = rbind(expand.grid(c(1/3, -1/3), c(1/3,-1/3)), expand.grid(c(2/3, -2/3,0), 0))
+  shift = t(t(shift)*c(xdist, ydist))
+  dist = max(rowSums(abs(shift)))*1.05
+  shift_long = shift[rep(seq_len(7), each = n0), ]
+  positions2[,"x"] = positions2[,"x"] + shift_long[,"Var1"]
+  positions2[,"y"] = positions2[,"y"] + shift_long[,"Var2"]
+  n = nrow(Y2)
+  df_j = sapply(1:n, function(x){which((abs(positions2[,1] -positions2[x,1]) + abs(positions2[,2] - positions2[x,2])) <= dist &  #L1 distance
+                                         (abs(positions2[,1] -positions2[x,1]) + abs(positions2[,2] - positions2[x,2])) > 0)-1})
+  
+  iterate_deconv(Y = Y2, df_j = df_j, nrep = nrep, n = n, n0 = n0, d = d, gamma = gamma, q = q, init = init, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
+}
+
+###below are all code that represent previous implementations of the methods
+library(mvnfast) #faster than mvnorm, but we don't need this for the rcpp code
+#non-rcpp version of cluster()
 run_mcmc_multi = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,grep("Y",colnames(df))]), lambda0 = diag(0.01, nrow = d), alpha = 1, beta = 0.01, gamma = 2, init = rep(1,nrow(df)), seed = 100){
   set.seed(seed)
   n = nrow(df)
@@ -110,7 +140,8 @@ run_mcmc_multi = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,grep
               ))
 }
 
-deconvolve = function(Y, positions, nrep = 1000, every = 1, gamma = 2, dist, q, init, seed = 100, mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01){
+#deconvolution as described by Ripley 1991
+deconvolveRipley = function(Y, positions, nrep = 1000, every = 1, gamma = 2, dist, q, init, seed = 100, mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01){
   set.seed(seed)
   d = ncol(Y)
   n0 = nrow(Y)
@@ -132,6 +163,7 @@ deconvolve = function(Y, positions, nrep = 1000, every = 1, gamma = 2, dist, q, 
   iterate2(Y = Y, df_j = df_j, nrep = nrep, n = n, n0 = n0, d = d, gamma = gamma, q = q, init = init, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
 }
 
+#non-rcpp deconvolution for square lattice
 run_mcmc_squaredeconv = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,grep("Y",colnames(df))]), lambda0 = diag(0.01, nrow = d), alpha = 1, beta = 0.01, gamma = 2, seed = 100, prev){
   set.seed(seed)
   n = nrow(df)
@@ -241,6 +273,7 @@ run_mcmc_squaredeconv = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(d
               Ychange = testY))
 }
 
+#non-rcpp deconvolution for hex lattice
 run_mcmc_hexdeconv = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,grep("Y",colnames(df))]), lambda0 = diag(0.01, nrow = d), alpha = 1, beta = 0.01, gamma = 2, seed = 100, prev){
   set.seed(seed)
   n = nrow(df)
