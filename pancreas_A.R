@@ -25,16 +25,12 @@ df_qc = perCellQCMetrics(sce_A)
 qc = quickPerCellQC(df_qc)
 ggplot(positions, aes(x, -y, col = qc$discard))+
   geom_point(size = 5)+coord_fixed()
-sce_A$discard = qc$discard
+sce_A$discard = qc$discard  #not actually discarded.. but just marked as low quality
 
 #Normalization
 set.seed(100)
-clusters = quickCluster(sce_A)
-sce_A = computeSumFactors(sce_A, clusters = clusters)
+
 sce_A = logNormCounts(sce_A)
-plot(librarySizeFactors(sce_A), sizeFactors(sce_A), pch=16,
-     xlab="Library size factors", ylab="Deconvolution factors", log="xy", 
-     col = clusters)
 
 set.seed(101)
 dec <- modelGeneVarByPoisson(sce_A)
@@ -52,9 +48,6 @@ PCs = getDenoisedPCs(sce_A, technical=dec, subset.row=top, min.rank = 5, max.ran
 sce_A <- runTSNE(sce_A, dimred="PCA")
 sce_A <- runUMAP(sce_A, dimred="PCA")
 
-snn.gr <- buildSNNGraph(sce_A, use.dimred="PCA", k=10)
-sce_A$cluster <- factor(igraph::cluster_walktrap(snn.gr)$membership)
-table(sce_A$cluster)
 
 ggplot(as.data.frame(colData(sce_A)), aes(x = x, y = -y, fill = logcounts(sce_A)[grep("S100A4", rownames(sce_A)),])) + 
   geom_point(pch = 22, size = 7)+

@@ -27,16 +27,12 @@ df_qc = perCellQCMetrics(sce_A)
 qc = quickPerCellQC(df_qc)
 ggplot(positions, aes(y, x, col = qc$discard))+
   geom_point(size = 5)+coord_fixed()
-sce_A$discard = qc$discard
+sce_A$discard = qc$discard #not actually discarded.. but just marked as low quality
 
 #Normalization
 set.seed(100)
-clusters = quickCluster(sce_A)
-sce_A = computeSumFactors(sce_A, clusters = clusters)
 sce_A = logNormCounts(sce_A)
-plot(librarySizeFactors(sce_A), sizeFactors(sce_A), pch=16,
-     xlab="Library size factors", ylab="Deconvolution factors", log="xy", 
-     col = clusters)
+
 
 set.seed(101)
 dec <- modelGeneVarByPoisson(sce_A)
