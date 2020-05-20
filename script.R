@@ -44,7 +44,6 @@ deconvolve = function(Y, positions, nrep = 1000, every = 1, gamma = 2, xdist, yd
   positions = as.matrix(positions)
   Y = as.matrix(Y)
   colnames(positions) = c("x", "y")
-  # j0 = rep(1:n0, 9)
 
   init = rep(init, 7)
   Y2 = Y[rep(seq_len(n0), 7), ] #rbind 7 times
@@ -56,10 +55,33 @@ deconvolve = function(Y, positions, nrep = 1000, every = 1, gamma = 2, xdist, yd
   positions2[,"x"] = positions2[,"x"] + shift_long[,"Var1"]
   positions2[,"y"] = positions2[,"y"] + shift_long[,"Var2"]
   n = nrow(Y2)
+  print("Calculating neighbors...")
   df_j = sapply(1:n, function(x){which((abs(positions2[,1] -positions2[x,1]) + abs(positions2[,2] - positions2[x,2])) <= dist &  #L1 distance
                                          (abs(positions2[,1] -positions2[x,1]) + abs(positions2[,2] - positions2[x,2])) > 0)-1})
-  
+  print("Fitting model...")
   iterate_deconv(Y = Y2, df_j = df_j, nrep = nrep, n = n, n0 = n0, d = d, gamma = gamma, q = q, init = init, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
+}
+
+#deconvolution as described by Ripley 1991
+deconvolveRipley = function(Y, positions, nrep = 1000, every = 1, gamma = 2, dist, q, init, seed = 100, mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01){
+  set.seed(seed)
+  d = ncol(Y)
+  n0 = nrow(Y)
+  positions = as.matrix(positions)
+  Y = as.matrix(Y)
+  colnames(positions) = c("x", "y")
+
+  Y = Y[rep(seq_len(n0), 9), ] #rbind 9 times
+  positions = positions[rep(seq_len(n0), 9), ] #rbind 9 times
+  shift = rbind(expand.grid(c(1/3, -1/3, 0), c(1/3,-1/3,0)))
+  shift_long = shift[rep(seq_len(9), each = n0), ]
+  positions[,"x"] = positions[,"x"] + shift_long[,"Var1"]
+  positions[,"y"] = positions[,"y"] + shift_long[,"Var2"]
+  n = nrow(Y)
+  df_j = sapply(1:n, function(x){which((abs(positions[,1] -positions[x,1]) + abs(positions[,2] - positions[x,2])) <= dist &  
+                                         (abs(positions[,1] -positions[x,1]) + abs(positions[,2] - positions[x,2])) > 0)-1})
+  
+  iterate2(Y = Y, df_j = df_j, nrep = nrep, n = n, n0 = n0, d = d, gamma = gamma, q = q, init = init, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
 }
 
 ###below are all code that represent previous implementations of the methods
@@ -140,30 +162,7 @@ run_mcmc_multi = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,grep
               ))
 }
 
-#deconvolution as described by Ripley 1991
-deconvolveRipley = function(Y, positions, nrep = 1000, every = 1, gamma = 2, dist, q, init, seed = 100, mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01){
-  set.seed(seed)
-  d = ncol(Y)
-  n0 = nrow(Y)
-  positions = as.matrix(positions)
-  Y = as.matrix(Y)
-  colnames(positions) = c("x", "y")
-  # j0 = rep(1:n0, 9)
-  
-  Y = Y[rep(seq_len(n0), 9), ] #rbind 9 times
-  positions = positions[rep(seq_len(n0), 9), ] #rbind 9 times
-  shift = rbind(expand.grid(c(1/3, -1/3, 0), c(1/3,-1/3,0)))
-  shift_long = shift[rep(seq_len(9), each = n0), ]
-  positions[,"x"] = positions[,"x"] + shift_long[,"Var1"]
-  positions[,"y"] = positions[,"y"] + shift_long[,"Var2"]
-  n = nrow(Y)
-  df_j = sapply(1:n, function(x){which((abs(positions[,1] -positions[x,1]) + abs(positions[,2] - positions[x,2])) <= dist &  
-                                         (abs(positions[,1] -positions[x,1]) + abs(positions[,2] - positions[x,2])) > 0)-1})
-  
-  iterate2(Y = Y, df_j = df_j, nrep = nrep, n = n, n0 = n0, d = d, gamma = gamma, q = q, init = init, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
-}
-
-#non-rcpp deconvolution for square lattice
+#non-rcpp deconvolution for square lattice 
 run_mcmc_squaredeconv = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,grep("Y",colnames(df))]), lambda0 = diag(0.01, nrow = d), alpha = 1, beta = 0.01, gamma = 2, seed = 100, prev){
   set.seed(seed)
   n = nrow(df)
@@ -332,7 +331,7 @@ run_mcmc_hexdeconv = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,
       n_i = sum(index_1[k,])
       mean_i = solve(lambda0 + n_i * lambda_prev) %*% (lambda0 %*% mu0 + lambda_prev %*% colSums(df_sim_Y[[i-1]][index_1[k,],, drop = F]))
       var_i = solve(lambda0 + n_i * lambda_prev)
-      mu_i[k,] = mvtnorm::rmvnorm(1, mean = mean_i, sigma = var_i)
+      mu_i[k,] = mvnfast::rmvn(1, mu = mean_i, sigma = var_i)
     }
     df_sim_mu[i,] = as.vector(t(mu_i))
     
@@ -349,11 +348,11 @@ run_mcmc_hexdeconv = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,
     test = rep(NA, n0) #testing purpose only!!
     for (j in 1:n0){
       Y_j_prev = df_sim_Y[[i-1]][four_map[[j]],]
-      error = scale(rmvnorm(n = 7, rep(0, d), sigma = diag(d)/100), scale = F)
+      error = scale(mvnfast::rmvn(n = 7, rep(0, d), sigma = diag(d)/100), scale = F)
       Y_j_new = Y_j_prev + error
       mu_i_four = mu_i[df_sim_z[i-1,j + 0:6 * n0],]
-      p_prev = prod(sapply(1:7, function(x){mvtnorm::dmvnorm(Y_j_prev[x,], mu_i_four[x,], sigma_i)}))
-      p_new = prod(sapply(1:7, function(x){mvtnorm::dmvnorm(Y_j_new[x,], mu_i_four[x,], sigma_i)}))
+      p_prev = prod(sapply(1:7, function(x){mvnfast::dmvn(Y_j_prev[x,], mu_i_four[x,], sigma_i)}))
+      p_new = prod(sapply(1:7, function(x){mvnfast::dmvn(Y_j_new[x,], mu_i_four[x,], sigma_i)}))
       #probY_j = min(p_new/p_prev, 1)
       probY_j = min(p_new/p_prev * exp(-0.1*(sum(diag(crossprod(df_sim_Y[[1]][rep(j,7),] - Y_j_new))) -
                                                sum(diag(crossprod(df_sim_Y[[1]][rep(j,7),] - Y_j_prev))))), 1)
@@ -372,8 +371,8 @@ run_mcmc_hexdeconv = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,
       qlessk = setdiff(1:q, z_j_prev)
       z_j_new = sample(qlessk, 1)
       j_vector = df2_j[[j2]]
-      h_z_prev = gamma/length(j_vector)* 2*sum(((z_j_prev == df_sim_z[i, j_vector])-0.5)) + mvtnorm::dmvnorm(df_sim_Y[[i]][j2,], mean = mu_i[z_j_prev,], sigma = sigma_i, log = T)
-      h_z_new = gamma/length(j_vector) * 2*sum(((z_j_new  == df_sim_z[i, j_vector])-0.5)) + mvtnorm::dmvnorm(df_sim_Y[[i]][j2,], mean = mu_i[z_j_new, ], sigma = sigma_i, log = T)
+      h_z_prev = gamma/length(j_vector)* 2*sum(((z_j_prev == df_sim_z[i, j_vector])-0.5)) + mvnfast::dmvn(df_sim_Y[[i]][j2,], mu = mu_i[z_j_prev,], sigma = sigma_i, log = T)
+      h_z_new = gamma/length(j_vector) * 2*sum(((z_j_new  == df_sim_z[i, j_vector])-0.5)) + mvnfast::dmvn(df_sim_Y[[i]][j2,], mu = mu_i[z_j_new, ], sigma = sigma_i, log = T)
       prob_j = min(exp(h_z_new - h_z_prev),1)
       df_sim_z[i, j2] = sample(x = c(z_j_prev, z_j_new), size = 1, prob = c(1-prob_j, prob_j))
     }
