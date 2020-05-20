@@ -39,7 +39,7 @@ sce <- runTSNE(sce, dimred="PCA")
 
 #choose input
 km = sapply(1:10,function(k){kmeans(PCs$components, centers = k)$cluster})
-positions = cbind(sce$imagerow, sce$imagecol) #save positions as df
+positions = cbind(sce$imagecol, sce$imagerow) #save positions as df
 colnames(positions) = c("x", "y") 
 xdist = coef(lm(sce$imagecol~sce$col))[2] #x distance between neighbors
 ydist = coef(lm(sce$imagerow~sce$row))[2] #y distance between neighbors
@@ -53,7 +53,7 @@ clust1alpha = pmax(colMeans(clust1$z[9000:10000,]==1),
                    colMeans(clust1$z[9000:10000,]==5),
                    colMeans(clust1$z[9000:10000,]==6),
                    colMeans(clust1$z[9000:10000,]==7))
-clust_out = ggplot(data.frame(positions), aes(y, -x)) +
+clust_out = ggplot(data.frame(positions), aes(x, -y)) +
   geom_text(aes(color = factor(clust1col, levels = c(5,1,2,7,4,6,3))), alpha = clust1alpha,
             size = 6, label = "\u2B22", family = "Lucida Sans Unicode") +
   geom_text(color = "black", label = "\u2B21", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
@@ -63,7 +63,7 @@ clust_out = ggplot(data.frame(positions), aes(y, -x)) +
   scale_alpha_continuous(limits = c(0,1), breaks = seq(0.1,1,0.1), range = c(0,1))+
   theme_void() + coord_fixed()
 
-truth_out = ggplot(data.frame(positions), aes(y, -x)) +
+truth_out = ggplot(data.frame(positions), aes(x, -y)) +
   geom_text(aes(color = factor(sce$layer_guess_reordered)),
             size = 6, label = "\u2B22", family = "Lucida Sans Unicode") +
   geom_text(color = "black", label = "\u2B21", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
@@ -73,7 +73,7 @@ truth_out = ggplot(data.frame(positions), aes(y, -x)) +
   scale_alpha_continuous(limits = c(0,1), breaks = seq(0.1,1,0.1), range = c(0,1))+
   theme_void() + coord_fixed()
 
-maynardclust_out = ggplot(data.frame(positions), aes(y, -x)) +
+maynardclust_out = ggplot(data.frame(positions), aes(x, -y)) +
   geom_text(aes(color = factor(sce$HVG_PCA_spatial, levels = c(5,1,3,2,7,8,6,4))),
             size = 6, label = "\u2B22", family = "Lucida Sans Unicode") +
   geom_text(color = "black", label = "\u2B21", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
@@ -91,3 +91,10 @@ test = data.frame(x = rep(1:7, each = 100), y = NA)
 mclust::adjustedRandIndex(sce$layer_guess, clust1col)
 mclust::adjustedRandIndex(sce$layer_guess, sce$HVG_PCA_spatial)
 mclust::adjustedRandIndex(sce$layer_guess, km[,7])
+
+#Spatial deconvolution
+ptm = proc.time()
+deconv1 = deconvolve(Y = PCs$components, positions = positions, nrep = 300, gamma = 2, xdist = xdist, ydist = ydist, init = clust1col, q = 7)
+proc.time()-ptm #147.75 seconds, ~25x faster than non-Rcpp code
+deconv1col = apply(deconv1$z[100:300,], 2, Mode)
+
