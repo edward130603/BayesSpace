@@ -1,13 +1,15 @@
 Rcpp::sourceCpp('script.cpp')
 
-#cluster() is used to perform spatial clustering
-#cluster() calls iterate() which is written in Rcpp
-#other functions are not finalized
 
+#find the mode, used for finding the most frequent cluster for each z
 Mode <- function(x) {
   ux <- unique(x)
   ux[which.max(tabulate(match(x, ux)))]
 }
+
+
+#cluster() is used to perform spatial clustering
+#cluster() calls iterate() which is written in Rcpp
 
 #Y is a matrix or dataframe with 1 row per spot and 1 column per outcome (e.g. principal component)
 #positions is a matrix or dataframe with two columns (x, y) that gives the spatial coordinates of the spot
@@ -34,8 +36,9 @@ cluster = function(Y, positions, nrep = 1000, gamma = 2, dist, q, init = rep(1, 
   iterate(Y = as.matrix(Y), df_j = df_j, nrep = nrep, n = n, d = d, gamma = gamma, q = q, init = init, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
 }
 
-#deconvolve (IN PROGRESS)
-
+#deconvolve
+#deconvolve calls iterate_deconv(), written in Rcpp
+#inputs are the same as cluster() except you have to specify xdist and ydist instead of total dist...(maybe would be better to change cluster() to match this)
 deconvolve = function(Y, positions, nrep = 1000, every = 1, gamma = 2, xdist, ydist, q, init, seed = 100, mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01){
   set.seed(seed)
   
@@ -45,7 +48,7 @@ deconvolve = function(Y, positions, nrep = 1000, every = 1, gamma = 2, xdist, yd
   Y = as.matrix(Y)
   colnames(positions) = c("x", "y")
 
-  init = rep(init, 7)
+  init1 = rep(init, 7)
   Y2 = Y[rep(seq_len(n0), 7), ] #rbind 7 times
   positions2 = positions[rep(seq_len(n0), 7), ] #rbind 7 times
   shift = rbind(expand.grid(c(1/3, -1/3), c(1/3,-1/3)), expand.grid(c(2/3, -2/3,0), 0))
@@ -59,7 +62,7 @@ deconvolve = function(Y, positions, nrep = 1000, every = 1, gamma = 2, xdist, yd
   df_j = sapply(1:n, function(x){which((abs(positions2[,1] -positions2[x,1]) + abs(positions2[,2] - positions2[x,2])) <= dist &  #L1 distance
                                          (abs(positions2[,1] -positions2[x,1]) + abs(positions2[,2] - positions2[x,2])) > 0)-1})
   print("Fitting model...")
-  iterate_deconv(Y = Y2, df_j = df_j, nrep = nrep, n = n, n0 = n0, d = d, gamma = gamma, q = q, init = init, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
+  iterate_deconv(Y = Y2, df_j = df_j, nrep = nrep, n = n, n0 = n0, d = d, gamma = gamma, q = q, init = init1, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
 }
 
 #deconvolution as described by Ripley 1991
