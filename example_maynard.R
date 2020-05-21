@@ -44,6 +44,7 @@ colnames(positions) = c("x", "y")
 xdist = coef(lm(sce$imagecol~sce$col))[2] #x distance between neighbors
 ydist = coef(lm(sce$imagerow~sce$row))[2] #y distance between neighbors
 dist = xdist + ydist + 0.2
+#Normal model
 clust1 = cluster(Y= PCs$components, positions = as.matrix(positions), q = 7, init = km[,7], nrep = 10000, gamma = 1.5, dist = dist)
 clust1col = apply(clust1$z[9000:10000,], 2, Mode)
 clust1alpha = pmax(colMeans(clust1$z[9000:10000,]==1),
@@ -86,11 +87,32 @@ maynardclust_out = ggplot(data.frame(positions), aes(x, -y)) +
 truth_out + clust_out #Truth vs spatial clustering
 truth_out + maynardclust_out #Truth vs best clustering implementation from Maynard
 
-test = data.frame(x = rep(1:7, each = 100), y = NA)
+#t model
+clust2 = cluster(Y= PCs$components, positions = as.matrix(positions), model = "t", q = 7, init = km[,7], nrep = 10000, gamma = 1.5, dist = dist)
+clust2col = apply(clust2$z[9000:10000,], 2, Mode)
+clust2alpha = pmax(colMeans(clust2$z[9000:10000,]==1),
+                   colMeans(clust2$z[9000:10000,]==2),
+                   colMeans(clust2$z[9000:10000,]==3),
+                   colMeans(clust2$z[9000:10000,]==4),
+                   colMeans(clust2$z[9000:10000,]==5),
+                   colMeans(clust2$z[9000:10000,]==6),
+                   colMeans(clust2$z[9000:10000,]==7))
+clust2_out = ggplot(data.frame(positions), aes(x, -y)) +
+  geom_text(aes(color = factor(clust2col, levels = c(5,1,2,7,4,6,3))), alpha = clust2alpha,
+            size = 6, label = "\u2B22", family = "Lucida Sans Unicode") +
+  geom_text(color = "black", label = "\u2B21", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
+  labs(color = "Cluster", alpha = "Proportion", x = NULL, y = NULL) +
+  guides(alpha = F, col = F) + 
+  scale_color_viridis_d(option = "A") +
+  scale_alpha_continuous(limits = c(0,1), breaks = seq(0.1,1,0.1), range = c(0,1))+
+  theme_void() + coord_fixed()
+
 #calculate ARI
 mclust::adjustedRandIndex(sce$layer_guess, clust1col)
+mclust::adjustedRandIndex(sce$layer_guess, clust2col)
 mclust::adjustedRandIndex(sce$layer_guess, sce$HVG_PCA_spatial)
 mclust::adjustedRandIndex(sce$layer_guess, km[,7])
+mclust::adjustedRandIndex(clust2col, clust1col)
 
 #Spatial deconvolution
 ptm = proc.time()

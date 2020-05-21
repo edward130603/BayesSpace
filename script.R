@@ -21,7 +21,7 @@ Mode <- function(x) {
 #lambda0 is prior precision hyperparam for mu
 #alpha,beta are additional hyperparameters Wishart distributed precision lambda
 
-cluster = function(Y, positions, nrep = 1000, gamma = 2, dist, q, init = rep(1, nrow(Y)), seed = 100, mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01){
+cluster = function(Y, positions, nrep = 1000, gamma = 2, dist, q, init = rep(1, nrow(Y)), model = "normal", seed = 100, mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01){
 
   set.seed(seed)
   positions = as.matrix(positions)
@@ -31,9 +31,15 @@ cluster = function(Y, positions, nrep = 1000, gamma = 2, dist, q, init = rep(1, 
     return(list(z = matrix(rep(1, n), nrow =1)))
   }
   colnames(positions) = c("x", "y")
+  print("Calculating neighbors...")
   df_j = sapply(1:n, function(x){which((abs(positions[,1] -positions[x,1]) + abs(positions[,2] - positions[x,2])) <= dist &  #L1 distance
                                       (abs(positions[,1] -positions[x,1]) + abs(positions[,2] - positions[x,2])) > 0)-1})
-  iterate(Y = as.matrix(Y), df_j = df_j, nrep = nrep, n = n, d = d, gamma = gamma, q = q, init = init, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
+  print("Fitting model...")
+  if (model == "normal"){
+    iterate(Y = as.matrix(Y), df_j = df_j, nrep = nrep, n = n, d = d, gamma = gamma, q = q, init = init, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
+  } else if (model == "t"){
+    iterate_t(Y = as.matrix(Y), df_j = df_j, nrep = nrep, n = n, d = d, gamma = gamma, q = q, init = init, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
+  }
 }
 
 #deconvolve
