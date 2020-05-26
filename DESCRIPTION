@@ -4,6 +4,10 @@ Date: 2020-05-26
 Title: "TODO name package"
 Authors@R: c(
     person("Edward", "Zhao", role=c("cre", "aut"), email="ezhao@fredhutch.org"))
+Author:
+    Edward Zhao [aut, cre]
+Maintainer:
+    Edward Zhao <ezhao@fredhutch.org>
 Imports:
     SingleCellExperiment,
     Rcpp (>= 1.0.4.6)
@@ -16,3 +20,4 @@ LinkingTo:
     RcppDist
 NeedsCompilation: yes
 SystemRequirements: C++11
+Encoding: UTF-8
