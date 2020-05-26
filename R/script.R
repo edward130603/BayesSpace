@@ -1,6 +1,3 @@
-Rcpp::sourceCpp('script.cpp')
-
-
 #find the mode, used for finding the most frequent cluster for each z
 Mode <- function(x) {
   ux <- unique(x)
