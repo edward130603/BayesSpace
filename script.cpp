@@ -259,11 +259,11 @@ List iterate_t (mat Y, List df_j, int nrep, int n, int d, double gamma, int q, v
       double h_z_prev;
       double h_z_new;
       if (j_vector.size() != 0){
-        h_z_prev = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_prev)) + dmvt(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i, 4, true)[0];
-        h_z_new  = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_new )) + dmvt(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i, 4, true)[0];
+        h_z_prev = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_prev)) + dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i/w[j], true)[0];
+        h_z_new  = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_new )) + dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i/w[j], true)[0];
       } else {
-        h_z_prev = dmvt(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i, 4, true)[0];
-        h_z_new  = dmvt(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i, 4, true)[0];
+        h_z_prev = dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i/w[j], true)[0];
+        h_z_new  = dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i/w[j], true)[0];
       }
       double prob_j = exp(h_z_new-h_z_prev);
       if (prob_j > 1){
@@ -351,21 +351,23 @@ List iterate_t_vvv (mat Y, List df_j, int nrep, int n, int d, double gamma, int 
     for (int j = 0; j < n; j++){
       int z_j_prev = df_sim_z(i,j);
       mat lambda_i = lambda_list[z_j_prev-1];
+      mat sigma_i = sigma_list[z_j_prev-1];
       w_beta = as_scalar(2/((Y.row(j)-mu_i_long.row(j))* lambda_i * (Y.row(j)-mu_i_long.row(j)).t() + 4)); //scale parameter
       w[j] = R::rgamma(w_alpha, w_beta); //sample from posterior for w
       
       IntegerVector qlessk = qvec[qvec != z_j_prev];
       int z_j_new = sample(qlessk, 1)[0];
+      mat sigma_i_new = sigma_list[z_j_new-1];
       uvec j_vector = df_j[j];
       uvec i_vector(1); i_vector.fill(i);
       double h_z_prev;
       double h_z_new;
       if (j_vector.size() != 0){
-        h_z_prev = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_prev)) + dmvt(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_list[z_j_prev-1], 4, true)[0];
-        h_z_new  = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_new )) + dmvt(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_list[z_j_new-1], 4, true)[0];
+        h_z_prev = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_prev)) + dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i/w[j], true)[0];
+        h_z_new  = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_new )) + dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i_new/w[j], true)[0];
       } else {
-        h_z_prev = dmvt(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_list[z_j_prev-1], 4, true)[0];
-        h_z_new  = dmvt(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_list[z_j_new-1], 4, true)[0];
+        h_z_prev = dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i/w[j], true)[0];
+        h_z_new  = dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i_new/w[j], true)[0];
       }
       double prob_j = exp(h_z_new-h_z_prev);
       if (prob_j > 1){

@@ -51,23 +51,25 @@ cluster = function(Y, positions, dist, gamma = 2, q, init = rep(1, nrow(Y)), mod
   message("Fitting model...")
   if (model == "normal"){
     if (precision == "equal"){
-      iterate(Y = as.matrix(Y), df_j = df_j, nrep = nrep, n = n, d = d, gamma = gamma, q = q, init = init, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
+      out = iterate(Y = as.matrix(Y), df_j = df_j, nrep = nrep, n = n, d = d, gamma = gamma, q = q, init = init, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
     } else if (precision == "variable"){
-      iterate_vvv(Y = as.matrix(Y), df_j = df_j, nrep = nrep, n = n, d = d, gamma = gamma, q = q, init = init, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
+      out = iterate_vvv(Y = as.matrix(Y), df_j = df_j, nrep = nrep, n = n, d = d, gamma = gamma, q = q, init = init, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
     } else {
       stop("precision should be either 'equal' or 'variable'")
     }
   } else if (model == "t"){
     if (precision == "equal"){
-      iterate_t(Y = as.matrix(Y), df_j = df_j, nrep = nrep, n = n, d = d, gamma = gamma, q = q, init = init, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
+      out = iterate_t(Y = as.matrix(Y), df_j = df_j, nrep = nrep, n = n, d = d, gamma = gamma, q = q, init = init, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
     } else if (precision == "variable"){
-      iterate_t_vvv(Y = as.matrix(Y), df_j = df_j, nrep = nrep, n = n, d = d, gamma = gamma, q = q, init = init, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
+      out = iterate_t_vvv(Y = as.matrix(Y), df_j = df_j, nrep = nrep, n = n, d = d, gamma = gamma, q = q, init = init, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
     } else {
       stop("precision should be either 'equal' or 'variable'")
     }
   } else {
     stop("model should be either 'normal' or 't'")
   }
+  out$labels = apply(out$z[max(nrep-1000, 2):nrep,], 2, Mode)
+  out
 }
 
 #deconvolve
