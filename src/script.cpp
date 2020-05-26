@@ -1,21 +1,12 @@
+// [[Rcpp::plugins("cpp11")]]
+// [[Rcpp::depends(RcppArmadillo, RcppDist)]]
 #include <RcppDist.h>
+#include <RcppArmadillo.h>
 using namespace Rcpp;
 using namespace arma;
 
-// This is a simple example of exporting a C++ function to R. You can
-// source this function into an R session using the Rcpp::sourceCpp 
-// function (or via the Source button on the editor toolbar). Learn
-// more about Rcpp at:
-//
-//   http://www.rcpp.org/
-//   http://adv-r.had.co.nz/Rcpp.html
-//   http://gallery.rcpp.org/
-//
-
-// [[Rcpp::plugins("cpp11")]]
-// [[Rcpp::depends(RcppArmadillo, RcppDist)]]
 // [[Rcpp::export]]
-List iterate(mat Y, List df_j, int nrep, int n, int d, double gamma, int q, vec init, NumericVector mu0, mat lambda0, double alpha, double beta){
+List iterate(arma::mat Y, List df_j, int nrep, int n, int d, double gamma, int q, arma::vec init, NumericVector mu0, arma::mat lambda0, double alpha, double beta){
 
   //Initalize matrices storing iterations
   mat df_sim_z(nrep, n, fill::zeros);
@@ -98,7 +89,7 @@ List iterate(mat Y, List df_j, int nrep, int n, int d, double gamma, int q, vec 
 }
 
 // [[Rcpp::export]]
-List iterate_vvv(mat Y, List df_j, int nrep, int n, int d, double gamma, int q, vec init, NumericVector mu0, mat lambda0, double alpha, double beta){
+List iterate_vvv(arma::mat Y, List df_j, int nrep, int n, int d, double gamma, int q, arma::vec init, NumericVector mu0, arma::mat lambda0, double alpha, double beta){
   
   //Initalize matrices storing iterations
   mat df_sim_z(nrep, n, fill::zeros);
@@ -193,7 +184,7 @@ List iterate_vvv(mat Y, List df_j, int nrep, int n, int d, double gamma, int q, 
 
 
 // [[Rcpp::export]]
-List iterate_t (mat Y, List df_j, int nrep, int n, int d, double gamma, int q, vec init, NumericVector mu0, mat lambda0, double alpha, double beta){
+List iterate_t (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, int q, arma::vec init, NumericVector mu0, arma::mat lambda0, double alpha, double beta){
 
   //Initalize matrices storing iterations
   mat df_sim_z(nrep, n, fill::zeros);
@@ -281,7 +272,7 @@ List iterate_t (mat Y, List df_j, int nrep, int n, int d, double gamma, int q, v
 }
 
 // [[Rcpp::export]]
-List iterate_t_vvv (mat Y, List df_j, int nrep, int n, int d, double gamma, int q, vec init, NumericVector mu0, mat lambda0, double alpha, double beta){
+List iterate_t_vvv (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, int q, arma::vec init, NumericVector mu0, arma::mat lambda0, double alpha, double beta){
   
   //Initalize matrices storing iterations
   mat df_sim_z(nrep, n, fill::zeros);
@@ -385,7 +376,7 @@ List iterate_t_vvv (mat Y, List df_j, int nrep, int n, int d, double gamma, int 
 }
 
 // [[Rcpp::export]]
-List iterate_deconv(mat Y, List df_j, int nrep, int n, int n0, int d, double gamma, int q, vec init, NumericVector mu0, mat lambda0, double alpha, double beta){
+List iterate_deconv(arma::mat Y, List df_j, int nrep, int n, int n0, int d, double gamma, int q, arma::vec init, NumericVector mu0, arma::mat lambda0, double alpha, double beta){
 
   //Initalize matrices storing iterations
   mat Y0 = Y.rows(0, n0-1);
@@ -504,7 +495,7 @@ List iterate_deconv(mat Y, List df_j, int nrep, int n, int n0, int d, double gam
 }
 
 // [[Rcpp::export]]
-List iterate2(mat Y, List df_j, int nrep, int n, int n0, int d, double gamma, int q, vec init, NumericVector mu0, mat lambda0, double alpha, double beta){
+List iterate2(arma::mat Y, List df_j, int nrep, int n, int n0, int d, double gamma, int q, arma::vec init, NumericVector mu0, arma::mat lambda0, double alpha, double beta){
 
   //Initalize matrices storing iterations
   mat Y0 = Y.rows(0, n0-1);

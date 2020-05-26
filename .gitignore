@@ -43,3 +43,11 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+*.o
+*.so
+*.dll
+
+.Rbuildignore
+.RDataTmp
+*.Rproj
