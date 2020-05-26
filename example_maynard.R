@@ -4,7 +4,6 @@ library(tidyverse)
 library(spatialLIBD)
 library(scater)
 library(scran)
-library(mvtnorm)
 library(extrafont)
 library(patchwork)
 
@@ -54,8 +53,8 @@ clust1alpha = pmax(colMeans(clust1$z[9000:10000,]==1),
                    colMeans(clust1$z[9000:10000,]==5),
                    colMeans(clust1$z[9000:10000,]==6),
                    colMeans(clust1$z[9000:10000,]==7))
-clust_out = ggplot(data.frame(positions), aes(x, -y)) +
-  geom_text(aes(color = factor(clust1col, levels = c(5,1,2,7,4,6,3))), alpha = clust1alpha,
+clust1_out = ggplot(data.frame(positions), aes(x, -y)) +
+  geom_text(aes(color = factor(clust1col, levels = c(7,1,4,3,6,2,5))), alpha = clust1alpha,
             size = 6, label = "\u2B22", family = "Lucida Sans Unicode") +
   geom_text(color = "black", label = "\u2B21", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
   labs(color = "Cluster", alpha = "Proportion", x = NULL, y = NULL) +
@@ -70,6 +69,16 @@ truth_out = ggplot(data.frame(positions), aes(x, -y)) +
   geom_text(color = "black", label = "\u2B21", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
   labs(color = "Cluster", alpha = "Proportion", x = NULL, y = NULL) +
   guides(alpha = F) + 
+  scale_color_viridis_d(option = "A") +
+  scale_alpha_continuous(limits = c(0,1), breaks = seq(0.1,1,0.1), range = c(0,1))+
+  theme_void() + coord_fixed()
+
+km_out = ggplot(data.frame(positions), aes(x, -y)) +
+  geom_text(aes(color = factor(km[,7], c(7,1,4,3,6,2,5))),
+            size = 6, label = "\u2B22", family = "Lucida Sans Unicode") +
+  geom_text(color = "black", label = "\u2B21", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
+  labs(color = "Cluster", alpha = "Proportion", x = NULL, y = NULL) +
+  guides(alpha = F, col = F) + 
   scale_color_viridis_d(option = "A") +
   scale_alpha_continuous(limits = c(0,1), breaks = seq(0.1,1,0.1), range = c(0,1))+
   theme_void() + coord_fixed()
@@ -98,7 +107,7 @@ clust2alpha = pmax(colMeans(clust2$z[9000:10000,]==1),
                    colMeans(clust2$z[9000:10000,]==6),
                    colMeans(clust2$z[9000:10000,]==7))
 clust2_out = ggplot(data.frame(positions), aes(x, -y)) +
-  geom_text(aes(color = factor(clust2col, levels = c(5,1,2,7,4,6,3))), alpha = clust2alpha,
+  geom_text(aes(color = factor(clust2col, levels = c(7,1,4,3,6,2,5))), alpha = clust2alpha,
             size = 6, label = "\u2B22", family = "Lucida Sans Unicode") +
   geom_text(color = "black", label = "\u2B21", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
   labs(color = "Cluster", alpha = "Proportion", x = NULL, y = NULL) +
@@ -118,7 +127,7 @@ clust3alpha = pmax(colMeans(clust3$z[9000:10000,]==1),
                    colMeans(clust3$z[9000:10000,]==6),
                    colMeans(clust3$z[9000:10000,]==7))
 clust3_out = ggplot(data.frame(positions), aes(x, -y)) +
-  geom_text(aes(color = factor(clust3col, levels = c(5,1,2,7,4,6,3))), alpha = clust3alpha,
+  geom_text(aes(color = factor(clust3col, levels = c(7,1,4,3,6,2,5))), alpha = clust3alpha,
             size = 6, label = "\u2B22", family = "Lucida Sans Unicode") +
   geom_text(color = "black", label = "\u2B21", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
   labs(color = "Cluster", alpha = "Proportion", x = NULL, y = NULL) +
@@ -138,7 +147,7 @@ clust4alpha = pmax(colMeans(clust4$z[9000:10000,]==1),
                    colMeans(clust4$z[9000:10000,]==6),
                    colMeans(clust4$z[9000:10000,]==7))
 clust4_out = ggplot(data.frame(positions), aes(x, -y)) +
-  geom_text(aes(color = factor(clust4col, levels = c(5,1,2,7,4,6,3))), alpha = clust4alpha,
+  geom_text(aes(color = factor(clust4col, levels = c(7,1,4,3,6,2,5))), alpha = clust4alpha,
             size = 6, label = "\u2B22", family = "Lucida Sans Unicode") +
   geom_text(color = "black", label = "\u2B21", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
   labs(color = "Cluster", alpha = "Proportion", x = NULL, y = NULL) +
@@ -146,6 +155,8 @@ clust4_out = ggplot(data.frame(positions), aes(x, -y)) +
   scale_color_viridis_d(option = "A") +
   scale_alpha_continuous(limits = c(0,1), breaks = seq(0.1,1,0.1), range = c(0,1))+
   theme_void() + coord_fixed()
+
+((truth_out | maynardclust_out | km_out) + plot_layout(guides = "collect"))/(clust1_out | clust2_out|clust3_out|clust4_out) 
 
 #calculate ARI
 mclust::adjustedRandIndex(sce$layer_guess, clust1col)
