@@ -5,12 +5,13 @@
 #' @param Y A matrix or dataframe with 1 row per spot and 1 column per outcome (e.g. principal component)
 #' @param positions A matrix or dataframe with two columns (x, y) that gives the spatial coordinates of the spot
 #' @param dist The L1 distance between neighboring spots
+#' @param gamma Smoothing parameter. Values in range of 1-3 seem to work well generally
+#' @param q The number of clusters
+#' @param init Initial cluster assignments (z's). Must be a vector of length equal to the number of rows of Y and positions
 #' @param model Error model ("normal" or "t")
 #' @param precision Covariance structure ("equal" or "variable" for EEE and VVV covariance models, respectively)
-#' @param q The number of clusters
 #' @param nrep The maximum number of mcmc iterations
-#' @param gamma Smoothing parameter. Values in range of 1-3 seem to work well generally
-#' @param init Initial cluster assignments (z's). Must be a vector of length equal to the number of rows of Y and positions
+#' @param seed Random state seed
 #' @param mu0 Prior mean hyperparameter for mu
 #' @param lambda0 Prior precision hyperparam for mu
 #' @param alpha Hyperparameter for Wishart distributed precision lambda
