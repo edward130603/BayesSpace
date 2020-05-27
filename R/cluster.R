@@ -1,19 +1,22 @@
-#cluster() is used to perform spatial clustering
-#cluster() calls iterate() which is written in Rcpp
-
-#Y is a matrix or dataframe with 1 row per spot and 1 column per outcome (e.g. principal component)
-#positions is a matrix or dataframe with two columns (x, y) that gives the spatial coordinates of the spot
-#dist is the L1 distance between neighboring spots
-#model is either "normal" or "t"
-#precision is either "equal" or "variable" for EEE and VVV covariance models respectively
-#q is the number of clusters
-#nrep is the number of mcmc iterations
-#gamma is the smoothing parameter, values in range of 1-3 seem to work well generally
-#init is the initial states (z's), vector of length equal to the number of rows of Y and positions
-#mu0 is prior mean hyperparam for mu
-#lambda0 is prior precision hyperparam for mu
-#alpha,beta are additional hyperparameters Wishart distributed precision lambda
-
+#' Spatial clustering
+#'
+#' Backend calls iterate() which is written in Rcpp
+#' 
+#' @param Y A matrix or dataframe with 1 row per spot and 1 column per outcome (e.g. principal component)
+#' @param positions A matrix or dataframe with two columns (x, y) that gives the spatial coordinates of the spot
+#' @param dist The L1 distance between neighboring spots
+#' @param model Error model ("normal" or "t")
+#' @param precision Covariance structure ("equal" or "variable" for EEE and VVV covariance models, respectively)
+#' @param q The number of clusters
+#' @param nrep The maximum number of mcmc iterations
+#' @param gamma Smoothing parameter. Values in range of 1-3 seem to work well generally
+#' @param init Initial cluster assignments (z's). Must be a vector of length equal to the number of rows of Y and positions
+#' @param mu0 Prior mean hyperparameter for mu
+#' @param lambda0 Prior precision hyperparam for mu
+#' @param alpha Hyperparameter for Wishart distributed precision lambda
+#' @param beta Hyperparameter for Wishart distributed precision lambda
+#' 
+#' @return List of parameter values (`z`, `mu`, `lambda`) and model log-likelihoods (`plogLik`) at each MCMC iteration, along with final cluster labels (`labels`)
 cluster = function(Y, positions, dist, gamma = 2, q, init = rep(1, nrow(Y)), model = "normal", precision = "equal", nrep = 1000, seed = 100, mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01){
   
   set.seed(seed)
