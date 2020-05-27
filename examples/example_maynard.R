@@ -17,6 +17,7 @@ sce_image_clus(
   ... = ' DLPFC Human Brain Layers\nMade with github.com/LieberInstitute/spatialLIBD'
 )
 
+sce <- fetch_data(type = 'sce')
 sce = sce[,sce$sample_name == "151673"]
 
 #Dim reduction and clustering
