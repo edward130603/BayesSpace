@@ -13,7 +13,9 @@ using namespace arma;
 //
 
 // [[Rcpp::plugins("cpp11")]]
-// [[Rcpp::depends(RcppArmadillo, RcppDist)]]
+// [[Rcpp::depends(RcppArmadillo, RcppDist, RcppProgress)]]
+#include <progress.hpp>
+#include <progress_bar.hpp>
 // [[Rcpp::export]]
 List iterate(mat Y, List df_j, int nrep, int n, int d, double gamma, int q, vec init, NumericVector mu0, mat lambda0, double alpha, double beta){
 
@@ -385,7 +387,7 @@ List iterate_t_vvv (mat Y, List df_j, int nrep, int n, int d, double gamma, int 
 }
 
 // [[Rcpp::export]]
-List iterate_deconv(mat Y, List df_j, int nrep, int n, int n0, int d, double gamma, int q, vec init, NumericVector mu0, mat lambda0, double alpha, double beta){
+List iterate_deconv(mat Y, List df_j, int nrep, int n, int n0, int d, double gamma, int q, vec init, bool verbose, NumericVector mu0, mat lambda0, double alpha, double beta){
 
   //Initalize matrices storing iterations
   mat Y0 = Y.rows(0, n0-1);
@@ -412,7 +414,13 @@ List iterate_deconv(mat Y, List df_j, int nrep, int n, int n0, int d, double gam
   vec zero_vec = zeros<vec>(d);
   vec one_vec = ones<vec>(d);
   mat error_var = diagmat(one_vec)/d/d*5; 
+  Progress p(nrep - 1, verbose);
   for (int i = 1; i < nrep; i++){
+    p.increment();
+    if (i % 10 == 0){
+      if (Progress::check_abort())
+        return(List::create(_["z"] = df_sim_z, _["mu"] = df_sim_mu, _["lambda"] = df_sim_lambda, _["Ychange"] = Ychange));
+    }
 
     //Update mu
     mat lambda_prev = df_sim_lambda[i-1];

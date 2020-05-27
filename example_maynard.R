@@ -32,6 +32,7 @@ set.seed(102)
 sce <- denoisePCA(sce, technical=dec, subset.row=top)
 PCs = getDenoisedPCs(sce, technical=dec, subset.row=top, min.rank = 5, max.rank = 50)
 sce <- runTSNE(sce, dimred="PCA")
+#sce2 = sce[,sce$col<25 & sce$row < 20]
 
 
 #Spatial clustering
@@ -170,7 +171,15 @@ mclust::adjustedRandIndex(clust2col, clust1col)
 
 #Spatial deconvolution
 ptm = proc.time()
-deconv1 = deconvolve(Y = PCs$components, positions = positions, nrep = 300, gamma = 2, xdist = xdist, ydist = ydist, init = clust1col, q = 7)
-proc.time()-ptm #147.75 seconds, ~25x faster than non-Rcpp code
-deconv1col = apply(deconv1$z[100:300,], 2, Mode)
-
+deconv1 = deconvolve(Y = PCs$components, positions = positions, nrep = 10000, gamma = 2, xdist = xdist, ydist = ydist, init = clust1col, q = 7)
+proc.time()-ptm #10000 reps: 5082 seconds runtime
+deconv1col = apply(deconv1$z[seq(1000,10000,10),], 2, Mode)
+ggplot(data.frame(deconv1$positions), aes(x, -y)) +
+  geom_text(color = "grey", label = "\u2B22", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
+  geom_text(aes(color = factor(deconv1col, levels = c(7,1,4,3,6,2,5))), alpha = 1,
+            size = 3, label = "\u2B22", family = "Lucida Sans Unicode") +
+  labs(color = "Cluster", alpha = "Proportion", x = NULL, y = NULL) +
+  guides(alpha = F, col = F) + 
+  scale_color_viridis_d(option = "A") +
+  scale_alpha_continuous(limits = c(0,1), breaks = seq(0.1,1,0.1), range = c(0,1))+
+  theme_void() + coord_fixed()
