@@ -24,4 +24,7 @@ NeedsCompilation: yes
 SystemRequirements: C++11
 Encoding: UTF-8
 Suggests: 
-    testthat
+    testthat,
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr

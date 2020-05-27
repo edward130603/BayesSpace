@@ -51,3 +51,4 @@ vignettes/*.pdf
 .Rbuildignore
 .RDataTmp
 *.Rproj
+inst/doc
