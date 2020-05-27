@@ -1,6 +1,23 @@
-#deconvolve
-#deconvolve calls iterate_deconv(), written in Rcpp
-#inputs are the same as cluster() except you have to specify xdist and ydist instead of total dist...(maybe would be better to change cluster() to match this)
+#' Deconvolution of spots into cells
+#' 
+#' Backend calls iterate_deconv(), written in Rcpp.
+#' Inputs are the same as `cluster()` except you have to specify xdist and ydist 
+#' instead of total dist...(maybe would be better to change `cluster()` to match this)
+#' 
+#' @param Y A matrix or dataframe with 1 row per spot and 1 column per outcome (e.g. principal component)
+#' @param positions A matrix or dataframe with two columns (x, y) that gives the spatial coordinates of the spot
+#' @param nrep The maximum number of mcmc iterations
+#' @param every TODO: define
+#' @param gamma Smoothing parameter. Values in range of 1-3 seem to work well generally
+#' @param xdist The distance along x-axis between neighboring spots
+#' @param ydist The distance along y-axis between neighboring spots
+#' @param q The number of clusters
+#' @param init Initial cluster assignments (z's). Must be a vector of length equal to the number of rows of Y and positions
+#' @param seed Random state seed
+#' @param mu0 Prior mean hyperparameter for mu
+#' @param lambda0 Prior precision hyperparam for mu
+#' @param alpha Hyperparameter for Wishart distributed precision lambda
+#' @param beta Hyperparameter for Wishart distributed precision lambda
 deconvolve = function(Y, positions, nrep = 1000, every = 1, gamma = 2, xdist, ydist, q, init, seed = 100, mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01){
   set.seed(seed)
   
