@@ -1,8 +1,7 @@
 library(SingleCellExperiment)
 
 test_that("clustering matches", {
-  # sce <- readRDS("../../data/maynard_151673.rds")
-  sce <- readRDS("../../data/maynard_151673_subset.rds")
+  sce <- readRDS(system.file("testdata/maynard_151673_subset.rds", package="BayesSpace"))
   
   positions = cbind(sce$imagecol, sce$imagerow)
   colnames(positions) = c("x", "y") 
