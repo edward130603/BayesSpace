@@ -1,0 +1,100 @@
+---
+title: "maynard"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{maynard}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+Load necessary libraries
+```{r setup}
+library(BayesSpace)
+library(spatialLIBD)
+library(scran)
+library(ggplot2)
+```
+
+Pick an example sample from the spatialLIBD package
+```{r fetch_data}
+sce <- spatialLIBD::fetch_data(type = 'sce')
+sce <- sce[,sce$sample_name == "151673"]
+```
+
+Apply `scran`'s denoised PCA
+```{r PCA}
+set.seed(101)
+dec <- scran::modelGeneVarByPoisson(sce)
+top <- scran::getTopHVGs(dec, prop=0.1)
+sce <- scran::denoisePCA(sce, technical=dec, subset.row=top)
+PCs <- scran::getDenoisedPCs(sce, technical=dec, subset.row=top, min.rank = 5, max.rank = 50)
+```
+
+Compute other inputs required by function - initial cluster assignments and x/y coordinates
+```{r inputs}
+km <- kmeans(PCs$components, centers = 7)$cluster
+
+positions <- cbind(sce$imagecol, sce$imagerow)  # save positions as df
+colnames(positions) <- c("x", "y") 
+
+xdist <- coef(lm(sce$imagecol~sce$col))[2]  # x distance between neighbors
+ydist <- coef(lm(sce$imagerow~sce$row))[2]  # y distance between neighbors
+dist <- xdist + ydist + 0.2
+```
+
+Cluster the PCs
+```{r cluster_normal_equal}
+set.seed(102)
+clust1 <- cluster(Y= PCs$components, positions = as.matrix(positions), 
+                  q = 7, init = km, nrep = 1000, gamma = 1.5, dist = dist,
+                  model="normal", precision="equal")
+
+# TODO: internalize this to cluster()
+Mode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+clust1col <- apply(clust1$z[900:1000,], 2, Mode)
+
+clust1alpha = pmax(colMeans(clust1$z[900:1000,]==1),
+                   colMeans(clust1$z[900:1000,]==2),
+                   colMeans(clust1$z[900:1000,]==3),
+                   colMeans(clust1$z[900:1000,]==4),
+                   colMeans(clust1$z[900:1000,]==5),
+                   colMeans(clust1$z[900:1000,]==6),
+                   colMeans(clust1$z[900:1000,]==7))
+```
+
+Plot results
+```{r vis_clusters}
+font.family <- "sans"
+truth_out <- ggplot(data.frame(positions), aes(x, -y)) +
+  geom_text(aes(color = factor(sce$layer_guess_reordered)),
+            size = 6, label = "\u2B22", family = font.family) +
+  geom_text(color = "black", label = "\u2B21", size = 6, family = font.family, show.legend = F) +
+  labs(color = "Cluster", alpha = "Proportion", x = NULL, y = NULL) +
+  guides(alpha = F) + 
+  scale_color_viridis_d(option = "A") +
+  scale_alpha_continuous(limits = c(0,1), breaks = seq(0.1,1,0.1), range = c(0,1))+
+  theme_void() + coord_fixed()
+
+clust1_out <- ggplot(data.frame(positions), aes(x, -y)) +
+  geom_text(aes(color = factor(clust1col, levels = c(7,1,4,3,6,2,5))), alpha = clust1alpha,
+            size = 6, label = "\u2B22", family = font.family) +
+  geom_text(color = "black", label = "\u2B21", size = 6, family = font.family, show.legend = F) +
+  labs(color = "Cluster", alpha = "Proportion", x = NULL, y = NULL) +
+  guides(alpha = F, col = F) + 
+  scale_color_viridis_d(option = "A") +
+  scale_alpha_continuous(limits = c(0,1), breaks = seq(0.1,1,0.1), range = c(0,1))+
+  theme_void() + coord_fixed()
+
+library(gridExtra)
+grid.arrange(truth_out, clust1_out)
+```
