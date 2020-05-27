@@ -14,9 +14,11 @@ test_that("clustering matches", {
                  init = colData(sce)$init_km7, 
                  nrep = 1000, 
                  gamma = 1.5, 
-                 dist = metadata(sce)$dist)
+                 dist = metadata(sce)$dist,
+                 model="normal",
+                 precision="equal")
   
   labels <- apply(out$z[900:1000,], 2, Mode)
   
-  expect_true(all(labels == colData(sce)$labels_q7_nrep1000))
+  expect_true(all(labels == colData(sce)$labels_normal_equal))
 })
