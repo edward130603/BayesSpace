@@ -8,6 +8,8 @@ Author:
     Edward Zhao [aut, cre]
 Maintainer:
     Edward Zhao <ezhao@fredhutch.org>
+Depends:
+    R (>= 3.5.0)
 Imports:
     SingleCellExperiment,
     Rcpp (>= 1.0.4.6)
