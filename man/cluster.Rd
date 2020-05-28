@@ -7,7 +7,7 @@
 cluster(
   Y,
   positions,
-  dist,
+  neighborhood.radius,
   gamma = 2,
   q,
   init = rep(1, nrow(Y)),
@@ -21,23 +21,27 @@ cluster(
 )
 }
 \arguments{
-\item{Y}{A matrix or dataframe with 1 row per spot and 1 column per outcome (e.g. principal component)}
+\item{Y}{A matrix or dataframe with 1 row per spot and 1 column per outcome 
+(e.g. principal components)}
 
-\item{positions}{A matrix or dataframe with two columns (x, y) that gives the spatial coordinates of the spot}
+\item{positions}{A matrix or dataframe with two columns (x, y) that gives the spatial 
+coordinates of the spot}
 
-\item{dist}{The L1 distance between neighboring spots}
+\item{neighborhood.radius}{The maximum (L1) distance for two spots to be considered neighbors}
 
-\item{gamma}{Smoothing parameter. Values in range of 1-3 seem to work well generally}
+\item{gamma}{Smoothing parameter. Values in range of 1-3 seem to work well}
 
 \item{q}{The number of clusters}
 
-\item{init}{Initial cluster assignments (z's). Must be a vector of length equal to the number of rows of Y and positions}
+\item{init}{Initial cluster assignments (z's). Must be a vector of length equal
+to the number of rows of Y and positions}
 
 \item{model}{Error model ("normal" or "t")}
 
-\item{precision}{Covariance structure ("equal" or "variable" for EEE and VVV covariance models, respectively)}
+\item{precision}{Covariance structure ("equal" or "variable" for EEE and VVV 
+covariance models, respectively)}
 
-\item{nrep}{The maximum number of mcmc iterations}
+\item{nrep}{The maximum number of MCMC iterations}
 
 \item{mu0}{Prior mean hyperparameter for mu}
 
@@ -48,8 +52,13 @@ cluster(
 \item{beta}{Hyperparameter for Wishart distributed precision lambda}
 }
 \value{
-List of parameter values (`z`, `mu`, `lambda`) and model log-likelihoods (`plogLik`) at each MCMC iteration, along with final cluster labels (`labels`)
+List of parameter values (`z`, `mu`, `lambda`) and model 
+        log-likelihoods (`plogLik`) at each MCMC iteration, along with final
+        cluster labels (`labels`)
 }
 \description{
 Backend calls iterate() which is written in Rcpp
+}
+\details{
+TODO describe method in detail
 }
