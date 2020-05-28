@@ -28,3 +28,6 @@ Suggests:
     knitr,
     rmarkdown
 VignetteBuilder: knitr
+biocViews:
+    Software,
+    Clustering
