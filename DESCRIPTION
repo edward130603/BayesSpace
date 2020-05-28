@@ -11,8 +11,9 @@ Maintainer:
 Depends:
     R (>= 3.5.0)
 Imports:
+    Rcpp (>= 1.0.4.6),
+    stats,
     SingleCellExperiment,
-    Rcpp (>= 1.0.4.6)
 Description: "TODO write description"
 License: "TODO pick license"
 RoxygenNote: 7.1.0
