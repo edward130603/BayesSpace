@@ -4,7 +4,7 @@
 #' 
 #' @param Y A matrix or dataframe with 1 row per spot and 1 column per outcome (e.g. principal component)
 #' @param positions A matrix or dataframe with two columns (x, y) that gives the spatial coordinates of the spot
-#' @param dist The L1 distance between neighboring spots
+#' @param neighborhood.radius The maximum (L1) distance for two spots to be considered neighbors
 #' @param gamma Smoothing parameter. Values in range of 1-3 seem to work well generally
 #' @param q The number of clusters
 #' @param init Initial cluster assignments (z's). Must be a vector of length equal to the number of rows of Y and positions
@@ -17,7 +17,11 @@
 #' @param beta Hyperparameter for Wishart distributed precision lambda
 #' 
 #' @return List of parameter values (`z`, `mu`, `lambda`) and model log-likelihoods (`plogLik`) at each MCMC iteration, along with final cluster labels (`labels`)
-cluster = function(Y, positions, dist, gamma = 2, q, init = rep(1, nrow(Y)), model = "normal", precision = "equal", nrep = 1000, mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01){
+cluster = function(Y, positions, neighborhood.radius, gamma = 2, q, 
+                   init = rep(1, nrow(Y)), model = "normal", 
+                   precision = "equal", nrep = 1000, mu0 = colMeans(Y), 
+                   lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, 
+                   beta = 0.01) {
   positions = as.matrix(positions)
   Y = as.matrix(Y)
   d = ncol(Y) 
@@ -45,11 +49,14 @@ cluster = function(Y, positions, dist, gamma = 2, q, init = rep(1, nrow(Y)), mod
   }
   colnames(positions) = c("x", "y")
   message("Calculating neighbors...")
-  df_j = sapply(1:n, function(x){which((abs(positions[,1] -positions[x,1]) + abs(positions[,2] - positions[x,2])) <= dist &  #L1 distance
-                                         (abs(positions[,1] -positions[x,1]) + abs(positions[,2] - positions[x,2])) > 0)-1})
-  num_neighbors = sapply(df_j, length)
-  num_message = paste0("Neighbors were identified for ", sum(num_neighbors >0), " out of ", n, " spots.")
-  message(num_message)
+  
+  # TODO: pass boolean matrix to cpp instead of using sapply?
+  pdist <- as.matrix(stats::dist(positions, method="manhattan"))
+  neighbors <- (pdist <= neighborhood.radius & pdist > 0)
+  df_j <- sapply(1:n, function(x) as.vector(which(neighbors[x, ])) - 1)
+  
+  num_message = "Neighbors were identified for %d out of %d spots."
+  message(sprintf(num_message, sum(rowSums(neighbors) > 0), n))
   
   message("Fitting model...")
   if (model == "normal"){
