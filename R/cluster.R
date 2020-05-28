@@ -2,21 +2,42 @@
 #'
 #' Backend calls iterate() which is written in Rcpp
 #' 
-#' @param Y A matrix or dataframe with 1 row per spot and 1 column per outcome (e.g. principal component)
-#' @param positions A matrix or dataframe with two columns (x, y) that gives the spatial coordinates of the spot
-#' @param neighborhood.radius The maximum (L1) distance for two spots to be considered neighbors
-#' @param gamma Smoothing parameter. Values in range of 1-3 seem to work well generally
-#' @param q The number of clusters
-#' @param init Initial cluster assignments (z's). Must be a vector of length equal to the number of rows of Y and positions
-#' @param model Error model ("normal" or "t")
-#' @param precision Covariance structure ("equal" or "variable" for EEE and VVV covariance models, respectively)
-#' @param nrep The maximum number of mcmc iterations
-#' @param mu0 Prior mean hyperparameter for mu
-#' @param lambda0 Prior precision hyperparam for mu
-#' @param alpha Hyperparameter for Wishart distributed precision lambda
-#' @param beta Hyperparameter for Wishart distributed precision lambda
+#' @param Y 
+#'        A matrix or dataframe with 1 row per spot and 1 column per outcome 
+#'        (e.g. principal components)
+#' @param positions 
+#'        A matrix or dataframe with two columns (x, y) that gives the spatial 
+#'        coordinates of the spot
+#' @param neighborhood.radius 
+#'        The maximum (L1) distance for two spots to be considered neighbors
+#' @param gamma 
+#'        Smoothing parameter. Values in range of 1-3 seem to work well
+#' @param q 
+#'        The number of clusters
+#' @param init 
+#'        Initial cluster assignments (z's). Must be a vector of length equal
+#'        to the number of rows of Y and positions
+#' @param model 
+#'        Error model ("normal" or "t")
+#' @param precision 
+#'        Covariance structure ("equal" or "variable" for EEE and VVV 
+#'        covariance models, respectively)
+#' @param nrep 
+#'        The maximum number of MCMC iterations
+#' @param mu0 
+#'        Prior mean hyperparameter for mu
+#' @param lambda0 
+#'        Prior precision hyperparam for mu
+#' @param alpha 
+#'        Hyperparameter for Wishart distributed precision lambda
+#' @param beta 
+#'        Hyperparameter for Wishart distributed precision lambda
 #' 
-#' @return List of parameter values (`z`, `mu`, `lambda`) and model log-likelihoods (`plogLik`) at each MCMC iteration, along with final cluster labels (`labels`)
+#' @return List of parameter values (`z`, `mu`, `lambda`) and model 
+#'         log-likelihoods (`plogLik`) at each MCMC iteration, along with final
+#'         cluster labels (`labels`)
+#'         
+#' @details TODO describe method in detail
 cluster = function(Y, positions, neighborhood.radius, gamma = 2, q, 
                    init = rep(1, nrow(Y)), model = "normal", 
                    precision = "equal", nrep = 1000, mu0 = colMeans(Y), 
