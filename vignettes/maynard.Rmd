@@ -46,14 +46,14 @@ colnames(positions) <- c("x", "y")
 
 xdist <- coef(lm(sce$imagecol~sce$col))[2]  # x distance between neighbors
 ydist <- coef(lm(sce$imagerow~sce$row))[2]  # y distance between neighbors
-dist <- xdist + ydist + 0.2
+radius <- xdist + ydist + 0.2
 ```
 
 Cluster the PCs
 ```{r cluster_normal_equal}
 set.seed(102)
 clust1 <- cluster(Y= PCs$components, positions = as.matrix(positions), 
-                  q = 7, init = km, nrep = 1000, gamma = 1.5, dist = dist,
+                  q = 7, init = km, nrep = 1000, gamma = 1.5, neighborhood.radius = radius,
                   model="normal", precision="equal")
 
 # TODO: internalize this to cluster()
