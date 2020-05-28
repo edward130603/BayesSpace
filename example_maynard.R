@@ -6,7 +6,7 @@ library(scater)
 library(scran)
 library(extrafont)
 library(patchwork)
-
+Rcpp::sourceCpp('script.cpp')
 
 sce <- fetch_data(type = 'sce')
 sce_image_clus(
@@ -173,13 +173,114 @@ mclust::adjustedRandIndex(clust2col, clust1col)
 ptm = proc.time()
 deconv1 = deconvolve(Y = PCs$components, positions = positions, nrep = 10000, gamma = 2, xdist = xdist, ydist = ydist, init = clust1col, q = 7)
 proc.time()-ptm #10000 reps: 5082 seconds runtime
+saveRDS(deconv1, "data-raw/deconv_sim1.RDS")
 deconv1col = apply(deconv1$z[seq(1000,10000,10),], 2, Mode)
-ggplot(data.frame(deconv1$positions), aes(x, -y)) +
+deconv1mu = colMeans(deconv1$mu[1000:10000,])
+deconv1mu_matrix = matrix(deconv1mu, byrow = T, ncol = ncol(deconv1$lambda[[1]]))
+deconv1lambda = Reduce(`+`, deconv1$lambda[1000:10000])/length(1000:10000)
+labels = ggplot(data.frame(deconv1$positions), aes(x, -y)) +
   geom_text(color = "grey", label = "\u2B22", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
   geom_text(aes(color = factor(deconv1col, levels = c(7,1,4,3,6,2,5))), alpha = 1,
-            size = 3, label = "\u2B22", family = "Lucida Sans Unicode") +
-  labs(color = "Cluster", alpha = "Proportion", x = NULL, y = NULL) +
-  guides(alpha = F, col = F) + 
+            size = 2, label = "\u2B22", family = "Lucida Sans Unicode") +
+  labs(color = "Cluster", x = NULL, y = NULL) +
   scale_color_viridis_d(option = "A") +
-  scale_alpha_continuous(limits = c(0,1), breaks = seq(0.1,1,0.1), range = c(0,1))+
   theme_void() + coord_fixed()
+means1 = ggplot(data.frame(deconv1$positions), aes(x, -y)) +
+  geom_text(color = "grey", label = "\u2B22", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
+  geom_text(aes(color = deconv1mu_matrix[deconv1col,1]), alpha = 1,
+            size = 2, label = "\u2B22", family = "Lucida Sans Unicode") +
+  labs(color = "PC1", x = NULL, y = NULL) +
+  theme_void() + coord_fixed()
+means2 = ggplot(data.frame(deconv1$positions), aes(x, -y)) +
+  geom_text(color = "grey", label = "\u2B22", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
+  geom_text(aes(color = deconv1mu_matrix[deconv1col,2]), alpha = 1,
+            size = 2, label = "\u2B22", family = "Lucida Sans Unicode") +
+  labs(color = "PC2", x = NULL, y = NULL) +
+  theme_void() + coord_fixed()
+labels + means1 + means2
+#simulation 1
+simY = matrix(nrow = nrow(deconv1$positions), ncol = 9)
+set.seed(100)
+for(i in 1:nrow(deconv1$positions)){
+  simY[i,] = mvnfast::rmvn(1, mu = deconv1mu_matrix[deconv1col[i],], sigma = solve(deconv1lambda))
+}
+sim1 = ggplot(data.frame(deconv1$positions), aes(x, -y)) +
+  geom_text(color = "grey", label = "\u2B22", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
+  geom_text(aes(color = simY[,1]), alpha = 1,
+            size = 2, label = "\u2B22", family = "Lucida Sans Unicode") +
+  labs(color = "PC1", alpha = "Proportion", x = NULL, y = NULL) +
+  theme_void() + coord_fixed()
+sim2 = ggplot(data.frame(deconv1$positions), aes(x, -y)) +
+  geom_text(color = "grey", label = "\u2B22", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
+  geom_text(aes(color = simY[,2]), alpha = 1,
+            size = 2, label = "\u2B22", family = "Lucida Sans Unicode") +
+  labs(color = "PC2", alpha = "Proportion", x = NULL, y = NULL) +
+  theme_void() + coord_fixed()
+sim3 = ggplot(data.frame(deconv1$positions), aes(x, -y)) +
+  geom_text(color = "grey", label = "\u2B22", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
+  geom_text(aes(color = simY[,3]), alpha = 1,
+            size = 2, label = "\u2B22", family = "Lucida Sans Unicode") +
+  labs(color = "PC3", alpha = "Proportion", x = NULL, y = NULL) +
+  theme_void() + coord_fixed()
+sim1+sim2+sim3
+#aggregation
+data_sim = data.frame(simY)
+data_sim$j = rep(1:nrow(PCs$components), 7)
+data_sim %>%
+  group_by(j) %>%
+  summarise_all(mean)->
+  data_sim_mean
+agg1 = ggplot(data.frame(positions), aes(x, -y)) +
+  geom_text(aes(color = data_sim_mean$X1), alpha = 1,
+            size = 5, label = "\u2B22", family = "Lucida Sans Unicode") +
+  geom_text(color = "black", label = "\u2B21", size = 5, family = "Lucida Sans Unicode", show.legend = F) +
+  labs(color = "PC1", alpha = "Proportion", x = NULL, y = NULL) +
+  theme_void() + coord_fixed()
+agg2 = ggplot(data.frame(positions), aes(x, -y)) +
+  geom_text(aes(color = data_sim_mean$X2), alpha = 1,
+            size = 5, label = "\u2B22", family = "Lucida Sans Unicode") +
+  geom_text(color = "black", label = "\u2B21", size = 5, family = "Lucida Sans Unicode", show.legend = F) +
+  labs(color = "PC2", alpha = "Proportion", x = NULL, y = NULL) +
+  theme_void() + coord_fixed()
+agg3 = ggplot(data.frame(positions), aes(x, -y)) +
+  geom_text(aes(color = data_sim_mean$X3), alpha = 1,
+            size = 5, label = "\u2B22", family = "Lucida Sans Unicode") +
+  geom_text(color = "black", label = "\u2B21", size = 5, family = "Lucida Sans Unicode", show.legend = F) +
+  labs(color = "PC3", alpha = "Proportion", x = NULL, y = NULL) +
+  theme_void() + coord_fixed()
+agg1+agg2+agg3
+
+set.seed(7)
+km_sim = kmeans(data_sim_mean[,-1], centers = 7)$cluster
+clust_sim = cluster(Y= data_sim_mean[,-1], positions = as.matrix(positions), q = 7, init = km_sim, 
+                    nrep = 100000, gamma = 1.5, dist = dist)
+
+simcol = apply(clust_sim$z[seq(10000,100000,10),], 2, Mode)
+
+kmeans_sim_out = ggplot(data.frame(positions), aes(x, -y)) +
+  geom_text(aes(color =factor(km_sim, levels = c(3,1,7,6,4,5,2))), alpha = 1,
+            size = 6, label = "\u2B22", family = "Lucida Sans Unicode") +
+  geom_text(color = "black", label = "\u2B21", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
+  guides(col = F)+ 
+  scale_color_viridis_d(option = "A") + 
+  labs(color = "PC3", alpha = "Proportion", x = NULL, y = NULL) +
+  theme_void() + coord_fixed()
+clust_sim_out = ggplot(data.frame(positions), aes(x, -y)) +
+  geom_text(aes(color =factor(simcol, levels = c(3,1,7,6,4,5,2))), alpha = 1,
+            size = 6, label = "\u2B22", family = "Lucida Sans Unicode") +
+  geom_text(color = "black", label = "\u2B21", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
+  guides(col = F)+ 
+  scale_color_viridis_d(option = "A") + 
+  labs(color = "PC3", alpha = "Proportion", x = NULL, y = NULL) +
+  theme_void() + coord_fixed()
+labels+guides(col = F) + kmeans_sim_out + clust_sim_out
+
+#re deconvolve
+deconv2 = deconvolve(Y = data_sim_mean[,-1], positions = positions, nrep = 50000, gamma = 2, xdist = xdist, ydist = ydist, init = simcol, q = 7)
+
+
+
+
+
+mclust::adjustedRandIndex(deconv1col, rep(km_sim,7))
+mclust::adjustedRandIndex(deconv1col, rep(simcol,7))

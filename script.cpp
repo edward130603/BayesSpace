@@ -42,10 +42,8 @@ List iterate(mat Y, List df_j, int nrep, int n, int d, double gamma, int q, vec 
       uvec index_1k = find(df_sim_z.row(i-1) == k);
       int n_i = index_1k.n_elem;
       NumericVector Ysums;
-      for (int di = 0; di < d; di++){
-        mat Yrows = Y.rows(index_1k);
-        Ysums.push_back(sum(Yrows.col(di)));
-      }
+      mat Yrows = Y.rows(index_1k);
+      Ysums = sum(Yrows, 0);
       vec mean_i = inv(lambda0 + n_i * lambda_prev) * (lambda0 * mu0vec + lambda_prev * as<colvec>(Ysums));
       mat var_i = inv(lambda0 + n_i * lambda_prev);
       mu_i.row(k-1) = rmvnorm(1, mean_i, var_i);
