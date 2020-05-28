@@ -22,12 +22,24 @@ cluster = function(Y, positions, dist, gamma = 2, q, init = rep(1, nrow(Y)), mod
   Y = as.matrix(Y)
   d = ncol(Y) 
   n = nrow(Y)
+  
   if ((nrow(positions) != n) | (length(init) != n)){
     stop("Dimensions of Y, positions, and init do not match")
   }
   if ((length(mu0) != d) | (ncol(lambda0) != d)) {
     stop("Dimensions of mu0 or lambda0 do not match input data Y")
   }
+  
+  if (!(model %in% c("normal", "t"))) {
+    msg <- "Invalid model: %s. Specify \"normal\" or \"t\"."
+    stop(sprintf(msg, model))
+  }
+  
+  if (!(precision %in% c("equal", "variable"))) {
+    msg <- "Invalid precision: %s. Specify \"equal\" or \"variable\"."
+    stop(sprintf(msg, precision))
+  }
+  
   if (q==1){
     return(list(z = matrix(rep(1, n), nrow =1)))
   }
@@ -42,23 +54,22 @@ cluster = function(Y, positions, dist, gamma = 2, q, init = rep(1, nrow(Y)), mod
   message("Fitting model...")
   if (model == "normal"){
     if (precision == "equal"){
-      out = iterate(Y = as.matrix(Y), df_j = df_j, nrep = nrep, n = n, d = d, gamma = gamma, q = q, init = init, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
+      cluster.FUN <- iterate
     } else if (precision == "variable"){
-      out = iterate_vvv(Y = as.matrix(Y), df_j = df_j, nrep = nrep, n = n, d = d, gamma = gamma, q = q, init = init, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
-    } else {
-      stop("precision should be either 'equal' or 'variable'")
-    }
+      cluster.FUN <- iterate_vvv
+    } 
   } else if (model == "t"){
     if (precision == "equal"){
-      out = iterate_t(Y = as.matrix(Y), df_j = df_j, nrep = nrep, n = n, d = d, gamma = gamma, q = q, init = init, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
+      cluster.FUN <- iterate_t
     } else if (precision == "variable"){
-      out = iterate_t_vvv(Y = as.matrix(Y), df_j = df_j, nrep = nrep, n = n, d = d, gamma = gamma, q = q, init = init, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
-    } else {
-      stop("precision should be either 'equal' or 'variable'")
+      cluster.FUN <- iterate_t_vvv
     }
-  } else {
-    stop("model should be either 'normal' or 't'")
-  }
+  } 
+  
+  out <- cluster.FUN(Y = as.matrix(Y), df_j = df_j, nrep = nrep, n = n, d = d, 
+                     gamma = gamma, q = q, init = init, mu0 = mu0, 
+                     lambda0 = lambda0, alpha = alpha, beta = beta)
+  
   out$labels = apply(out$z[max(nrep-1000, 2):nrep,], 2, Mode)
   out
 }
