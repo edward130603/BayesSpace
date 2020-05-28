@@ -14,7 +14,6 @@ cluster(
   model = "normal",
   precision = "equal",
   nrep = 1000,
-  seed = 100,
   mu0 = colMeans(Y),
   lambda0 = diag(0.01, nrow = ncol(Y)),
   alpha = 1,
@@ -39,8 +38,6 @@ cluster(
 \item{precision}{Covariance structure ("equal" or "variable" for EEE and VVV covariance models, respectively)}
 
 \item{nrep}{The maximum number of mcmc iterations}
-
-\item{seed}{Random state seed}
 
 \item{mu0}{Prior mean hyperparameter for mu}
 

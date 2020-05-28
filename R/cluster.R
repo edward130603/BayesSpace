@@ -11,16 +11,13 @@
 #' @param model Error model ("normal" or "t")
 #' @param precision Covariance structure ("equal" or "variable" for EEE and VVV covariance models, respectively)
 #' @param nrep The maximum number of mcmc iterations
-#' @param seed Random state seed
 #' @param mu0 Prior mean hyperparameter for mu
 #' @param lambda0 Prior precision hyperparam for mu
 #' @param alpha Hyperparameter for Wishart distributed precision lambda
 #' @param beta Hyperparameter for Wishart distributed precision lambda
 #' 
 #' @return List of parameter values (`z`, `mu`, `lambda`) and model log-likelihoods (`plogLik`) at each MCMC iteration, along with final cluster labels (`labels`)
-cluster = function(Y, positions, dist, gamma = 2, q, init = rep(1, nrow(Y)), model = "normal", precision = "equal", nrep = 1000, seed = 100, mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01){
-  
-  set.seed(seed)
+cluster = function(Y, positions, dist, gamma = 2, q, init = rep(1, nrow(Y)), model = "normal", precision = "equal", nrep = 1000, mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01){
   positions = as.matrix(positions)
   Y = as.matrix(Y)
   d = ncol(Y) 
