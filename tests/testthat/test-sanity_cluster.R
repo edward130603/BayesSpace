@@ -13,7 +13,7 @@ test_that("clustering matches", {
                  init = colData(sce)$init_km7, 
                  nrep = 1000, 
                  gamma = 1.5, 
-                 dist = metadata(sce)$dist,
+                 neighborhood.radius = metadata(sce)$dist,
                  model="normal",
                  precision="equal")
   
