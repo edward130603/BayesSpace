@@ -8,6 +8,8 @@ See vignettes/maynard.Rmd for an example that should be fully compatible with th
 
 ## TODOs to pass checks
 
+Last updated 2020-05-27.
+
 ### R CMD check
 #### Errors (0)
 #### Warnings (1)
