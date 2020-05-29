@@ -141,6 +141,8 @@ BEGIN_RCPP
 END_RCPP
 }
 
+RcppExport SEXP run_testthat_tests();
+
 static const R_CallMethodDef CallEntries[] = {
     {"_BayesSpace_iterate", (DL_FUNC) &_BayesSpace_iterate, 12},
     {"_BayesSpace_iterate_vvv", (DL_FUNC) &_BayesSpace_iterate_vvv, 12},
@@ -148,6 +150,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BayesSpace_iterate_t_vvv", (DL_FUNC) &_BayesSpace_iterate_t_vvv, 12},
     {"_BayesSpace_iterate_deconv", (DL_FUNC) &_BayesSpace_iterate_deconv, 13},
     {"_BayesSpace_iterate2", (DL_FUNC) &_BayesSpace_iterate2, 13},
+    {"run_testthat_tests", (DL_FUNC) &run_testthat_tests, 0},
     {NULL, NULL, 0}
 };
 

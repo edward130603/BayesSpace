@@ -20,7 +20,8 @@ RoxygenNote: 7.1.0
 LinkingTo: 
     Rcpp,
     RcppArmadillo,
-    RcppDist
+    RcppDist,
+    testthat
 NeedsCompilation: yes
 SystemRequirements: C++11
 Encoding: UTF-8
