@@ -82,7 +82,8 @@ cluster = function(Y, positions, neighborhood.radius, gamma = 2, q,
   message("Fitting model...")
   if (model == "normal"){
     if (precision == "equal"){
-      cluster.FUN <- iterate
+      # cluster.FUN <- iterate
+      cluster.FUN <- cluster_mcmc
     } else if (precision == "variable"){
       cluster.FUN <- iterate_vvv
     } 
