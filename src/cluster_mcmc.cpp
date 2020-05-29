@@ -37,6 +37,26 @@ arma::mat update_mu(arma::mat Y, arma::rowvec z_prev, arma::mat lambda_prev,
   return mu_i;
 }
 
+arma::mat update_lambda(arma::mat Y, arma::mat mu_i, arma::rowvec z_prev, 
+                        int n, int d, double alpha, double beta) {
+  
+  arma::mat mu_i_long(n, d, arma::fill::zeros);
+  
+  for (int j = 0; j < n; j++){
+    mu_i_long.row(j) = mu_i.row(z_prev[j] - 1);
+  }
+  
+  arma::mat sumofsq = (Y - mu_i_long).t() * (Y - mu_i_long);
+  
+  arma::vec beta_d(d); 
+  beta_d.fill(beta);
+  
+  arma::mat lambda_i = rwish(n + alpha, inv(arma::diagmat(beta_d) + sumofsq));
+
+  return lambda_i;
+}
+
+
 // [[Rcpp::export]]
 List cluster_mcmc(arma::mat Y, List df_j, int nrep, int n, int d, double gamma, 
                   int q, arma::vec init, NumericVector mu0, arma::mat lambda0, 
@@ -57,23 +77,17 @@ List cluster_mcmc(arma::mat Y, List df_j, int nrep, int n, int d, double gamma,
   //Iterate
   arma::vec mu0vec = as<arma::vec>(mu0);
   arma::mat mu_i(q , d, arma::fill::zeros);
+  arma::mat lambda_i(n, n, arma::fill::zeros);
+  arma::mat sigma_i(n, n, arma::fill::zeros);
   for (int i = 1; i < nrep; i++){
     //Update mu
-    mu_i = update_mu(Y, df_sim_z.row(i-1), df_sim_lambda[i-1], lambda0, mu0vec, q, d);
+    mu_i = update_mu(Y, df_sim_z.row(i - 1), df_sim_lambda[i - 1], lambda0, mu0vec, q, d);
     df_sim_mu.row(i) = mu_i.as_row();
     
     //Update lambda
-    arma::mat mu_i_long(n,d);
-    for (int j = 0; j < n; j++){
-      mu_i_long.row(j) = mu_i.row(df_sim_z(i-1, j)-1);
-    }
-    arma::mat sumofsq = (Y-mu_i_long).t() * (Y-mu_i_long);
-    arma::vec beta_d(d); 
-    beta_d.fill(beta);
-    arma::mat Vinv = diagmat(beta_d);
-    arma::mat lambda_i = rwish(n + alpha, inv(Vinv + sumofsq));
+    lambda_i = update_lambda(Y, mu_i, df_sim_z.row(i - 1), n, d, alpha, beta);
     df_sim_lambda[i] = lambda_i;
-    arma::mat sigma_i = inv(lambda_i);
+    sigma_i = inv(lambda_i);
     
     //Update z
     df_sim_z.row(i) = df_sim_z.row(i-1);
@@ -106,5 +120,6 @@ List cluster_mcmc(arma::mat Y, List df_j, int nrep, int n, int d, double gamma,
     plogLik[i] = sum(plogLikj);
   }
   List out = List::create(_["z"] = df_sim_z, _["mu"] = df_sim_mu, _["lambda"] = df_sim_lambda, _["plogLik"] = plogLik);
+  
   return(out);
 }
