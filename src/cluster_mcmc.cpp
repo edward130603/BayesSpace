@@ -9,6 +9,7 @@ using namespace Rcpp;
 const double kDefaultAlpha = 1;
 const double kDefaultBeta = 0.01;
 const double kDefaultGamma = 2;
+const double kDefaultLambda = 0.01;
 
 class PottsState {
 public:
@@ -26,11 +27,15 @@ public:
 // TODO: add lambda0, mu0?
 class ClusterParams {
 public:
-  // Keep public for ease of access
+  // Keep public for ease of access (TODO: set up accessors later)
   arma::mat Y;         // expression/feature matrix (n x d)
   int q;               // number of clusters
   double alpha, beta;  // Wishart hyperparameters
   double gamma;        // Smoothing hyperparameter
+  
+  // Initial cluster means and covariance
+  arma::vec mu0;
+  arma::mat lambda0;
   
   ClusterParams () = delete;
   
@@ -40,6 +45,8 @@ public:
     alpha = kDefaultAlpha;
     beta = kDefaultBeta;
     gamma = kDefaultGamma;
+    
+    setDefaultPriorParameters();
   } 
   
   ClusterParams (arma::mat features, int n_clusters,
@@ -49,6 +56,19 @@ public:
     alpha = a;
     beta = b;
     gamma = g;
+    
+    setDefaultPriorParameters();
+  }
+  
+  // TODO: revisit this - 
+  // maybe make  mu0 and lambda0 optional arguments to cluster_mcmc()?
+  void setDefaultPriorParameters () {
+    // Default mu0 are means across all spots.
+    // Y is (spots x features), so mean() returns a rowvec that we need to transpose
+    mu0 = mean(Y, 0).t();
+    lambda0 = arma::eye(arma::size(n_dims(), n_dims())) * kDefaultLambda;
+    
+    assert(mu0.n_elem == n_dims());
   }
   
   // No need to track n and d directly
@@ -57,8 +77,7 @@ public:
 };
 
 // Compute next mean vector
-arma::mat update_mu(ClusterParams params, PottsState prev,
-                    arma::mat lambda0, arma::vec mu0) {
+arma::mat update_mu(ClusterParams params, PottsState prev) {
   
   int n_i;
   arma::uvec index_1k;
@@ -73,8 +92,8 @@ arma::mat update_mu(ClusterParams params, PottsState prev,
     n_i = index_1k.n_elem;
     Ysums = sum(params.Y.rows(index_1k), 0);
 
-    mean_i = inv(lambda0 + n_i * prev.lambda) * (lambda0 * mu0 + prev.lambda * as<arma::colvec>(Ysums));
-    var_i = inv(lambda0 + n_i * prev.lambda);
+    mean_i = arma::inv(params.lambda0 + n_i * prev.lambda) * (params.lambda0 * params.mu0 + prev.lambda * as<arma::colvec>(Ysums));
+    var_i = arma::inv(params.lambda0 + n_i * prev.lambda);
 
     mu_i.row(k-1) = rmvnorm(1, mean_i, var_i);
   }
@@ -161,8 +180,7 @@ List cluster_mcmc(arma::mat Y, List df_j, int nrep, int n_spots, int n_dims, dou
   NumericVector plogLik(nrep, NA_REAL);
   
   //Initialize parameters
-  arma::vec mu0vec = as<arma::vec>(mu0);
-  arma::mat mu_init = repmat(mu0vec, n_clusters, 1);
+  arma::mat mu_init = repmat(params.mu0, n_clusters, 1);
   PottsState curr(mu_init, lambda0, init.t());
   chain.push_back(curr);
   
@@ -170,7 +188,7 @@ List cluster_mcmc(arma::mat Y, List df_j, int nrep, int n_spots, int n_dims, dou
     curr = PottsState();
     
     //Update mu
-    curr.mu = update_mu(params, chain.back(), lambda0, mu0vec);
+    curr.mu = update_mu(params, chain.back());
     
     //Update lambda
     curr.lambda = update_lambda(params, curr, chain.back());
