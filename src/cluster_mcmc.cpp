@@ -56,6 +56,46 @@ arma::mat update_lambda(arma::mat Y, arma::mat mu_i, arma::rowvec z_prev,
   return lambda_i;
 }
 
+arma::mat update_z(arma::mat Y, arma::rowvec z_prev, List df_j, IntegerVector qvec, 
+                      arma::mat mu_i, arma::mat sigma_i,
+                      int n_spots, double gamma) {
+  
+  arma::rowvec z = z_prev;
+  arma::rowvec plogLikj(n_spots, arma::fill::zeros);
+  double h_z_prev;
+  double h_z_new;
+  
+  for (int j = 0; j < n_spots; j++){
+    int z_j_prev = z(j);
+    IntegerVector qlessk = qvec[qvec != z_j_prev];
+    int z_j_new = sample(qlessk, 1)[0];
+    
+    arma::uvec j_vector = df_j[j];
+    
+    // has neighbors
+    if (j_vector.size() != 0){
+      h_z_prev = gamma/j_vector.size() * 2*arma::accu((z(j_vector) == z_j_prev)) + dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i, true)[0];
+      h_z_new  = gamma/j_vector.size() * 2*arma::accu((z(j_vector) == z_j_new )) + dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i, true)[0];
+    } else {
+      h_z_prev = dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i, true)[0];
+      h_z_new  = dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i, true)[0];
+    }
+    
+    double prob_j = exp(h_z_new - h_z_prev);
+    if (prob_j > 1){
+      prob_j = 1;
+    }
+    
+    IntegerVector zsample = {z_j_prev, z_j_new};
+    NumericVector probs = {1-prob_j, prob_j};
+    
+    z(j) = sample(zsample, 1, true, probs)[0];
+    plogLikj(j) = h_z_prev;
+  }
+  
+  arma::mat result = join_cols(z, plogLikj);
+  return result;
+}
 
 // [[Rcpp::export]]
 List cluster_mcmc(arma::mat Y, List df_j, int nrep, int n_spots, int n_dims, double gamma, 
@@ -91,37 +131,12 @@ List cluster_mcmc(arma::mat Y, List df_j, int nrep, int n_spots, int n_dims, dou
     sigma_i = inv(lambda_i);
     
     //Update z
-    // df_sim_z.row(i) = update_z();
-    
-    df_sim_z.row(i) = df_sim_z.row(i-1);
     IntegerVector qvec = seq_len(n_clusters);
-    NumericVector plogLikj(n_spots, NA_REAL);
-    for (int j = 0; j < n_spots; j++){
-      int z_j_prev = df_sim_z(i,j);
-      IntegerVector qlessk = qvec[qvec != z_j_prev];
-      int z_j_new = sample(qlessk, 1)[0];
-      arma::uvec j_vector = df_j[j];
-      arma::uvec i_vector(1); i_vector.fill(i);
-      double h_z_prev;
-      double h_z_new;
-      if (j_vector.size() != 0){
-        h_z_prev = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_prev)) + dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i, true)[0];
-        h_z_new  = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_new )) + dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i, true)[0];
-      } else {
-        h_z_prev = dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i, true)[0];
-        h_z_new  = dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i, true)[0];
-      }
-      double prob_j = exp(h_z_new-h_z_prev);
-      if (prob_j > 1){
-        prob_j = 1;
-      }
-      IntegerVector zsample = {z_j_prev, z_j_new};
-      NumericVector probs = {1-prob_j, prob_j};
-      df_sim_z(i,j) = sample(zsample, 1, true, probs)[0];
-      plogLikj[j] = h_z_prev;
-    }
-    plogLik[i] = sum(plogLikj);
+    arma::mat result = update_z(Y, df_sim_z.row(i - 1), df_j, qvec, mu_i, sigma_i, n_spots, gamma);
+    df_sim_z.row(i) = result.row(0);
+    plogLik[i] = arma::sum(result.row(1));
   }
+  
   List out = List::create(_["z"] = df_sim_z, _["mu"] = df_sim_mu, _["lambda"] = df_sim_lambda, _["plogLik"] = plogLik);
   
   return(out);
