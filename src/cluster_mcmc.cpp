@@ -120,6 +120,17 @@ arma::mat update_lambda(ClusterParams params, PottsState curr, PottsState prev) 
   return lambda_i;
 }
 
+
+// TODO store neighbors in params
+double computeEnergy(arma::rowvec z, arma::uvec neighbors, 
+                     int label, ClusterParams params) {
+  
+  double H;
+  H = (params.gamma / neighbors.n_elem) * 2 * arma::accu(z(neighbors) == label);
+  
+  return H;
+}
+
 // Compute next set of cluster assignments and corresponding log-likelihoods
 // TODO: extract energy/likelihood computation
 arma::mat update_z(ClusterParams params, PottsState curr, PottsState prev, List df_j) {
@@ -135,12 +146,14 @@ arma::mat update_z(ClusterParams params, PottsState curr, PottsState prev, List 
     IntegerVector qlessk = qvec[qvec != z_j_prev];
     int z_j_new = sample(qlessk, 1)[0];
     
+    // Locations of neighbors
+    // arma::uvec neighbor_indices = df_j[j];
     arma::uvec j_vector = df_j[j];
     
     // has neighbors
-    if (j_vector.size() != 0){
-      h_z_prev = params.gamma/j_vector.size() * 2*arma::accu((z(j_vector) == z_j_prev)) + dmvnorm(params.Y.row(j), arma::vectorise(curr.mu.row(z_j_prev-1)), curr.sigma(), true)[0];
-      h_z_new  = params.gamma/j_vector.size() * 2*arma::accu((z(j_vector) == z_j_new )) + dmvnorm(params.Y.row(j), arma::vectorise(curr.mu.row(z_j_new -1)), curr.sigma(), true)[0];
+    if (j_vector.size() != 0) {
+      h_z_prev = computeEnergy(z, j_vector, z_j_prev, params) + dmvnorm(params.Y.row(j), arma::vectorise(curr.mu.row(z_j_prev-1)), curr.sigma(), true)[0];
+      h_z_new  = computeEnergy(z, j_vector, z_j_new, params) + dmvnorm(params.Y.row(j), arma::vectorise(curr.mu.row(z_j_new -1)), curr.sigma(), true)[0];
     } else {
       h_z_prev = dmvnorm(params.Y.row(j), arma::vectorise(curr.mu.row(z_j_prev-1)), curr.sigma(), true)[0];
       h_z_new  = dmvnorm(params.Y.row(j), arma::vectorise(curr.mu.row(z_j_new -1)), curr.sigma(), true)[0];
@@ -199,6 +212,7 @@ List cluster_mcmc(arma::mat Y, List df_j, int nrep, int n_spots, int n_dims, dou
     plogLik[i] = arma::sum(result.row(1));
     
     // Original output format
+    // TODO: write accumulator to genarate df_sim_* matrices from chain
     df_sim_mu.row(i) = curr.mu.as_row();
     df_sim_lambda[i] = curr.lambda;
     df_sim_z.row(i) = curr.z; 
