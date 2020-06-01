@@ -5,10 +5,25 @@
 #include <testthat.h>
 using namespace Rcpp;
 
-struct ModelState {
-  arma::mat mu;
-  arma::mat lambda;
-  arma::vec z;
+class ClusterInputs {
+public:
+  // Constructors
+  ClusterInputs (): Y(arma::zeros(0, 0)), q(0) {}
+  ClusterInputs (arma::mat Y, int q): Y(Y), q(q) {}
+  
+  // Getters
+  int n_spots() const { return Y.n_rows; }
+  int n_dims() const { return Y.n_cols; }
+  int n_clusters() const { return q; }
+  arma::mat features() const { return Y; }
+  
+  // Setters
+  void set_Y(arma::mat features) { Y = features; }
+  void set_q(int n_clusters) { q = n_clusters; }
+  
+private:
+  arma::mat Y;  // n x d Expression/feature matrix
+  int q;        // Number of clusters
 };
 
 // arma::mat update_mu(ModelState curr, ModelState prev) {
@@ -148,5 +163,22 @@ context("Sample unit tests v3") {
   
   test_that("Covariance is symmetric") {
     expect_true(lambda0.is_symmetric());
+  }
+}
+
+context("Inputs class") {
+  arma::mat Y = arma::randu<arma::mat>(5, 7);
+  int q = 3;
+  
+  ClusterInputs inputs(Y, q);
+  
+  test_that("rows match input") {
+    expect_true(inputs.n_spots() == Y.n_rows);
+  }
+  test_that("columns match input") {
+    expect_true(inputs.n_dims() == Y.n_cols); 
+  }
+  test_that("clusters match input") {
+    expect_true(inputs.n_clusters() == q);
   }
 }
