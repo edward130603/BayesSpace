@@ -252,13 +252,15 @@ agg1+agg2+agg3
 
 set.seed(7)
 km_sim = kmeans(data_sim_mean[,-1], centers = 7)$cluster
-clust_sim = cluster(Y= data_sim_mean[,-1], positions = as.matrix(positions), q = 7, init = km_sim, 
-                    nrep = 100000, gamma = 1.5, dist = dist)
+set.seed(7)
+mclust_sim = Mclust(data_sim_mean[,-1], G = 7, modelNames = c("EEE"))
+clust_sim = cluster(Y= data_sim_mean[,-1], positions = as.matrix(positions), q = 7, init = mclust_sim$classification, 
+                    nrep = 50000, gamma = 1.5, dist = dist)
 
-simcol = apply(clust_sim$z[seq(10000,100000,10),], 2, Mode)
+simcol = apply(clust_sim$z[seq(10000,50000,10),], 2, Mode)
 
-kmeans_sim_out = ggplot(data.frame(positions), aes(x, -y)) +
-  geom_text(aes(color =factor(km_sim, levels = c(3,1,7,6,4,5,2))), alpha = 1,
+mclust_sim_out = ggplot(data.frame(positions), aes(x, -y)) +
+  geom_text(aes(color =factor(mclust_sim$classification, levels = c(6,1,3,4,5,7,2))), alpha = 1,
             size = 6, label = "\u2B22", family = "Lucida Sans Unicode") +
   geom_text(color = "black", label = "\u2B21", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
   guides(col = F)+ 
@@ -266,21 +268,48 @@ kmeans_sim_out = ggplot(data.frame(positions), aes(x, -y)) +
   labs(color = "PC3", alpha = "Proportion", x = NULL, y = NULL) +
   theme_void() + coord_fixed()
 clust_sim_out = ggplot(data.frame(positions), aes(x, -y)) +
-  geom_text(aes(color =factor(simcol, levels = c(3,1,7,6,4,5,2))), alpha = 1,
+  geom_text(aes(color =factor(simcol, levels = c(6,1,3,4,5,7,2))), alpha = 1,
             size = 6, label = "\u2B22", family = "Lucida Sans Unicode") +
   geom_text(color = "black", label = "\u2B21", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
   guides(col = F)+ 
   scale_color_viridis_d(option = "A") + 
   labs(color = "PC3", alpha = "Proportion", x = NULL, y = NULL) +
   theme_void() + coord_fixed()
-labels+guides(col = F) + kmeans_sim_out + clust_sim_out
+labels+guides(col = F) + mclust_sim_out + clust_sim_out
 
 #re deconvolve
 deconv2 = deconvolve(Y = data_sim_mean[,-1], positions = positions, nrep = 50000, gamma = 2, xdist = xdist, ydist = ydist, init = simcol, q = 7)
-
-
-
-
+deconv2 = deconvolve(Y = data_sim_mean[,-1], positions = positions, nrep = 4000, gamma = 2, xdist = xdist, ydist = ydist, init = simcol, q = 7)
+deconv2col = apply(deconv2$z[seq(10,4000,10),], 2, Mode)
+deconv2colg1 = readRDS("data-raw/deconv2colg1.RDS")
+deconv2colg3 = readRDS("data-raw/deconv2colg3.RDS")
+g2 = ggplot(data.frame(deconv1$positions), aes(x, -y)) +
+  geom_text(color = "grey", label = "\u2B22", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
+  geom_text(aes(color = factor(deconv2col, levels = c(6,1,3,4,5,7,2))), alpha = 1,
+            size = 2, label = "\u2B22", family = "Lucida Sans Unicode") +
+  labs(color = "Cluster", x = NULL, y = NULL) +
+  scale_color_viridis_d(option = "A") +
+  guides(col = F)+
+  theme_void() + coord_fixed()
+g1 = ggplot(data.frame(deconv1$positions), aes(x, -y)) +
+  geom_text(color = "grey", label = "\u2B22", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
+  geom_text(aes(color = factor(deconv2colg1, levels = c(6,1,3,4,5,7,2))), alpha = 1,
+            size = 2, label = "\u2B22", family = "Lucida Sans Unicode") +
+  labs(color = "Cluster", x = NULL, y = NULL) +
+  scale_color_viridis_d(option = "A") +
+  guides(col = F)+
+  theme_void() + coord_fixed()
+g3 = ggplot(data.frame(deconv1$positions), aes(x, -y)) +
+  geom_text(color = "grey", label = "\u2B22", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
+  geom_text(aes(color = factor(deconv2colg3, levels = c(6,1,3,4,5,7,2))), alpha = 1,
+            size = 2, label = "\u2B22", family = "Lucida Sans Unicode") +
+  labs(color = "Cluster", x = NULL, y = NULL) +
+  scale_color_viridis_d(option = "A") +
+  guides(col = F)+
+  theme_void() + coord_fixed()
+g1+g2+g3
 
 mclust::adjustedRandIndex(deconv1col, rep(km_sim,7))
+mclust::adjustedRandIndex(deconv1col, rep(mclust_sim$classification,7))
 mclust::adjustedRandIndex(deconv1col, rep(simcol,7))
+mclust::adjustedRandIndex(deconv1col, g5col)

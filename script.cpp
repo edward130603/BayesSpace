@@ -2,16 +2,6 @@
 using namespace Rcpp;
 using namespace arma;
 
-// This is a simple example of exporting a C++ function to R. You can
-// source this function into an R session using the Rcpp::sourceCpp 
-// function (or via the Source button on the editor toolbar). Learn
-// more about Rcpp at:
-//
-//   http://www.rcpp.org/
-//   http://adv-r.had.co.nz/Rcpp.html
-//   http://gallery.rcpp.org/
-//
-
 // [[Rcpp::plugins("cpp11")]]
 // [[Rcpp::depends(RcppArmadillo, RcppDist, RcppProgress)]]
 #include <progress.hpp>
@@ -451,7 +441,7 @@ List iterate_deconv(mat Y, List df_j, int nrep, int n, int n0, int d, double gam
     for (int j0 = 0; j0 < n0; j0++){
       Y_j_prev = Y.rows(j0_vector*n0+j0);
       error = rmvnorm(7, zero_vec, error_var); 
-      rowvec error_mean = sum(error, 0);
+      rowvec error_mean = sum(error, 0)/7;
       for (int r = 0; r < 7; r++){
         error.row(r) = error.row(r) - error_mean;
       }
@@ -461,7 +451,7 @@ List iterate_deconv(mat Y, List df_j, int nrep, int n, int n0, int d, double gam
       vec p_new = {0.0};
       for (int r = 0; r<7; r++){
         p_prev += dmvnorm(Y_j_prev.row(r), vectorise(mu_i_j.row(r)), sigma_i, true) - 0.1*(accu(pow(Y_j_prev.row(r)-Y0.row(j0),2)));
-        p_new += dmvnorm(Y_j_prev.row(r), vectorise(mu_i_j.row(r)), sigma_i, true)  - 0.1*(accu(pow(Y_j_new.row(r) -Y0.row(j0),2)));
+        p_new  += dmvnorm(Y_j_new.row(r),  vectorise(mu_i_j.row(r)), sigma_i, true) - 0.1*(accu(pow(Y_j_new.row(r) -Y0.row(j0),2)));
       }
       double probY_j = as_scalar(exp(p_new - p_prev));
       if (probY_j > 1){
