@@ -5,6 +5,21 @@
 #include <testthat.h>
 using namespace Rcpp;
 
+class PottsState {
+public:
+  arma::mat mu;
+  arma::mat lambda;
+  arma::rowvec z;
+  // TODO arma::vec pLogLik
+  
+  PottsState(): mu(arma::zeros(0, 0)), lambda(arma::zeros(0, 0)), z(arma::zeros<arma::rowvec>(0)) {}
+  PottsState(arma::mat mu, arma::mat lambda, arma::rowvec z): mu(mu), lambda(lambda), z(z) {}
+  
+  arma::mat sigma() const { return inv(lambda); }
+};
+
+// TODO: add alpha, beta, gamma
+// TODO: add lambda0, mu0
 class ClusterInputs {
 public:
   // Constructors
@@ -27,7 +42,7 @@ private:
 };
 
 // arma::mat update_mu(ModelState curr, ModelState prev) {
-arma::mat update_mu(ClusterInputs inputs, arma::rowvec z_prev, arma::mat lambda_prev, 
+arma::mat update_mu(ClusterInputs inputs, PottsState prev,
                     arma::mat lambda0, arma::vec mu0) {
   
   int n_i;
@@ -39,12 +54,12 @@ arma::mat update_mu(ClusterInputs inputs, arma::rowvec z_prev, arma::mat lambda_
   arma::mat mu_i(inputs.n_clusters(), inputs.n_dims(), arma::fill::zeros);
     
   for (int k = 1; k <= inputs.n_clusters(); k++){
-    index_1k = arma::find(z_prev == k);
+    index_1k = arma::find(prev.z == k);
     n_i = index_1k.n_elem;
     Ysums = sum(inputs.features().rows(index_1k), 0);
 
-    mean_i = inv(lambda0 + n_i * lambda_prev) * (lambda0 * mu0 + lambda_prev * as<arma::colvec>(Ysums));
-    var_i = inv(lambda0 + n_i * lambda_prev);
+    mean_i = inv(lambda0 + n_i * prev.lambda) * (lambda0 * mu0 + prev.lambda * as<arma::colvec>(Ysums));
+    var_i = inv(lambda0 + n_i * prev.lambda);
 
     mu_i.row(k-1) = rmvnorm(1, mean_i, var_i);
   }
@@ -52,13 +67,13 @@ arma::mat update_mu(ClusterInputs inputs, arma::rowvec z_prev, arma::mat lambda_
   return mu_i;
 }
 
-arma::mat update_lambda(ClusterInputs inputs, arma::mat mu_i, arma::rowvec z_prev, 
+arma::mat update_lambda(ClusterInputs inputs, PottsState curr, PottsState prev, 
                         double alpha, double beta) {
   
   arma::mat mu_i_long(inputs.n_spots(), inputs.n_dims(), arma::fill::zeros);
   
   for (int j = 0; j < inputs.n_spots(); j++){
-    mu_i_long.row(j) = mu_i.row(z_prev[j] - 1);
+    mu_i_long.row(j) = curr.mu.row(prev.z[j] - 1);
   }
   
   arma::mat sumofsq = (inputs.features() - mu_i_long).t() * (inputs.features() - mu_i_long);
@@ -71,11 +86,12 @@ arma::mat update_lambda(ClusterInputs inputs, arma::mat mu_i, arma::rowvec z_pre
   return lambda_i;
 }
 
-arma::mat update_z(ClusterInputs inputs, arma::rowvec z_prev, List df_j, IntegerVector qvec, 
-                   arma::mat mu_i, arma::mat sigma_i, double gamma) {
+arma::mat update_z(ClusterInputs inputs, PottsState curr, PottsState prev, 
+                   List df_j, double gamma) {
   
-  arma::rowvec z = z_prev;
+  arma::rowvec z = prev.z;
   arma::rowvec plogLikj(inputs.n_spots(), arma::fill::zeros);
+  IntegerVector qvec = seq_len(inputs.n_clusters());
   double h_z_prev;
   double h_z_new;
   
@@ -88,11 +104,11 @@ arma::mat update_z(ClusterInputs inputs, arma::rowvec z_prev, List df_j, Integer
     
     // has neighbors
     if (j_vector.size() != 0){
-      h_z_prev = gamma/j_vector.size() * 2*arma::accu((z(j_vector) == z_j_prev)) + dmvnorm(inputs.features().row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i, true)[0];
-      h_z_new  = gamma/j_vector.size() * 2*arma::accu((z(j_vector) == z_j_new )) + dmvnorm(inputs.features().row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i, true)[0];
+      h_z_prev = gamma/j_vector.size() * 2*arma::accu((z(j_vector) == z_j_prev)) + dmvnorm(inputs.features().row(j), vectorise(curr.mu.row(z_j_prev-1)), curr.sigma(), true)[0];
+      h_z_new  = gamma/j_vector.size() * 2*arma::accu((z(j_vector) == z_j_new )) + dmvnorm(inputs.features().row(j), vectorise(curr.mu.row(z_j_new -1)), curr.sigma(), true)[0];
     } else {
-      h_z_prev = dmvnorm(inputs.features().row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i, true)[0];
-      h_z_new  = dmvnorm(inputs.features().row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i, true)[0];
+      h_z_prev = dmvnorm(inputs.features().row(j), vectorise(curr.mu.row(z_j_prev-1)), curr.sigma(), true)[0];
+      h_z_new  = dmvnorm(inputs.features().row(j), vectorise(curr.mu.row(z_j_new -1)), curr.sigma(), true)[0];
     }
     
     double prob_j = exp(h_z_new - h_z_prev);
@@ -117,40 +133,43 @@ List cluster_mcmc(arma::mat Y, List df_j, int nrep, int n_spots, int n_dims, dou
                   double alpha, double beta){
   
   ClusterInputs inputs(Y, n_clusters);
+  std::vector<PottsState> chain;
   
   //Initalize matrices storing iterations
   arma::mat df_sim_z(nrep, n_spots, arma::fill::zeros);
   arma::mat df_sim_mu(nrep, n_clusters * n_dims, arma::fill::zeros);
   List df_sim_lambda(nrep);
+  
+  // TODO: add this attribute and calculation to PottsState class
   NumericVector plogLik(nrep, NA_REAL);
   
   //Initialize parameters
-  arma::rowvec initmu = rep(mu0, n_clusters);
-  df_sim_mu.row(0) = initmu;
-  df_sim_lambda[0] = lambda0;
-  df_sim_z.row(0) = init.t();
-  
-  //Iterate
   arma::vec mu0vec = as<arma::vec>(mu0);
-  arma::mat mu_i(n_clusters, n_dims, arma::fill::zeros);  // q x d
-  arma::mat lambda_i;  // d x d
-  arma::mat sigma_i;
+  arma::mat mu_init = repmat(mu0vec, n_clusters, 1);
+  PottsState curr(mu_init, lambda0, init.t());
+  chain.push_back(curr);
+  
   
   for (int i = 1; i < nrep; i++){
+    curr = PottsState();
+    
     //Update mu
-    mu_i = update_mu(inputs, df_sim_z.row(i - 1), df_sim_lambda[i - 1], lambda0, mu0vec);
-    df_sim_mu.row(i) = mu_i.as_row();
+    curr.mu = update_mu(inputs, chain.back(), lambda0, mu0vec);
     
     //Update lambda
-    lambda_i = update_lambda(inputs, mu_i, df_sim_z.row(i - 1), alpha, beta);
-    df_sim_lambda[i] = lambda_i;
-    sigma_i = inv(lambda_i);
+    curr.lambda = update_lambda(inputs, curr, chain.back(), alpha, beta);
     
     //Update z
-    IntegerVector qvec = seq_len(n_clusters);
-    arma::mat result = update_z(inputs, df_sim_z.row(i - 1), df_j, qvec, mu_i, sigma_i, gamma);
-    df_sim_z.row(i) = result.row(0);
+    arma::mat result = update_z(inputs, curr, chain.back(), df_j, gamma);
+    curr.z = result.row(0);
     plogLik[i] = arma::sum(result.row(1));
+    
+    // Original output format
+    df_sim_mu.row(i) = curr.mu.as_row();
+    df_sim_lambda[i] = curr.lambda;
+    df_sim_z.row(i) = curr.z; 
+    
+    chain.push_back(curr);
   }
   
   List out = List::create(_["z"] = df_sim_z, _["mu"] = df_sim_mu, _["lambda"] = df_sim_lambda, _["plogLik"] = plogLik);
