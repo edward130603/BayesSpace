@@ -131,6 +131,16 @@ double computeEnergy(arma::rowvec z, arma::uvec neighbors,
   return H;
 }
 
+double computeLogLikelihood(arma::rowvec x, int label, PottsState state) {
+  double logP_YGivenZ;
+  
+  // Mean vector of given cluster
+  arma::vec mean = arma::vectorise(state.mu.row(label - 1));
+  
+  logP_YGivenZ = dmvnorm(x, mean, state.sigma(), true)[0];
+  return logP_YGivenZ;
+}
+
 // Compute next set of cluster assignments and corresponding log-likelihoods
 // TODO: extract energy/likelihood computation
 arma::mat update_z(ClusterParams params, PottsState curr, PottsState prev, List df_j) {
@@ -147,16 +157,15 @@ arma::mat update_z(ClusterParams params, PottsState curr, PottsState prev, List 
     int z_j_new = sample(qlessk, 1)[0];
     
     // Locations of neighbors
-    // arma::uvec neighbor_indices = df_j[j];
-    arma::uvec j_vector = df_j[j];
+    arma::uvec neighbors = df_j[j];
     
     // has neighbors
-    if (j_vector.size() != 0) {
-      h_z_prev = computeEnergy(z, j_vector, z_j_prev, params) + dmvnorm(params.Y.row(j), arma::vectorise(curr.mu.row(z_j_prev-1)), curr.sigma(), true)[0];
-      h_z_new  = computeEnergy(z, j_vector, z_j_new, params) + dmvnorm(params.Y.row(j), arma::vectorise(curr.mu.row(z_j_new -1)), curr.sigma(), true)[0];
+    if (neighbors.n_elem > 0) {
+      h_z_prev = computeEnergy(z, neighbors, z_j_prev, params) + computeLogLikelihood(params.Y.row(j), z_j_prev, curr);
+      h_z_new  = computeEnergy(z, neighbors, z_j_new, params) + computeLogLikelihood(params.Y.row(j), z_j_new, curr);
     } else {
-      h_z_prev = dmvnorm(params.Y.row(j), arma::vectorise(curr.mu.row(z_j_prev-1)), curr.sigma(), true)[0];
-      h_z_new  = dmvnorm(params.Y.row(j), arma::vectorise(curr.mu.row(z_j_new -1)), curr.sigma(), true)[0];
+      h_z_prev = computeLogLikelihood(params.Y.row(j), z_j_prev, curr);
+      h_z_new  = computeLogLikelihood(params.Y.row(j), z_j_new, curr);
     }
     
     double prob_j = exp(h_z_new - h_z_prev);
