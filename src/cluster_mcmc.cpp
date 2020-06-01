@@ -27,8 +27,8 @@ private:
 };
 
 // arma::mat update_mu(ModelState curr, ModelState prev) {
-arma::mat update_mu(arma::mat Y, arma::rowvec z_prev, arma::mat lambda_prev, 
-                    arma::mat lambda0, arma::vec mu0, int n_clusters, int n_dims) {
+arma::mat update_mu(ClusterInputs inputs, arma::rowvec z_prev, arma::mat lambda_prev, 
+                    arma::mat lambda0, arma::vec mu0) {
   
   int n_i;
   arma::uvec index_1k;
@@ -36,12 +36,12 @@ arma::mat update_mu(arma::mat Y, arma::rowvec z_prev, arma::mat lambda_prev,
   arma::mat var_i;
   NumericVector Ysums;
     
-  arma::mat mu_i(n_clusters, n_dims, arma::fill::zeros);
+  arma::mat mu_i(inputs.n_clusters(), inputs.n_dims(), arma::fill::zeros);
     
-  for (int k = 1; k <= n_clusters; k++){
+  for (int k = 1; k <= inputs.n_clusters(); k++){
     index_1k = arma::find(z_prev == k);
     n_i = index_1k.n_elem;
-    Ysums = sum(Y.rows(index_1k), 0);
+    Ysums = sum(inputs.features().rows(index_1k), 0);
 
     mean_i = inv(lambda0 + n_i * lambda_prev) * (lambda0 * mu0 + lambda_prev * as<arma::colvec>(Ysums));
     var_i = inv(lambda0 + n_i * lambda_prev);
@@ -52,35 +52,34 @@ arma::mat update_mu(arma::mat Y, arma::rowvec z_prev, arma::mat lambda_prev,
   return mu_i;
 }
 
-arma::mat update_lambda(arma::mat Y, arma::mat mu_i, arma::rowvec z_prev, 
-                        int n_spots, int n_dims, double alpha, double beta) {
+arma::mat update_lambda(ClusterInputs inputs, arma::mat mu_i, arma::rowvec z_prev, 
+                        double alpha, double beta) {
   
-  arma::mat mu_i_long(n_spots, n_dims, arma::fill::zeros);
+  arma::mat mu_i_long(inputs.n_spots(), inputs.n_dims(), arma::fill::zeros);
   
-  for (int j = 0; j < n_spots; j++){
+  for (int j = 0; j < inputs.n_spots(); j++){
     mu_i_long.row(j) = mu_i.row(z_prev[j] - 1);
   }
   
-  arma::mat sumofsq = (Y - mu_i_long).t() * (Y - mu_i_long);
+  arma::mat sumofsq = (inputs.features() - mu_i_long).t() * (inputs.features() - mu_i_long);
   
-  arma::vec beta_d(n_dims); 
+  arma::vec beta_d(inputs.n_dims()); 
   beta_d.fill(beta);
   
-  arma::mat lambda_i = rwish(n_spots + alpha, inv(arma::diagmat(beta_d) + sumofsq));
+  arma::mat lambda_i = rwish(inputs.n_spots() + alpha, inv(arma::diagmat(beta_d) + sumofsq));
 
   return lambda_i;
 }
 
-arma::mat update_z(arma::mat Y, arma::rowvec z_prev, List df_j, IntegerVector qvec, 
-                      arma::mat mu_i, arma::mat sigma_i,
-                      int n_spots, double gamma) {
+arma::mat update_z(ClusterInputs inputs, arma::rowvec z_prev, List df_j, IntegerVector qvec, 
+                   arma::mat mu_i, arma::mat sigma_i, double gamma) {
   
   arma::rowvec z = z_prev;
-  arma::rowvec plogLikj(n_spots, arma::fill::zeros);
+  arma::rowvec plogLikj(inputs.n_spots(), arma::fill::zeros);
   double h_z_prev;
   double h_z_new;
   
-  for (int j = 0; j < n_spots; j++){
+  for (int j = 0; j < inputs.n_spots(); j++){
     int z_j_prev = z(j);
     IntegerVector qlessk = qvec[qvec != z_j_prev];
     int z_j_new = sample(qlessk, 1)[0];
@@ -89,11 +88,11 @@ arma::mat update_z(arma::mat Y, arma::rowvec z_prev, List df_j, IntegerVector qv
     
     // has neighbors
     if (j_vector.size() != 0){
-      h_z_prev = gamma/j_vector.size() * 2*arma::accu((z(j_vector) == z_j_prev)) + dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i, true)[0];
-      h_z_new  = gamma/j_vector.size() * 2*arma::accu((z(j_vector) == z_j_new )) + dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i, true)[0];
+      h_z_prev = gamma/j_vector.size() * 2*arma::accu((z(j_vector) == z_j_prev)) + dmvnorm(inputs.features().row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i, true)[0];
+      h_z_new  = gamma/j_vector.size() * 2*arma::accu((z(j_vector) == z_j_new )) + dmvnorm(inputs.features().row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i, true)[0];
     } else {
-      h_z_prev = dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i, true)[0];
-      h_z_new  = dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i, true)[0];
+      h_z_prev = dmvnorm(inputs.features().row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i, true)[0];
+      h_z_new  = dmvnorm(inputs.features().row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i, true)[0];
     }
     
     double prob_j = exp(h_z_new - h_z_prev);
@@ -117,6 +116,8 @@ List cluster_mcmc(arma::mat Y, List df_j, int nrep, int n_spots, int n_dims, dou
                   int n_clusters, arma::vec init, NumericVector mu0, arma::mat lambda0, 
                   double alpha, double beta){
   
+  ClusterInputs inputs(Y, n_clusters);
+  
   //Initalize matrices storing iterations
   arma::mat df_sim_z(nrep, n_spots, arma::fill::zeros);
   arma::mat df_sim_mu(nrep, n_clusters * n_dims, arma::fill::zeros);
@@ -137,17 +138,17 @@ List cluster_mcmc(arma::mat Y, List df_j, int nrep, int n_spots, int n_dims, dou
   
   for (int i = 1; i < nrep; i++){
     //Update mu
-    mu_i = update_mu(Y, df_sim_z.row(i - 1), df_sim_lambda[i - 1], lambda0, mu0vec, n_clusters, n_dims);
+    mu_i = update_mu(inputs, df_sim_z.row(i - 1), df_sim_lambda[i - 1], lambda0, mu0vec);
     df_sim_mu.row(i) = mu_i.as_row();
     
     //Update lambda
-    lambda_i = update_lambda(Y, mu_i, df_sim_z.row(i - 1), n_spots, n_dims, alpha, beta);
+    lambda_i = update_lambda(inputs, mu_i, df_sim_z.row(i - 1), alpha, beta);
     df_sim_lambda[i] = lambda_i;
     sigma_i = inv(lambda_i);
     
     //Update z
     IntegerVector qvec = seq_len(n_clusters);
-    arma::mat result = update_z(Y, df_sim_z.row(i - 1), df_j, qvec, mu_i, sigma_i, n_spots, gamma);
+    arma::mat result = update_z(inputs, df_sim_z.row(i - 1), df_j, qvec, mu_i, sigma_i, gamma);
     df_sim_z.row(i) = result.row(0);
     plogLik[i] = arma::sum(result.row(1));
   }
