@@ -5,6 +5,11 @@
 #include <testthat.h>
 using namespace Rcpp;
 
+// Hyperparameter defaults
+const double kDefaultAlpha = 1;
+const double kDefaultBeta = 0.01;
+const double kDefaultGamma = 2;
+
 class PottsState {
 public:
   arma::mat mu;
@@ -18,31 +23,41 @@ public:
   arma::mat sigma() const { return inv(lambda); }
 };
 
-// TODO: add alpha, beta, gamma
-// TODO: add lambda0, mu0
-class ClusterInputs {
+// TODO: add lambda0, mu0?
+class ClusterParams {
 public:
-  // Constructors
-  ClusterInputs (): Y(arma::zeros(0, 0)), q(0) {}
-  ClusterInputs (arma::mat Y, int q): Y(Y), q(q) {}
+  // Keep public for ease of access
+  arma::mat Y;         // expression/feature matrix (n x d)
+  int q;               // number of clusters
+  double alpha, beta;  // Wishart hyperparameters
+  double gamma;        // Smoothing hyperparameter
   
-  // Getters
+  ClusterParams () = delete;
+  
+  ClusterParams (arma::mat features, int n_clusters) {
+    Y = features;
+    q = n_clusters;
+    alpha = kDefaultAlpha;
+    beta = kDefaultBeta;
+    gamma = kDefaultGamma;
+  } 
+  
+  ClusterParams (arma::mat features, int n_clusters,
+                 double a, double b, double g) {
+    Y = features;
+    q = n_clusters;
+    alpha = a;
+    beta = b;
+    gamma = g;
+  }
+  
+  // No need to track n and d directly
   int n_spots() const { return Y.n_rows; }
   int n_dims() const { return Y.n_cols; }
-  int n_clusters() const { return q; }
-  arma::mat features() const { return Y; }
-  
-  // Setters
-  void set_Y(arma::mat features) { Y = features; }
-  void set_q(int n_clusters) { q = n_clusters; }
-  
-private:
-  arma::mat Y;  // n x d Expression/feature matrix
-  int q;        // Number of clusters
 };
 
-// arma::mat update_mu(ModelState curr, ModelState prev) {
-arma::mat update_mu(ClusterInputs inputs, PottsState prev,
+// Compute next mean vector
+arma::mat update_mu(ClusterParams params, PottsState prev,
                     arma::mat lambda0, arma::vec mu0) {
   
   int n_i;
@@ -51,12 +66,12 @@ arma::mat update_mu(ClusterInputs inputs, PottsState prev,
   arma::mat var_i;
   NumericVector Ysums;
     
-  arma::mat mu_i(inputs.n_clusters(), inputs.n_dims(), arma::fill::zeros);
+  arma::mat mu_i(params.q, params.n_dims(), arma::fill::zeros);
     
-  for (int k = 1; k <= inputs.n_clusters(); k++){
+  for (int k = 1; k <= params.q; k++){
     index_1k = arma::find(prev.z == k);
     n_i = index_1k.n_elem;
-    Ysums = sum(inputs.features().rows(index_1k), 0);
+    Ysums = sum(params.Y.rows(index_1k), 0);
 
     mean_i = inv(lambda0 + n_i * prev.lambda) * (lambda0 * mu0 + prev.lambda * as<arma::colvec>(Ysums));
     var_i = inv(lambda0 + n_i * prev.lambda);
@@ -67,35 +82,36 @@ arma::mat update_mu(ClusterInputs inputs, PottsState prev,
   return mu_i;
 }
 
-arma::mat update_lambda(ClusterInputs inputs, PottsState curr, PottsState prev, 
-                        double alpha, double beta) {
+// Compute next covariance matrix
+arma::mat update_lambda(ClusterParams params, PottsState curr, PottsState prev) {
   
-  arma::mat mu_i_long(inputs.n_spots(), inputs.n_dims(), arma::fill::zeros);
+  arma::mat mu_i_long(params.n_spots(), params.n_dims(), arma::fill::zeros);
   
-  for (int j = 0; j < inputs.n_spots(); j++){
+  for (int j = 0; j < params.n_spots(); j++){
     mu_i_long.row(j) = curr.mu.row(prev.z[j] - 1);
   }
   
-  arma::mat sumofsq = (inputs.features() - mu_i_long).t() * (inputs.features() - mu_i_long);
+  arma::mat sumofsq = (params.Y - mu_i_long).t() * (params.Y - mu_i_long);
   
-  arma::vec beta_d(inputs.n_dims()); 
-  beta_d.fill(beta);
+  arma::vec beta_d(params.n_dims()); 
+  beta_d.fill(params.beta);
   
-  arma::mat lambda_i = rwish(inputs.n_spots() + alpha, inv(arma::diagmat(beta_d) + sumofsq));
+  arma::mat lambda_i = rwish(params.n_spots() + params.alpha, inv(arma::diagmat(beta_d) + sumofsq));
 
   return lambda_i;
 }
 
-arma::mat update_z(ClusterInputs inputs, PottsState curr, PottsState prev, 
-                   List df_j, double gamma) {
+// Compute next set of cluster assignments and corresponding log-likelihoods
+// TODO: extract energy/likelihood computation
+arma::mat update_z(ClusterParams params, PottsState curr, PottsState prev, List df_j) {
   
   arma::rowvec z = prev.z;
-  arma::rowvec plogLikj(inputs.n_spots(), arma::fill::zeros);
-  IntegerVector qvec = seq_len(inputs.n_clusters());
+  arma::rowvec plogLikj(params.n_spots(), arma::fill::zeros);
+  IntegerVector qvec = seq_len(params.q);
   double h_z_prev;
   double h_z_new;
   
-  for (int j = 0; j < inputs.n_spots(); j++){
+  for (int j = 0; j < params.n_spots(); j++){
     int z_j_prev = z(j);
     IntegerVector qlessk = qvec[qvec != z_j_prev];
     int z_j_new = sample(qlessk, 1)[0];
@@ -104,11 +120,11 @@ arma::mat update_z(ClusterInputs inputs, PottsState curr, PottsState prev,
     
     // has neighbors
     if (j_vector.size() != 0){
-      h_z_prev = gamma/j_vector.size() * 2*arma::accu((z(j_vector) == z_j_prev)) + dmvnorm(inputs.features().row(j), vectorise(curr.mu.row(z_j_prev-1)), curr.sigma(), true)[0];
-      h_z_new  = gamma/j_vector.size() * 2*arma::accu((z(j_vector) == z_j_new )) + dmvnorm(inputs.features().row(j), vectorise(curr.mu.row(z_j_new -1)), curr.sigma(), true)[0];
+      h_z_prev = params.gamma/j_vector.size() * 2*arma::accu((z(j_vector) == z_j_prev)) + dmvnorm(params.Y.row(j), arma::vectorise(curr.mu.row(z_j_prev-1)), curr.sigma(), true)[0];
+      h_z_new  = params.gamma/j_vector.size() * 2*arma::accu((z(j_vector) == z_j_new )) + dmvnorm(params.Y.row(j), arma::vectorise(curr.mu.row(z_j_new -1)), curr.sigma(), true)[0];
     } else {
-      h_z_prev = dmvnorm(inputs.features().row(j), vectorise(curr.mu.row(z_j_prev-1)), curr.sigma(), true)[0];
-      h_z_new  = dmvnorm(inputs.features().row(j), vectorise(curr.mu.row(z_j_new -1)), curr.sigma(), true)[0];
+      h_z_prev = dmvnorm(params.Y.row(j), arma::vectorise(curr.mu.row(z_j_prev-1)), curr.sigma(), true)[0];
+      h_z_new  = dmvnorm(params.Y.row(j), arma::vectorise(curr.mu.row(z_j_new -1)), curr.sigma(), true)[0];
     }
     
     double prob_j = exp(h_z_new - h_z_prev);
@@ -127,12 +143,13 @@ arma::mat update_z(ClusterInputs inputs, PottsState curr, PottsState prev,
   return result;
 }
 
+// Cluster input matrix Y
 // [[Rcpp::export]]
 List cluster_mcmc(arma::mat Y, List df_j, int nrep, int n_spots, int n_dims, double gamma, 
                   int n_clusters, arma::vec init, NumericVector mu0, arma::mat lambda0, 
                   double alpha, double beta){
   
-  ClusterInputs inputs(Y, n_clusters);
+  ClusterParams params(Y, n_clusters, alpha, beta, gamma);
   std::vector<PottsState> chain;
   
   //Initalize matrices storing iterations
@@ -149,18 +166,17 @@ List cluster_mcmc(arma::mat Y, List df_j, int nrep, int n_spots, int n_dims, dou
   PottsState curr(mu_init, lambda0, init.t());
   chain.push_back(curr);
   
-  
   for (int i = 1; i < nrep; i++){
     curr = PottsState();
     
     //Update mu
-    curr.mu = update_mu(inputs, chain.back(), lambda0, mu0vec);
+    curr.mu = update_mu(params, chain.back(), lambda0, mu0vec);
     
     //Update lambda
-    curr.lambda = update_lambda(inputs, curr, chain.back(), alpha, beta);
+    curr.lambda = update_lambda(params, curr, chain.back());
     
     //Update z
-    arma::mat result = update_z(inputs, curr, chain.back(), df_j, gamma);
+    arma::mat result = update_z(params, curr, chain.back(), df_j);
     curr.z = result.row(0);
     plogLik[i] = arma::sum(result.row(1));
     
@@ -190,15 +206,18 @@ context("Inputs class") {
   arma::mat Y = arma::randu<arma::mat>(5, 7);
   int q = 3;
   
-  ClusterInputs inputs(Y, q);
+  ClusterParams params(Y, q);
   
   test_that("rows match input") {
-    expect_true(inputs.n_spots() == Y.n_rows);
+    expect_true(params.n_spots() == Y.n_rows);
   }
   test_that("columns match input") {
-    expect_true(inputs.n_dims() == Y.n_cols); 
+    expect_true(params.n_dims() == Y.n_cols); 
   }
   test_that("clusters match input") {
-    expect_true(inputs.n_clusters() == q);
+    expect_true(params.q == q);
+  }
+  test_that("default alpha matches") {
+    expect_true(params.alpha == kDefaultAlpha);
   }
 }
