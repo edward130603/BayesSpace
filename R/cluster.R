@@ -95,8 +95,9 @@ cluster = function(Y, positions, neighborhood.radius, gamma = 2, q,
     }
   } 
   
-  out <- cluster.FUN(Y = as.matrix(Y), df_j = df_j, nrep = nrep, n = n, d = d, 
-                     gamma = gamma, q = q, init = init, mu0 = mu0, 
+  out <- cluster.FUN(Y = as.matrix(Y), df_j = df_j, nrep = nrep, 
+                     n_spots = n, n_dims = d, 
+                     gamma = gamma, n_clusters = q, init = init, mu0 = mu0, 
                      lambda0 = lambda0, alpha = alpha, beta = beta)
   
   out$labels = apply(out$z[max(nrep-1000, 2):nrep,], 2, Mode)

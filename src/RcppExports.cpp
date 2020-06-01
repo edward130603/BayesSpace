@@ -95,24 +95,24 @@ BEGIN_RCPP
 END_RCPP
 }
 // cluster_mcmc
-List cluster_mcmc(arma::mat Y, List df_j, int nrep, int n, int d, double gamma, int q, arma::vec init, NumericVector mu0, arma::mat lambda0, double alpha, double beta);
-RcppExport SEXP _BayesSpace_cluster_mcmc(SEXP YSEXP, SEXP df_jSEXP, SEXP nrepSEXP, SEXP nSEXP, SEXP dSEXP, SEXP gammaSEXP, SEXP qSEXP, SEXP initSEXP, SEXP mu0SEXP, SEXP lambda0SEXP, SEXP alphaSEXP, SEXP betaSEXP) {
+List cluster_mcmc(arma::mat Y, List df_j, int nrep, int n_spots, int n_dims, double gamma, int n_clusters, arma::vec init, NumericVector mu0, arma::mat lambda0, double alpha, double beta);
+RcppExport SEXP _BayesSpace_cluster_mcmc(SEXP YSEXP, SEXP df_jSEXP, SEXP nrepSEXP, SEXP n_spotsSEXP, SEXP n_dimsSEXP, SEXP gammaSEXP, SEXP n_clustersSEXP, SEXP initSEXP, SEXP mu0SEXP, SEXP lambda0SEXP, SEXP alphaSEXP, SEXP betaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::mat >::type Y(YSEXP);
     Rcpp::traits::input_parameter< List >::type df_j(df_jSEXP);
     Rcpp::traits::input_parameter< int >::type nrep(nrepSEXP);
-    Rcpp::traits::input_parameter< int >::type n(nSEXP);
-    Rcpp::traits::input_parameter< int >::type d(dSEXP);
+    Rcpp::traits::input_parameter< int >::type n_spots(n_spotsSEXP);
+    Rcpp::traits::input_parameter< int >::type n_dims(n_dimsSEXP);
     Rcpp::traits::input_parameter< double >::type gamma(gammaSEXP);
-    Rcpp::traits::input_parameter< int >::type q(qSEXP);
+    Rcpp::traits::input_parameter< int >::type n_clusters(n_clustersSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type init(initSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type mu0(mu0SEXP);
     Rcpp::traits::input_parameter< arma::mat >::type lambda0(lambda0SEXP);
     Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
     Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
-    rcpp_result_gen = Rcpp::wrap(cluster_mcmc(Y, df_j, nrep, n, d, gamma, q, init, mu0, lambda0, alpha, beta));
+    rcpp_result_gen = Rcpp::wrap(cluster_mcmc(Y, df_j, nrep, n_spots, n_dims, gamma, n_clusters, init, mu0, lambda0, alpha, beta));
     return rcpp_result_gen;
 END_RCPP
 }
