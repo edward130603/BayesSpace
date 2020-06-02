@@ -78,23 +78,18 @@ public:
 
 // Compute next mean vector
 arma::mat update_mu(ClusterParams params, PottsState prev) {
-  
-  int n_i;
-  arma::uvec index_1k;
-  arma::vec mean_i;
-  arma::mat var_i;
-  NumericVector Ysums;
-    
   arma::mat mu_i(params.q, params.n_dims(), arma::fill::zeros);
     
   for (int k = 1; k <= params.q; k++){
-    index_1k = arma::find(prev.z == k);
-    n_i = index_1k.n_elem;
-    Ysums = sum(params.Y.rows(index_1k), 0);
-
-    mean_i = arma::inv(params.lambda0 + n_i * prev.lambda) * (params.lambda0 * params.mu0 + prev.lambda * as<arma::colvec>(Ysums));
-    var_i = arma::inv(params.lambda0 + n_i * prev.lambda);
-
+    arma::uvec cluster_members = arma::find(prev.z == k);
+    
+    // Cov  = (Λ_0 + n_k * Λ)^{-1}
+    arma::mat var_i = arma::inv(params.lambda0 + cluster_members.n_elem * prev.lambda);
+    
+    // Mean = (Λ_0 + n_k * Λ)^{-1} (Λ_0 * μ_0 + Λ * Σ(y_i))
+    arma::vec Ysums = arma::sum(params.Y.rows(cluster_members), 0).t();
+    arma::vec mean_i = var_i * (params.lambda0 * params.mu0 + prev.lambda * Ysums);
+    
     mu_i.row(k-1) = rmvnorm(1, mean_i, var_i);
   }
     
@@ -168,10 +163,7 @@ arma::mat update_z(ClusterParams params, PottsState curr, PottsState prev, List 
       h_z_new  = computeLogLikelihood(params.Y.row(j), z_j_new, curr);
     }
     
-    double prob_j = exp(h_z_new - h_z_prev);
-    if (prob_j > 1){
-      prob_j = 1;
-    }
+    double prob_j = std::min(exp(h_z_new - h_z_prev), 1.0);
     
     IntegerVector zsample = {z_j_prev, z_j_new};
     NumericVector probs = {1-prob_j, prob_j};
@@ -181,6 +173,7 @@ arma::mat update_z(ClusterParams params, PottsState curr, PottsState prev, List 
   }
   
   arma::mat result = join_cols(z, plogLikj);
+  
   return result;
 }
 
