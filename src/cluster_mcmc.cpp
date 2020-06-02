@@ -77,7 +77,7 @@ public:
 };
 
 // Compute next mean vector
-arma::mat update_mu(ClusterParams params, PottsState prev) {
+arma::mat updateMu(ClusterParams params, PottsState prev) {
   arma::mat mu_i(params.q, params.n_dims(), arma::fill::zeros);
     
   for (int k = 1; k <= params.q; k++){
@@ -97,7 +97,7 @@ arma::mat update_mu(ClusterParams params, PottsState prev) {
 }
 
 // Compute next covariance matrix
-arma::mat update_lambda(ClusterParams params, PottsState curr, PottsState prev) {
+arma::mat updateLambda(ClusterParams params, PottsState curr, PottsState prev) {
   
   arma::mat mu_i_long(params.n_spots(), params.n_dims(), arma::fill::zeros);
   
@@ -138,7 +138,7 @@ double computeLogLikelihood(arma::rowvec x, int label, PottsState state) {
 
 // Compute next set of cluster assignments and corresponding log-likelihoods
 // TODO: extract energy/likelihood computation
-arma::mat update_z(ClusterParams params, PottsState curr, PottsState prev, List df_j) {
+arma::mat updateZ(ClusterParams params, PottsState curr, PottsState prev, List df_j) {
   
   arma::rowvec z = prev.z;
   arma::rowvec plogLikj(params.n_spots(), arma::fill::zeros);
@@ -203,13 +203,13 @@ List cluster_mcmc(arma::mat Y, List df_j, int nrep, int n_spots, int n_dims, dou
     curr = PottsState();
     
     //Update mu
-    curr.mu = update_mu(params, chain.back());
+    curr.mu = updateMu(params, chain.back());
     
     //Update lambda
-    curr.lambda = update_lambda(params, curr, chain.back());
+    curr.lambda = updateLambda(params, curr, chain.back());
     
     //Update z
-    arma::mat result = update_z(params, curr, chain.back(), df_j);
+    arma::mat result = updateZ(params, curr, chain.back(), df_j);
     curr.z = result.row(0);
     plogLik[i] = arma::sum(result.row(1));
     
