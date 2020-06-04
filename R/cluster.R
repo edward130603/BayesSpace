@@ -39,8 +39,9 @@
 #'         
 #' @details TODO describe method in detail
 cluster = function(Y, positions, neighborhood.radius, gamma = 2, q, 
-                   init = rep(1, nrow(Y)), model = "normal", 
-                   precision = "equal", nrep = 1000, mu0 = colMeans(Y), 
+                   init = rep(1, nrow(Y)), 
+                   model = c("normal", "t"), precision = c("equal", "variable"),
+                   nrep = 1000, mu0 = colMeans(Y), 
                    lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, 
                    beta = 0.01) {
   positions = as.matrix(positions)
@@ -55,15 +56,8 @@ cluster = function(Y, positions, neighborhood.radius, gamma = 2, q,
     stop("Dimensions of mu0 or lambda0 do not match input data Y")
   }
   
-  if (!(model %in% c("normal", "t"))) {
-    msg <- "Invalid model: %s. Specify \"normal\" or \"t\"."
-    stop(sprintf(msg, model))
-  }
-  
-  if (!(precision %in% c("equal", "variable"))) {
-    msg <- "Invalid precision: %s. Specify \"equal\" or \"variable\"."
-    stop(sprintf(msg, precision))
-  }
+  model <- match.arg(model)
+  precision <- match.arg(precision)
   
   if (q==1){
     return(list(z = matrix(rep(1, n), nrow =1)))
@@ -101,3 +95,5 @@ cluster = function(Y, positions, neighborhood.radius, gamma = 2, q,
   out$labels = apply(out$z[max(nrep-1000, 2):nrep,], 2, Mode)
   out
 }
+
+# find_neighbors <- function
