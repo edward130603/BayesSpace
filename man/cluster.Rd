@@ -8,16 +8,16 @@ cluster(
   Y,
   positions,
   neighborhood.radius,
-  gamma = 2,
   q,
-  init = rep(1, nrow(Y)),
-  model = "normal",
-  precision = "equal",
-  nrep = 1000,
+  model = c("normal", "t"),
+  precision = c("equal", "variable"),
+  z0 = rep(1, nrow(Y)),
   mu0 = colMeans(Y),
   lambda0 = diag(0.01, nrow = ncol(Y)),
+  gamma = 2,
   alpha = 1,
-  beta = 0.01
+  beta = 0.01,
+  nrep = 1000
 )
 }
 \arguments{
@@ -29,27 +29,27 @@ coordinates of the spot}
 
 \item{neighborhood.radius}{The maximum (L1) distance for two spots to be considered neighbors}
 
-\item{gamma}{Smoothing parameter. Values in range of 1-3 seem to work well}
-
 \item{q}{The number of clusters}
-
-\item{init}{Initial cluster assignments (z's). Must be a vector of length equal
-to the number of rows of Y and positions}
 
 \item{model}{Error model ("normal" or "t")}
 
 \item{precision}{Covariance structure ("equal" or "variable" for EEE and VVV 
 covariance models, respectively)}
 
-\item{nrep}{The maximum number of MCMC iterations}
+\item{z0}{Initial cluster assignments (z's). Must be a vector of length equal
+to the number of rows of Y and positions.}
 
-\item{mu0}{Prior mean hyperparameter for mu}
+\item{mu0}{Initial cluster means}
 
-\item{lambda0}{Prior precision hyperparam for mu}
+\item{lambda0}{Initial cluster covariances}
+
+\item{gamma}{Smoothing parameter. Values in range of 1-3 seem to work well}
 
 \item{alpha}{Hyperparameter for Wishart distributed precision lambda}
 
 \item{beta}{Hyperparameter for Wishart distributed precision lambda}
+
+\item{nrep}{The maximum number of MCMC iterations}
 }
 \value{
 List of parameter values (`z`, `mu`, `lambda`) and model 
