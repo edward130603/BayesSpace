@@ -10,7 +10,7 @@ test_that("clustering matches", {
   out <- cluster(Y = metadata(sce)$PCs, 
                  positions = as.matrix(positions), 
                  q = 7, 
-                 init = colData(sce)$init_km7, 
+                 z0 = colData(sce)$init_km7, 
                  nrep = 1000, 
                  gamma = 1.5, 
                  neighborhood.radius = metadata(sce)$dist,
