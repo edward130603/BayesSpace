@@ -18,6 +18,7 @@ public:
   int q;               // number of clusters
   double alpha, beta;  // Wishart hyperparameters
   double gamma;        // Smoothing hyperparameter
+  // TODO: add neighbors matrix/list
   
   // Initial cluster means and covariance
   arma::vec mu0;
