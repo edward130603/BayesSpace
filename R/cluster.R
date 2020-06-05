@@ -88,34 +88,33 @@ cluster = function(Y, positions, neighborhood.radius, q,
   out
 }
 
-#' Compute pairwise distances between all spots and return list of neighbors
-#' for each spot
-#' 
-#' @param positions 
-#'        (n x 2) matrix of spot coordinates
-#' @param radius
-#'        The maximum distance for two spots to be considered neighbors 
-#' @param method
-#'        Distance metric to use
-#' 
-#' @return List df_j, 
-#'         where df_j[[i]] is a vector of zero-indexed neighbors of i 
-#'         
-#' @importFrom stats dist
-find_neighbors <- function(positions, neighborhood.radius,
-                            method=c("manhattan", "euclidean")) {
-  method <- match.arg(method)
+
+#' @importFrom stats kmeans
+SpatialCluster <- function(sce, q,
+                           init=NA, init.method=c("kmeans"),
+                           positions=NA, neighborhood.radius=NA,
+                           x_col = "col", y_col = "row",
+                           assay.type="logcounts") {
   
-  message("Calculating neighbors...")
-  pdist <- as.matrix(stats::dist(positions, method=method))
-  neighbors <- (pdist <= neighborhood.radius & pdist > 0)
-  df_j <- sapply(1:nrow(positions),
-                 function(x) as.vector(which(neighbors[x, ])) - 1)
+  # TODO: 
+  #   1. Allow specification of reduced dimension (and number of top features)
+  #   2. Default to PCA, running PCA if necessary
+  # Y <- assay(sce, assay.type)
+  # Y <- as.matrix(reducedDim(sce, dim.name)
   
-  msg <- sprintf("Neighbors were identified for %d out of %d spots.",
-                 sum(rowSums(neighbors) > 0), 
-                 nrow(positions))
-  message(msg)
+  if (is.na(positions)) {
+    positions <- cbind(sce[[x_col]], sce[[y_col]])
+    colnames(positions) <- c("x", "y")
+  }
   
-  df_j
+  if (is.na(neighborhood.radius)) {
+    neighborhood.radius <- compute_neighborhood_radius(sce)
+  }
+  
+  if (is.na(init)) {
+    init.method <- match.arg(init.method)
+    if (init.method == "kmeans") {
+      init <- kmeans(PCs$components, centers = 7)$cluster
+    }
+  }
 }
