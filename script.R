@@ -68,14 +68,14 @@ cluster = function(Y, positions, dist, gamma = 2, q, init = rep(1, nrow(Y)), mod
   } else {
     stop("model should be either 'normal' or 't'")
   }
-  out$labels = apply(out$z[max(nrep-1000, 2):nrep,], 2, Mode)
+  out$labels = apply(out$z[ifelse(nrep<2000,max(2, nrep-1000), 1000) :nrep,], 2, Mode)
   out
 }
 
 #deconvolve
 #deconvolve calls iterate_deconv(), written in Rcpp
 #inputs are the same as cluster() except you have to specify xdist and ydist instead of total dist...(maybe would be better to change cluster() to match this)
-deconvolve = function(Y, positions, nrep = 1000, every = 1, gamma = 2, xdist, ydist, q, init, seed = 100, verbose = TRUE, mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01){
+deconvolve = function(Y, positions, nrep = 1000, every = 1, gamma = 2, xdist, ydist, q, init, seed = 100, platform = "visium", verbose = TRUE, mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01){
   set.seed(seed)
   
   d = ncol(Y)
@@ -83,14 +83,25 @@ deconvolve = function(Y, positions, nrep = 1000, every = 1, gamma = 2, xdist, yd
   positions = as.matrix(positions)
   Y = as.matrix(Y)
   colnames(positions) = c("x", "y")
+  
+  subspots = ifelse(platform == "visium", 7, 
+                    ifelse(platform == "ST", 9, stop("platform should be either 'visium' or 'ST'")))
 
-  init1 = rep(init, 7)
-  Y2 = Y[rep(seq_len(n0), 7), ] #rbind 7 times
-  positions2 = positions[rep(seq_len(n0), 7), ] #rbind 7 times
-  shift = rbind(expand.grid(c(1/3, -1/3), c(1/3,-1/3)), expand.grid(c(2/3, -2/3,0), 0))
+  init1 = rep(init, subspots)
+  Y2 = Y[rep(seq_len(n0), subspots), ] #rbind 7 or 9 times
+  positions2 = positions[rep(seq_len(n0), subspots), ] #rbind 7 times
+  if (platform == "visium"){
+    shift = rbind(expand.grid(c(1/3, -1/3), c(1/3,-1/3)), expand.grid(c(2/3, -2/3,0), 0))
+  } else {
+    shift = rbind(expand.grid(c(1/3, -1/3, 0), c(1/3,-1/3,0)))
+  }
+  
   shift = t(t(shift)*c(xdist, ydist))
   dist = max(rowSums(abs(shift)))*1.05
-  shift_long = shift[rep(seq_len(7), each = n0), ]
+  if (platform == "ST"){
+    dist = dist/2
+  }
+  shift_long = shift[rep(seq_len(subspots), each = n0), ]
   positions2[,"x"] = positions2[,"x"] + shift_long[,"Var1"]
   positions2[,"y"] = positions2[,"y"] + shift_long[,"Var2"]
   n = nrow(Y2)
@@ -98,7 +109,7 @@ deconvolve = function(Y, positions, nrep = 1000, every = 1, gamma = 2, xdist, yd
   df_j = sapply(1:n, function(x){which((abs(positions2[,1] -positions2[x,1]) + abs(positions2[,2] - positions2[x,2])) <= dist &  #L1 distance
                                          (abs(positions2[,1] -positions2[x,1]) + abs(positions2[,2] - positions2[x,2])) > 0)-1})
   if (verbose){message("Fitting model...")}
-  out = iterate_deconv(Y = Y2, df_j = df_j, nrep = nrep, n = n, n0 = n0, d = d, gamma = gamma, q = q, init = init1, verbose = verbose, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
+  out = iterate_deconv(Y = Y2, df_j = df_j, nrep = nrep, n = n, n0 = n0, d = d, gamma = gamma, q = q, init = init1, subspots = subspots, verbose = verbose, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
   out$positions = positions2
   out
 }

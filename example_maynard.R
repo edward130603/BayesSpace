@@ -46,6 +46,7 @@ ydist = coef(lm(sce$imagerow~sce$row))[2] #y distance between neighbors
 dist = xdist + ydist + 0.2
 #Normal model
 clust1 = cluster(Y= PCs$components, positions = as.matrix(positions), q = 7, init = km[,7], nrep = 10000, gamma = 1.5, dist = dist)
+clust1g3 = cluster(Y= PCs$components, positions = as.matrix(positions), q = 7, init = km[,7], nrep = 5000, gamma = 3, dist = dist)
 clust1col = apply(clust1$z[9000:10000,], 2, Mode)
 clust1alpha = pmax(colMeans(clust1$z[9000:10000,]==1),
                    colMeans(clust1$z[9000:10000,]==2),
@@ -202,7 +203,7 @@ labels + means1 + means2
 simY = matrix(nrow = nrow(deconv1$positions), ncol = 9)
 set.seed(100)
 for(i in 1:nrow(deconv1$positions)){
-  simY[i,] = mvnfast::rmvn(1, mu = deconv1mu_matrix[deconv1col[i],], sigma = solve(deconv1lambda))
+  simY[i,] = mvtnorm::rmvnorm(1, mean = deconv1mu_matrix[deconv1col[i],], sigma = solve(deconv1lambda))
 }
 sim1 = ggplot(data.frame(deconv1$positions), aes(x, -y)) +
   geom_text(color = "grey", label = "\u2B22", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
@@ -250,17 +251,20 @@ agg3 = ggplot(data.frame(positions), aes(x, -y)) +
   theme_void() + coord_fixed()
 agg1+agg2+agg3
 
-set.seed(7)
-km_sim = kmeans(data_sim_mean[,-1], centers = 7)$cluster
+# set.seed(7)
+# km_sim = kmeans(data_sim_mean[,-1], centers = 7)$cluster
 set.seed(7)
 mclust_sim = Mclust(data_sim_mean[,-1], G = 7, modelNames = c("EEE"))
 clust_sim = cluster(Y= data_sim_mean[,-1], positions = as.matrix(positions), q = 7, init = mclust_sim$classification, 
-                    nrep = 50000, gamma = 1.5, dist = dist)
+                    nrep = 10000, gamma = 2, dist = dist)
+clust_sim2 = cluster(Y= data_sim_mean[,-1], positions = as.matrix(positions), q = 7, init = mclust_sim$classification, 
+                    nrep = 50000, gamma = 3, dist = dist)
 
-simcol = apply(clust_sim$z[seq(10000,50000,10),], 2, Mode)
+simcol = apply(clust_sim$z[seq(1000,10000,10),], 2, Mode)
+simcol2 = apply(clust_sim2$z[seq(10000,50000,10),], 2, Mode)
 
 mclust_sim_out = ggplot(data.frame(positions), aes(x, -y)) +
-  geom_text(aes(color =factor(mclust_sim$classification, levels = c(6,1,3,4,5,7,2))), alpha = 1,
+  geom_text(aes(color =factor(mclust_sim$classification, levels = c(2,4,5,7,1,3,6))), alpha = 1,
             size = 6, label = "\u2B22", family = "Lucida Sans Unicode") +
   geom_text(color = "black", label = "\u2B21", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
   guides(col = F)+ 
@@ -268,7 +272,7 @@ mclust_sim_out = ggplot(data.frame(positions), aes(x, -y)) +
   labs(color = "PC3", alpha = "Proportion", x = NULL, y = NULL) +
   theme_void() + coord_fixed()
 clust_sim_out = ggplot(data.frame(positions), aes(x, -y)) +
-  geom_text(aes(color =factor(simcol, levels = c(6,1,3,4,5,7,2))), alpha = 1,
+  geom_text(aes(color =factor(simcol, levels = c(2,4,5,7,1,3,6))), alpha = 1,
             size = 6, label = "\u2B22", family = "Lucida Sans Unicode") +
   geom_text(color = "black", label = "\u2B21", size = 6, family = "Lucida Sans Unicode", show.legend = F) +
   guides(col = F)+ 
@@ -309,7 +313,39 @@ g3 = ggplot(data.frame(deconv1$positions), aes(x, -y)) +
   theme_void() + coord_fixed()
 g1+g2+g3
 
-mclust::adjustedRandIndex(deconv1col, rep(km_sim,7))
 mclust::adjustedRandIndex(deconv1col, rep(mclust_sim$classification,7))
 mclust::adjustedRandIndex(deconv1col, rep(simcol,7))
 mclust::adjustedRandIndex(deconv1col, g5col)
+
+#Giotto
+Sys.setenv(RETICULATE_PYTHON = "C:/Users/Edward Zhao/.conda/envs/Giotto/")
+reticulate::py_config()
+giotto_data = createGiottoObject(counts(sce),
+                                 positions)
+giotto_data <- normalizeGiotto(gobject = giotto_data, scalefactor = 6000, verbose = T)
+spatPlot(gobject = giotto_data)
+giotto_data <- calculateHVG(gobject = giotto_data, method = 'cov_loess', difference_in_cov = 0.1,
+                        save_param = list(save_name = '3_HVGplot', base_height = 5, base_width = 5))
+gene_metadata = fDataDT(giotto_data)
+featgenes = gene_metadata[hvg == 'yes']$gene_ID
+giotto_data <- Giotto::runPCA(gobject = giotto_data, genes_to_use = featgenes, scale_unit = F)
+plotPCA(gobject = giotto_data)
+giotto_data = createSpatialNetwork(gobject = giotto_data, maximum_distance_delaunay = 9)
+spatPlot(gobject=giotto_data, show_network = T, network_color = "blue",
+         spatial_network_name = 'Delaunay_network')
+rank_spatialgenes = binSpect(giotto_data, bin_method = 'rank')
+results_folder = "C:/Users/Edward Zhao/Google Drive/Gottardo/spatial"
+hmrf_folder = paste0(results_folder,'/','HMRF/')
+
+test = doHMRF(gobject = giotto_data,
+              dim_reduction_name = "pca", dim_reduction_to_use = "pca",
+              k = 7, betas = c(7,2,3),
+              output_folder = paste0(hmrf_folder, '/', 'PCA/PCA_k9'))
+viewHMRFresults2D(giotto_data,
+                  test,
+                  k = 7,
+                  betas_to_view = 7)
+VC_test = addHMRF(gobject = giotto_data,
+                  HMRFoutput = test,
+                  k = 7, betas_to_add = c(7),
+                  hmrf_name = 'HMRF_7')
