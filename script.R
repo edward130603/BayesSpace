@@ -75,7 +75,7 @@ cluster = function(Y, positions, dist, gamma = 2, q, init = rep(1, nrow(Y)), mod
 #deconvolve
 #deconvolve calls iterate_deconv(), written in Rcpp
 #inputs are the same as cluster() except you have to specify xdist and ydist instead of total dist...(maybe would be better to change cluster() to match this)
-deconvolve = function(Y, positions, nrep = 1000, every = 1, gamma = 2, xdist, ydist, q, init, seed = 100, platform = "visium", verbose = TRUE, mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01){
+deconvolve = function(Y, positions, nrep = 1000, every = 1, gamma = 2, xdist, ydist, q, init, seed = 100, platform = "visium", verbose = TRUE, c = 0.01, mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01){
   set.seed(seed)
   
   d = ncol(Y)
@@ -109,7 +109,7 @@ deconvolve = function(Y, positions, nrep = 1000, every = 1, gamma = 2, xdist, yd
   df_j = sapply(1:n, function(x){which((abs(positions2[,1] -positions2[x,1]) + abs(positions2[,2] - positions2[x,2])) <= dist &  #L1 distance
                                          (abs(positions2[,1] -positions2[x,1]) + abs(positions2[,2] - positions2[x,2])) > 0)-1})
   if (verbose){message("Fitting model...")}
-  out = iterate_deconv(Y = Y2, df_j = df_j, nrep = nrep, n = n, n0 = n0, d = d, gamma = gamma, q = q, init = init1, subspots = subspots, verbose = verbose, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
+  out = iterate_deconv(Y = Y2, df_j = df_j, nrep = nrep, n = n, n0 = n0, d = d, gamma = gamma, q = q, init = init1, subspots = subspots, verbose = verbose, c = c, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
   out$positions = positions2
   out
 }

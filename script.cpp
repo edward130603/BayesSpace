@@ -375,7 +375,7 @@ List iterate_t_vvv (mat Y, List df_j, int nrep, int n, int d, double gamma, int 
 }
 
 // [[Rcpp::export]]
-List iterate_deconv(mat Y, List df_j, int nrep, int n, int n0, int d, double gamma, int q, vec init, int subspots, bool verbose, NumericVector mu0, mat lambda0, double alpha, double beta){
+List iterate_deconv(mat Y, List df_j, int nrep, int n, int n0, int d, double gamma, int q, vec init, int subspots, bool verbose, double c, NumericVector mu0, mat lambda0, double alpha, double beta){
 
   //Initalize matrices storing iterations
   mat Y0 = Y.rows(0, n0-1);
@@ -455,8 +455,8 @@ List iterate_deconv(mat Y, List df_j, int nrep, int n, int n0, int d, double gam
       vec p_prev = {0.0};
       vec p_new = {0.0};
       for (int r = 0; r< subspots; r++){
-        p_prev += dmvnorm(Y_j_prev.row(r), vectorise(mu_i_j.row(r)), sigma_i, true) - 0.01*(accu(pow(Y_j_prev.row(r)-Y0.row(j0),2)));
-        p_new  += dmvnorm(Y_j_new.row(r),  vectorise(mu_i_j.row(r)), sigma_i, true) - 0.01*(accu(pow(Y_j_new.row(r) -Y0.row(j0),2)));
+        p_prev += dmvnorm(Y_j_prev.row(r), vectorise(mu_i_j.row(r)), sigma_i, true) - c*(accu(pow(Y_j_prev.row(r)-Y0.row(j0),2)));
+        p_new  += dmvnorm(Y_j_new.row(r),  vectorise(mu_i_j.row(r)), sigma_i, true) - c*(accu(pow(Y_j_new.row(r) -Y0.row(j0),2)));
       }
       double probY_j = as_scalar(exp(p_new - p_prev));
       if (probY_j > 1){
