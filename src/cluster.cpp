@@ -376,7 +376,7 @@ List iterate_t_vvv (arma::mat Y, List df_j, int nrep, int n, int d, double gamma
 }
 
 // [[Rcpp::export]]
-List iterate_deconv(mat Y, List df_j, int nrep, int n, int n0, int d, double gamma, int q, vec init, int subspots, bool verbose, double c, NumericVector mu0, mat lambda0, double alpha, double beta){
+List iterate_deconv(arma::mat Y, List df_j, int nrep, int n, int n0, int d, double gamma, int q, arma::vec init, int subspots, bool verbose, double c, NumericVector mu0, arma::mat lambda0, double alpha, double beta){
 
   //Initalize matrices storing iterations
   mat Y0 = Y.rows(0, n0-1);
@@ -510,7 +510,7 @@ List iterate_deconv(mat Y, List df_j, int nrep, int n, int n0, int d, double gam
 }
 
 // [[Rcpp::export]]
-List iterate2(mat Y, List df_j, int nrep, int n, int n0, int d, double gamma, int q, vec init, NumericVector mu0, mat lambda0, double alpha, double beta){
+List iterate2(arma::mat Y, List df_j, int nrep, int n, int n0, int d, double gamma, int q, arma::vec init, NumericVector mu0, arma::mat lambda0, double alpha, double beta){
 
   //Initalize matrices storing iterations
   mat Y0 = Y.rows(0, n0-1);
