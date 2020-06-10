@@ -1,11 +1,5 @@
 
 
-
-
-
-
-
-
 ###below are all code that represent previous implementations of the methods
 library(mvnfast) #faster than mvnorm, but we don't need this for the rcpp code
 #non-rcpp version of cluster()
