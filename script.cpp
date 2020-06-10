@@ -382,7 +382,7 @@ List iterate_deconv(mat Y, List df_j, int nrep, int n, int n0, int d, double gam
   mat df_sim_z(nrep, n, fill::zeros);
   mat df_sim_mu(nrep, q*d, fill::zeros);
   List df_sim_lambda(nrep);
-  List df_sim_Y(nrep);
+  List df_sim_Y(nrep/100 + 1);
   NumericVector Ychange(nrep, NA_REAL);
 
   //Initialize parameters
@@ -390,6 +390,7 @@ List iterate_deconv(mat Y, List df_j, int nrep, int n, int n0, int d, double gam
   df_sim_mu.row(0) = initmu;
   df_sim_lambda[0] = lambda0;
   df_sim_z.row(0) = init.t();
+  df_sim_Y[0] = Y;
   
   //Iterate
   colvec mu0vec = as<colvec>(mu0);
@@ -471,6 +472,9 @@ List iterate_deconv(mat Y, List df_j, int nrep, int n, int n0, int d, double gam
       }
     }
     Ychange[i] = updateCounter * 1.0 / n0;
+    if ((i+1) % 100 == 0){
+      df_sim_Y[(i+1)/100] = Y;
+    }
 
     //Update z
     df_sim_z.row(i) = df_sim_z.row(i-1);
@@ -500,7 +504,7 @@ List iterate_deconv(mat Y, List df_j, int nrep, int n, int n0, int d, double gam
     }
 
   }
-  List out = List::create(_["z"] = df_sim_z, _["mu"] = df_sim_mu, _["lambda"] = df_sim_lambda, _["Ychange"] = Ychange);
+  List out = List::create(_["z"] = df_sim_z, _["mu"] = df_sim_mu, _["lambda"] = df_sim_lambda, _["Y"] = df_sim_Y, _["Ychange"] = Ychange);
   return(out);
 }
 
