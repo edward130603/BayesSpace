@@ -56,10 +56,12 @@ plot_km2.1 = ggplot(data.frame(positions2.1), aes(x = x, y = y, fill = factor(km
 
 # Cluster
 clust1.2 = cluster(Y= Y1.2, positions = positions1.2, q = 3, init = km1.2, nrep = 10000, gamma = 2, dist = 1)
+saveRDS(clust1.2, "data-raw/clust1.2_figure3b.RDS")
+clust1.2 = loadRDS("data-raw/clust1.2_figure3b.RDS") #figure 4b
 clust2.1 = cluster(Y= Y2.1, positions = positions2.1, q = 3, init = km2.1, nrep = 10000, gamma = 2, dist = 1)
 
 plot_clust1.2 = ggplot(data.frame(positions1.2), aes(x = x, y = y, fill = factor(clust1.2$labels))) +
-  geom_point(size = 7, pch = 22)+
+  geom_point(size = 4.5, pch = 22)+
   labs(x = NULL, y = NULL, fill = "Cluster") +
   scale_fill_manual(values = c("red", "yellow", "purple", "grey"))+
   guides(fill = F) +
@@ -71,7 +73,7 @@ plot_clust2.1 = ggplot(data.frame(positions2.1), aes(x = x, y = y, fill = factor
   theme_void()+ coord_fixed()
 
 #Deconvolution
-deconv1.2 = readRDS("data-raw/deconv1.2_g2_c0.003_withY.RDS")
+deconv1.2 = readRDS("data-raw/deconv1.2_g2_c0.003_withY.RDS") #FIGURE 4C
 # deconv1.2 = deconvolve(Y= Y1.2, positions = positions1.2, q = 3, init = km1.2, nrep = 100000, gamma = 1, xdist = 1, ydist = 1, platform = "ST", c = 0.01)
 # deconv1.2col = apply(deconv1.2$z[seq(10000,100000,10),], 2, Mode)
 # deconv1.2_alpha = pmax(colMeans(deconv1.2$z[seq(10000,100000,10),]==1),
@@ -81,7 +83,7 @@ deconv1.2 = readRDS("data-raw/deconv1.2_g2_c0.003_withY.RDS")
 # saveRDS(list(obj = deconv1.2, cols = deconv1.2col, alpha = deconv1.2_alpha), "deconv1.2_g1_c0.01.RDS")
 plot_deconv1.2 = ggplot(as.data.frame(deconv1.2$obj$positions),
        aes(x = x, y = y, alpha = deconv1.2$alpha, fill = factor(deconv1.2$cols))) +
-  geom_point(size = 2.1, pch = 22)+
+  geom_point(size = 1.3, pch = 22)+
   scale_alpha_continuous(limits = c(0,1), range = c(0,1))+
   labs(x = NULL, y = NULL, fill = "Cluster") +
   guides(alpha = F, fill = F) +
@@ -99,15 +101,15 @@ deconv2.1 = readRDS("data-raw/deconv2.1_g2_c0.003.RDS")
 
 plot_deconv2.1 = ggplot(as.data.frame(deconv2.1$obj$positions),
        aes(x = y, y = x, alpha = deconv2.1$alpha, fill = factor(deconv2.1$cols))) +
-  geom_point(size = 2.1, pch = 22)+
+  geom_point(size = 1, pch = 22)+
   scale_alpha_continuous(limits = c(0,1), range = c(0,1))+
   labs(x = NULL, y = NULL, fill = "Cluster") +
   guides(alpha = F) +
   scale_fill_manual(values = c("purple", "yellow", "purple", "grey"))+
   theme_void()+ coord_fixed()
 
-placeholder = ggplot(as.data.frame(deconv2.1$obj$positions),
-                     aes(x = y, y = x, alpha = deconv2.1$alpha, fill = factor(deconv2.1$cols)))+
+placeholder = ggplot(as.data.frame(deconv1.2$obj$positions),
+                     aes(x = y, y = x, alpha = deconv1.2$alpha, fill = factor(deconv1.2$cols)))+
   geom_blank()+theme_void()
 
 (placeholder | plot_clust1.2 |plot_deconv1.2) + plot_annotation(tag_levels = "A")
@@ -223,3 +225,93 @@ plot_deconv_sim_0.001 = ggplot(as.data.frame(deconv_sim$obj$positions),
   scale_fill_manual(values = c("yellow", "red", "purple", "grey"))+
   theme_void()+ coord_fixed()
 plot_deconv_sim_0.01 + plot_deconv_sim_0.003+ plot_deconv_sim_0.001
+
+ari_files = list.files("data-raw/melanoma_sim_ari/")
+ari_out = matrix(nrow = 10, ncol = 6)
+colnames(ari_out) = names(readRDS(paste0("data-raw/melanoma_sim_ari/", ari_files[i])))
+rownames(ari_out) = 1:10
+for (i in 1:length(ari_files)){
+  ari_out[i,] = readRDS(paste0("data-raw/melanoma_sim_ari/", ari_files[i]))  
+}
+ari_out_long = reshape::melt(ari_out) %>% filter(! X2 %in% c("deconv_c0.001", "deconv_c0.01")) 
+ari_plot = ggplot(ari_out_long, aes(x = factor(X2, levels = colnames(ari_out)), y = value, group = X2, col = factor(X1)))+ #figure 4d
+  geom_boxplot()+geom_point()+theme_light()+guides(col = F)+
+  scale_x_discrete(labels = c("k-means", "mclust", "Spatial clustering", "Spatial deconvolution"))+
+  labs(x = NULL, y = "ARI")#+theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+(placeholder | plot_clust1.2 )/(plot_deconv1.2 | ari_plot) + plot_annotation(tag_levels = "A")
+
+
+
+pblank = ggplot(ari_out_long)+geom_blank()+theme_void()
+(pblank+pblank+pblank)/ari_plot+plot_annotation(tag_levels = "A")
+#Deconvolved PCs => lognormcounts
+dec <- modelGeneVarByPoisson(melanoma1.2)
+top <- getTopHVGs(dec, prop=0.1)
+logNormCounts(melanoma1.1)["IGLL5",]
+colnames(deconv1.2Y) = paste0("PC",1:10)
+deconv_data = data.frame(deconv1.2Y)
+deconv_expression = matrix(nrow = length(top), ncol = nrow(deconv_data))
+rownames(deconv_expression) = top
+Y1.2data = data.frame(Y1.2)
+rsquared = numeric(length(top))
+names(rsquared) = top
+for (gene in top){
+  train = lm(logcounts(melanoma1.2)[gene,]~. , data = Y1.2data)
+  rsquared[gene] = summary(train)$r.squared
+  deconv_expression[gene,] = predict(train, newdata = deconv_data)
+}
+saveRDS(deconv_expression, "data-raw/deconv_expression.RDS")
+ggplot(data.frame(positions1.2), aes(x = x, y = y, fill = logcounts(melanoma1.2)["PTPRC",])) + 
+  geom_point(size = 7, pch = 22)+
+  labs(x = NULL, y = NULL, fill = "Expression") +
+  scale_fill_viridis(option = "A")+
+  theme_void()+ coord_fixed()
+
+#logliks for cluster number 
+logliks = readRDS("data-raw/logliks_2.1.RDS")
+logliks
+library(tidyverse)
+reshape::melt(logliks) %>% 
+  as.data.frame() %>% 
+  ggplot(aes(x = X1, y = value, col = X2))+
+  geom_point()+geom_line()+
+  labs(x = "Number of clusters", y = "Pseudo-log-likelihood")
+
+logliks2 = matrix(nrow = 6, ncol = 2)
+colnames(logliks2) = c("normal_var", "t_var")
+
+for (q in 2:6){
+  set.seed(101)
+  mclust_q = Mclust(Y1.2, G = q, modelNames = "EEE")$classification
+  logliks2[q,1] = mean(cluster(Y= Y1.2, positions = positions1.2, q = q, init = mclust_q, nrep = 1000, gamma = 2, dist = 1, 
+                               precision = "variable")$plogLik[100:1000])
+  logliks2[q,2] = mean(cluster(Y= Y1.2, positions = positions1.2, q = q, init = mclust_q, nrep = 1000, gamma = 2, dist = 1, alpha = 10, beta = 10,
+                               precision = "variable", model = "t")$plogLik[100:1000])
+  print(logliks2[q,])
+}
+
+plot_pll = reshape::melt(logliks) %>% rbind(reshape::melt(logliks2)) %>% 
+  as.data.frame() %>% 
+  ggplot(aes(x = X1, y = value, col = X2))+
+  geom_point()+geom_line()+
+  scale_x_continuous(breaks = 1:15, labels = 1:15) +
+  theme_light()+
+  labs(x = "Number of clusters", y = "Pseudo-log-likelihood", col = "Model")
+logliksv2 = logliks
+for (i in 2:15){
+  logliksv2[i, ] = logliks[i,] - 1/2 * i*10 * log(nrow(Y1.2))
+}
+logliks2v2 = logliks2
+for (i in 2:6){
+  logliks2v2[i, ] = logliks2[i,] - 1/2 * i*(10+55) * log(nrow(Y1.2))
+}
+
+plot_bic = reshape::melt(logliksv2) %>% rbind(reshape::melt(logliks2v2)) %>% 
+  as.data.frame() %>% 
+  ggplot(aes(x = X1, y = value, col = X2))+
+  geom_point()+geom_line()+
+  scale_x_continuous(breaks = 1:15, labels = 1:15) +
+  theme_light()+
+  labs(x = "Number of clusters", y = "BIC", col = "Model")
+plot_pll+plot_bic+plot_layout(guides = "collect")
+

@@ -8,7 +8,7 @@ library(patchwork)
 #Load sce
 #rep1
 sce_A = read10xCounts("data-raw/breast/V1_Breast_Cancer_Block_A_Section_1_filtered_feature_bc_matrix.h5", type = "HDF5")
-pos = read.csv("data-raw/breast/spatial/tissue_positions_list.csv", header=FALSE)
+pos = read.csv("data-raw/breast/spatial1/tissue_positions_list.csv", header=FALSE)
 #rep2
 sce_A = read10xCounts("data-raw/breast/V1_Breast_Cancer_Block_A_Section_2_filtered_feature_bc_matrix.h5", type = "HDF5")
 pos = read.csv("data-raw/breast/spatial2/tissue_positions_list.csv", header=FALSE)
@@ -69,3 +69,8 @@ plot(x = 2:30, y = plogLiks[10000,] -0.5* 11*(2:30)*log(nrow(positions)), type =
 library(mclust)
 clust_bic = Mclust(PCs$components, G = 1:20, modelNames = c("VVV"))
 clust_icl = mclustICL(PCs$components, G = 1:20, modelNames = c("VVV"))
+
+ggplot(positions, aes(x = x, y = -y))+
+  geom_text(aes(color =  logcounts(sce_A)["ERBB2",]),
+            size = 6, label = "\u2B22", family = "Lucida Sans Unicode") +
+  coord_fixed() + theme_void() + guides(col = F) + scale_color_viridis(option = "A")

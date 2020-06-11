@@ -375,7 +375,7 @@ List iterate_t_vvv (mat Y, List df_j, int nrep, int n, int d, double gamma, int 
 }
 
 // [[Rcpp::export]]
-List iterate_deconv(mat Y, List df_j, int nrep, int n, int n0, int d, double gamma, int q, vec init, int subspots, bool verbose, double c, NumericVector mu0, mat lambda0, double alpha, double beta){
+List iterate_deconv(mat Y, List df_j, int nrep, int n, int n0, int d, double gamma, int q, vec init, int subspots, bool verbose, double jitter_scale, double c, NumericVector mu0, mat lambda0, double alpha, double beta){
 
   //Initalize matrices storing iterations
   mat Y0 = Y.rows(0, n0-1);
@@ -407,7 +407,7 @@ List iterate_deconv(mat Y, List df_j, int nrep, int n, int n0, int d, double gam
   mat error(subspots,d);
   vec zero_vec = zeros<vec>(d);
   vec one_vec = ones<vec>(d);
-  mat error_var = diagmat(one_vec)/d/d*50; 
+  mat error_var = diagmat(one_vec)/d*jitter_scale; 
   Progress p(nrep - 1, verbose);
   for (int i = 1; i < nrep; i++){
     p.increment();

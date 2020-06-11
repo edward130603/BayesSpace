@@ -31,3 +31,16 @@ plot_clust_p6 = ggplot(data1,aes(x=spot_col,y=spot_row*sqrt(3),col=factor(clust_
   labs(color = "Cluster", title = "spatial clustering")+
   theme_void()
 plot_km_p6+plot_clust_p6
+
+load("data-raw/p6_Visium_deconv.RData")
+
+deconv2 = deconvolve(Y= deconv1$Y[[1]][1:576,], 
+                     positions = deconv1$positions[1:576,], 
+                     q = 5, 
+                     init = deconv1$z[1,1:576], 
+                     nrep = 1000, 
+                     gamma = 0, 
+                     xdist = 1, ydist = 1, platform = "visium", c = 0.003, jitter_scale = 0.0005)
+cols = apply(deconv2$z[500:1000,], 2, Mode)
+ggplot(data.frame(deconv2$positions), aes(x = x, y =y ))+
+  geom_point(col = factor(cols))+coord_fixed(ratio = sqrt(3))
