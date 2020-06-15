@@ -34,6 +34,19 @@ plot_km_p6+plot_clust_p6
 
 load("data-raw/p6_Visium_deconv.RData")
 
+clust2 = cluster(Y = deconv1$Y[[1]][1:576,], 
+                 positions = deconv1$positions[1:576,], 
+                 q = 5, 
+                 init = deconv1$z[1,1:576], 
+                 gamma = 2,
+                 nrep = 1000,
+                 dist = 2)
+ggplot(data.frame(deconv1$positions[1:576,]), aes(x = x, y =y ))+
+  geom_point(col = factor(clust2$labels), size = 4)+coord_fixed(ratio = sqrt(3))+
+  theme_void()
+
+
+
 deconv2 = deconvolve(Y= deconv1$Y[[1]][1:576,], 
                      positions = deconv1$positions[1:576,], 
                      q = 5, 

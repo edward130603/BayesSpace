@@ -68,14 +68,16 @@ cluster = function(Y, positions, dist, gamma = 2, q, init = rep(1, nrow(Y)), mod
   } else {
     stop("model should be either 'normal' or 't'")
   }
-  out$labels = apply(out$z[ifelse(nrep<2000,max(2, nrep-1000), 1000) :nrep,], 2, Mode)
+  iter_from = ifelse(nrep<2000,max(2, nrep-1000), 1000)
+  message("Calculating labels using iterations ", iter_from, " through ", nrep, "...")
+  out$labels = apply(out$z[iter_from:nrep,], 2, Mode)
   out
 }
 
 #deconvolve
 #deconvolve calls iterate_deconv(), written in Rcpp
 #inputs are the same as cluster() except you have to specify xdist and ydist instead of total dist...(maybe would be better to change cluster() to match this)
-deconvolve = function(Y, positions, nrep = 1000, every = 1, gamma = 2, xdist, ydist, q, init, seed = 100, platform = "visium", verbose = TRUE, jitter_scale = 5, c = 0.01, mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01){
+deconvolve = function(Y, positions, nrep = 1000, every = 1, gamma = 2, xdist, ydist, q, init, model = "normal", seed = 100, platform = "visium", verbose = TRUE, jitter_scale = 5, c = 0.01, mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01){
   set.seed(seed)
   
   d = ncol(Y)
@@ -109,7 +111,8 @@ deconvolve = function(Y, positions, nrep = 1000, every = 1, gamma = 2, xdist, yd
   df_j = sapply(1:n, function(x){which((abs(positions2[,1] -positions2[x,1]) + abs(positions2[,2] - positions2[x,2])) <= dist &  #L1 distance
                                          (abs(positions2[,1] -positions2[x,1]) + abs(positions2[,2] - positions2[x,2])) > 0)-1})
   if (verbose){message("Fitting model...")}
-  out = iterate_deconv(Y = Y2, df_j = df_j, nrep = nrep, n = n, n0 = n0, d = d, gamma = gamma, q = q, init = init1, subspots = subspots, verbose = verbose, jitter_scale = jitter_scale, c = c, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
+  tdist = ifelse(model == "t", TRUE, FALSE)
+  out = iterate_deconv(Y = Y2, df_j = df_j, tdist = tdist, nrep = nrep, n = n, n0 = n0, d = d, gamma = gamma, q = q, init = init1, subspots = subspots, verbose = verbose, jitter_scale = jitter_scale, c = c, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
   out$positions = positions2
   out
 }
@@ -134,6 +137,40 @@ deconvolveRipley = function(Y, positions, nrep = 1000, every = 1, gamma = 2, dis
                                          (abs(positions[,1] -positions[x,1]) + abs(positions[,2] - positions[x,2])) > 0)-1})
   
   iterate2(Y = Y, df_j = df_j, nrep = nrep, n = n, n0 = n0, d = d, gamma = gamma, q = q, init = init, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
+}
+
+#predictExpression takes the deconvolved PCs and predicts logcounts expression vector using linear regression
+#newdata = deconvolved PCs (1 row is a subspot, 1 col is a PC)
+#dimred = name of dimension reduction to use
+#sce = single cell experiment with actual PCs and logcounts
+#genes = list of genes to predict expression
+#components = number of (principal) components to use
+
+#return value
+#expression = deconvolved expression values, each row is a gene, each col is a spot/sub-spot
+#r2 = percent of variation in the original gene expressions explained by PCs
+
+predictExpression = function(sce, newdata, dimred = "PCA", genes = rownames(sce), components = ncol(newdata)){
+  actual_data = data.frame(reducedDim(sce, type = dimred))[,1:components]
+  newdata = as.data.frame(newdata)
+  if (ncol(actual_data) != ncol(newdata)){
+    stop("number of components do not match")
+  }
+  if (! all(colnames(newdata) == colnames(actual_data))){
+    warning("colnames of reducedDim and newdata do not match. Setting newdata colnames to match reducedDim")
+    colnames(newdata) = colnames(actual_data)
+  }
+  rsquared = numeric(length(genes))
+  names(rsquared) = genes
+  deconv_expression = matrix(nrow = length(genes), ncol = nrow(newdata))
+  rownames(deconv_expression) = genes
+  colnames(deconv_expression) = rownames(newdata)
+  for (gene in genes){
+    train = lm(logcounts(sce)[gene,]~. , data = actual_data)
+    rsquared[gene] = summary(train)$r.squared
+    deconv_expression[gene,] = predict(train, newdata = newdata)
+  }
+  list(expression = deconv_expression, r2 = rsquared)
 }
 
 ###below are all code that represent previous implementations of the methods

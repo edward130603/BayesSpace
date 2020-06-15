@@ -189,6 +189,7 @@ List iterate_t (mat Y, List df_j, int nrep, int n, int d, double gamma, int q, v
   mat df_sim_z(nrep, n, fill::zeros);
   mat df_sim_mu(nrep, q*d, fill::zeros);
   List df_sim_lambda(nrep);
+  mat df_sim_w(nrep, n);
   NumericVector plogLik(nrep, NA_REAL);
 
   //Initialize parameters
@@ -197,6 +198,7 @@ List iterate_t (mat Y, List df_j, int nrep, int n, int d, double gamma, int q, v
   df_sim_lambda[0] = lambda0;
   df_sim_z.row(0) = init.t();
   vec w = ones<vec>(n);
+  df_sim_w.row(0) = w.t();
   
   //Iterate
   colvec mu0vec = as<colvec>(mu0);
@@ -264,9 +266,10 @@ List iterate_t (mat Y, List df_j, int nrep, int n, int d, double gamma, int q, v
       df_sim_z(i,j) = sample(zsample, 1, true, probs)[0];
       plogLikj[j] = h_z_prev;
     }
+    df_sim_w.row(i) = w.t();
     plogLik[i] = sum(plogLikj);
   }
-  List out = List::create(_["z"] = df_sim_z, _["mu"] = df_sim_mu, _["lambda"] = df_sim_lambda, _["weights"] = w, _["plogLik"] = plogLik);
+  List out = List::create(_["z"] = df_sim_z, _["mu"] = df_sim_mu, _["lambda"] = df_sim_lambda, _["weights"] = df_sim_w, _["plogLik"] = plogLik);
   return(out);
 }
 
@@ -375,7 +378,7 @@ List iterate_t_vvv (mat Y, List df_j, int nrep, int n, int d, double gamma, int 
 }
 
 // [[Rcpp::export]]
-List iterate_deconv(mat Y, List df_j, int nrep, int n, int n0, int d, double gamma, int q, vec init, int subspots, bool verbose, double jitter_scale, double c, NumericVector mu0, mat lambda0, double alpha, double beta){
+List iterate_deconv(mat Y, List df_j, bool tdist, int nrep, int n, int n0, int d, double gamma, int q, vec init, int subspots, bool verbose, double jitter_scale, double c, NumericVector mu0, mat lambda0, double alpha, double beta){
 
   //Initalize matrices storing iterations
   mat Y0 = Y.rows(0, n0-1);
@@ -383,6 +386,7 @@ List iterate_deconv(mat Y, List df_j, int nrep, int n, int n0, int d, double gam
   mat df_sim_mu(nrep, q*d, fill::zeros);
   List df_sim_lambda(nrep);
   List df_sim_Y(nrep/100 + 1);
+  mat df_sim_w(nrep, n);
   NumericVector Ychange(nrep, NA_REAL);
 
   //Initialize parameters
@@ -391,6 +395,8 @@ List iterate_deconv(mat Y, List df_j, int nrep, int n, int n0, int d, double gam
   df_sim_lambda[0] = lambda0;
   df_sim_z.row(0) = init.t();
   df_sim_Y[0] = Y;
+  vec w = ones<vec>(n);
+  df_sim_w.row(0) = w.t();
   
   //Iterate
   colvec mu0vec = as<colvec>(mu0);
@@ -413,7 +419,7 @@ List iterate_deconv(mat Y, List df_j, int nrep, int n, int n0, int d, double gam
     p.increment();
     if (i % 10 == 0){
       if (Progress::check_abort())
-        return(List::create(_["z"] = df_sim_z, _["mu"] = df_sim_mu, _["lambda"] = df_sim_lambda, _["Ychange"] = Ychange));
+        return(List::create(_["z"] = df_sim_z, _["mu"] = df_sim_mu, _["lambda"] = df_sim_lambda, _["weights"] = df_sim_w, _["Y"] = df_sim_Y, _["Ychange"] = Ychange));
     }
 
     //Update mu
@@ -421,8 +427,9 @@ List iterate_deconv(mat Y, List df_j, int nrep, int n, int n0, int d, double gam
     NumericVector Ysums;
     for (int k = 1; k <= q; k++){
       uvec index_1k = find(df_sim_z.row(i-1) == k);
-      int n_i = index_1k.n_elem;
+      int n_i = sum(w(index_1k)); 
       mat Yrows = Y.rows(index_1k);
+      Yrows.each_col() %= w(index_1k);
       Ysums = sum(Yrows, 0);
       vec mean_i = inv(lambda0 + n_i * lambda_prev) * (lambda0 * mu0vec + lambda_prev * as<colvec>(Ysums));
       mat var_i = inv(lambda0 + n_i * lambda_prev);
@@ -434,11 +441,11 @@ List iterate_deconv(mat Y, List df_j, int nrep, int n, int n0, int d, double gam
     for (int j = 0; j < n; j++){
       mu_i_long.row(j) = mu_i.row(df_sim_z(i-1, j)-1);
     }
-    mat sumofsq = (Y-mu_i_long).t() * (Y-mu_i_long);
+    mat sumofsq = (Y-mu_i_long).t() * diagmat(w) *  (Y-mu_i_long);
     vec beta_d(d);
     beta_d.fill(beta);
     mat Vinv = diagmat(beta_d);
-    mat lambda_i = rwish(n + alpha, inv(Vinv + sumofsq));
+    mat lambda_i = rwish(sum(w) + alpha, inv(Vinv + sumofsq));
     df_sim_lambda[i] = lambda_i;
     mat sigma_i = inv(lambda_i);
 
@@ -456,8 +463,8 @@ List iterate_deconv(mat Y, List df_j, int nrep, int n, int n0, int d, double gam
       vec p_prev = {0.0};
       vec p_new = {0.0};
       for (int r = 0; r< subspots; r++){
-        p_prev += dmvnorm(Y_j_prev.row(r), vectorise(mu_i_j.row(r)), sigma_i, true) - c*(accu(pow(Y_j_prev.row(r)-Y0.row(j0),2)));
-        p_new  += dmvnorm(Y_j_new.row(r),  vectorise(mu_i_j.row(r)), sigma_i, true) - c*(accu(pow(Y_j_new.row(r) -Y0.row(j0),2)));
+        p_prev += dmvnorm(Y_j_prev.row(r), vectorise(mu_i_j.row(r)), sigma_i/w[j0 + n0*r], true) - c*(accu(pow(Y_j_prev.row(r)-Y0.row(j0),2)));
+        p_new  += dmvnorm(Y_j_new.row(r),  vectorise(mu_i_j.row(r)), sigma_i/w[j0 + n0*r], true) - c*(accu(pow(Y_j_new.row(r) -Y0.row(j0),2)));
       }
       double probY_j = as_scalar(exp(p_new - p_prev));
       if (probY_j > 1){
@@ -477,9 +484,15 @@ List iterate_deconv(mat Y, List df_j, int nrep, int n, int n0, int d, double gam
     }
 
     //Update z
+    double w_alpha = (d+4)/2; //shape parameter
+    double w_beta;
     df_sim_z.row(i) = df_sim_z.row(i-1);
     IntegerVector qvec = seq_len(q);
     for (int j = 0; j < n; j++){
+      if (tdist){
+        w_beta = as_scalar(2/((Y.row(j)-mu_i_long.row(j))* lambda_i * (Y.row(j)-mu_i_long.row(j)).t() + 4)); //scale parameter
+        w[j] = R::rgamma(w_alpha, w_beta); //sample from posterior for w
+      }
       int z_j_prev = df_sim_z(i,j);
       IntegerVector qlessk = qvec[qvec != z_j_prev];
       int z_j_new = sample(qlessk, 1)[0];
@@ -488,11 +501,11 @@ List iterate_deconv(mat Y, List df_j, int nrep, int n, int n0, int d, double gam
       double h_z_prev;
       double h_z_new;
       if (j_vector.size() != 0){
-        h_z_prev = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_prev)) + dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i, true)[0];
-        h_z_new  = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_new )) + dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i, true)[0];
+        h_z_prev = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_prev)) + dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i/w[j], true)[0];
+        h_z_new  = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_new )) + dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i/w[j], true)[0];
       } else {
-        h_z_prev = dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i, true)[0];
-        h_z_new  = dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i, true)[0];
+        h_z_prev = dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i/w[j], true)[0];
+        h_z_new  = dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i/w[j], true)[0];
       }
       double prob_j = exp(h_z_new-h_z_prev);
       if (prob_j > 1){
@@ -502,9 +515,9 @@ List iterate_deconv(mat Y, List df_j, int nrep, int n, int n0, int d, double gam
       NumericVector probs = {1-prob_j, prob_j};
       df_sim_z(i,j) = sample(zsample, 1, true, probs)[0];
     }
-
+    df_sim_w.row(i) = w.t();
   }
-  List out = List::create(_["z"] = df_sim_z, _["mu"] = df_sim_mu, _["lambda"] = df_sim_lambda, _["Y"] = df_sim_Y, _["Ychange"] = Ychange);
+  List out = List::create(_["z"] = df_sim_z, _["mu"] = df_sim_mu, _["lambda"] = df_sim_lambda, _["weights"] = df_sim_w, _["Y"] = df_sim_Y, _["Ychange"] = Ychange);
   return(out);
 }
 
