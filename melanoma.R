@@ -318,29 +318,6 @@ for (gene in top){
 saveRDS(deconv_expression, "data-raw/deconv_expression.RDS")
 deconv_expression = readRDS("data-raw/deconv_expression.RDS")
 
-predictExpression = function(sce, newdata, dimred = "PCA", genes = rownames(sce), components = ncol(newdata)){
-  actual_data = data.frame(reducedDim(sce, type = dimred))[,1:components]
-  newdata = as.data.frame(newdata)
-  if (ncol(actual_data) != ncol(newdata)){
-    stop("number of components do not match")
-  }
-  if (! all(colnames(newdata) == colnames(actual_data))){
-    warning("colnames of reducedDim and newdata do not match. Setting newdata colnames to match reducedDim")
-    colnames(newdata) = colnames(actual_data)
-  }
-  rsquared = numeric(length(genes))
-  names(rsquared) = genes
-  deconv_expression = matrix(nrow = length(genes), ncol = nrow(newdata))
-  rownames(deconv_expression) = genes
-  colnames(deconv_expression) = rownames(newdata)
-  for (gene in genes){
-    train = lm(logcounts(sce)[gene,]~. , data = actual_data)
-    rsquared[gene] = summary(train)$r.squared
-    deconv_expression[gene,] = predict(train, newdata = newdata)
-  }
-  list(expression = deconv_expression, r2 = rsquared)
-
-}
 cd14_plot1 = ggplot(data.frame(positions1.2), aes(x = x, y = y, fill = logcounts(melanoma1.2)["CD3D",])) + 
   geom_point(size = 7, pch = 22)+
   labs(x = NULL, y = NULL, fill = "Expression") +
