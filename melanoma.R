@@ -55,6 +55,9 @@ plot_km2.1 = ggplot(data.frame(positions2.1), aes(x = x, y = y, fill = factor(km
   theme_void()+ coord_fixed()
 
 # Cluster
+clust1.1 = cluster(Y= Y1.1, positions = positions1.1, q = 4, model = "t", init = km1.1, nrep = 10000, gamma = 2, dist = 1)
+
+
 clust1.2 = cluster(Y= Y1.2, positions = positions1.2, q = 4, model = "t", init = km1.2, nrep = 10000, gamma = 2, dist = 1)
 saveRDS(clust1.2, "data-raw/clust1.2_q4_figure4b.RDS")
 clust1.2 = readRDS("data-raw/clust1.2_q4_figure4b.RDS")
@@ -167,6 +170,24 @@ ari_plot = ggplot(ari_out_long, aes(x = factor(X2, levels = colnames(ari_out)), 
   theme_light()+guides(col = F)+
   scale_x_discrete(labels = c("k-means", "mclust", "Spatial clustering (normal)", "Spatial clustering (t)", "SC (t), truth init"))+
   labs(x = NULL, y = "ARI")+theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+
+ari_files = list.files("data-raw/nu_large/")
+ari_out = matrix(nrow = 30, ncol = 10)
+colnames(ari_out) = names(readRDS(paste0("data-raw/nu_large/", ari_files[1])))
+rownames(ari_out) = 1:30
+for (i in 1:length(ari_files)){
+  ari_out[i,] = readRDS(paste0("data-raw/nu_large/", ari_files[i]))  
+}
+ari_out_long = reshape::melt(ari_out)
+ari_plot = ggplot(ari_out_long, aes(x = factor(X2, levels = colnames(ari_out)), y = value, group = X2, col = factor(X1)))+ #figure 4d
+  geom_boxplot()+geom_point()+
+  theme_light()+guides(col = F)+
+  scale_x_discrete(labels = c("k-means", "mclust", "Spatial clustering (t, gamma = 2)", "Spatial clustering (normal, gamma = 2)",
+                              "Spatial clustering (t, gamma = 1)", "Spatial Clustering (normal, gamma = 1)", "Deconvolution (normal)",
+                              "Deconvolution (normal, truth init)", "Deconvolution (t)", "Deconvolution (t, truth init)"))+
+  labs(x = NULL, y = "ARI")+theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+
+
 
 # Deconvolution Simulation
 deconv1.2mu = matrix(colMeans(deconv1.2$obj$mu[50000:200000,]), byrow = T, ncol = 10)
@@ -281,6 +302,20 @@ plot_deconv_sim_0.001 = ggplot(as.data.frame(deconv_sim$obj$positions),
   theme_void()+ coord_fixed()
 plot_deconv_sim_0.01 + plot_deconv_sim_0.003+ plot_deconv_sim_0.001
 
+ari_files = list.files("data-raw/melanoma_deconv_4_sim/")
+ari_out = matrix(nrow = 30, ncol = 5)
+colnames(ari_out) = names(readRDS(paste0("data-raw/melanoma_deconv_4_sim/", ari_files[1])))
+rownames(ari_out) = 1:30
+for (i in 1:length(ari_files)){
+  ari_out[i,] = readRDS(paste0("data-raw/melanoma_deconv_4_sim/", ari_files[i]))  
+}
+ari_out_long = reshape::melt(ari_out)
+ari_plot = ggplot(ari_out_long, aes(x = factor(X2, levels = colnames(ari_out)), y = value, group = X2, col = factor(X1)))+ #figure 4d
+  geom_boxplot()+geom_point()+
+  theme_light()+guides(col = F)+
+  #scale_x_discrete(labels = c("k-means", "mclust", "Spatial clustering (normal)", "Spatial clustering (t)", "SC (t), truth init"))+
+  labs(x = NULL, y = "ARI")+theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+
 ari_files = list.files("data-raw/melanoma_sim_ari/")
 ari_out = matrix(nrow = 10, ncol = 6)
 colnames(ari_out) = names(readRDS(paste0("data-raw/melanoma_sim_ari/", ari_files[i])))
@@ -293,6 +328,9 @@ ari_plot = ggplot(ari_out_long, aes(x = factor(X2, levels = colnames(ari_out)), 
   geom_boxplot()+geom_point()+theme_light()+guides(col = F)+
   scale_x_discrete(labels = c("k-means", "mclust", "Spatial clustering", "Spatial deconvolution"))+
   labs(x = NULL, y = "ARI")#+theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+
+
+
 (placeholder | plot_clust1.2 )/(plot_deconv1.2 | ari_plot) + plot_annotation(tag_levels = "A")
 
 
@@ -315,23 +353,33 @@ for (gene in top){
   rsquared[gene] = summary(train)$r.squared
   deconv_expression[gene,] = predict(train, newdata = deconv_data)
 }
+deconv_expression2 = predictExpression(melanoma1.2, newdata = deconv1.2Y, components = 10)
+
 saveRDS(deconv_expression, "data-raw/deconv_expression.RDS")
 deconv_expression = readRDS("data-raw/deconv_expression.RDS")
 
-cd14_plot1 = ggplot(data.frame(positions1.2), aes(x = x, y = y, fill = logcounts(melanoma1.2)["CD3D",])) + 
+cd6_plot1 = ggplot(data.frame(positions1.2), aes(x = x, y = y, fill = logcounts(melanoma1.2)["CD6",])) + 
   geom_point(size = 7, pch = 22)+
   labs(x = NULL, y = NULL, fill = "Expression") +
   scale_fill_viridis(option = "A")+
   theme_void()+ coord_fixed() +
   guides(fill=F)
-cd14_plot2 = ggplot(as.data.frame(deconv1.2$obj$positions),
-       aes(x = x, y = y, fill = deconv_expression["CD3D",])) +
+cd6_plot2 = ggplot(as.data.frame(deconv1.2$obj$positions),
+       aes(x = x, y = y, fill = deconv_expression$expression["CD6",])) +
   geom_point(size = 2, pch = 22)+
   labs(x = NULL, y = NULL, fill = "Cluster") +
   scale_fill_viridis(option="A")+
   guides(alpha = F, fill = F) +
   theme_void()+ coord_fixed()
-(cd14_plot1|cd14_plot2)
+(cd2_plot1|cd2_plot2)/
+  (cd6_plot1|cd6_plot2)/
+  (cd14_plot1|cd14_plot2)/
+  (cd19_plot1|cd19_plot2)/
+  (cd20_plot1|cd20_plot2)/
+  (cd45_plot1|cd45_plot2)
+  
+  
+  
 
 #logliks for cluster number 
 logliks = readRDS("data-raw/logliks_2.1.RDS")
@@ -459,3 +507,22 @@ saveRDS(list(clust1.1 = clust1.1$labels,
      clust2.2 = clust2.2$labels,
      deconv1.2_3 = deconv1.2$cols,
      deconv1.2_4 = deconv1.2col), "data-raw/labels.RDS")
+
+#xgboost
+xgboost_expression = matrix(ncol = nrow(deconv1.2Y), nrow = length(top))
+rownames(xgboost_expression) = top
+for (gene in top){
+  train = xgboost(data = Y1.2, label = logcounts(melanoma1.2)[gene,], max_depth = 2,
+                  eta = 0.03, nthread = 2, nrounds = 200, objective = "reg:squarederror", verbose = F)
+  xgboost_expression[gene, ] = predict(train, deconv1.2Y)
+}
+set.seed(1)
+traindata = sample(1:293, 200)
+Y1.2train = xgb.DMatrix(data = Y1.2[traindata,], label = logcounts(melanoma1.2)["CD38",traindata])
+Y1.2test = xgb.DMatrix(data = Y1.2[-traindata,], label = logcounts(melanoma1.2)["CD38",-traindata])
+watchlist = list(train = Y1.2train, test = Y1.2test)
+train = xgb.train(data = Y1.2train, max_depth = 2, watchlist = watchlist,
+        eta = 0.03, nthread = 2, nrounds = 200, objective = "reg:squarederror")
+test = predict(train, deconv1.2Y)
+test2 = predictExpression(melanoma1.2, deconv1.2Y, genes = "CD14")
+plot(x = test2$expression[1,], y = test, xlab = "Linear regression", ylab = "xgboost")
