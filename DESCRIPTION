@@ -1,0 +1,35 @@
+Package: BayesSpace
+Version: 0.1.0
+Date: 2020-05-26
+Title: "TODO name package"
+Authors@R: c(
+    person("Edward", "Zhao", role=c("cre", "aut"), email="ezhao@fredhutch.org"))
+Author:
+    Edward Zhao [aut, cre]
+Maintainer:
+    Edward Zhao <ezhao@fredhutch.org>
+Depends:
+    R (>= 3.5.0)
+Imports:
+    Rcpp (>= 1.0.4.6),
+    stats,
+    SingleCellExperiment,
+Description: "TODO write description"
+License: "TODO pick license"
+RoxygenNote: 7.1.0
+LinkingTo: 
+    Rcpp,
+    RcppArmadillo,
+    RcppDist,
+    RcppProgress
+NeedsCompilation: yes
+SystemRequirements: C++11
+Encoding: UTF-8
+Suggests: 
+    testthat,
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
+biocViews:
+    Software,
+    Clustering
