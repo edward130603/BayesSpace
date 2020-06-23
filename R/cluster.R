@@ -2,36 +2,24 @@
 #'
 #' Backend calls iterate() which is written in Rcpp
 #' 
-#' @param Y 
-#'        A matrix or dataframe with 1 row per spot and 1 column per outcome 
-#'        (e.g. principal components)
-#' @param positions 
-#'        A matrix or dataframe with two columns (x, y) that gives the spatial 
-#'        coordinates of the spot
-#' @param neighborhood.radius 
-#'        The maximum (L1) distance for two spots to be considered neighbors
-#' @param q 
-#'        The number of clusters
-#' @param model 
-#'        Error model ("normal" or "t")
-#' @param precision 
-#'        Covariance structure ("equal" or "variable" for EEE and VVV 
-#'        covariance models, respectively)
-#' @param z0 
-#'        Initial cluster assignments (z's). Must be a vector of length equal
-#'        to the number of rows of Y and positions.
-#' @param mu0 
-#'        Initial cluster means
-#' @param lambda0 
-#'        Initial cluster covariances
-#' @param gamma 
-#'        Smoothing parameter. Values in range of 1-3 seem to work well
-#' @param alpha 
-#'        Hyperparameter for Wishart distributed precision lambda
-#' @param beta 
-#'        Hyperparameter for Wishart distributed precision lambda
-#' @param nrep 
-#'        The maximum number of MCMC iterations
+#' @param Y A matrix or dataframe with 1 row per spot and 1 column per outcome 
+#'   (e.g. principal components).
+#' @param positions A matrix or dataframe with two columns (x, y) that gives
+#'   the spatial coordinates of each spot.
+#' @param neighborhood.radius The maximum (L1) distance for two spots to be
+#'   considered neighbors.
+#' @param gamma Smoothing parameter. (Values in range of 1-3 seem to work well.)
+#' @param q The number of clusters.
+#' @param init Initial cluster assignments (z's). Must be a vector of length
+#'   equal to the number of rows of Y and positions.
+#' @param model Error model. ("normal" or "t")
+#' @param precision Covariance structure. ("equal" or "variable" for EEE and 
+#'   VVV covariance models, respectively.)
+#' @param nrep The maximum number of MCMC iterations.
+#' @param mu0 Prior mean hyperparameter for mu.
+#' @param lambda0 Prior precision hyperparam for mu.
+#' @param alpha Hyperparameter for Wishart distributed precision lambda.
+#' @param beta Hyperparameter for Wishart distributed precision lambda.
 #' 
 #' @return List of parameter values (`z`, `mu`, `lambda`) and model 
 #'         log-likelihoods (`plogLik`) at each MCMC iteration, along with final
@@ -84,7 +72,10 @@ cluster = function(Y, positions, neighborhood.radius, q,
                      gamma = gamma, q = q, init = z0, mu0 = mu0, 
                      lambda0 = lambda0, alpha = alpha, beta = beta)
   
-  out$labels = apply(out$z[max(nrep-1000, 2):nrep,], 2, Mode)
+  iter_from <- ifelse(nrep < 2000, max(2, nrep - 1000), 1000)
+  message("Calculating labels using iterations ", iter_from, " through ", nrep, "...")
+  out$labels <- apply(out$z[iter_from:nrep,], 2, Mode)
+  
   out
 }
 

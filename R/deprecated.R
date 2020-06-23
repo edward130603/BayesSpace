@@ -1,8 +1,24 @@
-
-
-
-
-
+#deconvolution as described by Ripley 1991
+deconvolveRipley = function(Y, positions, nrep = 1000, every = 1, gamma = 2, dist, q, init, seed = 100, mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01){
+  set.seed(seed)
+  d = ncol(Y)
+  n0 = nrow(Y)
+  positions = as.matrix(positions)
+  Y = as.matrix(Y)
+  colnames(positions) = c("x", "y")
+  
+  Y = Y[rep(seq_len(n0), 9), ] #rbind 9 times
+  positions = positions[rep(seq_len(n0), 9), ] #rbind 9 times
+  shift = rbind(expand.grid(c(1/3, -1/3, 0), c(1/3,-1/3,0)))
+  shift_long = shift[rep(seq_len(9), each = n0), ]
+  positions[,"x"] = positions[,"x"] + shift_long[,"Var1"]
+  positions[,"y"] = positions[,"y"] + shift_long[,"Var2"]
+  n = nrow(Y)
+  df_j = sapply(1:n, function(x){which((abs(positions[,1] -positions[x,1]) + abs(positions[,2] - positions[x,2])) <= dist &  
+                                         (abs(positions[,1] -positions[x,1]) + abs(positions[,2] - positions[x,2])) > 0)-1})
+  
+  iterate2(Y = Y, df_j = df_j, nrep = nrep, n = n, n0 = n0, d = d, gamma = gamma, q = q, init = init, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta)
+}
 
 
 
@@ -81,7 +97,7 @@ run_mcmc_multi = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(df[,grep
   }
   return(list(z = df_sim_z, mu = df_sim_mu, lambda = df_sim_lambda, plogLik = plogLik
               #,logLik = logLik
-              ))
+  ))
 }
 
 #non-rcpp deconvolution for square lattice 
@@ -93,7 +109,7 @@ run_mcmc_squaredeconv = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(d
   
   df2 = as.data.frame(df[rep(seq_len(n), 9), ]) #rbind 7 times
   df2$j2 = rep(1:(9*n))
-
+  
   shift = rbind(expand.grid(c(1/3, -1/3, 0), c(1/3,-1/3,0))) #coord 2
   coord_scale = c(1, 1)
   shift = t(t(shift)*coord_scale)
@@ -103,7 +119,7 @@ run_mcmc_squaredeconv = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(d
   df2$y = df2$y + shift_long[,"Var2"]
   df2 = as.matrix(df2)
   df2_j = sapply(1:(9 *n), function(x){df2[(abs(df2[,"x"] -df2[x,"x"]) + abs(df2[,"y"] - df2[x,"y"])) <= 0.34 &
-                                            (abs(df2[,"x"] -df2[x,"x"]) + abs(df2[,"y"] - df2[x,"y"])) > 0,"j2"]})
+                                             (abs(df2[,"x"] -df2[x,"x"]) + abs(df2[,"y"] - df2[x,"y"])) > 0,"j2"]})
   n = nrow(df2)
   n0 = nrow(df)
   
@@ -165,7 +181,7 @@ run_mcmc_squaredeconv = function(df, nrep = 1000, q = 3, d = 2, mu0 = colMeans(d
       p_new  = sum(sapply(1:9, function(x){mvnfast::dmvn(Y_j_new[x,] , mu_i_four[x,], sigma_i, log = T)}))
       #probY_j = min(p_new/p_prev, 1)
       probY_j = min(exp(p_new - p_prev) * exp(-0.1*(sum(diag(crossprod(df_sim_Y[[1]][rep(j,9),] - Y_j_new))) -
-                                               sum(diag(crossprod(df_sim_Y[[1]][rep(j,9),] - Y_j_prev))))), 1)
+                                                      sum(diag(crossprod(df_sim_Y[[1]][rep(j,9),] - Y_j_prev))))), 1)
       test[j] = sample(x = 0:1, size = 1, prob = c(1-probY_j, probY_j)) #(testing purpose only!!)
       if (sample(x = 0:1, size = 1, prob = c(1-probY_j, probY_j))){
         df_sim_Y[[i]][four_map[[j]],] = Y_j_new

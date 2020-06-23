@@ -14,7 +14,12 @@ deconvolve(
   ydist,
   q,
   init,
+  model = "normal",
   seed = 100,
+  platform = "visium",
+  verbose = TRUE,
+  jitter_scale = 5,
+  c = 0.01,
   mu0 = colMeans(Y),
   lambda0 = diag(0.01, nrow = ncol(Y)),
   alpha = 1,
@@ -49,6 +54,9 @@ deconvolve(
 \item{alpha}{Hyperparameter for Wishart distributed precision lambda}
 
 \item{beta}{Hyperparameter for Wishart distributed precision lambda}
+}
+\value{
+out TODO: specify
 }
 \description{
 Backend calls iterate_deconv(), written in Rcpp.

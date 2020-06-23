@@ -17,8 +17,8 @@ iterate_t_vvv <- function(Y, df_j, nrep, n, d, gamma, q, init, mu0, lambda0, alp
     .Call(`_BayesSpace_iterate_t_vvv`, Y, df_j, nrep, n, d, gamma, q, init, mu0, lambda0, alpha, beta)
 }
 
-iterate_deconv <- function(Y, df_j, nrep, n, n0, d, gamma, q, init, mu0, lambda0, alpha, beta) {
-    .Call(`_BayesSpace_iterate_deconv`, Y, df_j, nrep, n, n0, d, gamma, q, init, mu0, lambda0, alpha, beta)
+iterate_deconv <- function(Y, df_j, tdist, nrep, n, n0, d, gamma, q, init, subspots, verbose, jitter_scale, c, mu0, lambda0, alpha, beta) {
+    .Call(`_BayesSpace_iterate_deconv`, Y, df_j, tdist, nrep, n, n0, d, gamma, q, init, subspots, verbose, jitter_scale, c, mu0, lambda0, alpha, beta)
 }
 
 iterate2 <- function(Y, df_j, nrep, n, n0, d, gamma, q, init, mu0, lambda0, alpha, beta) {

@@ -13,6 +13,7 @@
 #' 
 #' @export cluster
 #' @export deconvolve
+#' @export predictExpression
 #' @import SingleCellExperiment
 #' @importFrom Rcpp evalCpp
 #' @importFrom stats cov rWishart

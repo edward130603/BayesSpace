@@ -1,15 +1,11 @@
 #' Compute pairwise distances between all spots and return list of neighbors
-#' for each spot
+#' for each spot.
 #' 
-#' @param positions 
-#'        (n x 2) matrix of spot coordinates
-#' @param radius
-#'        The maximum distance for two spots to be considered neighbors 
-#' @param method
-#'        Distance metric to use
+#' @param positions (n x 2) matrix of spot coordinates.
+#' @param radius The maximum distance for two spots to be considered neighbors.
+#' @param method Distance metric to use.
 #' 
-#' @return List df_j, 
-#'         where df_j[[i]] is a vector of zero-indexed neighbors of i 
+#' @return List df_j, where df_j[[i]] is a vector of zero-indexed neighbors of i.
 #'         
 #' @importFrom stats dist
 find_neighbors <- function(positions, neighborhood.radius,
@@ -43,4 +39,17 @@ compute_neighborhood_radius <- function(sce) {
   radius <- xdist + ydist + 0.2
   
   radius
+}
+
+#' Find the mode
+#' 
+#' Used for finding the most frequent cluster for each z
+#' 
+#' @param x Numeric vector
+#'
+#' @return mode Numeric scalar, most frequent element in x
+#'
+Mode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
 }
