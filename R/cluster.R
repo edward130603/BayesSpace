@@ -81,10 +81,11 @@ cluster = function(Y, positions, neighborhood.radius, q,
 
 
 #' @importFrom stats kmeans
+#' @importFrom SingleCellExperiment reducedDim<-
 SpatialCluster <- function(sce, q,
-                           init=NA, init.method=c("kmeans"),
-                           positions=NA, neighborhood.radius=NA,
-                           x_col = "col", y_col = "row",
+                           init=NULL, init.method=c("kmeans"),
+                           positions=NULL, position.cols=c("row", "col"),
+                           neighborhood.radius=NULL,
                            assay.type="logcounts") {
   
   # TODO: 
@@ -93,19 +94,22 @@ SpatialCluster <- function(sce, q,
   # Y <- assay(sce, assay.type)
   # Y <- as.matrix(reducedDim(sce, dim.name)
   
-  if (is.na(positions)) {
+  if (is.null(positions)) {
     positions <- cbind(sce[[x_col]], sce[[y_col]])
     colnames(positions) <- c("x", "y")
   }
   
-  if (is.na(neighborhood.radius)) {
+  if (is.null(neighborhood.radius)) {
     neighborhood.radius <- compute_neighborhood_radius(sce)
   }
   
-  if (is.na(init)) {
+  # Initialize cluster assignments (use k-means for now)
+  if (is.null(init)) {
     init.method <- match.arg(init.method)
     if (init.method == "kmeans") {
-      init <- kmeans(PCs$components, centers = 7)$cluster
+      init <- kmeans(PCs$components, centers = q)$cluster
     }
   }
+  
+  Y <- reducedDim(sce, "PCA")
 }

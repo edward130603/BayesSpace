@@ -60,3 +60,7 @@ deconvolve = function(Y, positions, nrep = 1000, every = 1, gamma = 2, xdist, yd
   out$positions = positions2
   out
 }
+
+SpatialEnhance <- function() {
+  
+}
