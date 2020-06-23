@@ -22,34 +22,35 @@ cluster(
 }
 \arguments{
 \item{Y}{A matrix or dataframe with 1 row per spot and 1 column per outcome 
-(e.g. principal components)}
+(e.g. principal components).}
 
-\item{positions}{A matrix or dataframe with two columns (x, y) that gives the spatial 
-coordinates of the spot}
+\item{positions}{A matrix or dataframe with two columns (x, y) that gives
+the spatial coordinates of each spot.}
 
-\item{neighborhood.radius}{The maximum (L1) distance for two spots to be considered neighbors}
+\item{neighborhood.radius}{The maximum (L1) distance for two spots to be
+considered neighbors.}
 
-\item{gamma}{Smoothing parameter. Values in range of 1-3 seem to work well}
+\item{gamma}{Smoothing parameter. (Values in range of 1-3 seem to work well.)}
 
-\item{q}{The number of clusters}
+\item{q}{The number of clusters.}
 
-\item{init}{Initial cluster assignments (z's). Must be a vector of length equal
-to the number of rows of Y and positions}
+\item{init}{Initial cluster assignments (z's). Must be a vector of length
+equal to the number of rows of Y and positions.}
 
-\item{model}{Error model ("normal" or "t")}
+\item{model}{Error model. ("normal" or "t")}
 
-\item{precision}{Covariance structure ("equal" or "variable" for EEE and VVV 
-covariance models, respectively)}
+\item{precision}{Covariance structure. ("equal" or "variable" for EEE and 
+VVV covariance models, respectively.)}
 
-\item{nrep}{The maximum number of MCMC iterations}
+\item{nrep}{The maximum number of MCMC iterations.}
 
-\item{mu0}{Prior mean hyperparameter for mu}
+\item{mu0}{Prior mean hyperparameter for mu.}
 
-\item{lambda0}{Prior precision hyperparam for mu}
+\item{lambda0}{Prior precision hyperparam for mu.}
 
-\item{alpha}{Hyperparameter for Wishart distributed precision lambda}
+\item{alpha}{Hyperparameter for Wishart distributed precision lambda.}
 
-\item{beta}{Hyperparameter for Wishart distributed precision lambda}
+\item{beta}{Hyperparameter for Wishart distributed precision lambda.}
 }
 \value{
 List of parameter values (`z`, `mu`, `lambda`) and model 
