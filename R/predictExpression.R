@@ -1,8 +1,5 @@
-#' Predict log-normalized expression vectors from deconvolved PCs using linear regression
-#' 
-#' Backend calls iterate_deconv(), written in Rcpp.
-#' Inputs are the same as `cluster()` except you have to specify xdist and ydist 
-#' instead of total dist...(maybe would be better to change `cluster()` to match this)
+#' Predict log-normalized expression vectors from deconvolved PCs using linear 
+#' regression.
 #' 
 #' @param sce SingleCellExperiment object with original PCs and logcounts
 #' @param newdata Deconvolved PCs (rows are subspots, columns are PCs)
@@ -11,8 +8,8 @@
 #' @param components Number of reduced dimensions (PCs) to use
 #' 
 #' @return Returns list with names:
-#'         * `expression` - Deconvolved expression values. (Rows are genes, columns are subspots)
-#'         * `r2` - Percent of variation in original gene expression explained by PCs
+#'    * `expression` - Deconvolved expression values. (Rows are genes, columns are subspots)
+#'    * `r2` - Percent of variation in original gene expression explained by PCs
 #'
 #' @importFrom stats lm
 #' @importFrom stats predict
