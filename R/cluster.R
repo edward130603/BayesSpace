@@ -82,20 +82,26 @@ cluster = function(Y, positions, neighborhood.radius, q,
 
 #' @importFrom stats kmeans
 #' @importFrom SingleCellExperiment reducedDim<-
-SpatialCluster <- function(sce, q,
+#' @importFrom SingleCellExperiment colData<-
+spatialCluster <- function(sce, q,
+                           assay.type="logcounts", d=15, use.dimred=NULL,
+                           pca.method=c("PCA", "denoised", "geneset"),
                            init=NULL, init.method=c("kmeans"),
-                           positions=NULL, position.cols=c("row", "col"),
-                           neighborhood.radius=NULL,
-                           assay.type="logcounts") {
+                           positions=NULL, position.cols=c("imagerow", "imagecol"),
+                           neighborhood.radius=NULL) {
+
+  if (is.null(use.dimred)) {
+    use.dimred <- "PCA"
+    pca.method <- match.arg(pca.method)
+    sce <- addPCA(sce, assay.type, pca.method, d)
+  }
   
-  # TODO: 
-  #   1. Allow specification of reduced dimension (and number of top features)
-  #   2. Default to PCA, running PCA if necessary
-  # Y <- assay(sce, assay.type)
-  # Y <- as.matrix(reducedDim(sce, dim.name)
+  PCs <- as.matrix(reducedDim(sce, use.dimred))
+  d <- min(d, ncol(PCs))
+  PCs <- PCs[, 1:d]
   
   if (is.null(positions)) {
-    positions <- cbind(sce[[x_col]], sce[[y_col]])
+    positions <- as.matrix(colData(sce)[position.cols])
     colnames(positions) <- c("x", "y")
   }
   
@@ -107,9 +113,18 @@ SpatialCluster <- function(sce, q,
   if (is.null(init)) {
     init.method <- match.arg(init.method)
     if (init.method == "kmeans") {
-      init <- kmeans(PCs$components, centers = q)$cluster
+      init <- kmeans(PCs, centers = q)$cluster
     }
   }
   
-  Y <- reducedDim(sce, "PCA")
+  # TODO: add other cluster arguments to this function's signature
+  set.seed(149)
+  results <- cluster(PCs, positions, neighborhood.radius, q, 
+                     z0 = init,
+                     model = "normal", precision = "equal",
+                     gamma = 1.5, nrep = 1000)
+  
+  colData(sce)$spatial.cluster <- apply(results$z[900:1000, ], 2, Mode)
+  
+  sce
 }

@@ -23,3 +23,11 @@ test_that("clustering matches", {
   expect_true(all(labels == sce$truth))
 })
 
+test_that("SCE clustering matches", {
+  sce <- readRDS(system.file("testdata/maynard_151673_subset2.rds", package="BayesSpace"))
+  
+  set.seed(149)
+  sce <- spatialCluster(sce, 7, use.dimred="PCA", init=sce$km_init)
+
+  expect_true(all(sce$spatial.cluster == sce$truth))
+})

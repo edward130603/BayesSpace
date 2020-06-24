@@ -101,6 +101,35 @@ runGenesetPCA <- function(expr, n_pcs=20, n_hvgs=2000, genesets=list()) {
   out$rotation <- purrr::reduce(purrr::map(pcs, "rotation"), bdiag)
   out$genesets <- genesets
   
+  # TODO: add PCs to reducedDims of SCE 
+  #       (for compatibility with other methods in addPCA)
+  
   return(out)
 }
 
+#' Add PCA output to a SingleCellExperiment
+#' 
+#' Supports "basic" PCA via scater, denoised PCA via scran, and blocked geneset
+#' PCA. Results will be stored in `reducedDim(sce, "PCA")`
+#' 
+#' @param sce SingleCellExperiment
+#' @param assay.type Assay in `sce` to compute PCA on
+#' @param pca.method PCA method to apply
+#' @param d Number of principal components to keep
+#' 
+#' @return Returns `sce` with PCs added to its `reducedDims`
+addPCA <- function(sce, assay.type, pca.method, d=15) {
+  if (pca.method == "PCA") {
+    sce <- scater::runPCA(sce, exprs_values=assay.type, ncomponents=d)
+  } else if (pca.method == "denoised") {
+    dec <- scran::modelGeneVar(sce, assay.type=assay.type)
+    top <- scran::getTopHVGs(dec, prop=0.1)  # TODO: parameterize
+    sce <- scran::denoisePCA(sce, technical=dec, subset.row=top, assay.type=assay.type)
+  } else if (pca.method =="geneset") {
+    stop("geneset PCA not yet supported")
+  } else {
+    stop("Unsupported PCA method: %s", pca.method)
+  }
+  
+  sce
+}
