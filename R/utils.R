@@ -26,17 +26,27 @@ find_neighbors <- function(positions, neighborhood.radius,
   df_j
 }
 
-#' Compute the distance between two neighboring spots
+#' Estimate the distance between two neighboring spots
+#' 
+#' Fit linear models between each image pixel coordinate and its corresponding
+#' array coordinate to estimate the pixel distance between two spots along
+#' each axis. Add these distances to estimate the L1 distance between two
+#' spots, then add a small buffer.
+#' 
+#' @param sce SingleCellExperiment (must include row, col, imagerow, imagecol 
+#'   in colData)
+#' @param scale.factor Scale estimated L1 difference up by this amount.
 #' 
 #' @return double radius
 #' 
 #' @importFrom stats lm
 #' @importFrom stats coef
-compute_neighborhood_radius <- function(sce) {
+compute_neighborhood_radius <- function(sce, scale.factor=1.02) {
   # TODO: remove hardcoding of columns
   xdist <- coef(lm(sce$imagecol~sce$col))[2]  # x distance between neighbors
   ydist <- coef(lm(sce$imagerow~sce$row))[2]  # y distance between neighbors
-  radius <- xdist + ydist + 0.2
+  radius <- xdist + ydist
+  radius <- radius * scale.factor
   
   radius
 }
@@ -121,12 +131,15 @@ runGenesetPCA <- function(expr, n_pcs=20, n_hvgs=2000, genesets=list()) {
 addPCA <- function(sce, assay.type, pca.method, d=15) {
   if (pca.method == "PCA") {
     sce <- scater::runPCA(sce, exprs_values=assay.type, ncomponents=d)
+    
   } else if (pca.method == "denoised") {
     dec <- scran::modelGeneVar(sce, assay.type=assay.type)
     top <- scran::getTopHVGs(dec, prop=0.1)  # TODO: parameterize
     sce <- scran::denoisePCA(sce, technical=dec, subset.row=top, assay.type=assay.type)
+    
   } else if (pca.method =="geneset") {
     stop("geneset PCA not yet supported")
+    
   } else {
     stop("Unsupported PCA method: %s", pca.method)
   }
