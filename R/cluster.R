@@ -10,7 +10,7 @@
 #'   considered neighbors.
 #' @param gamma Smoothing parameter. (Values in range of 1-3 seem to work well.)
 #' @param q The number of clusters.
-#' @param init Initial cluster assignments (z's). Must be a vector of length
+#' @param z0 Initial cluster assignments (z's). Must be a vector of length
 #'   equal to the number of rows of Y and positions.
 #' @param model Error model. ("normal" or "t")
 #' @param precision Covariance structure. ("equal" or "variable" for EEE and 
@@ -79,10 +79,9 @@ cluster = function(Y, positions, neighborhood.radius, q,
   out
 }
 
-
 #' @importFrom stats kmeans
 #' @importFrom SingleCellExperiment reducedDim<-
-#' @importFrom SingleCellExperiment colData<-
+#' @importFrom SummarizedExperiment colData<-
 spatialCluster <- function(sce, q,
                            assay.type="logcounts", d=15, use.dimred=NULL,
                            pca.method=c("PCA", "denoised", "geneset"),

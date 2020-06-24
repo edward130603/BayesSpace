@@ -37,6 +37,9 @@ considered neighbors.}
 \item{precision}{Covariance structure. ("equal" or "variable" for EEE and 
 VVV covariance models, respectively.)}
 
+\item{z0}{Initial cluster assignments (z's). Must be a vector of length
+equal to the number of rows of Y and positions.}
+
 \item{mu0}{Prior mean hyperparameter for mu.}
 
 \item{lambda0}{Prior precision hyperparam for mu.}
@@ -48,9 +51,6 @@ VVV covariance models, respectively.)}
 \item{beta}{Hyperparameter for Wishart distributed precision lambda.}
 
 \item{nrep}{The maximum number of MCMC iterations.}
-
-\item{init}{Initial cluster assignments (z's). Must be a vector of length
-equal to the number of rows of Y and positions.}
 }
 \value{
 List of parameter values (`z`, `mu`, `lambda`) and model 
