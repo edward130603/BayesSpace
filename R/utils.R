@@ -53,3 +53,54 @@ Mode <- function(x) {
   ux <- unique(x)
   ux[which.max(tabulate(match(x, ux)))]
 }
+
+#' Run "blocked" PCA on HVGs and gene sets of interest
+#' 
+#' PCA is computed for each specified gene set. The PCs from each gene set are 
+#' concatenated into a single matrix, and their rotation matrices are combined
+#' into a block diagonal rotation matrix.
+#' 
+#' If a set of highly variable genes (HVGs) is not included in the list of 
+#' gene sets (using the name `hvgs`), the top `n_hvgs` will be computed using 
+#' scran and added to the list of gene sets.
+#' 
+#' @param expr Expression/counts (matrix or SingleCellExperiment)
+#' @param n_pcs Number of PCs per gene set (TODO: optionally specify list, n 
+#' per gene set)
+#' @param n_hvgs Number of HVGs to use in HVG set
+#' @param genesets List of other gene sets to include
+#' 
+#' @return Returns list with names:
+#'   * `x` Concatenated principal components from each gene set
+#'   * `rotation` Rotation matrix (block diagonal for each set of PCs)
+#'   * `genesets` List of gene sets in each block
+runGenesetPCA <- function(expr, n_pcs=20, n_hvgs=2000, genesets=list()) {
+  # Compute top n HVGs and exclude any that appear in user-specified gene sets
+  if (n_hvgs >= 1 && !("hvgs" %in% names(genesets))) {
+    dec <- scran::modelGeneVar(expr)
+    hvgs <- scran::getTopHVGs(dec, n=n_hvgs)
+    others <- purrr::reduce(genesets, union)
+    genesets[["hvgs"]] <- setdiff(hvgs, others)
+  }
+  
+  # Run PCA on each set of genes
+  .runSubsetPCA <- function(geneset, name) {
+    subset <- expr[geneset, ]
+    pca <- BiocSingular::runPCA(t(subset), rank=n_pcs)
+    
+    colnames(pca$x) <- paste0(name, "_", colnames(pca$x))
+    colnames(pca$rotation) <- paste0(name, "_", colnames(pca$rotation))
+    
+    pca
+  }
+  pcs <- purrr::imap(genesets, .runSubsetPCA)
+  
+  # Concatenate PCs and assemble rotation matrices
+  out <- list()
+  out$x <- purrr::reduce(purrr::map(pcs, "x"), cbind)
+  out$rotation <- purrr::reduce(purrr::map(pcs, "rotation"), bdiag)
+  out$genesets <- genesets
+  
+  return(out)
+}
+

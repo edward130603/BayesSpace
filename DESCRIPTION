@@ -14,6 +14,10 @@ Imports:
     Rcpp (>= 1.0.4.6),
     stats,
     SingleCellExperiment,
+    methods,
+    BiocSingular,
+    purrr,
+    scran
 Description: "TODO write description"
 License: "TODO pick license"
 RoxygenNote: 7.1.0
