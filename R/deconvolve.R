@@ -21,8 +21,12 @@
 #' 
 #' @return out TODO: specify
 #' 
-deconvolve = function(Y, positions, nrep = 1000, every = 1, gamma = 2, xdist, ydist, q, init, model = "normal", seed = 100, platform = "visium", verbose = TRUE, jitter_scale = 5, c = 0.01, mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01){
-  set.seed(seed)
+deconvolve = function(Y, positions, nrep = 1000, every = 1, gamma = 2, 
+                      xdist, ydist, q, init, 
+                      model = "normal", seed = 100, platform = "visium", 
+                      verbose = TRUE, jitter_scale = 5, c = 0.01, 
+                      mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)), 
+                      alpha = 1, beta = 0.01) {
   
   d = ncol(Y)
   n0 = nrow(Y)
@@ -61,6 +65,62 @@ deconvolve = function(Y, positions, nrep = 1000, every = 1, gamma = 2, xdist, yd
   out
 }
 
-SpatialEnhance <- function() {
+spatialEnhance <- function(sce, q,
+                           assay.type="logcounts", d=15, use.dimred=NULL,
+                           pca.method=c("PCA", "denoised", "geneset"),
+                           init=NULL, init.method=c("spatialCluster"),
+                           positions=NULL, position.cols=c("imagerow", "imagecol")) {
   
+  if (is.null(use.dimred)) {
+    use.dimred <- "PCA"
+    pca.method <- match.arg(pca.method)
+    sce <- addPCA(sce, assay.type, pca.method, d)
+  }
+  
+  PCs <- as.matrix(reducedDim(sce, use.dimred))
+  d <- min(d, ncol(PCs))
+  PCs <- PCs[, 1:d]
+  
+  if (is.null(positions)) {
+    positions <- as.matrix(colData(sce)[position.cols])
+    colnames(positions) <- c("x", "y")
+  }
+  
+  # TODO: add checks that all four cols are in SCE
+  # TODO: sort out discrepancy between cluster and enhance here
+  xdist <- coef(lm(sce$imagecol~sce$col))[2]  # x distance between neighbors
+  ydist <- coef(lm(sce$imagerow~sce$row))[2]  # y distance between neighbors
+  
+  # Initialize cluster assignments (use k-means for now)
+  if (is.null(init)) {
+    init.method <- match.arg(init.method)
+    if (init.method == "kmeans") {
+      init <- kmeans(PCs, centers = q)$cluster
+    } else if (init.method == "spatialCluster") {
+      sce <- spatialCluster(sce, q, assay.type, d, use.dimred, pca.method,
+                            init, init.method, positions, position.cols,
+                            neighborhood.radius)
+      init <- sce$spatial.cluster
+    }
+  }
+  
+  # TODO: add other deconvolve arguments to this function
+  deconv <- deconvolve(Y = PCs, positions = positions, nrep = 1000, gamma = 2, 
+                       xdist = xdist, ydist = ydist, init = init, q = q)
+  
+  # Create enhanced SCE
+  
+  # TODO: auto-run predictExpression and include as assay
+  # deconv_PCs <- deconv$Y[[length(deconv$Y)]]
+  # expr <- predictExpression(sce, deconv_PCs)
+  
+  cdata <- as.data.frame(deconv$positions)
+  colnames(cdata) <- c("imagecol", "imagerow")
+  enhanced <- SingleCellExperiment(assays=list(), 
+                                   rowData=rowData(sce), colData=cdata)
+  
+  reducedDim(enhanced, "PCA") <- deconv$Y[[length(deconv$Y)]]
+  enhanced$spatial.cluster <- apply(deconv$z[900:1000, ], 2, Mode)
+  
+  enhanced
 }
