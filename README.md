@@ -52,3 +52,10 @@ Last updated 2020-06-23.
 - [ ] Use multiples of 4 spaces for indents
     * Run FormatR
 - [ ] Subscribe maintainer to bioc-devel mailing list
+
+## Notes
+
+Under MacOS Catalina, may be necessary to install gfortran
+[directly](https://github.com/fxcoudert/gfortran-for-macOS/releases) rather
+than through homebrew in order for libraries to be linkable. I used 8.2 for
+Mojave and it worked.
