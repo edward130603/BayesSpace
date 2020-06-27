@@ -80,7 +80,8 @@ cluster = function(Y, positions, neighborhood.radius, q,
 }
 
 #' @importFrom stats kmeans
-#' @importFrom SingleCellExperiment reducedDim<-
+#' @importFrom SingleCellExperiment reducedDim
+#' @importFrom SummarizedExperiment colData
 #' @importFrom SummarizedExperiment colData<-
 spatialCluster <- function(sce, q,
                            assay.type="logcounts", d=15, use.dimred=NULL,
@@ -95,7 +96,7 @@ spatialCluster <- function(sce, q,
     sce <- addPCA(sce, assay.type, pca.method, d)
   }
   
-  PCs <- as.matrix(reducedDim(sce, use.dimred))
+  PCs <- reducedDim(sce, use.dimred)
   d <- min(d, ncol(PCs))
   PCs <- PCs[, 1:d]
   
@@ -117,7 +118,6 @@ spatialCluster <- function(sce, q,
   }
   
   # TODO: add other cluster arguments to this function's signature
-  set.seed(149)
   results <- cluster(PCs, positions, neighborhood.radius, q, 
                      z0 = init,
                      model = "normal", precision = "equal",

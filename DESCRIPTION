@@ -17,6 +17,7 @@ Imports:
     methods,
     BiocSingular,
     purrr,
+    scater,
     scran
 Description: "TODO write description"
 License: "TODO pick license"
