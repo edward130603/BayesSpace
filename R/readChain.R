@@ -56,6 +56,41 @@ NULL
   mcmc(x)
 }
 
+.make_index_names <- function(name, m, n=NULL, dim=1) 
+# Make colnames for parameter indices. 
+{
+  if (is.null(n)) {
+    paste0(name, "[", rep(1:m), "]")
+  } else if (dim == 1) {
+    paste0(name, "[", rep(1:m, each=n), ",", rep(1:n, m), "]")
+  } else {
+    paste0(name, "[", rep(1:m, n), ",", rep(1:n, each=m), "]")
+  }
+}
+
+#' @importFrom purrr map
+.clean_chain <- function(out, method=c("cluster", "enhance")) 
+# Tidy C++ outputs before writing to disk.
+# 1) Convert each parameter to matrix (n_iterations x n_indices)
+# 2) Add appropriate colnames 
+# 3) Thin evenly (for enhance)
+{
+  d <- ncol(out$lambda[[1]])
+  q <- ncol(out$mu) / d
+    
+  colnames(out$z) <- .make_index_names("z", ncol(out$z))
+  colnames(out$mu) <- .make_index_names("mu", q, d)
+  
+  lambdas <- map(out$lambda, function(x) as.vector(t(x)))
+  out$lambda <- do.call(rbind, lambdas)
+  colnames(out$lambda) <- .make_index_names("lambda", d, d)
+  
+  out$plogLik <- as.matrix(out$plogLik)
+  colnames(out$plogLik) <- c("pLogLikelihood")
+  
+  out
+} 
+
 #' @export
 #' @rdname readChain
 readChain <- function(sce, params=NULL) {
