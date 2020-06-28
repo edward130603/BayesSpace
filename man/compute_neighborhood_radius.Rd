@@ -2,13 +2,22 @@
 % Please edit documentation in R/utils.R
 \name{compute_neighborhood_radius}
 \alias{compute_neighborhood_radius}
-\title{Compute the distance between two neighboring spots}
+\title{Estimate the distance between two neighboring spots}
 \usage{
-compute_neighborhood_radius(sce)
+compute_neighborhood_radius(sce, scale.factor = 1.02)
+}
+\arguments{
+\item{sce}{SingleCellExperiment (must include row, col, imagerow, imagecol 
+in colData)}
+
+\item{scale.factor}{Scale estimated L1 difference up by this amount.}
 }
 \value{
 double radius
 }
 \description{
-Compute the distance between two neighboring spots
+Fit linear models between each image pixel coordinate and its corresponding
+array coordinate to estimate the pixel distance between two spots along
+each axis. Add these distances to estimate the L1 distance between two
+spots, then add a small buffer.
 }
