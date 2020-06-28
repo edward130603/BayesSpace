@@ -26,6 +26,8 @@
 #'         cluster labels (`labels`)
 #'         
 #' @details TODO describe method in detail
+#' 
+#' @importFrom purrr map
 cluster = function(Y, positions, neighborhood.radius, q, 
                    model = c("normal", "t"), precision = c("equal", "variable"),
                    z0 = rep(1, nrow(Y)), mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)),
@@ -71,6 +73,11 @@ cluster = function(Y, positions, neighborhood.radius, q,
   out <- cluster.FUN(Y = as.matrix(Y), df_j = df_j, nrep = nrep, n = n, d = d, 
                      gamma = gamma, q = q, init = z0, mu0 = mu0, 
                      lambda0 = lambda0, alpha = alpha, beta = beta)
+  
+  # TODO: make optional, add filepath as argument
+  out <- .clean_chain(out)
+  h5.fname <- .write_chain(out)
+  out$h5.fname <- h5.fname
   
   iter_from <- ifelse(nrep < 2000, max(2, nrep - 1000), 1000)
   message("Calculating labels using iterations ", iter_from, " through ", nrep, "...")
@@ -123,7 +130,9 @@ spatialCluster <- function(sce, q,
                      model = "normal", precision = "equal",
                      gamma = 1.5, nrep = 1000)
   
+  # TODO: switch to labels computed above (this was just for sanity test)
   colData(sce)$spatial.cluster <- apply(results$z[900:1000, ], 2, Mode)
+  metadata(sce)$chain.h5 <- results$h5.fname
   
   sce
 }

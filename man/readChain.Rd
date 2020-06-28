@@ -7,7 +7,7 @@
 readChain(sce, params = NULL)
 }
 \arguments{
-\item{sce}{SingleCellExperiment with a file path stored in its metadata}
+\item{sce}{SingleCellExperiment with a file path stored in its metadata.}
 
 \item{params}{List of model parameters to read}
 }

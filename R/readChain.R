@@ -26,10 +26,8 @@ NULL
   
   h5createFile(h5.fname)
   
-  # TODO: clean formats ahead of time (n_reps x n_param_idxs)
-  # TODO: clean matrix colnames (parname[i,j])
-  # for (param in names(chain)) {
-  for (param in c("z", "mu")) {
+  # TODO: check why colnames aren't being preserved
+  for (param in names(chain)) {
     dims <- dim(chain[[param]])
     h5createDataset(h5.fname, param, dims, 
                            chunk=c(chunk.length, dims[2]))
@@ -40,6 +38,8 @@ NULL
   h5.fname
 }
 
+#' @importFrom rhdf5 h5ls
+#' @importFrom rhdf5 h5read
 #' @importFrom coda mcmc
 #' @importFrom purrr map
 .read_chain <- function(h5.fname, params=NULL) {
@@ -88,6 +88,7 @@ NULL
   out$plogLik <- as.matrix(out$plogLik)
   colnames(out$plogLik) <- c("pLogLikelihood")
   
+  # TODO: if enhance, then add weights, Y, Ychange
   out
 } 
 
