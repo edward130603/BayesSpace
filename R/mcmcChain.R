@@ -107,5 +107,5 @@ mcmcChain <- function(sce, params=NULL) {
     stop("Path to chain file not available in object metadata.")
   }
   
-  chain <- .read_chain(metadata(sce)$chain.h5, params)
+  .read_chain(metadata(sce)$chain.h5, params)
 }

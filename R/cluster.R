@@ -70,20 +70,9 @@ cluster = function(Y, positions, neighborhood.radius, q,
     }
   } 
   
-  out <- cluster.FUN(Y = as.matrix(Y), df_j = df_j, nrep = nrep, n = n, d = d, 
-                     gamma = gamma, q = q, init = z0, mu0 = mu0, 
-                     lambda0 = lambda0, alpha = alpha, beta = beta)
-  
-  # TODO: make optional, add filepath as argument
-  out <- .clean_chain(out)
-  h5.fname <- .write_chain(out)
-  out$h5.fname <- h5.fname
-  
-  iter_from <- ifelse(nrep < 2000, max(2, nrep - 1000), 1000)
-  message("Calculating labels using iterations ", iter_from, " through ", nrep, "...")
-  out$labels <- apply(out$z[iter_from:nrep,], 2, Mode)
-  
-  out
+  cluster.FUN(Y = as.matrix(Y), df_j = df_j, nrep = nrep, n = n, d = d, 
+              gamma = gamma, q = q, init = z0, mu0 = mu0, lambda0 = lambda0, 
+              alpha = alpha, beta = beta)
 }
 
 #' @importFrom stats kmeans
@@ -95,7 +84,9 @@ spatialCluster <- function(sce, q,
                            pca.method=c("PCA", "denoised", "geneset"),
                            init=NULL, init.method=c("kmeans"),
                            positions=NULL, position.cols=c("imagerow", "imagecol"),
-                           neighborhood.radius=NULL) {
+                           nrep=1000,
+                           neighborhood.radius=NULL,
+                           save.chain=FALSE, chain.fname=NULL) {
 
   if (is.null(use.dimred)) {
     use.dimred <- "PCA"
@@ -128,11 +119,19 @@ spatialCluster <- function(sce, q,
   results <- cluster(PCs, positions, neighborhood.radius, q, 
                      z0 = init,
                      model = "normal", precision = "equal",
-                     gamma = 1.5, nrep = 1000)
+                     gamma = 1.5, nrep = nrep)
   
-  # TODO: switch to labels computed above (this was just for sanity test)
+  if (save.chain) {
+    results <- .clean_chain(results)
+    metadata(sce)$chain.h5 <- .write_chain(results, chain.fname)
+  }
+  
+  iter_from <- ifelse(nrep < 2000, max(2, nrep - 1000), 1000)
+  # message("Calculating labels using iterations ", iter_from, " through ", nrep, "...")f
+  results$labels <- apply(results$z[iter_from:nrep,], 2, Mode)
+  
+  # TODO: switch to labels computed above (this is just for sanity test)
   colData(sce)$spatial.cluster <- apply(results$z[900:1000, ], 2, Mode)
-  metadata(sce)$chain.h5 <- results$h5.fname
   
   sce
 }

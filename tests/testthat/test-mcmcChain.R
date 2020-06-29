@@ -18,14 +18,14 @@ test_that("Reading and writing works as expected", {
   z <- matrix(rep(rnorm(5), n_iter), ncol=5)
   mu <- matrix(rep(rnorm(20), n_iter), ncol=20)
   
-  colnames(z) <- BayesSpace:::.make_index_names("z", 5)
-  colnames(mu) <- BayesSpace:::.make_index_names("mu", 5, 4)
+  colnames(z) <- .make_index_names("z", 5)
+  colnames(mu) <- .make_index_names("mu", 5, 4)
   
   out$z <- z
   out$mu <- mu
   
-  h5.fname <- BayesSpace:::.write_chain(out)
-  chain <- BayesSpace:::.read_chain(h5.fname, params=c("z", "mu"))
+  h5.fname <- .write_chain(out)
+  chain <- .read_chain(h5.fname, params=c("z", "mu"))
   
   expect_true(ncol(chain) == ncol(z) + ncol(mu))
   expect_true(nrow(chain) == n_iter)
