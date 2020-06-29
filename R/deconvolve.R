@@ -4,26 +4,37 @@
 #' Inputs are the same as `cluster()` except you have to specify xdist and ydist 
 #' instead of total dist...(maybe would be better to change `cluster()` to match this)
 #' 
-#' @param Y A matrix or dataframe with 1 row per spot and 1 column per outcome (e.g. principal component)
-#' @param positions A matrix or dataframe with two columns (x, y) that gives the spatial coordinates of the spot
-#' @param nrep The maximum number of mcmc iterations
-#' @param every TODO: define
-#' @param gamma Smoothing parameter. Values in range of 1-3 seem to work well generally
-#' @param xdist The distance along x-axis between neighboring spots
-#' @param ydist The distance along y-axis between neighboring spots
-#' @param q The number of clusters
-#' @param init Initial cluster assignments (z's). Must be a vector of length equal to the number of rows of Y and positions
-#' @param seed Random state seed
-#' @param mu0 Prior mean hyperparameter for mu
-#' @param lambda0 Prior precision hyperparam for mu
-#' @param alpha Hyperparameter for Wishart distributed precision lambda
-#' @param beta Hyperparameter for Wishart distributed precision lambda
-#' 
+#' @param Y A matrix or dataframe with 1 row per spot and 1 column per outcome 
+#'   (e.g. principal component).
+#' @param positions A matrix or dataframe with two columns (x, y) that gives 
+#'   the spatial coordinates of the spot.
+#' @param nrep The maximum number of mcmc iterations.
+#' @param gamma Smoothing parameter. Values in range of 1-3 generally work well.
+#' @param xdist The distance along x-axis between neighboring spots.
+#' @param ydist The distance along y-axis between neighboring spots.
+#' @param q The number of clusters.
+#' @param init Initial cluster assignments (z's). Must be a vector of length 
+#'   equal to the number of rows of Y and positions.
+#' @param model Error model. ("normal" or "t")
+#' @param mu0 Prior mean hyperparameter for mu.
+#' @param lambda0 Prior precision hyperparam for mu.
+#' @param alpha Hyperparameter for Wishart distributed precision lambda.
+#' @param beta Hyperparameter for Wishart distributed precision lambda.
+#' @param platform Spatial transcriptomic platform. Specify "Visium" for hex 
+#'   lattice geometry or "ST" for square lattice geometry.
+#' @param jitter_scale Controls the amount of jittering. Small amounts of 
+#'   jittering are more likely to be accepted but result in exploring the space
+#'   more slowly. We suggest tuning `jitter_scale` so that Ychange is on 
+#'   average around 30\%.
+#' @param c Prior precision (1/variance) of the actual spot-level expression 
+#'   value in PC space. We suggest making c larger if the jittered values are
+#'   not expected to vary much from the overall mean of the spot.
+#' @param verbose Log progress to stderr.
+#'  
 #' @return out TODO: specify
-#' 
-deconvolve = function(Y, positions, nrep = 1000, every = 1, gamma = 2, 
-                      xdist, ydist, q, init, 
-                      model = "normal", seed = 100, platform = "visium", 
+deconvolve = function(Y, positions, nrep = 1000, gamma = 2,
+                      xdist, ydist, q, init,
+                      model = "normal", platform = c("Visium", "ST"), 
                       verbose = TRUE, jitter_scale = 5, c = 0.01, 
                       mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)), 
                       alpha = 1, beta = 0.01) {
@@ -34,13 +45,13 @@ deconvolve = function(Y, positions, nrep = 1000, every = 1, gamma = 2,
   Y = as.matrix(Y)
   colnames(positions) = c("x", "y")
   
-  subspots = ifelse(platform == "visium", 7, 
-                    ifelse(platform == "ST", 9, stop("platform should be either 'visium' or 'ST'")))
+  platform <- match.arg(platform)
+  subspots = ifelse(platform == "Visium", 7, 9)  # TODO: parameterize?
   
   init1 = rep(init, subspots)
   Y2 = Y[rep(seq_len(n0), subspots), ] #rbind 7 or 9 times
   positions2 = positions[rep(seq_len(n0), subspots), ] #rbind 7 times
-  if (platform == "visium"){
+  if (platform == "Visium"){
     shift = rbind(expand.grid(c(1/3, -1/3), c(1/3,-1/3)), expand.grid(c(2/3, -2/3,0), 0))
   } else {
     shift = rbind(expand.grid(c(1/3, -1/3, 0), c(1/3,-1/3,0)))

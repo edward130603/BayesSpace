@@ -5,18 +5,14 @@
 \title{Compute pairwise distances between all spots and return list of neighbors
 for each spot.}
 \usage{
-find_neighbors(
-  positions,
-  neighborhood.radius,
-  method = c("manhattan", "euclidean")
-)
+find_neighbors(positions, radius, method = c("manhattan", "euclidean"))
 }
 \arguments{
 \item{positions}{(n x 2) matrix of spot coordinates.}
 
-\item{method}{Distance metric to use.}
-
 \item{radius}{The maximum distance for two spots to be considered neighbors.}
+
+\item{method}{Distance metric to use.}
 }
 \value{
 List df_j, where df_j[[i]] is a vector of zero-indexed neighbors of i.

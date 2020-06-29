@@ -8,15 +8,13 @@ deconvolve(
   Y,
   positions,
   nrep = 1000,
-  every = 1,
   gamma = 2,
   xdist,
   ydist,
   q,
   init,
   model = "normal",
-  seed = 100,
-  platform = "visium",
+  platform = c("Visium", "ST"),
   verbose = TRUE,
   jitter_scale = 5,
   c = 0.01,
@@ -27,33 +25,48 @@ deconvolve(
 )
 }
 \arguments{
-\item{Y}{A matrix or dataframe with 1 row per spot and 1 column per outcome (e.g. principal component)}
+\item{Y}{A matrix or dataframe with 1 row per spot and 1 column per outcome 
+(e.g. principal component).}
 
-\item{positions}{A matrix or dataframe with two columns (x, y) that gives the spatial coordinates of the spot}
+\item{positions}{A matrix or dataframe with two columns (x, y) that gives 
+the spatial coordinates of the spot.}
 
-\item{nrep}{The maximum number of mcmc iterations}
+\item{nrep}{The maximum number of mcmc iterations.}
 
-\item{every}{TODO: define}
+\item{gamma}{Smoothing parameter. Values in range of 1-3 generally work well.}
 
-\item{gamma}{Smoothing parameter. Values in range of 1-3 seem to work well generally}
+\item{xdist}{The distance along x-axis between neighboring spots.}
 
-\item{xdist}{The distance along x-axis between neighboring spots}
+\item{ydist}{The distance along y-axis between neighboring spots.}
 
-\item{ydist}{The distance along y-axis between neighboring spots}
+\item{q}{The number of clusters.}
 
-\item{q}{The number of clusters}
+\item{init}{Initial cluster assignments (z's). Must be a vector of length 
+equal to the number of rows of Y and positions.}
 
-\item{init}{Initial cluster assignments (z's). Must be a vector of length equal to the number of rows of Y and positions}
+\item{model}{Error model. ("normal" or "t")}
 
-\item{seed}{Random state seed}
+\item{platform}{Spatial transcriptomic platform. Specify "Visium" for hex 
+lattice geometry or "ST" for square lattice geometry.}
 
-\item{mu0}{Prior mean hyperparameter for mu}
+\item{verbose}{Log progress to stderr.}
 
-\item{lambda0}{Prior precision hyperparam for mu}
+\item{jitter_scale}{Controls the amount of jittering. Small amounts of 
+jittering are more likely to be accepted but result in exploring the space
+more slowly. We suggest tuning `jitter_scale` so that Ychange is on 
+average around 30\%.}
 
-\item{alpha}{Hyperparameter for Wishart distributed precision lambda}
+\item{c}{Prior precision (1/variance) of the actual spot-level expression 
+value in PC space. We suggest making c larger if the jittered values are
+not expected to vary much from the overall mean of the spot.}
 
-\item{beta}{Hyperparameter for Wishart distributed precision lambda}
+\item{mu0}{Prior mean hyperparameter for mu.}
+
+\item{lambda0}{Prior precision hyperparam for mu.}
+
+\item{alpha}{Hyperparameter for Wishart distributed precision lambda.}
+
+\item{beta}{Hyperparameter for Wishart distributed precision lambda.}
 }
 \value{
 out TODO: specify

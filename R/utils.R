@@ -8,13 +8,13 @@
 #' @return List df_j, where df_j[[i]] is a vector of zero-indexed neighbors of i.
 #'         
 #' @importFrom stats dist
-find_neighbors <- function(positions, neighborhood.radius,
+find_neighbors <- function(positions, radius,
                            method=c("manhattan", "euclidean")) {
   method <- match.arg(method)
   
   message("Calculating neighbors...")
   pdist <- as.matrix(stats::dist(positions, method=method))
-  neighbors <- (pdist <= neighborhood.radius & pdist > 0)
+  neighbors <- (pdist <= radius & pdist > 0)
   df_j <- sapply(1:nrow(positions),
                  function(x) as.vector(which(neighbors[x, ])) - 1)
   
