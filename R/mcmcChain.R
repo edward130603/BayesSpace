@@ -31,9 +31,9 @@ NULL
     h5createDataset(h5.fname, param, dims, 
                     chunk=c(min(chunk.length, dims[1]), dims[2]))
     
-    # TODO: write colnames manually to avoid warnings about dimnames
     attr(chain[[param]], "colnames") <- colnames(chain[[param]])
-    h5write(chain[[param]], h5.fname, param, write.attributes=T)
+    # TODO: write colnames manually to avoid warnings about dimnames
+    suppressWarnings(h5write(chain[[param]], h5.fname, param, write.attributes=T))
   }
   
   h5.fname
