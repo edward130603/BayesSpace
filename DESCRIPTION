@@ -18,7 +18,10 @@ Imports:
     BiocSingular,
     purrr,
     scater,
-    scran
+    scran,
+    SummarizedExperiment,
+    coda,
+    rhdf5
 Description: "TODO write description"
 License: "TODO pick license"
 RoxygenNote: 7.1.0
