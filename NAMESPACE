@@ -2,8 +2,8 @@
 
 export(cluster)
 export(deconvolve)
+export(mcmcChain)
 export(predictExpression)
-export(readChain)
 export(spatialCluster)
 export(spatialEnhance)
 import(SingleCellExperiment)

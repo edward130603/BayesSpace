@@ -1,7 +1,7 @@
 #' Read MCMC chain associated with a BayesSpace clustering or enhancement
 #' 
 #' BayesSpace stores the MCMC chain associated with a clustering or enhancement 
-#' on disk in an HDF5 file. The `readChain` function reads any parameters 
+#' on disk in an HDF5 file. The `mcmcChain` function reads any parameters 
 #' specified by the user into a `coda::mcmc` object compatible with TidyBayes.
 #' 
 #' @details 
@@ -13,7 +13,7 @@
 #' @param sce SingleCellExperiment with a file path stored in its metadata.
 #' @param params List of model parameters to read
 #' 
-#' @name readChain
+#' @name mcmcChain
 NULL
 
 #' @importFrom rhdf5 h5createFile
@@ -26,13 +26,14 @@ NULL
   
   h5createFile(h5.fname)
   
-  # TODO: check why colnames aren't being preserved
   for (param in names(chain)) {
     dims <- dim(chain[[param]])
     h5createDataset(h5.fname, param, dims, 
-                           chunk=c(chunk.length, dims[2]))
+                    chunk=c(min(chunk.length, dims[1]), dims[2]))
     
-    h5write(chain[[param]], h5.fname, param)
+    # TODO: write colnames manually to avoid warnings about dimnames
+    attr(chain[[param]], "colnames") <- colnames(chain[[param]])
+    h5write(chain[[param]], h5.fname, param, write.attributes=T)
   }
   
   h5.fname
@@ -49,7 +50,14 @@ NULL
     params <- h5ls(h5.fname)$name
   }
   
-  xs <- map(params, function(x) {as.matrix(h5read(h5.fname, x))})
+  .read_param <- function(x) {
+    x <- as.matrix(h5read(h5.fname, x, read.attributes=T))
+    colnames(x) <- attr(x, "colnames")
+    attr(x, "colnames") <- NULL
+    x
+  }
+  
+  xs <- map(params, .read_param)
   x <- do.call(cbind, xs)
   
   # TODO: specify thinning interval; start/end if we drop burn-in earlier
@@ -93,11 +101,11 @@ NULL
 } 
 
 #' @export
-#' @rdname readChain
-readChain <- function(sce, params=NULL) {
+#' @rdname mcmcChain
+mcmcChain <- function(sce, params=NULL) {
   if (!("chain.h5" %in% names(metadata(sce)))) {
     stop("Path to chain file not available in object metadata.")
   }
   
-  .read_chain(metadata(sce)$chain.h5, params)
+  chain <- .read_chain(metadata(sce)$chain.h5, params)
 }
