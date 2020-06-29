@@ -69,7 +69,7 @@ spatialEnhance <- function(sce, q,
                            assay.type="logcounts", d=15, use.dimred=NULL,
                            pca.method=c("PCA", "denoised", "geneset"),
                            init=NULL, init.method=c("spatialCluster"),
-                           positions=NULL, position.cols=c("imagerow", "imagecol")) {
+                           positions=NULL, position.cols=c("imagecol", "imagerow")) {
   
   if (is.null(use.dimred)) {
     use.dimred <- "PCA"
