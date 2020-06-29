@@ -14,14 +14,15 @@ Imports:
     Rcpp (>= 1.0.4.6),
     stats,
     SingleCellExperiment,
-    methods,
     BiocSingular,
     purrr,
     scater,
     scran,
     SummarizedExperiment,
     coda,
-    rhdf5
+    rhdf5,
+    S4Vectors,
+    Matrix
 Description: "Clustering and enhanced resolution of spatial transcriptomics datasets."
 License: MIT + file LICENSE
 RoxygenNote: 7.1.0

@@ -16,9 +16,7 @@
 #' @name mcmcChain
 NULL
 
-#' @importFrom rhdf5 h5createFile
-#' @importFrom rhdf5 h5createDataset
-#' @importFrom rhdf5 h5write
+#' @importFrom rhdf5 h5createFile h5createDataset h5write
 .write_chain <- function(chain, h5.fname=NULL, chunk.length=1000) {
   if (is.null(h5.fname)) {
     h5.fname <- tempfile(fileext=".h5")
@@ -39,8 +37,7 @@ NULL
   h5.fname
 }
 
-#' @importFrom rhdf5 h5ls
-#' @importFrom rhdf5 h5read
+#' @importFrom rhdf5 h5ls h5read
 #' @importFrom coda mcmc
 #' @importFrom purrr map
 .read_chain <- function(h5.fname, params=NULL) {

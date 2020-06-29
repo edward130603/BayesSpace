@@ -90,6 +90,7 @@ spatialEnhance <- function(sce, q,
   # TODO: sort out discrepancy between cluster and enhance here
   xdist <- coef(lm(sce$imagecol~sce$col))[2]  # x distance between neighbors
   ydist <- coef(lm(sce$imagerow~sce$row))[2]  # y distance between neighbors
+  radius <- (xdist + ydist) * 1.02
   
   # Initialize cluster assignments (use k-means for now)
   if (is.null(init)) {
@@ -98,8 +99,7 @@ spatialEnhance <- function(sce, q,
       init <- kmeans(PCs, centers = q)$cluster
     } else if (init.method == "spatialCluster") {
       sce <- spatialCluster(sce, q, assay.type, d, use.dimred, pca.method,
-                            init, "kmeans", positions, position.cols,
-                            neighborhood.radius)
+                            init, "kmeans", positions, position.cols, radius)
       init <- sce$spatial.cluster
     }
   }

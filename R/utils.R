@@ -39,8 +39,7 @@ find_neighbors <- function(positions, neighborhood.radius,
 #' 
 #' @return double radius
 #' 
-#' @importFrom stats lm
-#' @importFrom stats coef
+#' @importFrom stats lm coef
 compute_neighborhood_radius <- function(sce, scale.factor=1.02) {
   # TODO: remove hardcoding of columns
   xdist <- coef(lm(sce$imagecol~sce$col))[2]  # x distance between neighbors
@@ -84,6 +83,8 @@ Mode <- function(x) {
 #'   * `x` Concatenated principal components from each gene set
 #'   * `rotation` Rotation matrix (block diagonal for each set of PCs)
 #'   * `genesets` List of gene sets in each block
+#'   
+#' @importFrom Matrix bdiag
 runGenesetPCA <- function(expr, n_pcs=20, n_hvgs=2000, genesets=list()) {
   # Compute top n HVGs and exclude any that appear in user-specified gene sets
   if (n_hvgs >= 1 && !("hvgs" %in% names(genesets))) {

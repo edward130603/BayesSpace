@@ -2,7 +2,7 @@ library(SingleCellExperiment)
 
 PCs <- read.csv(system.file("testdata/maynard_151673_subset.PCs.csv.gz", package="BayesSpace"), row.names=1)
 cdata <- read.csv(system.file("testdata/maynard_151673_subset.colData.csv.gz", package="BayesSpace"), row.names=1)
-metadata <- readRDS(system.file("testdata/maynard_151673_subset.metadata.rds", package="BayesSpace"))
+meta <- readRDS(system.file("testdata/maynard_151673_subset.metadata.rds", package="BayesSpace"))
 positions <- cdata[, c("imagecol", "imagerow")]
 
 test_that("Refactored clustering matches", {
@@ -13,7 +13,7 @@ test_that("Refactored clustering matches", {
                  z0 = cdata$km.init, 
                  nrep = 1000, 
                  gamma = 1.5, 
-                 neighborhood.radius = metadata$dist,
+                 neighborhood.radius = meta$dist,
                  model="normal",
                  precision="equal")
   
