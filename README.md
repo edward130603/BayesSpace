@@ -13,7 +13,7 @@ Last updated 2020-06-29.
 ### R CMD check
 #### Errors (0)
 #### Warnings (0)
-- [X] Dependency check.  
+- [X] ~~Dependency check.~~  
     * ~~Remove mvnfast code if we don't need it~~ DONE
     * ~~SingleCellExperiment declared but not used - should be fixed after
       refactoring `cluster()` to operate on SCE~~ all imports cleaned up
@@ -25,30 +25,33 @@ Last updated 2020-06-29.
       replaced with CSVs of PCs and relevant colData
 - [X] ~~DESCRIPTION meta-information.~~  
     * ~~Write an actual Description and pick a license.~~ MIT license
-- [X] Unstated vignette dependencies.  
+- [X] ~~Unstated vignette dependencies.~~  
     * Removed Maynard vignette to speed up build times during testing
     * Need to pick which example R scripts to include as vignettes, then fix
 
 ### R CMD BiocCheck
 #### Errors (3)
-- [ ] Package source tarball exceeds size requirement  
-    * Currently at 10.6 MB (testdata is 10.1 MB); needs to be <5 MB
+- [ ] No 'vignettes' directory  
+    * TODO: draft vignettes
+- [X] ~~Package source tarball exceeds size requirement~~  
+    * ~~Currently at 10.6 MB (testdata is 10.1 MB); needs to be <5 MB~~ see above
 - [ ] Need runnable examples for exported objects  
     * Wait to do this until after refactoring is complete
 - [ ] Maintainer must register at bioconductor support site  
     * Wait to do this until near publication
-#### Warnings (4)
+#### Warnings (1)
 - [ ] Update R version dependency from 3.5.0 to 4.0  
     * TODO: determine minimum R version and run checks under it
-- [ ] Test data over 5 MB in size
-- [ ] Use TRUE/FALSE instead of T/F
-- [ ] Remove set.seed usage from inside functions
-- [X] Add non-empty value sections to deconvolve docs
+- [X] ~~Test data over 5 MB in size~~
+- [X] ~~Use TRUE/FALSE instead of T/F~~
+- [X] ~~Remove set.seed usage from inside functions~~
+- [X] ~~Add non-empty value sections to deconvolve docs~~
+- [X] ~~Add non-empty value sections to readChain docs~~
 #### Notes (7)
 - [ ] Avoid sapply(); use vapply()
 - [ ] Avoid 1:...; use seq_len() or seq_along()
 - [ ] Keep functions below 50 lines
-    * Offenders are old implementations w/o Rcpp, will probably remove
+    * TODO: fix by refactoring out shared input parsing from spatialCluster/spatialEnhance
 - [ ] Add NEWS file
 - [ ] Keep lines <= 80 characters
 - [ ] Use multiples of 4 spaces for indents

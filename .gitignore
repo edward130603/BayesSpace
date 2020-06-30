@@ -54,3 +54,4 @@ vignettes/*.pdf
 inst/doc
 
 .DS_Store
+*.swp

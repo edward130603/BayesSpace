@@ -13,6 +13,9 @@
 #' @param sce SingleCellExperiment with a file path stored in its metadata.
 #' @param params List of model parameters to read
 #' 
+#' @return Returns an \code{mcmc} object containing the values of the requested
+#'   parameters over the constructed chain.
+#' 
 #' @name mcmcChain
 NULL
 
@@ -31,7 +34,7 @@ NULL
     
     attr(chain[[param]], "colnames") <- colnames(chain[[param]])
     # TODO: write colnames manually to avoid warnings about dimnames
-    suppressWarnings(h5write(chain[[param]], h5.fname, param, write.attributes=T))
+    suppressWarnings(h5write(chain[[param]], h5.fname, param, write.attributes=TRUE))
   }
   
   h5.fname
@@ -48,7 +51,7 @@ NULL
   }
   
   .read_param <- function(x) {
-    x <- as.matrix(h5read(h5.fname, x, read.attributes=T))
+    x <- as.matrix(h5read(h5.fname, x, read.attributes=TRUE))
     colnames(x) <- attr(x, "colnames")
     attr(x, "colnames") <- NULL
     x

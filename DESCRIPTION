@@ -41,4 +41,5 @@ Suggests:
 VignetteBuilder: knitr
 biocViews:
     Software,
-    Clustering
+    Clustering,
+    Transcriptomics

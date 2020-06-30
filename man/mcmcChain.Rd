@@ -11,6 +11,10 @@ mcmcChain(sce, params = NULL)
 
 \item{params}{List of model parameters to read}
 }
+\value{
+Returns an \code{mcmc} object containing the values of the requested
+  parameters over the constructed chain.
+}
 \description{
 BayesSpace stores the MCMC chain associated with a clustering or enhancement 
 on disk in an HDF5 file. The `mcmcChain` function reads any parameters 
