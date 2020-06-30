@@ -12,7 +12,7 @@ spatialEnhance(
   positions = NULL,
   position.cols = c("imagecol", "imagerow"),
   init = NULL,
-  init.method = c("spatialCluster", "kmeans"),
+  init.method = c("kmeans", "spatialCluster"),
   xdist = NULL,
   ydist = NULL,
   model = c("normal", "t"),
@@ -57,7 +57,7 @@ provided, the distance will be estimated using \code{lm(imagecol ~ col)}.}
 \item{ydist}{The distance along y-axis between neighboring spots. If not
 provided, the distance will be estimated using \code{lm(imagerow ~ row)}.}
 
-\item{model}{Error model. ("normal" or "t")}
+\item{model}{Error model. ('normal' or 't')}
 
 \item{nrep}{The number of MCMC iterations.}
 
@@ -77,12 +77,12 @@ is set to a diagonal matrix \eqn{0.01 I}.}
 
 \item{chain.fname}{File path for saved chain. Tempfile used if not provided.}
 
-\item{platform}{Spatial transcriptomic platform. Specify "Visium" for hex 
-lattice geometry or "ST" for square lattice geometry.}
+\item{platform}{Spatial transcriptomic platform. Specify 'Visium' for hex 
+lattice geometry or 'ST' for square lattice geometry.}
 
 \item{jitter_scale}{Controls the amount of jittering. Small amounts of 
 jittering are more likely to be accepted but result in exploring the space
-more slowly. We suggest tuning `jitter_scale` so that Ychange is on 
+more slowly. We suggest tuning \code{jitter_scale} so that Ychange is on 
 average around 30\%.}
 
 \item{c}{Prior precision (1/variance) of the actual spot-level expression 
@@ -95,12 +95,13 @@ not expected to vary much from the overall mean of the spot.}
 Returns a new SingleCellExperiment object. By default, the 
   \code{assays} of this object are empty, and the enhanced resolution PCs 
   are stored as a reduced dimensionality result accessible with
-  \code{reducedDim(sce, "PCA")}.
+  \code{reducedDim(sce, 'PCA')}.
 }
 \description{
 Backend calls iterate_deconv(), written in Rcpp.
-Inputs are the same as `cluster()` except you have to specify xdist and ydist 
-instead of total dist...(maybe would be better to change `cluster()` to match this)
+Inputs are the same as \code{spatialCluster()} except you have to specify
+xdist and ydist instead of total dist...(maybe would be better to change
+\code{spatialCluster} to match this)
 }
 \details{
 TODO: add details on subspot coordinates and linking to parent spots

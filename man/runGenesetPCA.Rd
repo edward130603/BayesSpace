@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{runGenesetPCA}
 \alias{runGenesetPCA}
-\title{Run "blocked" PCA on HVGs and gene sets of interest}
+\title{Run 'blocked' PCA on HVGs and gene sets of interest}
 \usage{
 runGenesetPCA(expr, n_pcs = 20, n_hvgs = 2000, genesets = list())
 }
@@ -18,9 +18,9 @@ per gene set)}
 }
 \value{
 Returns list with names:
-  * `x` Concatenated principal components from each gene set
-  * `rotation` Rotation matrix (block diagonal for each set of PCs)
-  * `genesets` List of gene sets in each block
+  * \code{x} Concatenated principal components from each gene set
+  * \code{rotation} Rotation matrix (block diagonal for each set of PCs)
+  * \code{genesets} List of gene sets in each block
 }
 \description{
 PCA is computed for each specified gene set. The PCs from each gene set are 
@@ -29,6 +29,6 @@ into a block diagonal rotation matrix.
 }
 \details{
 If a set of highly variable genes (HVGs) is not included in the list of 
-gene sets (using the name `hvgs`), the top `n_hvgs` will be computed using 
-scran and added to the list of gene sets.
+gene sets (using the name \code{hvgs}), the top \code{n_hvgs} will be
+computed using scran and added to the list of gene sets.
 }

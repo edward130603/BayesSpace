@@ -26,8 +26,10 @@ predictExpression(
 }
 \value{
 Returns list with names:
-   * `expression` - Deconvolved expression values. (Rows are genes, columns are subspots)
-   * `r2` - Percent of variation in original gene expression explained by PCs
+   * \code{expression} - Deconvolved expression values. 
+     (Rows are genes, columns are subspots)
+   * \code{r2} - Percent of variation in original gene expression 
+     explained by PCs
 }
 \description{
 Predict log-normalized expression vectors from deconvolved PCs using linear 

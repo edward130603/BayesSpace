@@ -15,7 +15,8 @@ find_neighbors(positions, radius, method = c("manhattan", "euclidean"))
 \item{method}{Distance metric to use.}
 }
 \value{
-List df_j, where df_j[[i]] is a vector of zero-indexed neighbors of i.
+List df_j, where \code{df_j[[i]]} is a vector of zero-indexed
+  neighbors of i.
 }
 \description{
 Compute pairwise distances between all spots and return list of neighbors

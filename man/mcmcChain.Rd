@@ -16,13 +16,14 @@ Returns an \code{mcmc} object containing the values of the requested
   parameters over the constructed chain.
 }
 \description{
-BayesSpace stores the MCMC chain associated with a clustering or enhancement 
-on disk in an HDF5 file. The `mcmcChain` function reads any parameters 
-specified by the user into a `coda::mcmc` object compatible with TidyBayes.
+BayesSpace stores the MCMC chain associated with a clustering or enhancement
+on disk in an HDF5 file. The \code{mcmcChain()} function reads any parameters
+specified by the user into a \code{coda::mcmc} object compatible with
+TidyBayes.
 }
 \details{
-To interact with the HDF5 file directly, obtain the filename from the 
-SingleCellExperiment's metadata: `metadata(sce)$chain.h5`. Each parameter is 
-stored as a separate dataset in the file, and is represented as a matrix of 
-size (n_iterations x n_parameter_indices).
+To interact with the HDF5 file directly, obtain the filename from the
+SingleCellExperiment's metadata: \code{metadata(sce)$chain.h5}. Each
+parameter is stored as a separate dataset in the file, and is represented as
+a matrix of size (n_iterations x n_parameter_indices).
 }

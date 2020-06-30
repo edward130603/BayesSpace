@@ -51,9 +51,9 @@ PCs with this method to obtain initial cluster assignments.}
 neighbors. If not provided, the distance will be estimated using
 \code{lm(image.coord ~ array.coord)}.}
 
-\item{model}{Error model. ("normal" or "t")}
+\item{model}{Error model. ('normal' or 't')}
 
-\item{precision}{Covariance structure. ("equal" or "variable" for EEE and 
+\item{precision}{Covariance structure. ('equal' or 'variable' for EEE and 
 VVV covariance models, respectively.)}
 
 \item{nrep}{The number of MCMC iterations.}
