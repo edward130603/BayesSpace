@@ -7,10 +7,8 @@
 spatialEnhance(
   sce,
   q,
-  use.dimred = NULL,
-  pca.method = c("PCA", "denoised", "geneset"),
+  use.dimred = "PCA",
   d = 15,
-  assay.type = "logcounts",
   positions = NULL,
   position.cols = c("imagecol", "imagerow"),
   init = NULL,
@@ -40,13 +38,7 @@ spatialEnhance(
 \item{use.dimred}{Name of a reduced dimensionality result in 
 \code{reducedDims(sce)}. If provided, cluster on these features directly.}
 
-\item{pca.method}{If \code{use.dimred} is not provided, run PCA on the 
-specified assay. Can run standard or de-noised PCA.}
-
 \item{d}{Number of top principal components to use when clustering.}
-
-\item{assay.type}{If \code{use.dimred} is not provided, use this assay when 
-running PCA.}
 
 \item{positions}{A matrix or dataframe with two columns (x, y) that gives
 the spatial coordinates of each spot.}

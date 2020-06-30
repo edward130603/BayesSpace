@@ -13,7 +13,7 @@ test_that("Refactored clustering matches", {
                  init = cdata$km.init, 
                  nrep = 1000, 
                  gamma = 1.5, 
-                 neighborhood.radius = meta$dist,
+                 radius = meta$dist,
                  model="normal",
                  precision="equal")
   

@@ -6,11 +6,7 @@
 #' @param q The number of clusters.
 #' @param use.dimred Name of a reduced dimensionality result in 
 #'   \code{reducedDims(sce)}. If provided, cluster on these features directly. 
-#' @param pca.method If \code{use.dimred} is not provided, run PCA on the 
-#'   specified assay. Can run standard or de-noised PCA.
 #' @param d Number of top principal components to use when clustering.
-#' @param assay.type If \code{use.dimred} is not provided, use this assay when 
-#'   running PCA.
 #' @param positions A matrix or dataframe with two columns (x, y) that gives
 #'   the spatial coordinates of each spot.
 #' @param position.cols If \code{positions} is not provided, use these columns 
@@ -18,9 +14,9 @@
 #' @param init Initial cluster assignments for spots.
 #' @param init.method If \code{init} is not provided, cluster the top \code{d} 
 #'   PCs with this method to obtain initial cluster assignments.
-#' @param neighborhood.radius The maximum (L1) distance for two spots to be
-#'   considered neighbors. If not provided, the distance will be estimated
-#'   using \code{lm(image.coord ~ array.coord)}.
+#' @param radius The maximum (L1) distance for two spots to be considered
+#'   neighbors. If not provided, the distance will be estimated using
+#'   \code{lm(image.coord ~ array.coord)}.
 #' @param model Error model. ("normal" or "t")
 #' @param precision Covariance structure. ("equal" or "variable" for EEE and 
 #'   VVV covariance models, respectively.)
@@ -55,7 +51,7 @@
 NULL
 
 #' @importFrom purrr map
-cluster = function(Y, positions, neighborhood.radius, q, 
+cluster = function(Y, positions, radius, q, 
                    model = c("normal", "t"), precision = c("equal", "variable"),
                    init = rep(1, nrow(Y)), mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)),
                    gamma = 2, alpha = 1, beta = 0.01, nrep = 1000) 
@@ -81,7 +77,7 @@ cluster = function(Y, positions, neighborhood.radius, q,
   }
   
   # TODO: pass boolean matrix to cpp instead of using sapply?
-  df_j <- find_neighbors(positions, neighborhood.radius, "manhattan")
+  df_j <- find_neighbors(positions, radius, "manhattan")
   
   message("Fitting model...")
   if (model == "normal"){
@@ -111,51 +107,34 @@ cluster = function(Y, positions, neighborhood.radius, q,
 #' 
 #' @export
 #' @rdname spatialCluster
-spatialCluster <- function(sce, q, use.dimred=NULL, 
-                           pca.method=c("PCA", "denoised", "geneset"), d=15,
-                           assay.type="logcounts",
+spatialCluster <- function(sce, q, use.dimred="PCA", d=15,
                            positions=NULL, position.cols=c("imagecol", "imagerow"),
                            init=NULL, init.method=c("kmeans"),
-                           neighborhood.radius=NULL,
+                           radius=NULL,
                            model=c("normal", "t"), precision=c("equal", "variable"),
                            nrep=1000, gamma=2, mu0=NULL, lambda0=NULL, 
                            alpha=1, beta=0.01,
                            save.chain=FALSE, chain.fname=NULL) {
 
-  if (is.null(use.dimred)) {
-    use.dimred <- "PCA"
-    pca.method <- match.arg(pca.method)
-    sce <- addPCA(sce, assay.type, pca.method, d)
-  }
-  
-  PCs <- reducedDim(sce, use.dimred)
-  d <- min(d, ncol(PCs))
-  PCs <- PCs[, 1:d]
-  
-  if (is.null(positions)) {
-    positions <- as.matrix(colData(sce)[position.cols])
-    colnames(positions) <- c("x", "y")
-  }
-  
-  if (is.null(neighborhood.radius)) {
-    neighborhood.radius <- compute_neighborhood_radius(sce)
-  }
-  
+  inputs <- .prepare_inputs(sce, use.dimred=use.dimred, d=d,
+                            positions=positions, position.cols=position.cols,
+                            radius=radius) 
+ 
   # Initialize cluster assignments (use k-means for now)
   if (is.null(init)) {
     init.method <- match.arg(init.method)
     if (init.method == "kmeans") {
-      init <- kmeans(PCs, centers = q)$cluster
+      init <- kmeans(inputs$PCs, centers = q)$cluster
     }
   }
   
   # TODO: pass these through with ...
   model <- match.arg(model)
   precision <- match.arg(precision)
-  mu0 <- if (is.null(mu0)) colMeans(PCs) else mu0
-  lambda0 <- if (is.null(lambda0)) diag(0.01, ncol(PCs)) else lambda0
+  mu0 <- if (is.null(mu0)) colMeans(inputs$PCs) else mu0
+  lambda0 <- if (is.null(lambda0)) diag(0.01, ncol(inputs$PCs)) else lambda0
   
-  results <- cluster(PCs, positions, neighborhood.radius, q, 
+  results <- cluster(inputs$PCs, inputs$positions, inputs$radius, q, 
                      init = init,
                      model = model, precision = precision,
                      mu0 = mu0, lambda0 = lambda0,

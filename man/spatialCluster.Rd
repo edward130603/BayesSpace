@@ -7,15 +7,13 @@
 spatialCluster(
   sce,
   q,
-  use.dimred = NULL,
-  pca.method = c("PCA", "denoised", "geneset"),
+  use.dimred = "PCA",
   d = 15,
-  assay.type = "logcounts",
   positions = NULL,
   position.cols = c("imagecol", "imagerow"),
   init = NULL,
   init.method = c("kmeans"),
-  neighborhood.radius = NULL,
+  radius = NULL,
   model = c("normal", "t"),
   precision = c("equal", "variable"),
   nrep = 1000,
@@ -36,13 +34,7 @@ spatialCluster(
 \item{use.dimred}{Name of a reduced dimensionality result in 
 \code{reducedDims(sce)}. If provided, cluster on these features directly.}
 
-\item{pca.method}{If \code{use.dimred} is not provided, run PCA on the 
-specified assay. Can run standard or de-noised PCA.}
-
 \item{d}{Number of top principal components to use when clustering.}
-
-\item{assay.type}{If \code{use.dimred} is not provided, use this assay when 
-running PCA.}
 
 \item{positions}{A matrix or dataframe with two columns (x, y) that gives
 the spatial coordinates of each spot.}
@@ -55,9 +47,9 @@ from \code{colData(sce)} as spatial coordinates (x, y).}
 \item{init.method}{If \code{init} is not provided, cluster the top \code{d} 
 PCs with this method to obtain initial cluster assignments.}
 
-\item{neighborhood.radius}{The maximum (L1) distance for two spots to be
-considered neighbors. If not provided, the distance will be estimated
-using \code{lm(image.coord ~ array.coord)}.}
+\item{radius}{The maximum (L1) distance for two spots to be considered
+neighbors. If not provided, the distance will be estimated using
+\code{lm(image.coord ~ array.coord)}.}
 
 \item{model}{Error model. ("normal" or "t")}
 

@@ -37,17 +37,18 @@ find_neighbors <- function(positions, radius,
 #'   in colData)
 #' @param scale.factor Scale estimated L1 difference up by this amount.
 #' 
-#' @return double radius
+#' @return doubles xdist, ydist, radius
 #' 
 #' @importFrom stats lm coef
-compute_neighborhood_radius <- function(sce, scale.factor=1.02) {
+.compute_interspot_distances <- function(sce, scale.factor=1.02) {
   # TODO: remove hardcoding of columns
-  xdist <- coef(lm(sce$imagecol~sce$col))[2]  # x distance between neighbors
-  ydist <- coef(lm(sce$imagerow~sce$row))[2]  # y distance between neighbors
-  radius <- xdist + ydist
-  radius <- radius * scale.factor
+  dists <- list()
   
-  radius
+  dists$xdist <- coef(lm(sce$imagecol~sce$col))[2]  # x distance between neighbors
+  dists$ydist <- coef(lm(sce$imagerow~sce$row))[2]  # y distance between neighbors
+  dists$radius <- (dists$xdist + dists$ydist) * scale.factor
+
+  dists
 }
 
 #' Find the mode
@@ -146,4 +147,33 @@ addPCA <- function(sce, assay.type, pca.method, d=15) {
   }
   
   sce
+}
+
+#' @importFrom SingleCellExperiment reducedDimNames
+#' @importFrom purrr imap
+.prepare_inputs <- function(sce, use.dimred="PCA", d=15,
+                            positions=NULL, position.cols=c("imagecol", "imagerow"),
+                            radius=NULL, xdist=NULL, ydist=NULL) 
+  # Prepare cluster/deconvolve inputs from SingleCellExperiment object
+{
+  inputs <- list()
+  
+  if (!(use.dimred %in% reducedDimNames(sce))) 
+    stop(sprintf("reducedDim %s not found in input SCE", use.dimred))
+  
+  PCs <- reducedDim(sce, use.dimred)
+  d <- min(d, ncol(PCs))
+  inputs$PCs <- PCs[, 1:d]
+  
+  if (is.null(positions))
+    positions <- as.matrix(colData(sce)[position.cols])
+    
+  colnames(positions) <- c("x", "y")
+  inputs$positions <- positions
+  
+  dists <- .compute_interspot_distances(sce)
+  dists <- imap(dists, function(d, n) ifelse(is.null(get(n)), d, get(n)))
+  inputs <- c(inputs, dists)
+  
+  inputs
 }

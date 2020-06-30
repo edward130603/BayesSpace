@@ -8,11 +8,7 @@
 #' @param q The number of clusters.
 #' @param use.dimred Name of a reduced dimensionality result in 
 #'   \code{reducedDims(sce)}. If provided, cluster on these features directly. 
-#' @param pca.method If \code{use.dimred} is not provided, run PCA on the 
-#'   specified assay. Can run standard or de-noised PCA.
 #' @param d Number of top principal components to use when clustering.
-#' @param assay.type If \code{use.dimred} is not provided, use this assay when 
-#'   running PCA.
 #' @param positions A matrix or dataframe with two columns (x, y) that gives
 #'   the spatial coordinates of each spot.
 #' @param position.cols If \code{positions} is not provided, use these columns 
@@ -106,9 +102,7 @@ deconvolve <- function(Y, positions, nrep = 1000, gamma = 2,
 #' @rdname spatialEnhance
 #' @importFrom SingleCellExperiment SingleCellExperiment reducedDim<-
 #' @importFrom SummarizedExperiment rowData 
-spatialEnhance <- function(sce, q, use.dimred=NULL,
-                           pca.method=c("PCA", "denoised", "geneset"), d=15, 
-                           assay.type="logcounts",
+spatialEnhance <- function(sce, q, use.dimred="PCA", d=15, 
                            positions=NULL, position.cols=c("imagecol", "imagerow"),
                            init=NULL, init.method=c("spatialCluster", "kmeans"),
                            xdist=NULL, ydist=NULL,
@@ -119,35 +113,17 @@ spatialEnhance <- function(sce, q, use.dimred=NULL,
                            platform=c("Visium", "ST"), jitter_scale=5, c=0.01,
                            verbose=FALSE) {
   
-  if (is.null(use.dimred)) {
-    use.dimred <- "PCA"
-    pca.method <- match.arg(pca.method)
-    sce <- addPCA(sce, assay.type, pca.method, d)
-  }
-  
-  PCs <- as.matrix(reducedDim(sce, use.dimred))
-  d <- min(d, ncol(PCs))
-  PCs <- PCs[, 1:d]
-  
-  if (is.null(positions)) {
-    positions <- as.matrix(colData(sce)[position.cols])
-    colnames(positions) <- c("x", "y")
-  }
-  
-  # TODO: add checks that all four cols are in SCE
-  # TODO: sort out discrepancy between cluster and enhance here
-  xdist <- ifelse(is.null(xdist), coef(lm(sce$imagecol~sce$col))[2], xdist)  # x distance between neighbors
-  ydist <- ifelse(is.null(ydist), coef(lm(sce$imagerow~sce$row))[2], ydist)  # y distance between neighbors
-  radius <- (xdist + ydist) * 1.02
+  inputs <- .prepare_inputs(sce, use.dimred=use.dimred, d=d,
+                            positions=positions, position.cols=position.cols,
+                            xdist=xdist, ydist=ydist)
   
   # Initialize cluster assignments (use k-means for now)
   if (is.null(init)) {
     init.method <- match.arg(init.method)
     if (init.method == "kmeans") {
-      init <- kmeans(PCs, centers = q)$cluster
+      init <- kmeans(inputs$PCs, centers = q)$cluster
     } else if (init.method == "spatialCluster") {
-      sce <- spatialCluster(sce, q, assay.type, d, use.dimred, pca.method,
-                            init, "kmeans", positions, position.cols, radius)
+      # TODO: check for spatial.cluster in sce and/or auto-run with same params
       init <- sce$spatial.cluster
     }
   }
@@ -155,11 +131,12 @@ spatialEnhance <- function(sce, q, use.dimred=NULL,
   # TODO: pass these through with ...
   model <- match.arg(model)
   platform <- match.arg(platform)
-  mu0 <- if (is.null(mu0)) colMeans(PCs) else mu0
-  lambda0 <- if (is.null(lambda0)) diag(0.01, ncol(PCs)) else lambda0
+  mu0 <- if (is.null(mu0)) colMeans(inputs$PCs) else mu0
+  lambda0 <- if (is.null(lambda0)) diag(0.01, ncol(inputs$PCs)) else lambda0
   
-  deconv <- deconvolve(PCs, positions, nrep = nrep, gamma = gamma,
-                       xdist = xdist, ydist = ydist, q = q, init = init,
+  deconv <- deconvolve(inputs$PCs, inputs$positions, nrep = nrep, gamma = gamma,
+                       xdist = inputs$xdist, ydist = inputs$ydist, q = q, 
+                       init = init,
                        model = model, platform = platform, 
                        verbose = verbose, jitter_scale = jitter_scale, c = c, 
                        mu0 = mu0, lambda0 = lambda0, 
