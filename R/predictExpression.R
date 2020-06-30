@@ -11,6 +11,7 @@
 #'    * `expression` - Deconvolved expression values. (Rows are genes, columns are subspots)
 #'    * `r2` - Percent of variation in original gene expression explained by PCs
 #'
+#' @export
 #' @importFrom stats lm predict
 predictExpression = function(sce, newdata, dimred = "PCA", genes = rownames(sce), components = ncol(newdata)){
   actual_data = data.frame(reducedDim(sce, type = dimred))[,1:components]

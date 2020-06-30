@@ -11,11 +11,7 @@
 #' @docType package
 #' @name BayesSpace
 #' 
-#' @export spatialEnhance
-#' @export predictExpression
-#' @import SingleCellExperiment
 #' @importFrom Rcpp evalCpp
-#' @importFrom stats cov rWishart
 #' @useDynLib BayesSpace
 #' @useDynLib BayesSpace, .registration=TRUE
 NULL

@@ -8,23 +8,25 @@ See vignettes/maynard.Rmd for an example that should be fully compatible with th
 
 ## TODOs to pass checks
 
-Last updated 2020-06-23.
+Last updated 2020-06-29.
 
 ### R CMD check
 #### Errors (0)
-#### Warnings (2)
-- [ ] Dependency check.  
-    * Remove mvnfast code if we don't need it
-    * SingleCellExperiment declared but not used - should be fixed after
-      refactoring `cluster()` to operate on SCE
-- [ ] Undocumented arguments for deconvolve
-    * Get definitions for new args: model, platform, verbose, jitter_scale, c
-#### Notes (3)
-- [ ] Installed package size  
-    * Currently at 10.8 Mb due to 10.1 Mb testdata
-- [ ] DESCRIPTION meta-information.  
-    * Write an actual Description and pick a license.
-- [ ] Unstated vignette dependencies.  
+#### Warnings (0)
+- [X] Dependency check.  
+    * ~~Remove mvnfast code if we don't need it~~ DONE
+    * ~~SingleCellExperiment declared but not used - should be fixed after
+      refactoring `cluster()` to operate on SCE~~ all imports cleaned up
+- [X] ~~Undocumented arguments for deconvolve~~
+    * ~~Get definitions for new args: model, platform, verbose, jitter_scale, c~~
+#### Notes (0)
+- [X] ~~Installed package size~~  
+    * ~~Currently at 10.8 Mb due to 10.1 Mb testdata~~ Removed full RDS and
+      replaced with CSVs of PCs and relevant colData
+- [X] ~~DESCRIPTION meta-information.~~  
+    * ~~Write an actual Description and pick a license.~~ MIT license
+- [X] Unstated vignette dependencies.  
+    * Removed Maynard vignette to speed up build times during testing
     * Need to pick which example R scripts to include as vignettes, then fix
 
 ### R CMD BiocCheck

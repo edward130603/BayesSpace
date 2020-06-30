@@ -32,13 +32,13 @@ test_that("SCE clustering matches", {
   expect_true(all(sce$spatial.cluster == cdata$spatial.cluster))
 })
 
-# test_that("Refactored deconvolution (SCE) matches", {
-#   truth <- read.csv(system.file("testdata/maynard_151673_subset.enhance_truth.csv.gz", package="BayesSpace"))
-#   sce <- SingleCellExperiment(assays=list(), reducedDims=list("PCA"=PCs), colData=cdata)
-#   
-#   set.seed(149)
-#   enhanced <- spatialEnhance(sce, 7, use.dimred="PCA", init=sce$spatial.cluster)
-#   
-#   expect_true(all(enhanced$spatial.cluster == truth$x))
-# })
+test_that("Refactored deconvolution (SCE) matches", {
+  truth <- read.csv(system.file("testdata/maynard_151673_subset.enhance_truth.csv.gz", package="BayesSpace"))
+  sce <- SingleCellExperiment(assays=list(), reducedDims=list("PCA"=PCs), colData=cdata)
+
+  set.seed(149)
+  enhanced <- spatialEnhance(sce, 7, use.dimred="PCA", init=sce$spatial.cluster)
+
+  expect_true(all(enhanced$spatial.cluster == truth$x))
+})
 
