@@ -1,44 +1,72 @@
 #' Spatial clustering
 #'
-#' Backend calls iterate() which is written in Rcpp
+#' Cluster a spatial expression dataset.
 #' 
-#' @param Y A matrix or dataframe with 1 row per spot and 1 column per outcome 
-#'   (e.g. principal components).
+#' @param sce A SingleCellExperiment object containing the spatial data.
+#' @param q The number of clusters.
+#' @param use.dimred Name of a reduced dimensionality result in 
+#'   \code{reducedDims(sce)}. If provided, cluster on these features directly. 
+#' @param pca.method If \code{use.dimred} is not provided, run PCA on the 
+#'   specified assay. Can run standard or de-noised PCA.
+#' @param d Number of top principal components to use when clustering.
+#' @param assay.type If \code{use.dimred} is not provided, use this assay when 
+#'   running PCA.
 #' @param positions A matrix or dataframe with two columns (x, y) that gives
 #'   the spatial coordinates of each spot.
+#' @param position.cols If \code{positions} is not provided, use these columns 
+#'   from \code{colData(sce)} as spatial coordinates (x, y).
+#' @param init Initial cluster assignments for spots.
+#' @param init.method If \code{init} is not provided, cluster the top \code{d} 
+#'   PCs with this method to obtain initial cluster assignments.
 #' @param neighborhood.radius The maximum (L1) distance for two spots to be
-#'   considered neighbors.
-#' @param gamma Smoothing parameter. (Values in range of 1-3 seem to work well.)
-#' @param q The number of clusters.
-#' @param z0 Initial cluster assignments (z's). Must be a vector of length
-#'   equal to the number of rows of Y and positions.
+#'   considered neighbors. If not provided, the distance will be estimated
+#'   using \code{lm(image.coord ~ array.coord)}.
 #' @param model Error model. ("normal" or "t")
 #' @param precision Covariance structure. ("equal" or "variable" for EEE and 
 #'   VVV covariance models, respectively.)
-#' @param nrep The maximum number of MCMC iterations.
+#' @param nrep The number of MCMC iterations.
+#' @param gamma Smoothing parameter. (Values in range of 1-3 seem to work well.)
 #' @param mu0 Prior mean hyperparameter for mu.
 #' @param lambda0 Prior precision hyperparam for mu.
 #' @param alpha Hyperparameter for Wishart distributed precision lambda.
 #' @param beta Hyperparameter for Wishart distributed precision lambda.
+#' @param model Error model. ("normal" or "t")
+#' @param precision Covariance structure. ("equal" or "variable" for EEE and 
+#'   VVV covariance models, respectively.)
+#' @param nrep The number of MCMC iterations.
+#' @param gamma Smoothing parameter. (Values in range of 1-3 seem to work well.)
+#' @param mu0 Prior mean hyperparameter for mu. If not provided, mu0 is set to
+#'   the mean of PCs over all spots.
+#' @param lambda0 Prior precision hyperparam for mu. If not provided, lambda0
+#'   is set to a diagonal matrix \eqn{0.01 I}.
+#' @param alpha Hyperparameter for Wishart distributed precision lambda.
+#' @param beta Hyperparameter for Wishart distributed precision lambda.
+#' @param save.chain If true, save the MCMC chain to an HDF5 file. 
+#' @param chain.fname File path for saved chain. Tempfile used if not provided.
 #' 
-#' @return List of parameter values (`z`, `mu`, `lambda`) and model 
-#'         log-likelihoods (`plogLik`) at each MCMC iteration, along with final
-#'         cluster labels (`labels`)
+#' @return Returns a modified \code{sce} with cluster assignments stored in
+#'   \code{colData} under the name \code{spatial.cluster}.
 #'         
-#' @details TODO describe method in detail
-#' 
+#' @details 
+#'   TODO describe method in detail
+#'   TODO add details or link to mcmcChain
+#'
+#' @name spatialCluster
+NULL
+
 #' @importFrom purrr map
 cluster = function(Y, positions, neighborhood.radius, q, 
                    model = c("normal", "t"), precision = c("equal", "variable"),
-                   z0 = rep(1, nrow(Y)), mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)),
-                   gamma = 2, alpha = 1, beta = 0.01, nrep = 1000) {
+                   init = rep(1, nrow(Y)), mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)),
+                   gamma = 2, alpha = 1, beta = 0.01, nrep = 1000) 
+{
   
   positions = as.matrix(positions)
   Y = as.matrix(Y)
   d = ncol(Y) 
   n = nrow(Y)
   
-  if ((nrow(positions) != n) | (length(z0) != n)){
+  if ((nrow(positions) != n) | (length(init) != n)){
     stop("Dimensions of Y, positions, and init do not match")
   }
   if ((length(mu0) != d) | (ncol(lambda0) != d)) {
@@ -71,21 +99,25 @@ cluster = function(Y, positions, neighborhood.radius, q,
   } 
   
   cluster.FUN(Y = as.matrix(Y), df_j = df_j, nrep = nrep, n = n, d = d, 
-              gamma = gamma, q = q, init = z0, mu0 = mu0, lambda0 = lambda0, 
+              gamma = gamma, q = q, init = init, mu0 = mu0, lambda0 = lambda0, 
               alpha = alpha, beta = beta)
 }
 
+# TODO make generic
 #' @importFrom stats kmeans
 #' @importFrom SingleCellExperiment reducedDim
 #' @importFrom SummarizedExperiment colData colData<-
 #' @importFrom S4Vectors metadata metadata<-
-spatialCluster <- function(sce, q,
-                           assay.type="logcounts", d=15, use.dimred=NULL,
-                           pca.method=c("PCA", "denoised", "geneset"),
+#' @rdname spatialCluster
+spatialCluster <- function(sce, q, use.dimred=NULL, 
+                           pca.method=c("PCA", "denoised", "geneset"), d=15,
+                           assay.type="logcounts",
+                           positions=NULL, position.cols=c("imagecol", "imagerow"),
                            init=NULL, init.method=c("kmeans"),
-                           positions=NULL, position.cols=c("imagerow", "imagecol"),
-                           nrep=1000,
                            neighborhood.radius=NULL,
+                           model=c("normal", "t"), precision=c("equal", "variable"),
+                           nrep=1000, gamma=2, mu0=NULL, lambda0=NULL, 
+                           alpha=1, beta=0.01,
                            save.chain=FALSE, chain.fname=NULL) {
 
   if (is.null(use.dimred)) {
@@ -115,12 +147,18 @@ spatialCluster <- function(sce, q,
     }
   }
   
-  # TODO: add other cluster arguments to this function's signature
-  results <- cluster(PCs, positions, neighborhood.radius, q, 
-                     z0 = init,
-                     model = "normal", precision = "equal",
-                     gamma = 1.5, nrep = nrep)
+  # TODO: pass these through with ...
+  model <- match.arg(model)
+  precision <- match.arg(precision)
+  mu0 <- if (is.null(mu0)) colMeans(PCs) else mu0
+  lambda0 <- if (is.null(lambda0)) diag(0.01, ncol(PCs)) else lambda0
   
+  results <- cluster(PCs, positions, neighborhood.radius, q, 
+                     init = init,
+                     model = model, precision = precision,
+                     mu0 = mu0, lambda0 = lambda0,
+                     gamma = gamma, alpha = alpha, beta = beta, nrep = nrep) 
+    
   if (save.chain) {
     results <- .clean_chain(results)
     metadata(sce)$chain.h5 <- .write_chain(results, chain.fname)
