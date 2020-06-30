@@ -39,15 +39,15 @@ Last updated 2020-06-29.
     * Wait to do this until after refactoring is complete
 - [ ] Maintainer must register at bioconductor support site  
     * Wait to do this until near publication
-#### Warnings (1)
-- [ ] Update R version dependency from 3.5.0 to 4.0  
-    * TODO: determine minimum R version and run checks under it
+#### Warnings (0)
+- [X] ~~Update R version dependency from 3.5.0 to 4.0~~  
+    * Need minimum of 4.0.0 for latest Bioconductor release (3.11)
 - [X] ~~Test data over 5 MB in size~~
 - [X] ~~Use TRUE/FALSE instead of T/F~~
 - [X] ~~Remove set.seed usage from inside functions~~
 - [X] ~~Add non-empty value sections to deconvolve docs~~
 - [X] ~~Add non-empty value sections to readChain docs~~
-#### Notes (7)
+#### Notes (6)
 - [ ] Avoid sapply(); use vapply()
 - [X] ~~Avoid 1:...; use seq_len() or seq_along()~~
 - [ ] Keep functions below 50 lines
