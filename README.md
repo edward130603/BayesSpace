@@ -47,15 +47,18 @@ Last updated 2020-06-29.
 - [X] ~~Remove set.seed usage from inside functions~~
 - [X] ~~Add non-empty value sections to deconvolve docs~~
 - [X] ~~Add non-empty value sections to readChain docs~~
-#### Notes (6)
+#### Notes (5)
 - [ ] Avoid sapply(); use vapply()
 - [X] ~~Avoid 1:...; use seq_len() or seq_along()~~
 - [ ] Keep functions below 50 lines
-    * TODO: fix by refactoring out shared input parsing from spatialCluster/spatialEnhance
-- [ ] Add NEWS file
+    * ~~TODO: fix by refactoring out shared input parsing from spatialCluster/spatialEnhance~~
+    * TODO: shorten spatialEnhance
+- [X] ~~Add NEWS file~~
 - [ ] Keep lines <= 80 characters
+    * Remaining lines are auto-generated in RcppExports
 - [ ] Use multiples of 4 spaces for indents
-    * Run FormatR
+    * ~~TODO: Run FormatR~~
+    * Remaining lines are in `man/`
 - [ ] Subscribe maintainer to bioc-devel mailing list
 
 ## Notes
