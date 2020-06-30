@@ -68,11 +68,11 @@ NULL
 # Make colnames for parameter indices. 
 {
   if (is.null(n)) {
-    paste0(name, "[", rep(1:m), "]")
+    paste0(name, "[", rep(seq_len(m)), "]")
   } else if (dim == 1) {
-    paste0(name, "[", rep(1:m, each=n), ",", rep(1:n, m), "]")
+    paste0(name, "[", rep(seq_len(m), each=n), ",", rep(seq_len(n), m), "]")
   } else {
-    paste0(name, "[", rep(1:m, n), ",", rep(1:n, each=m), "]")
+    paste0(name, "[", rep(seq_len(m), n), ",", rep(seq_len(n), each=m), "]")
   }
 }
 

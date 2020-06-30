@@ -89,7 +89,7 @@ deconvolve <- function(Y, positions, nrep = 1000, gamma = 2,
   positions2[,"y"] = positions2[,"y"] + shift_long[,"Var2"]
   n = nrow(Y2)
   if (verbose){message("Calculating neighbors...")}
-  df_j = sapply(1:n, function(x){which((abs(positions2[,1] -positions2[x,1]) + abs(positions2[,2] - positions2[x,2])) <= dist &  #L1 distance
+  df_j = sapply(seq_len(n), function(x){which((abs(positions2[,1] -positions2[x,1]) + abs(positions2[,2] - positions2[x,2])) <= dist &  #L1 distance
                                          (abs(positions2[,1] -positions2[x,1]) + abs(positions2[,2] - positions2[x,2])) > 0)-1})
   if (verbose){message("Fitting model...")}
   tdist = ifelse(model == "t", TRUE, FALSE)

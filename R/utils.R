@@ -15,7 +15,7 @@ find_neighbors <- function(positions, radius,
   message("Calculating neighbors...")
   pdist <- as.matrix(stats::dist(positions, method=method))
   neighbors <- (pdist <= radius & pdist > 0)
-  df_j <- sapply(1:nrow(positions),
+  df_j <- sapply(seq_len(nrow(positions)),
                  function(x) as.vector(which(neighbors[x, ])) - 1)
   
   msg <- sprintf("Neighbors were identified for %d out of %d spots.",
@@ -163,7 +163,7 @@ addPCA <- function(sce, assay.type, pca.method, d=15) {
   
   PCs <- reducedDim(sce, use.dimred)
   d <- min(d, ncol(PCs))
-  inputs$PCs <- PCs[, 1:d]
+  inputs$PCs <- PCs[, seq_len(d)]
   
   if (is.null(positions))
     positions <- as.matrix(colData(sce)[position.cols])

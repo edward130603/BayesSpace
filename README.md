@@ -49,7 +49,7 @@ Last updated 2020-06-29.
 - [X] ~~Add non-empty value sections to readChain docs~~
 #### Notes (7)
 - [ ] Avoid sapply(); use vapply()
-- [ ] Avoid 1:...; use seq_len() or seq_along()
+- [X] ~~Avoid 1:...; use seq_len() or seq_along()~~
 - [ ] Keep functions below 50 lines
     * TODO: fix by refactoring out shared input parsing from spatialCluster/spatialEnhance
 - [ ] Add NEWS file

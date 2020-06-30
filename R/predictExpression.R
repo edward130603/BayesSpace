@@ -14,7 +14,7 @@
 #' @export
 #' @importFrom stats lm predict
 predictExpression = function(sce, newdata, dimred = "PCA", genes = rownames(sce), components = ncol(newdata)){
-  actual_data = data.frame(reducedDim(sce, type = dimred))[,1:components]
+  actual_data = data.frame(reducedDim(sce, type = dimred))[, seq_len(components)]
   newdata = as.data.frame(newdata)
   if (ncol(actual_data) != ncol(newdata)){
     stop("number of components do not match")
