@@ -11,11 +11,8 @@
 #' @docType package
 #' @name BayesSpace
 #' 
-#' @export spatialCluster
 #' @export spatialEnhance
 #' @export predictExpression
-#' @export cluster
-#' @export deconvolve
 #' @import SingleCellExperiment
 #' @importFrom Rcpp evalCpp
 #' @importFrom stats cov rWishart

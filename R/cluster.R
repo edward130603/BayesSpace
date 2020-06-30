@@ -108,6 +108,8 @@ cluster = function(Y, positions, neighborhood.radius, q,
 #' @importFrom SingleCellExperiment reducedDim
 #' @importFrom SummarizedExperiment colData colData<-
 #' @importFrom S4Vectors metadata metadata<-
+#' 
+#' @export
 #' @rdname spatialCluster
 spatialCluster <- function(sce, q, use.dimred=NULL, 
                            pca.method=c("PCA", "denoised", "geneset"), d=15,
