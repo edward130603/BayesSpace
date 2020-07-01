@@ -34,18 +34,40 @@ NULL
     
     h5createFile(h5.fname)
     
-    for (param in params) {
-        dims <- dim(chain[[param]])
+    for (par.name in params) {
+        param <- chain[[par.name]]
+        dims <- dim(param)
         chunk <- c(min(chunk.length, dims[1]), dims[2])
-        h5createDataset(h5.fname, param, dims, chunk=chunk)
+        h5createDataset(h5.fname, par.name, dims, chunk=chunk)
         
-        attr(chain[[param]], "colnames") <- colnames(chain[[param]])
+        attr(param, "dims") <- .infer_param_dims(colnames(param))
+        
         ## TODO: write colnames manually to avoid warnings about dimnames
-        suppressWarnings(h5write(chain[[param]], h5.fname, param,
-            write.attributes=TRUE))
+        ## when writing all attributes
+        suppressWarnings(h5write(param, h5.fname, par.name, write.attributes=TRUE))
     }
     
     h5.fname
+}
+
+## Infer original dimensions of parameter (per iteration) from colnames
+##
+## Used to avoid writing colnames directly to HDF5 as attribute, which fails
+## for large parameters (e.g. Y)
+.infer_param_dims <- function(cnames) {
+    n_idxs <- length(cnames)
+    dims <- list()
+    
+    if (n_idxs == 1) {
+        dims <- c(1, 1)
+    } else if (!grepl(",", cnames[n_idxs])) {
+        dims <- c(n_idxs, 1)
+    } else {
+        dims <- gsub("[a-zA-Z_\\.]|\\[|\\]", "", cnames[n_idxs])
+        dims <- as.numeric(strsplit(dims, ",")[[1]])
+    }
+    
+    dims
 }
 
 #' @importFrom rhdf5 h5ls h5read
@@ -58,11 +80,12 @@ NULL
         params <- h5ls(h5.fname)$name
     }
     
-    .read_param <- function(x) {
-        x <- as.matrix(h5read(h5.fname, x, read.attributes=TRUE))
-        colnames(x) <- attr(x, "colnames")
-        attr(x, "colnames") <- NULL
-        x
+    .read_param <- function(par.name) {
+        param <- as.matrix(h5read(h5.fname, par.name, read.attributes=TRUE))
+        dims <- attr(param, "dims")
+        colnames(param) <- .make_index_names(par.name, dims[1], dims[2])
+        
+        param
     }
     
     xs <- map(params, .read_param)
@@ -73,8 +96,10 @@ NULL
 }
 
 ## Make colnames for parameter indices.
-.make_index_names <- function(name, m, n = NULL, dim = 1) {
-    if (is.null(n)) {
+.make_index_names <- function(name, m = NULL, n = NULL, dim = 1) {
+    if (is.null(m) || m == 1) {
+        name
+    } else if (is.null(n) || n == 1) {
         paste0(name, "[", rep(seq_len(m)), "]")
     } else if (dim == 1) {
         paste0(name, "[", rep(seq_len(m), each=n), ",", rep(seq_len(n), m), "]")

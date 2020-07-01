@@ -162,7 +162,7 @@ spatialEnhance <- function(sce, q, use.dimred = "PCA", d = 15,
     if (save.chain) {
         deconv <- .clean_chain(deconv, method="enhance")
         params <- c("z", "mu", "lambda", "weights", "Y", "Ychange")
-        metadata(sce)$chain.h5 <- .write_chain(deconv, chain.fname, params)
+        metadata(enhanced)$chain.h5 <- .write_chain(deconv, chain.fname, params)
     }
     
     enhanced
