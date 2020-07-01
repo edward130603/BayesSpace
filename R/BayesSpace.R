@@ -1,22 +1,20 @@
 #' BayesSpace: A package for processing spatial transcriptomes
 #' 
-#' The BayesSpace package provides two primary functions: `cluster()` and `deconvolve()`.
+#' The BayesSpace package provides two primary functions:
+#' \code{spatialCluster()} and \code{spatialEnhance()}.
 #' 
 #' @section Clustering:
-#' The clustering algorithm groups neighboring spots together by expression profile.
+#' The clustering algorithm groups neighboring spots together by expression
+#' profile.
 #' 
-#' @section Deconvolution:
-#' The deconvolution algorithm deconvolves spot-level expression signals into imputed cell-level signals.
+#' @section Enhancement:
+#' The enhancement algorithm deconvolves spot-level expression into imputed
+#' cell-level signals.
 #' 
 #' @docType package
 #' @name BayesSpace
 #' 
-#' @export cluster
-#' @export deconvolve
-#' @export predictExpression
-#' @import SingleCellExperiment
 #' @importFrom Rcpp evalCpp
-#' @importFrom stats cov rWishart
 #' @useDynLib BayesSpace
 #' @useDynLib BayesSpace, .registration=TRUE
 NULL

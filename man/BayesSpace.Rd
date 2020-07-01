@@ -5,15 +5,18 @@
 \alias{BayesSpace}
 \title{BayesSpace: A package for processing spatial transcriptomes}
 \description{
-The BayesSpace package provides two primary functions: `cluster()` and `deconvolve()`.
+The BayesSpace package provides two primary functions:
+\code{spatialCluster()} and \code{spatialEnhance()}.
 }
 \section{Clustering}{
 
-The clustering algorithm groups neighboring spots together by expression profile.
+The clustering algorithm groups neighboring spots together by expression
+profile.
 }
 
-\section{Deconvolution}{
+\section{Enhancement}{
 
-The deconvolution algorithm deconvolves spot-level expression signals into imputed cell-level signals.
+The enhancement algorithm deconvolves spot-level expression into imputed
+cell-level signals.
 }
 

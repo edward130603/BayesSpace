@@ -52,3 +52,6 @@ vignettes/*.pdf
 .RDataTmp
 *.Rproj
 inst/doc
+
+.DS_Store
+*.swp

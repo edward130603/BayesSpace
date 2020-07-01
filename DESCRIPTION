@@ -9,13 +9,22 @@ Author:
 Maintainer:
     Edward Zhao <ezhao@fredhutch.org>
 Depends:
-    R (>= 3.5.0)
+    R (>= 4.0.0)
 Imports:
     Rcpp (>= 1.0.4.6),
     stats,
     SingleCellExperiment,
-Description: "TODO write description"
-License: "TODO pick license"
+    BiocSingular,
+    purrr,
+    scater,
+    scran,
+    SummarizedExperiment,
+    coda,
+    rhdf5,
+    S4Vectors,
+    Matrix
+Description: "Clustering and enhanced resolution of spatial transcriptomics datasets."
+License: MIT + file LICENSE
 RoxygenNote: 7.1.0
 LinkingTo: 
     Rcpp,
@@ -32,4 +41,5 @@ Suggests:
 VignetteBuilder: knitr
 biocViews:
     Software,
-    Clustering
+    Clustering,
+    Transcriptomics
