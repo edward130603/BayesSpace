@@ -179,3 +179,42 @@ addPCA <- function(sce, assay.type, pca.method, d = 15) {
     
     inputs
 }
+
+#' Create minimal \code{SingleCellExperiment} for documentation examples.
+#' 
+#' @param n_PCs Number of principal components to simulate
+#' @param nrow Number of rows of spots
+#' @param ncol Number of columns of spots
+#' 
+#' @return A SingleCellExperiment object with no assays, a set of random PCs in
+#' \code{reducedDim(sce, "PCA")}, and positional data in \code{colData}. Spots
+#' are distributed over an (\code{nrow} x \code{ncol}) rectangle.
+#' 
+#' @details 
+#' Inspired by scuttle's \code{mockSCE}.
+#' 
+#' @examples
+#' set.seed(149)
+#' sce <- exampleSCE()
+#' 
+#' @importFrom stats rnorm
+#' @importFrom SingleCellExperiment SingleCellExperiment
+#' @export
+exampleSCE <- function(n_PCs=15, nrow=10, ncol=20)
+{
+    n_spots <- nrow * ncol
+    PCs <- matrix(rnorm(n_spots * n_PCs), ncol=n_PCs)
+    
+    cdata <- list()
+    cdata$row <- rep(seq_len(nrow), each=ncol)
+    cdata$col <- rep(seq_len(ncol), nrow)
+    cdata <- as.data.frame(do.call(cbind, cdata))
+    
+    ## Scale and jitter image coordinates
+    scale.factor <- rnorm(1, 8)
+    cdata$imagerow <- scale.factor * cdata$row + rnorm(n_spots)
+    cdata$imagecol <- scale.factor * cdata$col + rnorm(n_spots)
+    
+    SingleCellExperiment(assays=list(), colData=cdata,
+        reducedDims=list("PCA"=PCs))
+}

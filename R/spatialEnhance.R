@@ -158,7 +158,6 @@ spatialEnhance <- function(sce, q, use.dimred = "PCA", d = 15,
     ## TODO: fix hard-coding of iterations being used
     enhanced$spatial.cluster <- apply(deconv$z[900:1000, ], 2, Mode)
     
-    ## TODO: save chain
     if (save.chain) {
         deconv <- .clean_chain(deconv, method="enhance")
         params <- c("z", "mu", "lambda", "weights", "Y", "Ychange")
