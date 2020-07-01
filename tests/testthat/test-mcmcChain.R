@@ -35,3 +35,21 @@ test_that("Reading and writing works as expected", {
   expect_true(colnames(chain)[7] == "mu[1,2]")
   expect_true(colnames(chain)[10] == "mu[2,1]")
 })
+
+test_that("List of matrices is flattened", {
+  xs <- list()
+  n_iter <- 10
+  n_row <- 3
+  n_col <- 5
+  
+  set.seed(149)
+  xs[[1]] <- matrix(rnorm(n_row * n_col), ncol=n_col)
+  xs <- rep(xs, n_iter)
+  
+  x <- .flatten_matrix_list(xs, "x", n_row, n_col)
+  
+  expect_equal(nrow(x), n_iter)
+  expect_equal(ncol(x), n_row * n_col)
+  expect_equal(as.numeric(x[1, 7]), xs[[1]][2, 2])
+  expect_equal(colnames(x)[7], "x[2,2]")
+})

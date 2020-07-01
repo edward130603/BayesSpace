@@ -21,14 +21,20 @@
 NULL
 
 #' @importFrom rhdf5 h5createFile h5createDataset h5write
-.write_chain <- function(chain, h5.fname = NULL, chunk.length = 1000) {
+.write_chain <- function(chain, h5.fname = NULL, params = NULL, 
+    chunk.length = 1000, chunk.width=4000) {
+    
     if (is.null(h5.fname)) {
         h5.fname <- tempfile(fileext=".h5")
     }
     
+    if (is.null(params)) {
+        params <- names(chain)
+    }
+    
     h5createFile(h5.fname)
     
-    for (param in names(chain)) {
+    for (param in params) {
         dims <- dim(chain[[param]])
         chunk <- c(min(chunk.length, dims[1]), dims[2])
         h5createDataset(h5.fname, param, dims, chunk=chunk)
@@ -82,23 +88,51 @@ NULL
 ##  2) Add appropriate colnames 
 ##  3) Thin evenly (for enhance)
 #' @importFrom purrr map
-.clean_chain <- function(out, method = c("cluster", "enhance")) 
+.clean_chain <- function(out, method = c("cluster", "enhance"), thin=100) 
 {
+    n_iter <- nrow(out$z)
+    n <- ncol(out$z)
     d <- ncol(out$lambda[[1]])
     q <- ncol(out$mu)/d
     
-    colnames(out$z) <- .make_index_names("z", ncol(out$z))
+    colnames(out$z) <- .make_index_names("z", n)
     colnames(out$mu) <- .make_index_names("mu", q, d)
+    out$lambda <- .flatten_matrix_list(out$lambda, "lambda", d, d)
     
-    lambdas <- map(out$lambda, function(x) as.vector(t(x)))
-    out$lambda <- do.call(rbind, lambdas)
-    colnames(out$lambda) <- .make_index_names("lambda", d, d)
+    ## Include function-specific chain parameters
+    if (method == "cluster") {
+        out$plogLik <- as.matrix(out$plogLik)
+        colnames(out$plogLik) <- c("pLogLikelihood")
+    } else if (method == "enhance") {
+        colnames(out$weights) <- .make_index_names("weights", n)
+        out$Y <- .flatten_matrix_list(out$Y, "Y", n, d)
+        out$Ychange <- as.matrix(out$Ychange)
+        colnames(out$Ychange) <- c("Ychange")
+    }
     
-    out$plogLik <- as.matrix(out$plogLik)
-    colnames(out$plogLik) <- c("pLogLikelihood")
+    ## TODO: optionally thin cluster output too
+    if (method == "enhance") {
+        for (param in c("z", "mu", "lambda", "weights")) {
+            out[[param]] <- out[[param]][seq(thin, n_iter, thin), ]
+        }
+        
+        ## Subset of a one-column matrix is a vector, not a matrix
+        out$Ychange <- as.matrix(out$Ychange[seq(thin, n_iter, thin), ])
+        colnames(out$Ychange) <- c("Ychange")
+        
+        ## Y is thinned inside `deconvolve` but includes starting values
+        out$Y <- out$Y[seq(2, nrow(out$Y)), ]
+    }
     
-    ## TODO: if enhance, then add weights, Y, Ychange
     out
+}
+
+.flatten_matrix_list <- function(xs, ...) {
+    xs <- map(xs, function(x) as.vector(t(x)))
+    x <- do.call(rbind, xs)
+    colnames(x) <- .make_index_names(...)
+    
+    x
 }
 
 #' @export
