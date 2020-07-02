@@ -13,11 +13,12 @@
 #'    * \code{r2} - Percent of variation in original gene expression 
 #'      explained by PCs
 #'
-#' @export
 #' @importFrom stats lm predict
+#' @export
 predictExpression <- function(sce, newdata, dimred = "PCA",
     genes = rownames(sce), components = ncol(newdata)) {
     
+    ## TODO: swap args so the enhanced sce we're predicting on is `sce`
     actual_data <- data.frame(reducedDim(sce, dimred))[, seq_len(components)]
     newdata <- as.data.frame(newdata)
     if (ncol(actual_data) != ncol(newdata)) {
@@ -38,5 +39,7 @@ predictExpression <- function(sce, newdata, dimred = "PCA",
         rsquared[gene] <- summary(train)$r.squared
         deconv_expression[gene, ] <- predict(train, newdata=newdata)
     }
+    
+    ## TODO: store deconvolved data in sce assays or altExps or reducedDims
     list(expression=deconv_expression, r2=rsquared)
 }

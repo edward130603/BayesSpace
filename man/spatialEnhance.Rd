@@ -106,3 +106,10 @@ xdist and ydist instead of total dist...(maybe would be better to change
 \details{
 TODO: add details on subspot coordinates and linking to parent spots
 }
+\examples{
+set.seed(149)
+sce <- exampleSCE()
+sce <- spatialCluster(sce, 7)
+enhanced <- spatialEnhance(sce, 7, init=sce$spatial.cluster)
+
+}

@@ -48,7 +48,14 @@
 #'   are stored as a reduced dimensionality result accessible with
 #'   \code{reducedDim(sce, 'PCA')}.
 #'   
-#' @details TODO: add details on subspot coordinates and linking to parent spots
+#' @details 
+#' TODO: add details on subspot coordinates and linking to parent spots
+#' 
+#' @examples
+#' set.seed(149)
+#' sce <- exampleSCE()
+#' sce <- spatialCluster(sce, 7)
+#' enhanced <- spatialEnhance(sce, 7, init=sce$spatial.cluster)
 #' 
 #' @name spatialEnhance
 NULL

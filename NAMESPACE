@@ -3,6 +3,7 @@
 export(exampleSCE)
 export(mcmcChain)
 export(predictExpression)
+export(removeChain)
 export(spatialCluster)
 export(spatialEnhance)
 importFrom(Matrix,bdiag)

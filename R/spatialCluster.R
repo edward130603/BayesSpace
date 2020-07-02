@@ -35,8 +35,13 @@
 #'   \code{colData} under the name \code{spatial.cluster}.
 #'         
 #' @details 
-#'   TODO describe method in detail
-#'   TODO add details or link to mcmcChain
+#' TODO describe method in detail
+#' TODO add details or link to mcmcChain
+#' 
+#' @examples
+#' set.seed(149)
+#' sce <- exampleSCE()
+#' sce <- spatialCluster(sce, 7)
 #'
 #' @name spatialCluster
 NULL

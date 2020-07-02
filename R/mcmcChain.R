@@ -16,13 +16,20 @@
 #' 
 #' @return Returns an \code{mcmc} object containing the values of the requested
 #'   parameters over the constructed chain.
+#'   
+#' @examples
+#' set.seed(149)
+#' sce <- exampleSCE()
+#' sce <- spatialCluster(sce, 7, save.chain=TRUE)
+#' chain <- mcmcChain(sce)
+#' removeChain(sce)
 #' 
 #' @name mcmcChain
 NULL
 
 #' @importFrom rhdf5 h5createFile h5createDataset h5write
 .write_chain <- function(chain, h5.fname = NULL, params = NULL, 
-    chunk.length = 1000, chunk.width=4000) {
+    chunk.length = 1000) {
     
     if (is.null(h5.fname)) {
         h5.fname <- tempfile(fileext=".h5")
@@ -168,4 +175,15 @@ mcmcChain <- function(sce, params = NULL) {
     }
     
     .read_chain(metadata(sce)$chain.h5, params)
+}
+
+#' @export
+#' @rdname mcmcChain
+removeChain <- function(sce) {
+    if ("chain.h5" %in% names(metadata(sce))) {
+        if (file.exists(metadata(sce)$chain.h5)) {
+            file.remove(metadata(sce)$chain.h5)
+        }
+        metadata(sce)$chain.h5 <- NULL
+    }
 }
