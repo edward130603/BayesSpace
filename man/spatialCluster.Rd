@@ -83,5 +83,11 @@ Cluster a spatial expression dataset.
 }
 \details{
 TODO describe method in detail
-  TODO add details or link to mcmcChain
+TODO add details or link to mcmcChain
+}
+\examples{
+set.seed(149)
+sce <- exampleSCE()
+sce <- spatialCluster(sce, 7)
+
 }
