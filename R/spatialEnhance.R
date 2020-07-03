@@ -144,17 +144,15 @@ spatialEnhance <- function(sce, q, use.dimred = "PCA", d = 15,
         mu0=mu0, lambda0=lambda0, alpha=alpha, beta=beta)
     
     ## Create enhanced SCE
-    
-    ## TODO: auto-run predictExpression and include as assay 
-    ## deconv_PCs <- deconv$Y[[length(deconv$Y)]] 
-    ## expr <- predictExpression(sce, deconv_PCs)
-    
     cdata <- as.data.frame(deconv$positions)
     colnames(cdata) <- c("imagecol", "imagerow")
     enhanced <- SingleCellExperiment(assays=list(), 
         rowData=rowData(sce), colData=cdata)
     
-    reducedDim(enhanced, "PCA") <- deconv$Y[[length(deconv$Y)]]
+    deconv_PCs <- deconv$Y[[length(deconv$Y)]]
+    colnames(deconv_PCs) <- paste0("PC", seq_len(ncol(deconv_PCs)))
+    reducedDim(enhanced, "PCA") <- deconv_PCs
+    
     ## TODO: fix hard-coding of iterations being used
     enhanced$spatial.cluster <- apply(deconv$z[900:1000, ], 2, Mode)
     
