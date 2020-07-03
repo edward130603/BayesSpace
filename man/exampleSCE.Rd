@@ -4,25 +4,27 @@
 \alias{exampleSCE}
 \title{Create minimal \code{SingleCellExperiment} for documentation examples.}
 \usage{
-exampleSCE(n_PCs = 15, nrow = 10, ncol = 20)
+exampleSCE(nrow = 10, ncol = 20, n_genes = 100, n_PCs = 10)
 }
 \arguments{
-\item{n_PCs}{Number of principal components to simulate}
-
 \item{nrow}{Number of rows of spots}
 
 \item{ncol}{Number of columns of spots}
+
+\item{n_genes}{Number of genes to simulate}
+
+\item{n_PCs}{Number of principal components to include}
 }
 \value{
-A SingleCellExperiment object with no assays, a set of random PCs in
-\code{reducedDim(sce, "PCA")}, and positional data in \code{colData}. Spots
-are distributed over an (\code{nrow} x \code{ncol}) rectangle.
+A SingleCellExperiment object with simulated counts, corresponding
+  logcounts and PCs, and positional data in \code{colData}. Spots are
+  distributed over an (\code{nrow} x \code{ncol}) rectangle.
 }
 \description{
 Create minimal \code{SingleCellExperiment} for documentation examples.
 }
 \details{
-Inspired by scuttle's \code{mockSCE}.
+Inspired by scuttle's \code{mockSCE()}.
 }
 \examples{
 set.seed(149)

@@ -182,16 +182,17 @@ addPCA <- function(sce, assay.type, pca.method, d = 15) {
 
 #' Create minimal \code{SingleCellExperiment} for documentation examples.
 #' 
-#' @param n_PCs Number of principal components to simulate
 #' @param nrow Number of rows of spots
 #' @param ncol Number of columns of spots
+#' @param n_genes Number of genes to simulate
+#' @param n_PCs Number of principal components to include
 #' 
-#' @return A SingleCellExperiment object with no assays, a set of random PCs in
-#' \code{reducedDim(sce, "PCA")}, and positional data in \code{colData}. Spots
-#' are distributed over an (\code{nrow} x \code{ncol}) rectangle.
+#' @return A SingleCellExperiment object with simulated counts, corresponding
+#'   logcounts and PCs, and positional data in \code{colData}. Spots are
+#'   distributed over an (\code{nrow} x \code{ncol}) rectangle.
 #' 
 #' @details 
-#' Inspired by scuttle's \code{mockSCE}.
+#' Inspired by scuttle's \code{mockSCE()}.
 #' 
 #' @examples
 #' set.seed(149)
@@ -199,12 +200,21 @@ addPCA <- function(sce, assay.type, pca.method, d = 15) {
 #' 
 #' @importFrom stats rnorm
 #' @importFrom SingleCellExperiment SingleCellExperiment
+#' @importFrom scater logNormCounts
+#' @importFrom stats prcomp
 #' @export
-exampleSCE <- function(n_PCs=15, nrow=10, ncol=20)
+exampleSCE <- function(nrow=10, ncol=20, n_genes=100, n_PCs=10)
 {
     n_spots <- nrow * ncol
-    PCs <- matrix(rnorm(n_spots * n_PCs), ncol=n_PCs)
     
+    ## Borrowed from scuttle::mockSCE()
+    mu <- 2 ^ runif(n_genes, 2, 10)
+    size <- 1 / (100 / mu + 0.5)
+    counts <- matrix(rnbinom(n_genes * n_spots, mu=mu, size=size), ncol=n_spots)
+    rownames(counts) <- paste0("gene_", seq_len(n_genes))
+    colnames(counts) <- paste0("spot_", seq_len(n_spots))
+
+    ## Make array coordinates - filled rectangle
     cdata <- list()
     cdata$row <- rep(seq_len(nrow), each=ncol)
     cdata$col <- rep(seq_len(ncol), nrow)
@@ -215,6 +225,11 @@ exampleSCE <- function(n_PCs=15, nrow=10, ncol=20)
     cdata$imagerow <- scale.factor * cdata$row + rnorm(n_spots)
     cdata$imagecol <- scale.factor * cdata$col + rnorm(n_spots)
     
-    SingleCellExperiment(assays=list(), colData=cdata,
-        reducedDims=list("PCA"=PCs))
+    ## Make SCE
+    ## note: scater::runPCA throws warning on our small sim data, so use prcomp
+    sce <- SingleCellExperiment(assays=list(counts=counts), colData=cdata)
+    sce <- logNormCounts(sce)
+    reducedDim(sce, "PCA") <- prcomp(t(logcounts(sce)))$x[, seq_len(n_PCs)]
+    
+    sce
 }
