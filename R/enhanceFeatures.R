@@ -1,20 +1,42 @@
 #' Predict log-normalized expression vectors from deconvolved PCs using linear 
 #' regression.
 #' 
-#' @param sce SingleCellExperiment object with original PCs and logcounts
-#' @param newdata Deconvolved PCs (rows are subspots, columns are PCs)
-#' @param dimred Name of dimension reduction to use
-#' @param genes List of genes to predict expression for
-#' @param components Number of reduced dimensions (PCs) to use
+#' @param sce.enhanced SingleCellExperiment object with enhanced PCs.
+#' @param sce.ref SingleCellExperiment object with original PCs and expression..
+#' @param use.dimred Name of dimension reduction to use.
+#' @param assay.type Expression matrix in \code{assays(sce.ref)} to predict.
+#' @param altExp.type Expression matrix in \code{altExps(sce.ref)} to predict.
+#'   Overrides \code{assay.type} if specified.
+#' @param feature.matrix Expression/feature matrix to predict, if not directly
+#'   attached to \code{sce.ref}. Must have columns corresponding to the spots in
+#'   \code{sce.ref}. Overrides \code{assay.type} and \code{altExp.type} if
+#'   specified.
+#' @param features List of genes/features to predict expression/values for.
+#' @param model Model used to predict enhanced values.
 #' 
-#' @return Returns list with names:
-#'    * \code{expression} - Deconvolved expression values. 
-#'      (Rows are genes, columns are subspots)
-#'    * \code{r2} - Percent of variation in original gene expression 
-#'      explained by PCs
+#' @return If \code{assay.type} or \code{altExp.type} are specified, the
+#'   enhanced features are stored in the corresponding slot of
+#'   \code{sce.enhanced} and the modified SingleCellExperiment object is
+#'   returned.
+#'   
+#'   If \code{feature.matrix} is specified, the enhanced features are returned
+#'   directly as a matrix.
+#' 
+#' @details
+#' 
+#' @examples
+#' set.seed(149)
+#' sce <- exampleSCE()
+#' sce <- spatialCluster(sce, 7)
+#' enhanced <- spatialEnhance(sce, 7, init=sce$spatial.cluster)
+#' enhanceFeatures(enhanced, sce, assay.type="logcounts")
 #'
 #' @name enhanceFeatures
 NULL
+
+## TODO: store deconvolved data in sce assays or altExps or reducedDims
+## altExp overrides assay.type if specified,
+## Feature.matrix overrides either if specified
 
 #' @importFrom assertthat assert_that
 .enhance_features <- function(X.enhanced, X.ref, Y.ref, 
@@ -57,29 +79,35 @@ NULL
     Y.enhanced
 }
 
-## TODO: store deconvolved data in sce assays or altExps or reducedDims
-
 #' @export
+#' @importFrom SingleCellExperiment reducedDim altExp altExp<-
+#' @importFrom SummarizedExperiment assay assay<- 
 #' @rdname enhanceFeatures
-setGeneric("enhanceFeatures", function(enhanced, reference, ...) standardGeneric("enhanceFeatures"))
-
-#' @export
-#' @rdname enhanceFeatures
-setMethod("enhanceFeatures", c("ANY", "ANY"), .enhance_features)
-
-#' @export
-#' @rdname enhanceFeatures
-setMethod("enhanceFeatures", 
-    c("SingleCellExperiment", "ANY"), 
-    function (enhanced, reference, ..., use.dimred = "PCA")
-{
-        
-})
-
-#' @export
-#' @rdname enhanceFeatures
-setMethod("enhanceFeatures", 
-    c("SingleCellExperiment", "SingleCellExperiment"), 
-    function (enhanced, reference, ..., use.dimred = "PCA") {
+enhanceFeatures <- function(sce.enhanced, sce.ref, use.dimred = "PCA",
+    assay.type="logcounts", altExp.type = NULL, feature.matrix = NULL, ...) {
     
+    X.enhanced <- reducedDim(sce.enhanced, use.dimred)
+    X.ref <- reducedDim(sce.ref, use.dimred)
+    
+    if (!is.null(feature.matrix)) {
+        Y.ref <- feature.matrix
+    } else if (!is.null(altExp.type)) {
+        Y.ref <- altExp(sce.ref, altExp.type)
+    } else {
+        Y.ref <- assay(sce.ref, assay.type)
+    }
+    
+    Y.enhanced <- .enhance_features(X.enhanced, X.ref, Y.ref, ...)
+    
+    ## TODO: add option to specify destination of enhanced features.
+    ## For now, return in same form as input
+    if (!is.null(feature.matrix)) {
+        return(Y.enhanced)
+    } else if (!is.null(altExp.type)) {
+        altExp(sce.enhanced, altExp.type) <- Y.enhanced
+    } else {
+        assay(sce.enhanced, assay.type) <- Y.enhanced
+    }
+    
+    return(sce)
 }
