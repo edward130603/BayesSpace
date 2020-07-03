@@ -30,13 +30,12 @@ Last updated 2020-06-29.
     * Need to pick which example R scripts to include as vignettes, then fix
 
 ### R CMD BiocCheck
-#### Errors (3)
+#### Errors (2)
 - [ ] No 'vignettes' directory  
     * TODO: draft vignettes
 - [X] ~~Package source tarball exceeds size requirement~~  
     * ~~Currently at 10.6 MB (testdata is 10.1 MB); needs to be <5 MB~~ see above
-- [ ] Need runnable examples for exported objects  
-    * Wait to do this until after refactoring is complete
+- [X] ~~Need runnable examples for exported objects~~  
 - [ ] Maintainer must register at bioconductor support site  
     * Wait to do this until near publication
 #### Warnings (0)
@@ -47,7 +46,7 @@ Last updated 2020-06-29.
 - [X] ~~Remove set.seed usage from inside functions~~
 - [X] ~~Add non-empty value sections to deconvolve docs~~
 - [X] ~~Add non-empty value sections to readChain docs~~
-#### Notes (5)
+#### Notes (6)
 - [ ] Avoid sapply(); use vapply()
 - [X] ~~Avoid 1:...; use seq_len() or seq_along()~~
 - [ ] Keep functions below 50 lines
@@ -60,6 +59,8 @@ Last updated 2020-06-29.
     * ~~TODO: Run FormatR~~
     * Remaining lines are in `man/`
 - [ ] Subscribe maintainer to bioc-devel mailing list
+- [ ] Runnable examples for predictExpression
+    * Operate on and store results in SCE first
 
 ## Notes
 

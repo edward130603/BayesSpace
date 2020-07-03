@@ -48,7 +48,14 @@
 #'   are stored as a reduced dimensionality result accessible with
 #'   \code{reducedDim(sce, 'PCA')}.
 #'   
-#' @details TODO: add details on subspot coordinates and linking to parent spots
+#' @details 
+#' TODO: add details on subspot coordinates and linking to parent spots
+#' 
+#' @examples
+#' set.seed(149)
+#' sce <- exampleSCE()
+#' sce <- spatialCluster(sce, 7)
+#' enhanced <- spatialEnhance(sce, 7, init=sce$spatial.cluster)
 #' 
 #' @name spatialEnhance
 NULL
@@ -158,7 +165,6 @@ spatialEnhance <- function(sce, q, use.dimred = "PCA", d = 15,
     ## TODO: fix hard-coding of iterations being used
     enhanced$spatial.cluster <- apply(deconv$z[900:1000, ], 2, Mode)
     
-    ## TODO: save chain
     if (save.chain) {
         deconv <- .clean_chain(deconv, method="enhance")
         params <- c("z", "mu", "lambda", "weights", "Y", "Ychange")
