@@ -5,7 +5,7 @@
 \alias{BayesSpace}
 \title{BayesSpace: A package for processing spatial transcriptomes}
 \description{
-TODO: flesh out package description (or link to vignette a la scran)
+TODO: flesh out package description (or link to vignette)
 }
 \details{
 The BayesSpace package provides two primary functions:
