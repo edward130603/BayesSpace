@@ -42,9 +42,10 @@ find_neighbors <- function(positions, radius,
 #' 
 #' @importFrom stats lm coef
 .compute_interspot_distances <- function(sce, scale.factor = 1.02) {
-    ## TODO: remove hardcoding of columns
-    dists <- list()
+    cols <- c("row", "col", "imagerow", "imagecol")
+    assert_that(all(cols %in% colnames(colData(sce))))
     
+    dists <- list()
     dists$xdist <- coef(lm(sce$imagecol ~ sce$col))[2]
     dists$ydist <- coef(lm(sce$imagerow ~ sce$row))[2]
     dists$radius <- (dists$xdist + dists$ydist) * scale.factor

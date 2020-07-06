@@ -178,7 +178,9 @@ spatialEnhance <- function(sce, q, use.dimred = "PCA", d = 15,
     if (is.null(init)) {
         init.method <- match.arg(init.method)
         if (init.method == "spatialCluster") {
-            ## TODO: check for spatial.cluster in sce, auto-run with same params
+            msg <- "Must run spatialCluster on sce before enhancement "
+            msg <- paste0(msg, "if using spatialCluster to initialize.")
+            assert_that("spatial.cluster" %in% colnames(colData(sce)), msg=msg)
             init <- sce$spatial.cluster
         } else if (init.method == "kmeans") {
             init <- kmeans(inputs$PCs, centers=q)$cluster
