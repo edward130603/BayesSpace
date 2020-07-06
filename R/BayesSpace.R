@@ -1,5 +1,7 @@
 #' BayesSpace: A package for processing spatial transcriptomes
 #' 
+#' TODO: flesh out package description (or link to vignette a la scran)
+#' 
 #' The BayesSpace package provides two primary functions:
 #' \code{spatialCluster()} and \code{spatialEnhance()}.
 #' 

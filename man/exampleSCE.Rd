@@ -4,7 +4,7 @@
 \alias{exampleSCE}
 \title{Create minimal \code{SingleCellExperiment} for documentation examples.}
 \usage{
-exampleSCE(nrow = 10, ncol = 20, n_genes = 100, n_PCs = 10)
+exampleSCE(nrow = 8, ncol = 12, n_genes = 100, n_PCs = 10)
 }
 \arguments{
 \item{nrow}{Number of rows of spots}

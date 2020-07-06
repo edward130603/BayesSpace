@@ -203,7 +203,7 @@ addPCA <- function(sce, assay.type, pca.method, d = 15) {
 #' @importFrom scater logNormCounts
 #' @importFrom stats prcomp
 #' @export
-exampleSCE <- function(nrow=10, ncol=20, n_genes=100, n_PCs=10)
+exampleSCE <- function(nrow=8, ncol=12, n_genes=100, n_PCs=10)
 {
     n_spots <- nrow * ncol
     
