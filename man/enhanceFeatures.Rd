@@ -50,7 +50,7 @@ Predict log-normalized expression vectors from deconvolved PCs using linear
 regression.
 }
 \details{
-
+TODO add details
 }
 \examples{
 set.seed(149)

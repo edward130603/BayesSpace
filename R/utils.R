@@ -199,9 +199,9 @@ addPCA <- function(sce, assay.type, pca.method, d = 15) {
 #' sce <- exampleSCE()
 #' 
 #' @importFrom stats rnorm
-#' @importFrom SingleCellExperiment SingleCellExperiment
+#' @importFrom SingleCellExperiment SingleCellExperiment logcounts
 #' @importFrom scater logNormCounts
-#' @importFrom stats prcomp
+#' @importFrom stats prcomp rnbinom runif
 #' @export
 exampleSCE <- function(nrow=8, ncol=12, n_genes=100, n_PCs=10)
 {

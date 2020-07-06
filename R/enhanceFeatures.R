@@ -22,7 +22,8 @@
 #'   If \code{feature.matrix} is specified, the enhanced features are returned
 #'   directly as a matrix.
 #' 
-#' @details
+#' @details 
+#' TODO add details
 #' 
 #' @examples
 #' set.seed(149)
