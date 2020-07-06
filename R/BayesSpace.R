@@ -18,6 +18,7 @@
 #' 
 #' @importFrom Rcpp evalCpp
 #' @importFrom SummarizedExperiment assayNames
+#' @importFrom SingleCellExperiment altExpNames
 #' @useDynLib BayesSpace
 #' @useDynLib BayesSpace, .registration=TRUE
 NULL

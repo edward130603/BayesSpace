@@ -83,7 +83,7 @@ NULL
 
 #' @export
 #' @importFrom SingleCellExperiment reducedDim altExp altExp<-
-#' @importFrom SummarizedExperiment assay assay<- 
+#' @importFrom SummarizedExperiment assay assay<- SummarizedExperiment
 #' @rdname enhanceFeatures
 enhanceFeatures <- function(sce.enhanced, sce.ref, use.dimred = "PCA",
     assay.type="logcounts", altExp.type = NULL, feature.matrix = NULL, ...) {
@@ -94,11 +94,13 @@ enhanceFeatures <- function(sce.enhanced, sce.ref, use.dimred = "PCA",
     if (!is.null(feature.matrix)) {
         Y.ref <- feature.matrix
     } else if (!is.null(altExp.type)) {
-        Y.ref <- altExp(sce.ref, altExp.type)
+        Y.ref <- assay(altExp(sce.ref, altExp.type), altExp.type)
     } else {
         Y.ref <- assay(sce.ref, assay.type)
     }
     
+    msg <- "Spot features must have assigned rownames."
+    assert_that(!is.null(rownames(Y.ref)), msg=msg)
     Y.enhanced <- .enhance_features(X.enhanced, X.ref, Y.ref, ...)
     
     ## TODO: add option to specify destination of enhanced features.
@@ -106,6 +108,7 @@ enhanceFeatures <- function(sce.enhanced, sce.ref, use.dimred = "PCA",
     if (!is.null(feature.matrix)) {
         return(Y.enhanced)
     } else if (!is.null(altExp.type)) {
+        Y.enhanced <- SummarizedExperiment(assays=list(altExp.type=Y.enhanced))
         altExp(sce.enhanced, altExp.type) <- Y.enhanced
     } else {
         assay(sce.enhanced, assay.type) <- Y.enhanced
