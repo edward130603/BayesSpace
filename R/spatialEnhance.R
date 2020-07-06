@@ -81,10 +81,9 @@ deconvolve <- function(Y, positions, nrep = 1000, gamma = 2, xdist, ydist, q,
     Y2 <- Y[rep(seq_len(n0), subspots), ]  # rbind 7 or 9 times
     positions2 <- positions[rep(seq_len(n0), subspots), ]  # rbind 7 times
     if (platform == "Visium") {
-        shift <- rbind(expand.grid(c(1/3, -1/3), c(1/3, -1/3)), 
-            expand.grid(c(2/3, -2/3, 0), 0))
+        shift <- .make_subspot_offsets(7)
     } else {
-        shift <- rbind(expand.grid(c(1/3, -1/3, 0), c(1/3, -1/3, 0)))
+        shift <- .make_subspot_offsets(9)
     }
     
     shift <- t(t(shift) * c(xdist, ydist))
@@ -111,13 +110,60 @@ deconvolve <- function(Y, positions, nrep = 1000, gamma = 2, xdist, ydist, q,
     out
 }
 
+## Define offsets for each subspot layout
+.make_subspot_offsets <- function(n_subspots_per) {
+    if (n_subspots_per == 7) {
+        rbind(expand.grid(c(1/3, -1/3), c(1/3, -1/3)), expand.grid(c(2/3, -2/3, 0), 0))
+    } else if (n_subspots_per == 9) {
+        rbind(expand.grid(c(1/3, -1/3, 0), c(1/3, -1/3, 0)))
+    } else {
+        stop("Only 7 and 9 subspots currently supported")
+    }
+}
+
+## Add subspot labels and offset row/col locations before making enhanced SCE.
+##
+## Subspots are stored as (1.1, 2.1, 3.1, ..., 1.2, 2.2, 3.2, ...)
+##
+## @param cdata Table of colData (imagerow and imagecol; from deconv$positions)
+## @param sce Original sce (to obtain number of spots and original row/col)
+## @param n_subspots_per Number of subspots per spot
+## 
+## @return Data frame with added subspot names, parent spot indices, and offset
+##   row/column coordinates
+##
+#' @importFrom assertthat assert_that
+.make_subspot_coldata <- function(positions, sce, n_subspots_per) {
+    cdata <- as.data.frame(positions)
+    colnames(cdata) <- c("imagecol", "imagerow")
+    
+    n_spots <- ncol(sce)
+    n_subspots <- nrow(cdata)
+    assert_that(nrow(cdata) == n_spots * n_subspots_per)
+    
+    ## Index of parent spot is (subspot % n_spots)
+    idxs <- seq_len(n_subspots)
+    spot_idxs <- ((idxs - 1) %% n_spots) + 1
+    subspot_idxs <- rep(seq_len(n_subspots_per), each=n_spots)
+    cdata$spot.idx <- spot_idxs
+    cdata$subspot.idx <- subspot_idxs
+    rownames(cdata) <- paste0("subspot_", spot_idxs, ".", subspot_idxs)
+    
+    offsets <- .make_subspot_offsets(n_subspots_per)
+    cdata$row <- rep(sce$row, n_subspots_per) + rep(offsets[, 1], each=n_spots)
+    cdata$col <- rep(sce$col, n_subspots_per) + rep(offsets[, 2], each=n_spots)
+
+    cols <- c("spot.idx", "subspot.idx", "row", "col", "imagerow", "imagecol")
+    cdata[, cols]
+}
+
 #' @export
 #' @rdname spatialEnhance
 #' @importFrom SingleCellExperiment SingleCellExperiment reducedDim<-
 #' @importFrom SummarizedExperiment rowData 
 spatialEnhance <- function(sce, q, use.dimred = "PCA", d = 15, 
     positions = NULL, position.cols = c("imagecol", "imagerow"), 
-    init = NULL, init.method = c("kmeans", "spatialCluster"),
+    init = NULL, init.method = c("spatialCluster", "kmeans"),
     xdist = NULL, ydist = NULL, 
     model = c("normal", "t"), nrep = 1000, gamma = 2, 
     mu0 = NULL, lambda0 = NULL, alpha = 1, beta = 0.01, 
@@ -131,11 +177,13 @@ spatialEnhance <- function(sce, q, use.dimred = "PCA", d = 15,
     ## Initialize cluster assignments (use k-means for now)
     if (is.null(init)) {
         init.method <- match.arg(init.method)
-        if (init.method == "kmeans") {
-            init <- kmeans(inputs$PCs, centers=q)$cluster
-        } else if (init.method == "spatialCluster") {
-            ## TODO: check for spatial.cluster in sce, auto-run with same params
+        if (init.method == "spatialCluster") {
+            msg <- "Must run spatialCluster on sce before enhancement "
+            msg <- paste0(msg, "if using spatialCluster to initialize.")
+            assert_that("spatial.cluster" %in% colnames(colData(sce)), msg=msg)
             init <- sce$spatial.cluster
+        } else if (init.method == "kmeans") {
+            init <- kmeans(inputs$PCs, centers=q)$cluster
         }
     }
     
@@ -151,18 +199,17 @@ spatialEnhance <- function(sce, q, use.dimred = "PCA", d = 15,
         mu0=mu0, lambda0=lambda0, alpha=alpha, beta=beta)
     
     ## Create enhanced SCE
-    
-    ## TODO: auto-run predictExpression and include as assay 
-    ## deconv_PCs <- deconv$Y[[length(deconv$Y)]] 
-    ## expr <- predictExpression(sce, deconv_PCs)
-    
-    cdata <- as.data.frame(deconv$positions)
-    colnames(cdata) <- c("imagecol", "imagerow")
+    n_subspots_per <- ifelse(platform == "Visium", 7, 9)
+    cdata <- .make_subspot_coldata(deconv$positions, sce, n_subspots_per)
     enhanced <- SingleCellExperiment(assays=list(), 
         rowData=rowData(sce), colData=cdata)
     
-    reducedDim(enhanced, "PCA") <- deconv$Y[[length(deconv$Y)]]
+    deconv_PCs <- deconv$Y[[length(deconv$Y)]]
+    colnames(deconv_PCs) <- paste0("PC", seq_len(ncol(deconv_PCs)))
+    reducedDim(enhanced, "PCA") <- deconv_PCs
+    
     ## TODO: fix hard-coding of iterations being used
+    ## TODO: add thinning parameter
     enhanced$spatial.cluster <- apply(deconv$z[900:1000, ], 2, Mode)
     
     if (save.chain) {
@@ -170,6 +217,6 @@ spatialEnhance <- function(sce, q, use.dimred = "PCA", d = 15,
         params <- c("z", "mu", "lambda", "weights", "Y", "Ychange")
         metadata(enhanced)$chain.h5 <- .write_chain(deconv, chain.fname, params)
     }
-    
+
     enhanced
 }

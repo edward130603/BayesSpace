@@ -1,5 +1,7 @@
 #' BayesSpace: A package for processing spatial transcriptomes
 #' 
+#' TODO: flesh out package description (or link to vignette)
+#' 
 #' The BayesSpace package provides two primary functions:
 #' \code{spatialCluster()} and \code{spatialEnhance()}.
 #' 
@@ -15,6 +17,8 @@
 #' @name BayesSpace
 #' 
 #' @importFrom Rcpp evalCpp
+#' @importFrom SummarizedExperiment assayNames
+#' @importFrom SingleCellExperiment altExpNames
 #' @useDynLib BayesSpace
 #' @useDynLib BayesSpace, .registration=TRUE
 NULL
