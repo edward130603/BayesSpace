@@ -12,7 +12,7 @@ spatialEnhance(
   positions = NULL,
   position.cols = c("imagecol", "imagerow"),
   init = NULL,
-  init.method = c("kmeans", "spatialCluster"),
+  init.method = c("spatialCluster", "kmeans"),
   xdist = NULL,
   ydist = NULL,
   model = c("normal", "t"),

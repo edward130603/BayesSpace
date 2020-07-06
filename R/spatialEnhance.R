@@ -117,7 +117,7 @@ deconvolve <- function(Y, positions, nrep = 1000, gamma = 2, xdist, ydist, q,
 #' @importFrom SummarizedExperiment rowData 
 spatialEnhance <- function(sce, q, use.dimred = "PCA", d = 15, 
     positions = NULL, position.cols = c("imagecol", "imagerow"), 
-    init = NULL, init.method = c("kmeans", "spatialCluster"),
+    init = NULL, init.method = c("spatialCluster", "kmeans"),
     xdist = NULL, ydist = NULL, 
     model = c("normal", "t"), nrep = 1000, gamma = 2, 
     mu0 = NULL, lambda0 = NULL, alpha = 1, beta = 0.01, 
@@ -131,11 +131,11 @@ spatialEnhance <- function(sce, q, use.dimred = "PCA", d = 15,
     ## Initialize cluster assignments (use k-means for now)
     if (is.null(init)) {
         init.method <- match.arg(init.method)
-        if (init.method == "kmeans") {
-            init <- kmeans(inputs$PCs, centers=q)$cluster
-        } else if (init.method == "spatialCluster") {
+        if (init.method == "spatialCluster") {
             ## TODO: check for spatial.cluster in sce, auto-run with same params
             init <- sce$spatial.cluster
+        } else if (init.method == "kmeans") {
+            init <- kmeans(inputs$PCs, centers=q)$cluster
         }
     }
     
@@ -168,6 +168,8 @@ spatialEnhance <- function(sce, q, use.dimred = "PCA", d = 15,
         params <- c("z", "mu", "lambda", "weights", "Y", "Ychange")
         metadata(enhanced)$chain.h5 <- .write_chain(deconv, chain.fname, params)
     }
+    
+    ## TODO: fix colnames
     
     enhanced
 }

@@ -109,5 +109,5 @@ enhanceFeatures <- function(sce.enhanced, sce.ref, use.dimred = "PCA",
         assay(sce.enhanced, assay.type) <- Y.enhanced
     }
     
-    return(sce)
+    return(sce.enhanced)
 }
