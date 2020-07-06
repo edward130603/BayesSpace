@@ -35,7 +35,7 @@
 #' sce <- exampleSCE()
 #' sce <- spatialCluster(sce, 7)
 #' enhanced <- spatialEnhance(sce, 7, init=sce$spatial.cluster)
-#' enhanceFeatures(enhanced, sce, assay.type="logcounts")
+#' enhanced <- enhanceFeatures(enhanced, sce, assay.type="logcounts")
 #'
 #' @name enhanceFeatures
 NULL
