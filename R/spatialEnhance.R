@@ -207,6 +207,7 @@ spatialEnhance <- function(sce, q, use.dimred = "PCA", d = 15,
     reducedDim(enhanced, "PCA") <- deconv_PCs
     
     ## TODO: fix hard-coding of iterations being used
+    ## TODO: add thinning parameter
     enhanced$spatial.cluster <- apply(deconv$z[900:1000, ], 2, Mode)
     
     if (save.chain) {

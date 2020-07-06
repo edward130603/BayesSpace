@@ -50,7 +50,12 @@ Predict log-normalized expression vectors from deconvolved PCs using linear
 regression.
 }
 \details{
-TODO add details
+Enhanced features are computed by fitting a predictive model to a
+low-dimensional representation of the original expression vectors. By
+default, a linear model is fit for each gene using the top 15 principal
+compoenents from each spot, i.e. \code{lm(gene ~ PCs)}, and the fitted model
+is used to predict the enhanced expression for each gene from the subspots'
+principal components.
 }
 \examples{
 set.seed(149)
