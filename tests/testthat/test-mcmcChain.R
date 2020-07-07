@@ -53,3 +53,25 @@ test_that("List of matrices is flattened", {
   expect_equal(as.numeric(x[1, 7]), xs[[1]][2, 2])
   expect_equal(colnames(x)[7], "x[2,2]")
 })
+
+test_that("cleaning and saving works", {
+  sce <- exampleSCE()
+  n_rep <- 1000
+  n_PCs <- ncol(reducedDim(sce, "PCA"))
+  n_spots <- ncol(sce)
+  q <- 4
+  
+  sce <- spatialCluster(sce, 4, model="normal", nrep=n_rep, save.chain=T)
+  chain <- mcmcChain(sce)
+  
+  # lambda + mu + ploglik + z
+  expect_equal(ncol(chain), n_PCs * n_PCs + q * n_PCs + 1 + n_spots)
+  expect_equal(nrow(chain), n_rep)
+  
+  sce <- spatialCluster(sce, 4, model="t", nrep=n_rep, save.chain=T)
+  chain <- mcmcChain(sce)
+  
+  # lambda + mu + ploglik + weights + z
+  expect_equal(ncol(chain), n_PCs * n_PCs + q * n_PCs + 1 + n_spots + n_spots)
+  expect_equal(nrow(chain), n_rep)
+})

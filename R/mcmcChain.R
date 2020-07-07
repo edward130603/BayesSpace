@@ -122,6 +122,7 @@ NULL
 #' @importFrom purrr map
 .clean_chain <- function(out, method = c("cluster", "enhance"), thin=100) 
 {
+    method <- match.arg(method)
     n_iter <- nrow(out$z)
     n <- ncol(out$z)
     d <- ncol(out$lambda[[1]])
@@ -131,12 +132,15 @@ NULL
     colnames(out$mu) <- .make_index_names("mu", q, d)
     out$lambda <- .flatten_matrix_list(out$lambda, "lambda", d, d)
     
+    if ("weights" %in% names(out)) {
+        colnames(out$weights) <- .make_index_names("weights", n)
+    }
+    
     ## Include function-specific chain parameters
     if (method == "cluster") {
         out$plogLik <- as.matrix(out$plogLik)
         colnames(out$plogLik) <- c("pLogLikelihood")
     } else if (method == "enhance") {
-        colnames(out$weights) <- .make_index_names("weights", n)
         out$Y <- .flatten_matrix_list(out$Y, "Y", n, d)
         out$Ychange <- as.matrix(out$Ychange)
         colnames(out$Ychange) <- c("Ychange")
