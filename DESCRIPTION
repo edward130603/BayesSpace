@@ -38,7 +38,9 @@ Encoding: UTF-8
 Suggests: 
     testthat,
     knitr,
-    rmarkdown
+    rmarkdown,
+    ggplot2,
+    spatialLIBD
 VignetteBuilder: knitr
 biocViews:
     Software,
