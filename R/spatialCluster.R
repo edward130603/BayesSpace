@@ -134,13 +134,14 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
         metadata(sce)$chain.h5 <- .write_chain(results, chain.fname)
     }
     
-    iter_from <- ifelse(nrep < 2000, max(2, nrep - 1000), 1000)
-    ## msg <- "Calculating labels using iterations %d through %d"
-    ## message(sprintf(msg, iter_from, nrep))
-    results$labels <- apply(results$z[iter_from:nrep, ], 2, Mode)
+    ## NOTE: swap below code for this to test against refactoring
+    ## colData(sce)$spatial.cluster <- apply(results$z[900:1000, ], 2, Mode)
     
-    ## TODO: switch to labels computed above (this is just for sanity test)
-    colData(sce)$spatial.cluster <- apply(results$z[900:1000, ], 2, Mode)
+    iter_from <- ifelse(nrep < 2000, max(2, nrep - 1000), 1000)
+    msg <- "Calculating labels using iterations %d through %d"
+    message(sprintf(msg, iter_from, nrep))
+    labels <- apply(results$z[iter_from:nrep, ], 2, Mode)
+    colData(sce)$spatial.cluster <- unname(labels)
     
     sce
 }
