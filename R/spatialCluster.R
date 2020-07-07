@@ -140,7 +140,8 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     iter_from <- ifelse(nrep < 2000, max(2, nrep - 1000), 1000)
     msg <- "Calculating labels using iterations %d through %d"
     message(sprintf(msg, iter_from, nrep))
-    colData(sce)$spatial.cluster <- apply(results$z[iter_from:nrep, ], 2, Mode)
+    labels <- apply(results$z[iter_from:nrep, ], 2, Mode)
+    colData(sce)$spatial.cluster <- unname(labels)
     
     sce
 }

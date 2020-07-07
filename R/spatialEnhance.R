@@ -215,7 +215,8 @@ spatialEnhance <- function(sce, q, use.dimred = "PCA", d = 15,
     iter_from <- ifelse(nrep < 2000, max(2, nrep - 1000), 1000)
     msg <- "Calculating labels using iterations %d through %d"
     message(sprintf(msg, iter_from, nrep))
-    enhanced$spatial.cluster <- apply(deconv$z[iter_from:nrep, ], 2, Mode)
+    labels <- apply(deconv$z[iter_from:nrep, ], 2, Mode)
+    enhanced$spatial.cluster <- unname(labels)
     
     if (save.chain) {
         deconv <- .clean_chain(deconv, method="enhance")
