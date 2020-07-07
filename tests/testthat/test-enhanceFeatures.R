@@ -53,3 +53,9 @@ test_that("enhanced features are returned as matrix", {
   expect_equal(nrow(enhanced.features), nrow(props))
   expect_equal(ncol(enhanced.features), ncol(sce) * 7)
 })
+
+test_that("proportions are predicted with Dirichlet model", { 
+  enhanced.props <- enhanceFeatures(enhanced, sce, feature.matrix=props, model="dirichlet")
+  
+  expect_true(all.equal(colSums(enhanced.props), rep(1, ncol(enhanced)), check.names=FALSE))
+})

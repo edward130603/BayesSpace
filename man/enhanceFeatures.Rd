@@ -32,7 +32,7 @@ attached to \code{sce.ref}. Must have columns corresponding to the spots in
 \code{sce.ref}. Overrides \code{assay.type} and \code{altExp.type} if
 specified.}
 
-\item{features}{List of genes/features to predict expression/values for.}
+\item{feature_names}{List of genes/features to predict expression/values for.}
 
 \item{model}{Model used to predict enhanced values.}
 }
@@ -56,6 +56,10 @@ default, a linear model is fit for each gene using the top 15 principal
 compoenents from each spot, i.e. \code{lm(gene ~ PCs)}, and the fitted model
 is used to predict the enhanced expression for each gene from the subspots'
 principal components.
+
+Note that feature matrices will be returned and are expected to be input as
+\eqn{p \times n} matrices of \eqn{p}-dimensional feature vectors over the
+\eqn{n} spots.
 }
 \examples{
 set.seed(149)
