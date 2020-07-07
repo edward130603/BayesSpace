@@ -23,7 +23,9 @@ Imports:
     rhdf5,
     S4Vectors,
     Matrix,
-    assertthat
+    assertthat,
+    xgboost,
+    DirichletReg
 Description: "Clustering and enhanced resolution of spatial transcriptomics datasets."
 License: MIT + file LICENSE
 RoxygenNote: 7.1.0
@@ -38,7 +40,9 @@ Encoding: UTF-8
 Suggests: 
     testthat,
     knitr,
-    rmarkdown
+    rmarkdown,
+    Seurat,
+    SPOTlight
 VignetteBuilder: knitr
 biocViews:
     Software,
