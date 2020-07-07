@@ -52,8 +52,10 @@ NULL
     assert_that(ncol(Y.ref) == nrow(X.ref))
     model <- match.arg(model)
     
-    X.ref <- as.data.frame(X.ref)
-    X.enhanced <- as.data.frame(X.enhanced)
+    if (model %in% c("lm", "dirichlet")) {
+        X.ref <- as.data.frame(X.ref)
+        X.enhanced <- as.data.frame(X.enhanced)
+    }
     
     if (!all(colnames(X.enhanced) == colnames(X.ref))) {
         warning("colnames of reducedDim and X.enhanced do not match.")
@@ -65,6 +67,8 @@ NULL
         .lm_enhance(X.ref, X.enhanced, Y.ref, feature_names)
     } else if (model == "dirichlet") {
         .dirichlet_enhance(X.ref, X.enhanced, Y.ref)
+    } else if (model == "xgboost") {
+        .xgboost_enhance(X.ref, X.enhanced, Y.ref, feature_names)
     }
 }
 
@@ -97,6 +101,24 @@ NULL
     
     rownames(Y.enhanced) <- rownames(Y.ref)
     colnames(Y.enhanced) <- rownames(X.enhanced)
+    Y.enhanced
+}
+
+#' @importFrom xgboost xgboost
+.xgboost_enhance <- function(X.ref, X.enhanced, Y.ref, feature_names) {
+    Y.enhanced <- matrix(nrow=length(feature_names), ncol=nrow(X.enhanced))
+    rownames(Y.enhanced) <- feature_names
+    colnames(Y.enhanced) <- rownames(X.enhanced)
+    
+    ## TODO: pass hyperparams through with ...
+    ## TODO: add (optional) tuning of nrounds
+    for (feature in feature_names) {
+        fit <- xgboost(data=X.ref, label=Y.ref[feature, ], 
+            objective="reg:squarederror", max_depth=2, eta=0.03, nrounds=100,
+            nthread=1, verbose=FALSE)
+        Y.enhanced[feature, ] <- predict(fit, X.enhanced)
+    }
+    
     Y.enhanced
 }
 
