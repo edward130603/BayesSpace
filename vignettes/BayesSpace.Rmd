@@ -44,7 +44,7 @@ sce <- scran::denoisePCA(sce, technical=dec, subset.row=top)
 The `spatialCluster()` function will cluster the spots, and add the predicted
 cluster labels to `colData(sce)`.
 ```{r}
-sce <- spatialCluster(sce, q=4, init.method="kmeans", model="t", nrep=1000, save.chain=T)
+sce <- spatialCluster(sce, q=4, init.method="kmeans", model="t", nrep=1000, save.chain=TRUE)
 head(sce$spatial.cluster)
 ```
 
@@ -63,7 +63,7 @@ The `spatialCluster()` function will enhance the resolution of the principal
 components, and add these PCs as well as predicted cluster labels at subspot
 resolution to a new SingleCellExperiment.
 ```{r}
-enhanced <- spatialEnhance(sce, q=4, init.method="kmeans", model="t", nrep=1000, save.chain=T)
+enhanced <- spatialEnhance(sce, q=4, init.method="kmeans", model="t", nrep=1000, save.chain=TRUE)
 head(enhanced$spatial.cluster)
 ```
 
