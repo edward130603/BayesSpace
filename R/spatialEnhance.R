@@ -208,9 +208,14 @@ spatialEnhance <- function(sce, q, use.dimred = "PCA", d = 15,
     colnames(deconv_PCs) <- paste0("PC", seq_len(ncol(deconv_PCs)))
     reducedDim(enhanced, "PCA") <- deconv_PCs
     
-    ## TODO: fix hard-coding of iterations being used
+    ## NOTE: swap below code for this to test against refactoring
+    ## enhanced$spatial.cluster <- apply(deconv$z[900:1000, ], 2, Mode)
+    
     ## TODO: add thinning parameter
-    enhanced$spatial.cluster <- apply(deconv$z[900:1000, ], 2, Mode)
+    iter_from <- ifelse(nrep < 2000, max(2, nrep - 1000), 1000)
+    msg <- "Calculating labels using iterations %d through %d"
+    message(sprintf(msg, iter_from, nrep))
+    enhanced$spatial.cluster <- apply(deconv$z[iter_from:nrep, ], 2, Mode)
     
     if (save.chain) {
         deconv <- .clean_chain(deconv, method="enhance")

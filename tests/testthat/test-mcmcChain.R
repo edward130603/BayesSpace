@@ -56,7 +56,7 @@ test_that("List of matrices is flattened", {
 
 test_that("cleaning and saving works", {
   sce <- exampleSCE()
-  n_rep <- 1000
+  n_rep <- 100
   n_PCs <- ncol(reducedDim(sce, "PCA"))
   n_spots <- ncol(sce)
   q <- 4
