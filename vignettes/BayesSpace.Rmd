@@ -24,10 +24,10 @@ library(ggplot2)
 
 ## Preprocessing
 
-We'll obtain one of the melanoma samples from spatialLIBD for this example.
+We'll obtain one of the melanoma samples from the 2018 Spatial Transcriptomics
+paper for this example.
 ```{r}
-sce <- spatialLIBD::fetch_data(type="sce", destdir="~/Downloads/spatialLIBD/")
-sce <- sce[, sce$sample_name == "151673"]
+sce <- getRDS(dataset="2018_thrane_melanoma", sample="ST_mel1_rep2")
 ```
 
 The spatialLIBD samples already include PCs, but in general we need to
@@ -35,7 +35,7 @@ preprocess our samples by running PCA.
 ```{r}
 # Dim reduction and clustering
 set.seed(102)
-dec <- scran::modelGeneVarByPoisson(sce)
+dec <- scran::modelGeneVar(sce)
 top <- scran::getTopHVGs(dec, prop=0.1)
 sce <- scran::denoisePCA(sce, technical=dec, subset.row=top)
 ```
