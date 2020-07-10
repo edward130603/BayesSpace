@@ -95,6 +95,7 @@ cluster <- function(Y, positions, radius, q, init = rep(1, nrow(Y)),
 
 ## TODO make generic
 #' @importFrom stats kmeans
+#' @importFrom mclust Mclust mclustBIC
 #' @importFrom SingleCellExperiment reducedDim
 #' @importFrom SummarizedExperiment colData colData<-
 #' @importFrom S4Vectors metadata metadata<-
@@ -103,7 +104,7 @@ cluster <- function(Y, positions, radius, q, init = rep(1, nrow(Y)),
 #' @rdname spatialCluster
 spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     positions = NULL, position.cols = c("imagecol", "imagerow"), 
-    init = NULL, init.method = c("kmeans"), radius = NULL, 
+    init = NULL, init.method = c("mclust", "kmeans"), radius = NULL, 
     model = c("normal", "t"), precision = c("equal", "variable"), 
     nrep = 1000, gamma = 2, mu0 = NULL, lambda0 = NULL, alpha = 1, 
     beta = 0.01, save.chain = FALSE, chain.fname = NULL) {
@@ -116,6 +117,8 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
         init.method <- match.arg(init.method)
         if (init.method == "kmeans") {
             init <- kmeans(inputs$PCs, centers=q)$cluster
+        } else if (init.method == "mclust") {
+            init <- Mclust(inputs$PCs, q, "EEE", verbose=FALSE)$classification
         }
     }
     
