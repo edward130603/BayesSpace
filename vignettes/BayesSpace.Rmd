@@ -26,7 +26,7 @@ library(ggplot2)
 
 We'll obtain one of the melanoma samples from the 2018 Spatial Transcriptomics
 paper for this example.
-```{r}
+```{r download}
 sce <- getRDS(dataset="2018_thrane_melanoma", sample="ST_mel1_rep2")
 ```
 
@@ -44,14 +44,15 @@ sce <- scater::runPCA(sce, subset_row=top)
 The `spatialCluster()` function will cluster the spots, and add the predicted
 cluster labels to `colData(sce)`.
 ```{r cluster}
-# sce <- spatialCluster(sce, q=4, init.method="mclust", model="t", nrep=1000, save.chain=TRUE)
-sce$spatial.cluster <- floor(runif(ncol(sce), 1, 5))
+set.seed(149)
+sce <- spatialCluster(sce, q=4, init.method="mclust", model="t", nrep=1000, 
+                      position.cols=c("col", "row"), radius=1, save.chain=TRUE)
 ```
 
 We can plot the cluster assignments over the spatial locations of the spots.
 ```{r cluster.plot, fig.width=7, fig.height=5}
 ggplot(as.data.frame(colData(sce)), aes(x = col, y = row, fill = factor(spatial.cluster))) +
-  geom_point(size = 2, pch = 22) +
+  geom_point(size = 7, pch = 22) +
   labs(x = NULL, y = NULL, fill = "Cluster") +
   scale_fill_manual(values = c("purple", "red", "blue", "yellow")) +
   theme_void() + 
@@ -63,14 +64,15 @@ ggplot(as.data.frame(colData(sce)), aes(x = col, y = row, fill = factor(spatial.
 The `spatialEnhance()` function will enhance the resolution of the principal
 components, and add these PCs as well as predicted cluster labels at subspot
 resolution to a new SingleCellExperiment.
-```{r enhance, eval=FALSE}
-enhanced <- spatialEnhance(sce, q=4, init=sce$spatial.cluster, model="t", nrep=1000, save.chain=TRUE)
+```{r enhance, eval=TRUE}
+enhanced <- spatialEnhance(sce, q=4, init=sce$spatial.cluster, model="t", nrep=1000, 
+                           position.cols=c("col", "row"), xdist=1, ydist=1, save.chain=TRUE)
 ```
 
 We can plot the enhanced cluster assignments as above.
-```{r enhance.plot, eval=FALSE}
+```{r enhance.plot, eval=TRUE, fig.width=7, fig.height=5}
 ggplot(as.data.frame(colData(enhanced)), aes(x = col, y = row, fill = factor(spatial.cluster))) +
-  geom_point(size = 3, pch = 22) +
+  geom_point(size = 2.5, pch = 22) +
   labs(x = NULL, y = NULL, fill = "Cluster") +
   scale_fill_manual(values = c("purple", "red", "blue", "yellow")) +
   theme_void() + 
