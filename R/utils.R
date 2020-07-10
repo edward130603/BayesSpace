@@ -234,3 +234,30 @@ exampleSCE <- function(nrow=8, ncol=12, n_genes=100, n_PCs=10)
     
     sce
 }
+
+#' Download a processed sample from our S3 bucket
+#' 
+#' @param dataset Dataset identifier (TODO: add function to list datasets/samples)
+#' @param sample
+#' 
+#' @return sce A SingleCellExperiment with positional information in colData and
+#'   PCs based on the top 2000 HVGs
+#'
+#' @export 
+#' @importFrom RCurl url.exists
+#' @importFrom utils download.file
+#' @importFrom assertthat assert_that
+getRDS <- function(dataset, sample) {
+    
+    url <- "https://fh-pi-gottardo-r.s3.amazonaws.com/SpatialTranscriptomes/%s/%s.rds"
+    url <- sprintf(url, dataset, sample)
+    assert_that(url.exists(url), msg="Dataset/sample not available")
+    
+    ## TODO add caching (but probably through experimenthub)
+    dest <- tempfile(fileext=".rds")
+    
+    ## TODO switch to curl or httr (avoid writing to disk when not caching; 
+    ## one package for both downloading and checking url exists)
+    download.file(url, dest, quiet=TRUE, mode="wb")
+    readRDS(dest)
+}
