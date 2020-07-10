@@ -174,9 +174,17 @@ addPCA <- function(sce, assay.type, pca.method, d = 15) {
     colnames(positions) <- c("x", "y")
     inputs$positions <- positions
     
-    dists <- .compute_interspot_distances(sce)
-    dists <- imap(dists, function(d, n) ifelse(is.null(get(n)), d, get(n)))
-    inputs <- c(inputs, dists)
+    ## TODO: add better check here against missing image coords
+    ## (necessary for thrane data)
+    if (is.null(radius) && is.null(xdist) && is.null(ydist)) {
+        dists <- .compute_interspot_distances(sce)
+        dists <- imap(dists, function(d, n) ifelse(is.null(get(n)), d, get(n)))
+        inputs <- c(inputs, dists)
+    } else {
+        inputs$radius <- radius
+        inputs$xdist <- xdist
+        inputs$ydist <- ydist
+    }
     
     inputs
 }
@@ -233,4 +241,31 @@ exampleSCE <- function(nrow=8, ncol=12, n_genes=100, n_PCs=10)
     reducedDim(sce, "PCA") <- prcomp(t(logcounts(sce)))$x[, seq_len(n_PCs)]
     
     sce
+}
+
+#' Download a processed sample from our S3 bucket
+#' 
+#' @param dataset Dataset identifier (TODO: add function to list datasets/samples)
+#' @param sample
+#' 
+#' @return sce A SingleCellExperiment with positional information in colData and
+#'   PCs based on the top 2000 HVGs
+#'
+#' @export 
+#' @importFrom RCurl url.exists
+#' @importFrom utils download.file
+#' @importFrom assertthat assert_that
+getRDS <- function(dataset, sample) {
+    
+    url <- "https://fh-pi-gottardo-r.s3.amazonaws.com/SpatialTranscriptomes/%s/%s.rds"
+    url <- sprintf(url, dataset, sample)
+    assert_that(url.exists(url), msg="Dataset/sample not available")
+    
+    ## TODO add caching (but probably through experimenthub)
+    dest <- tempfile(fileext=".rds")
+    
+    ## TODO switch to curl or httr (avoid writing to disk when not caching; 
+    ## one package for both downloading and checking url exists)
+    download.file(url, dest, quiet=TRUE, mode="wb")
+    readRDS(dest)
 }

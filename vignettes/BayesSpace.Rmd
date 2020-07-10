@@ -12,44 +12,45 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>",
-  eval = FALSE
+  comment = "#>"
 )
 ```
 
 ```{r setup}
+suppressMessages(library(SingleCellExperiment))
 library(BayesSpace)
 library(ggplot2)
 ```
 
 ## Preprocessing
 
-We'll obtain one of the melanoma samples from spatialLIBD for this example.
-```{r}
-sce <- spatialLIBD::fetch_data(type="sce", destdir="~/Downloads/spatialLIBD/")
-sce <- sce[, sce$sample_name == "151673"]
+We'll obtain one of the melanoma samples from the 2018 Spatial Transcriptomics
+paper for this example.
+```{r download}
+sce <- getRDS(dataset="2018_thrane_melanoma", sample="ST_mel1_rep2")
 ```
 
-The spatialLIBD samples already include PCs, but in general we need to
-preprocess our samples by running PCA.
-```{r}
-# Dim reduction and clustering
+Our processed datasets already include PCs, but in general it's necessary to
+preprocess samples by running PCA. We recommend running PCA on only the top
+highly variable genes.
+```{r preprocess}
 set.seed(102)
-dec <- scran::modelGeneVarByPoisson(sce)
-top <- scran::getTopHVGs(dec, prop=0.1)
-sce <- scran::denoisePCA(sce, technical=dec, subset.row=top)
+dec <- scran::modelGeneVar(sce)
+top <- scran::getTopHVGs(dec, n=2000)
+sce <- scater::runPCA(sce, subset_row=top)
 ```
 
 ## Clustering
 The `spatialCluster()` function will cluster the spots, and add the predicted
 cluster labels to `colData(sce)`.
-```{r}
-sce <- spatialCluster(sce, q=4, init.method="kmeans", model="t", nrep=1000, save.chain=TRUE)
-head(sce$spatial.cluster)
+```{r cluster}
+set.seed(149)
+sce <- spatialCluster(sce, q=4, init.method="mclust", model="t", nrep=1000, 
+                      position.cols=c("col", "row"), radius=1, save.chain=TRUE)
 ```
 
 We can plot the cluster assignments over the spatial locations of the spots.
-```{r}
+```{r cluster.plot, fig.width=7, fig.height=5}
 ggplot(as.data.frame(colData(sce)), aes(x = col, y = row, fill = factor(spatial.cluster))) +
   geom_point(size = 7, pch = 22) +
   labs(x = NULL, y = NULL, fill = "Cluster") +
@@ -57,20 +58,21 @@ ggplot(as.data.frame(colData(sce)), aes(x = col, y = row, fill = factor(spatial.
   theme_void() + 
   coord_fixed()
 ```
+
 ## Enhanced resolution
 
-The `spatialCluster()` function will enhance the resolution of the principal
+The `spatialEnhance()` function will enhance the resolution of the principal
 components, and add these PCs as well as predicted cluster labels at subspot
 resolution to a new SingleCellExperiment.
-```{r}
-enhanced <- spatialEnhance(sce, q=4, init.method="kmeans", model="t", nrep=1000, save.chain=TRUE)
-head(enhanced$spatial.cluster)
+```{r enhance, eval=TRUE}
+enhanced <- spatialEnhance(sce, q=4, init=sce$spatial.cluster, model="t", nrep=1000, 
+                           position.cols=c("col", "row"), xdist=1, ydist=1, save.chain=TRUE)
 ```
 
 We can plot the enhanced cluster assignments as above.
-```{r}
+```{r enhance.plot, eval=TRUE, fig.width=7, fig.height=5}
 ggplot(as.data.frame(colData(enhanced)), aes(x = col, y = row, fill = factor(spatial.cluster))) +
-  geom_point(size = 3, pch = 22) +
+  geom_point(size = 2.5, pch = 22) +
   labs(x = NULL, y = NULL, fill = "Cluster") +
   scale_fill_manual(values = c("purple", "red", "blue", "yellow")) +
   theme_void() + 
@@ -83,7 +85,7 @@ subspot resolution, we need to run `enhanceFeatures()` afterwards.
 
 By default, log-normalized expression (`logcounts(sce)`) is imputed, but other
 assays or arbitrary features can be specified.
-```{r}
+```{r enhanceFeatures, eval=FALSE}
 enhanced <- enhanceFeatures(enhanced, sce) 
 ```
 
@@ -101,7 +103,7 @@ The chain is provided as a `coda::mcmc` object, which can be analyzed with
 [TidyBayes](https://mjskay.github.io/tidybayes/) or as a matrix. The object has
 one row per iteration, with the values of the parameters concatenated across the
 row. Columns are named with the parameter name and index (if any).
-```{r}
+```{r mcmcChain, eval=F}
 chain <- mcmcChain(sce)
 chain[1:5, 1:5]
 ```
