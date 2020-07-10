@@ -174,9 +174,17 @@ addPCA <- function(sce, assay.type, pca.method, d = 15) {
     colnames(positions) <- c("x", "y")
     inputs$positions <- positions
     
-    dists <- .compute_interspot_distances(sce)
-    dists <- imap(dists, function(d, n) ifelse(is.null(get(n)), d, get(n)))
-    inputs <- c(inputs, dists)
+    ## TODO: add better check here against missing image coords
+    ## (necessary for thrane data)
+    if (is.null(radius) && is.null(xdist) && is.null(ydist)) {
+        dists <- .compute_interspot_distances(sce)
+        dists <- imap(dists, function(d, n) ifelse(is.null(get(n)), d, get(n)))
+        inputs <- c(inputs, dists)
+    } else {
+        inputs$radius <- radius
+        inputs$xdist <- xdist
+        inputs$ydist <- ydist
+    }
     
     inputs
 }
