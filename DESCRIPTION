@@ -25,7 +25,9 @@ Imports:
     Matrix,
     assertthat,
     mclust,
-    RCurl
+    RCurl,
+    DirichletReg,
+    xgboost
 Description: "Clustering and enhanced resolution of spatial transcriptomics datasets."
 License: MIT + file LICENSE
 RoxygenNote: 7.1.0
