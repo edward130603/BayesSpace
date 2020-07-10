@@ -24,7 +24,8 @@ Imports:
     S4Vectors,
     Matrix,
     assertthat,
-    mclust
+    mclust,
+    RCurl
 Description: "Clustering and enhanced resolution of spatial transcriptomics datasets."
 License: MIT + file LICENSE
 RoxygenNote: 7.1.0
