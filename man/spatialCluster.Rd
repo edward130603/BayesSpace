@@ -12,7 +12,7 @@ spatialCluster(
   positions = NULL,
   position.cols = c("imagecol", "imagerow"),
   init = NULL,
-  init.method = c("kmeans"),
+  init.method = c("mclust", "kmeans"),
   radius = NULL,
   model = c("normal", "t"),
   precision = c("equal", "variable"),

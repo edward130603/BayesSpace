@@ -11,7 +11,7 @@
 #'   attached to \code{sce.ref}. Must have columns corresponding to the spots in
 #'   \code{sce.ref}. Overrides \code{assay.type} and \code{altExp.type} if
 #'   specified.
-#' @param features List of genes/features to predict expression/values for.
+#' @param feature_names List of genes/features to predict expression/values for.
 #' @param model Model used to predict enhanced values.
 #' 
 #' @return If \code{assay.type} or \code{altExp.type} are specified, the
@@ -30,6 +30,10 @@
 #' is used to predict the enhanced expression for each gene from the subspots'
 #' principal components.
 #' 
+#' Note that feature matrices will be returned and are expected to be input as
+#' \eqn{p \times n} matrices of \eqn{p}-dimensional feature vectors over the
+#' \eqn{n} spots.
+#' 
 #' @examples
 #' set.seed(149)
 #' sce <- exampleSCE()
@@ -42,14 +46,16 @@ NULL
 
 #' @importFrom assertthat assert_that
 .enhance_features <- function(X.enhanced, X.ref, Y.ref, 
-    features = rownames(Y.ref), model = c("lm", "xgboost")) {
+    feature_names = rownames(Y.ref), model = c("lm", "dirichlet", "xgboost")) {
 
     assert_that(ncol(X.enhanced) == ncol(X.ref))
     assert_that(ncol(Y.ref) == nrow(X.ref))
     model <- match.arg(model)
     
-    X.ref <- as.data.frame(X.ref)
-    X.enhanced <- as.data.frame(X.enhanced)
+    if (model %in% c("lm", "dirichlet")) {
+        X.ref <- as.data.frame(X.ref)
+        X.enhanced <- as.data.frame(X.enhanced)
+    }
     
     if (!all(colnames(X.enhanced) == colnames(X.ref))) {
         warning("colnames of reducedDim and X.enhanced do not match.")
@@ -58,26 +64,61 @@ NULL
     }
 
     if (model == "lm") {
-        .lm_enhance(X.ref, X.enhanced, Y.ref, features)
+        .lm_enhance(X.ref, X.enhanced, Y.ref, feature_names)
+    } else if (model == "dirichlet") {
+        .dirichlet_enhance(X.ref, X.enhanced, Y.ref)
+    } else if (model == "xgboost") {
+        .xgboost_enhance(X.ref, X.enhanced, Y.ref, feature_names)
     }
 }
 
 #' @importFrom stats lm predict
-.lm_enhance <- function(X.ref, X.enhanced, Y.ref, features) {
-    r.squared <- numeric(length(features))
-    names(r.squared) <- features
+.lm_enhance <- function(X.ref, X.enhanced, Y.ref, feature_names) {
+    r.squared <- numeric(length(feature_names))
+    names(r.squared) <- feature_names
     
-    Y.enhanced <- matrix(nrow=length(features), ncol=nrow(X.enhanced))
-    rownames(Y.enhanced) <- features
+    Y.enhanced <- matrix(nrow=length(feature_names), ncol=nrow(X.enhanced))
+    rownames(Y.enhanced) <- feature_names
     colnames(Y.enhanced) <- rownames(X.enhanced)
     
-    for (feature in features) {
+    for (feature in feature_names) {
         fit <- lm(Y.ref[feature, ] ~ ., data=X.ref)
         r.squared[feature] <- summary(fit)$r.squared
         Y.enhanced[feature, ] <- predict(fit, newdata=X.enhanced)
     }
     
     attr(Y.enhanced, "r.squared") <- r.squared
+    Y.enhanced
+}
+
+#' @importFrom DirichletReg DR_data DirichReg
+#' @importFrom stats predict
+.dirichlet_enhance <- function(X.ref, X.enhanced, Y.ref) {
+    features <- DR_data(t(Y.ref))
+    
+    fit <- DirichReg(features ~ ., data = X.ref)
+    Y.enhanced <- t(predict(fit, newdata = X.enhanced))
+    
+    rownames(Y.enhanced) <- rownames(Y.ref)
+    colnames(Y.enhanced) <- rownames(X.enhanced)
+    Y.enhanced
+}
+
+#' @importFrom xgboost xgboost
+.xgboost_enhance <- function(X.ref, X.enhanced, Y.ref, feature_names) {
+    Y.enhanced <- matrix(nrow=length(feature_names), ncol=nrow(X.enhanced))
+    rownames(Y.enhanced) <- feature_names
+    colnames(Y.enhanced) <- rownames(X.enhanced)
+    
+    ## TODO: pass hyperparams through with ...
+    ## TODO: add (optional) tuning of nrounds
+    for (feature in feature_names) {
+        fit <- xgboost(data=X.ref, label=Y.ref[feature, ], 
+            objective="reg:squarederror", max_depth=2, eta=0.03, nrounds=100,
+            nthread=1, verbose=FALSE)
+        Y.enhanced[feature, ] <- predict(fit, X.enhanced)
+    }
+    
     Y.enhanced
 }
 
