@@ -9,7 +9,7 @@ getRDS(dataset, sample)
 \arguments{
 \item{dataset}{Dataset identifier (TODO: add function to list datasets/samples)}
 
-\item{sample}{}
+\item{sample}{Sample identifier}
 }
 \value{
 sce A SingleCellExperiment with positional information in colData and
