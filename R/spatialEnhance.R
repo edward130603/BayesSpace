@@ -55,13 +55,14 @@
 #' @examples
 #' set.seed(149)
 #' sce <- exampleSCE()
-#' sce <- spatialCluster(sce, 7)
-#' enhanced <- spatialEnhance(sce, 7, init=sce$spatial.cluster)
+#' sce <- spatialCluster(sce, 7, nrep=200)
+#' enhanced <- spatialEnhance(sce, 7, init=sce$spatial.cluster, nrep=200)
 #' 
 #' @name spatialEnhance
 NULL
 
 ## TODO: re-order arguments so all keyword arguments come after positionals
+#' @importFrom stats cov
 deconvolve <- function(Y, positions, nrep = 1000, gamma = 2, xdist, ydist, q, 
     init, model = "normal", platform = c("Visium", "ST"), verbose = TRUE, 
     jitter_scale = 5, jitter_prior = 0.01, mu0 = colMeans(Y), 
@@ -213,7 +214,7 @@ spatialEnhance <- function(sce, q, use.dimred = "PCA", d = 15,
     ## enhanced$spatial.cluster <- apply(deconv$z[900:1000, ], 2, Mode)
     
     ## TODO: add thinning parameter
-    iter_from <- ifelse(nrep < 20000, max(1000, nrep - 10000), 10000)
+    iter_from <- ifelse(nrep < 20000, max(100, nrep - 10000), 10000)
     msg <- "Calculating labels using iterations %d through %d"
     message(sprintf(msg, iter_from, nrep))
     

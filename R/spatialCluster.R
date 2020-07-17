@@ -41,7 +41,7 @@
 #' @examples
 #' set.seed(149)
 #' sce <- exampleSCE()
-#' sce <- spatialCluster(sce, 7)
+#' sce <- spatialCluster(sce, 7, nrep=200)
 #'
 #' @name spatialCluster
 NULL
