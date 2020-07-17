@@ -20,7 +20,7 @@
 #' @examples
 #' set.seed(149)
 #' sce <- exampleSCE()
-#' sce <- spatialCluster(sce, 7, save.chain=TRUE)
+#' sce <- spatialCluster(sce, 7, nrep=200, save.chain=TRUE)
 #' chain <- mcmcChain(sce)
 #' removeChain(sce)
 #' 
@@ -98,7 +98,8 @@ NULL
     xs <- map(params, .read_param)
     x <- do.call(cbind, xs)
     
-    ## TODO: specify thinning interval; start/end if we drop burn-in earlier
+    ## TODO: specify thinning interval + start/end based on burn-in
+    ## may need to save iter_from in chain file
     mcmc(x)
 }
 
@@ -123,11 +124,13 @@ NULL
 .clean_chain <- function(out, method = c("cluster", "enhance"), thin=100) 
 {
     method <- match.arg(method)
-    n_iter <- nrow(out$z)
+    n_iter <- nrow(out$z)  # this is technically n_iters / 100 for enhance
     n <- ncol(out$z)
     d <- ncol(out$lambda[[1]])
     q <- ncol(out$mu)/d
     
+    ## TODO: this is bugged if only one iteration saved. 
+    ## Add as.matrix to fix, but check for transposition
     colnames(out$z) <- .make_index_names("z", n)
     colnames(out$mu) <- .make_index_names("mu", q, d)
     out$lambda <- .flatten_matrix_list(out$lambda, "lambda", d, d)
@@ -148,16 +151,14 @@ NULL
     
     ## TODO: optionally thin cluster output too
     if (method == "enhance") {
-        for (param in c("z", "mu", "lambda", "weights")) {
-            out[[param]] <- out[[param]][seq(thin, n_iter, thin), ]
-        }
+        ## manually thin mu until updated in c++; 
+        ## keep init values for consistency with others
+        thinned_idx <- c(1, seq(thin, (n_iter - 1) * thin, thin))
+        out$mu <- out$mu[thinned_idx, ]
         
         ## Subset of a one-column matrix is a vector, not a matrix
-        out$Ychange <- as.matrix(out$Ychange[seq(thin, n_iter, thin), ])
+        out$Ychange <- as.matrix(out$Ychange[thinned_idx, ])
         colnames(out$Ychange) <- c("Ychange")
-        
-        ## Y is thinned inside `deconvolve` but includes starting values
-        out$Y <- out$Y[seq(2, nrow(out$Y)), ]
     }
     
     out

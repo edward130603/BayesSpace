@@ -35,7 +35,7 @@ test_that("SCE clustering matches", {
 })
 
 test_that("Refactored deconvolution (SCE) matches", {
-  skip("Set to match results from iterations 900:1000")
+  skip("Based on 7 subspots not 6")
   truth <- read.csv(system.file("testdata/maynard_151673_subset.enhance_truth.csv.gz", package="BayesSpace"))
   sce <- SingleCellExperiment(assays=list(), reducedDims=list("PCA"=PCs), colData=cdata)
 

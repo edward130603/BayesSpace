@@ -41,7 +41,7 @@
 #' @examples
 #' set.seed(149)
 #' sce <- exampleSCE()
-#' sce <- spatialCluster(sce, 7)
+#' sce <- spatialCluster(sce, 7, nrep=200)
 #'
 #' @name spatialCluster
 NULL
@@ -105,8 +105,8 @@ cluster <- function(Y, positions, radius, q, init = rep(1, nrow(Y)),
 spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     positions = NULL, position.cols = c("imagecol", "imagerow"), 
     init = NULL, init.method = c("mclust", "kmeans"), radius = NULL, 
-    model = c("normal", "t"), precision = c("equal", "variable"), 
-    nrep = 1000, gamma = 2, mu0 = NULL, lambda0 = NULL, alpha = 1, 
+    model = c("t", "normal"), precision = c("equal", "variable"), 
+    nrep = 50000, gamma = 3, mu0 = NULL, lambda0 = NULL, alpha = 1, 
     beta = 0.01, save.chain = FALSE, chain.fname = NULL) {
     
     inputs <- .prepare_inputs(sce, use.dimred=use.dimred, d=d, 

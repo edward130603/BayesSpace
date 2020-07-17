@@ -15,9 +15,9 @@ spatialEnhance(
   init.method = c("spatialCluster", "kmeans"),
   xdist = NULL,
   ydist = NULL,
-  model = c("normal", "t"),
-  nrep = 1000,
-  gamma = 2,
+  model = c("t", "normal"),
+  nrep = 2e+05,
+  gamma = 3,
   mu0 = NULL,
   lambda0 = NULL,
   alpha = 1,
@@ -26,7 +26,7 @@ spatialEnhance(
   chain.fname = NULL,
   platform = c("Visium", "ST"),
   jitter_scale = 5,
-  c = 0.01,
+  jitter_prior = 0.3,
   verbose = FALSE
 )
 }
@@ -85,9 +85,10 @@ jittering are more likely to be accepted but result in exploring the space
 more slowly. We suggest tuning \code{jitter_scale} so that Ychange is on 
 average around 30\%.}
 
-\item{c}{Prior precision (1/variance) of the actual spot-level expression 
-value in PC space. We suggest making c larger if the jittered values are
-not expected to vary much from the overall mean of the spot.}
+\item{jitter_prior}{(TODO: re-define) Prior precision (1/variance) of the
+actual spot-level expression value in PC space. We suggest making c larger
+if the jittered values are not expected to vary much from the overall mean
+of the spot.}
 
 \item{verbose}{Log progress to stderr.}
 }

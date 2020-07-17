@@ -246,10 +246,13 @@ exampleSCE <- function(nrow=8, ncol=12, n_genes=100, n_PCs=10)
 #' Download a processed sample from our S3 bucket
 #' 
 #' @param dataset Dataset identifier (TODO: add function to list datasets/samples)
-#' @param sample
+#' @param sample Sample identifier
 #' 
 #' @return sce A SingleCellExperiment with positional information in colData and
 #'   PCs based on the top 2000 HVGs
+#'   
+#' @examples
+#' sce <- getRDS("2018_thrane_melanoma", "ST_mel1_rep2")
 #'
 #' @export 
 #' @importFrom RCurl url.exists
