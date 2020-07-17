@@ -128,6 +128,8 @@ NULL
     d <- ncol(out$lambda[[1]])
     q <- ncol(out$mu)/d
     
+    ## TODO: this is bugged if only one iteration saved. 
+    ## Add as.matrix to fix, but check for transposition
     colnames(out$z) <- .make_index_names("z", n)
     colnames(out$mu) <- .make_index_names("mu", q, d)
     out$lambda <- .flatten_matrix_list(out$lambda, "lambda", d, d)

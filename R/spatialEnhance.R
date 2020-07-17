@@ -38,9 +38,10 @@
 #'   jittering are more likely to be accepted but result in exploring the space
 #'   more slowly. We suggest tuning \code{jitter_scale} so that Ychange is on 
 #'   average around 30\%.
-#' @param c Prior precision (1/variance) of the actual spot-level expression 
-#'   value in PC space. We suggest making c larger if the jittered values are
-#'   not expected to vary much from the overall mean of the spot.
+#' @param jitter_prior (TODO: re-define) Prior precision (1/variance) of the
+#'   actual spot-level expression value in PC space. We suggest making c larger
+#'   if the jittered values are not expected to vary much from the overall mean
+#'   of the spot.
 #' @param verbose Log progress to stderr.
 #'  
 #' @return Returns a new SingleCellExperiment object. By default, the 
@@ -63,7 +64,7 @@ NULL
 ## TODO: re-order arguments so all keyword arguments come after positionals
 deconvolve <- function(Y, positions, nrep = 1000, gamma = 2, xdist, ydist, q, 
     init, model = "normal", platform = c("Visium", "ST"), verbose = TRUE, 
-    jitter_scale = 5, c = 0.01, mu0 = colMeans(Y), 
+    jitter_scale = 5, jitter_prior = 0.01, mu0 = colMeans(Y), 
     lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01) {
     
     ## TODO: turn progress bar off when verbose=FALSE
@@ -72,20 +73,18 @@ deconvolve <- function(Y, positions, nrep = 1000, gamma = 2, xdist, ydist, q,
     n0 <- nrow(Y)
     positions <- as.matrix(positions)
     Y <- as.matrix(Y)
+    c <- jitter_prior * 1 / (2 * mean(diag(cov(Y))))
+    
     colnames(positions) <- c("x", "y")
     
     platform <- match.arg(platform)
-    subspots <- ifelse(platform == "Visium", 7, 9)  # TODO: parameterize?
+    subspots <- ifelse(platform == "Visium", 6, 9)  ## TODO: parameterize?
     
     init1 <- rep(init, subspots)
-    Y2 <- Y[rep(seq_len(n0), subspots), ]  # rbind 7 or 9 times
+    Y2 <- Y[rep(seq_len(n0), subspots), ]  # rbind 6 or 9 times
     positions2 <- positions[rep(seq_len(n0), subspots), ]  # rbind 7 times
-    if (platform == "Visium") {
-        shift <- .make_subspot_offsets(7)
-    } else {
-        shift <- .make_subspot_offsets(9)
-    }
     
+    shift <- .make_subspot_offsets(subspots)
     shift <- t(t(shift) * c(xdist, ydist))
     dist <- max(rowSums(abs(shift))) * 1.05
     if (platform == "ST") {
@@ -106,18 +105,19 @@ deconvolve <- function(Y, positions, nrep = 1000, gamma = 2, xdist, ydist, q,
         jitter_scale=jitter_scale, c=c, mu0=mu0, lambda0=lambda0, alpha=alpha, 
         beta=beta)
     out$positions <- positions2
-    
     out
 }
 
 ## Define offsets for each subspot layout
 .make_subspot_offsets <- function(n_subspots_per) {
-    if (n_subspots_per == 7) {
-        rbind(expand.grid(c(1/3, -1/3), c(1/3, -1/3)), expand.grid(c(2/3, -2/3, 0), 0))
+    if (n_subspots_per == 6) {
+        rbind(expand.grid(c(1/3, -1/3), c(1/3,-1/3)), expand.grid(c(2/3, -2/3), 0))
+    # } else if (n_subspots_per == 7) {
+    #     rbind(expand.grid(c(1/3, -1/3), c(1/3, -1/3)), expand.grid(c(2/3, -2/3, 0), 0))
     } else if (n_subspots_per == 9) {
         rbind(expand.grid(c(1/3, -1/3, 0), c(1/3, -1/3, 0)))
     } else {
-        stop("Only 7 and 9 subspots currently supported")
+        stop("Only 6 and 9 subspots currently supported")
     }
 }
 
@@ -168,7 +168,7 @@ spatialEnhance <- function(sce, q, use.dimred = "PCA", d = 15,
     model = c("normal", "t"), nrep = 1000, gamma = 2, 
     mu0 = NULL, lambda0 = NULL, alpha = 1, beta = 0.01, 
     save.chain = FALSE, chain.fname = NULL, platform = c("Visium", "ST"), 
-    jitter_scale = 5, c = 0.01, verbose = FALSE) {
+    jitter_scale = 5, jitter_prior = 0.01, verbose = FALSE) {
     
     inputs <- .prepare_inputs(sce, use.dimred=use.dimred, d=d,
         positions=positions, position.cols=position.cols,
@@ -195,11 +195,12 @@ spatialEnhance <- function(sce, q, use.dimred = "PCA", d = 15,
     
     deconv <- deconvolve(inputs$PCs, inputs$positions, nrep=nrep, gamma=gamma, 
         xdist=inputs$xdist, ydist=inputs$ydist, q=q, init=init, model=model, 
-        platform=platform, verbose=verbose, jitter_scale=jitter_scale, c=c, 
-        mu0=mu0, lambda0=lambda0, alpha=alpha, beta=beta)
+        platform=platform, verbose=verbose, jitter_scale=jitter_scale,
+        jitter_prior=jitter_prior, mu0=mu0, lambda0=lambda0, alpha=alpha,
+        beta=beta)
     
     ## Create enhanced SCE
-    n_subspots_per <- ifelse(platform == "Visium", 7, 9)
+    n_subspots_per <- ifelse(platform == "Visium", 6, 9)
     cdata <- .make_subspot_coldata(deconv$positions, sce, n_subspots_per)
     enhanced <- SingleCellExperiment(assays=list(), 
         rowData=rowData(sce), colData=cdata)

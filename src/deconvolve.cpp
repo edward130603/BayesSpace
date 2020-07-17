@@ -33,8 +33,8 @@ List iterate_deconv(arma::mat Y, List df_j, bool tdist, int nrep, int n, int n0,
   mat mu_i(q,d);
   mat mu_i_long(n,d);
   uvec j0_vector;
-  if (subspots == 7){
-    j0_vector = {0,1,2,3,4,5,6};
+  if (subspots == 6) {
+    j0_vector = {0,1,2,3,4,5};
   } else {
     j0_vector = {0,1,2,3,4,5,6,7,8};
   }
