@@ -77,9 +77,9 @@ test_that("cleaning and saving works", {
   
   enhanced <- spatialEnhance(sce, q, model="normal", nrep=n_rep, init=sce$spatial.cluster, save.chain=TRUE)
   chain <- mcmcChain(enhanced)
-  expect_equal(nrow(chain), n_rep / 100)
+  expect_equal(nrow(chain), (n_rep / 100) + 1)
   
   enhanced <- spatialEnhance(sce, q, model="t", nrep=n_rep, init=sce$spatial.cluster, save.chain=TRUE)
   chain <- mcmcChain(enhanced)
-  expect_equal(nrow(chain), n_rep / 100)
+  expect_equal(nrow(chain), (n_rep / 100) + 1)
 })

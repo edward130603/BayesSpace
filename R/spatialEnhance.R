@@ -213,10 +213,12 @@ spatialEnhance <- function(sce, q, use.dimred = "PCA", d = 15,
     ## enhanced$spatial.cluster <- apply(deconv$z[900:1000, ], 2, Mode)
     
     ## TODO: add thinning parameter
-    iter_from <- ifelse(nrep < 2000, max(2, nrep - 1000), 1000)
+    iter_from <- ifelse(nrep < 2000, max(100, nrep - 1000), 1000)
     msg <- "Calculating labels using iterations %d through %d"
     message(sprintf(msg, iter_from, nrep))
-    labels <- apply(deconv$z[iter_from:nrep, ], 2, Mode)
+    
+    ## Add one to skip initial values stored before first iteration
+    labels <- apply(deconv$z[((iter_from %/% 100) + 1):((nrep %/% 100) + 1), ], 2, Mode)
     enhanced$spatial.cluster <- unname(labels)
     
     if (save.chain) {
