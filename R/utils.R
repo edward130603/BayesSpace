@@ -250,6 +250,9 @@ exampleSCE <- function(nrow=8, ncol=12, n_genes=100, n_PCs=10)
 #' 
 #' @return sce A SingleCellExperiment with positional information in colData and
 #'   PCs based on the top 2000 HVGs
+#'   
+#' @examples
+#' sce <- getRDS("2018_thrane_melanoma", "ST_mel1_rep2")
 #'
 #' @export 
 #' @importFrom RCurl url.exists
