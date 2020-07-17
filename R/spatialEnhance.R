@@ -165,10 +165,10 @@ spatialEnhance <- function(sce, q, use.dimred = "PCA", d = 15,
     positions = NULL, position.cols = c("imagecol", "imagerow"), 
     init = NULL, init.method = c("spatialCluster", "kmeans"),
     xdist = NULL, ydist = NULL, 
-    model = c("normal", "t"), nrep = 1000, gamma = 2, 
+    model = c("t", "normal"), nrep = 200000, gamma = 3, 
     mu0 = NULL, lambda0 = NULL, alpha = 1, beta = 0.01, 
     save.chain = FALSE, chain.fname = NULL, platform = c("Visium", "ST"), 
-    jitter_scale = 5, jitter_prior = 0.01, verbose = FALSE) {
+    jitter_scale = 5, jitter_prior = 0.3, verbose = FALSE) {
     
     inputs <- .prepare_inputs(sce, use.dimred=use.dimred, d=d,
         positions=positions, position.cols=position.cols,
@@ -213,7 +213,7 @@ spatialEnhance <- function(sce, q, use.dimred = "PCA", d = 15,
     ## enhanced$spatial.cluster <- apply(deconv$z[900:1000, ], 2, Mode)
     
     ## TODO: add thinning parameter
-    iter_from <- ifelse(nrep < 2000, max(100, nrep - 1000), 1000)
+    iter_from <- ifelse(nrep < 20000, max(1000, nrep - 10000), 10000)
     msg <- "Calculating labels using iterations %d through %d"
     message(sprintf(msg, iter_from, nrep))
     

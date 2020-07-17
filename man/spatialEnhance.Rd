@@ -15,9 +15,9 @@ spatialEnhance(
   init.method = c("spatialCluster", "kmeans"),
   xdist = NULL,
   ydist = NULL,
-  model = c("normal", "t"),
-  nrep = 1000,
-  gamma = 2,
+  model = c("t", "normal"),
+  nrep = 2e+05,
+  gamma = 3,
   mu0 = NULL,
   lambda0 = NULL,
   alpha = 1,
@@ -26,7 +26,7 @@ spatialEnhance(
   chain.fname = NULL,
   platform = c("Visium", "ST"),
   jitter_scale = 5,
-  jitter_prior = 0.01,
+  jitter_prior = 0.3,
   verbose = FALSE
 )
 }
