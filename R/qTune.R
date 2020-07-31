@@ -50,7 +50,7 @@ qPlot <- function(sce, qs=seq(3, 7), force.retune=FALSE, ...) {
         sce <- qTune(sce, qs, ...)        
     }
     
-    logliks <- attribute(sce, "q.logliks")
+    logliks <- attr(sce, "q.logliks")
     qplot <- ggplot(data=logliks, aes(x=q, y=-loglik)) +
         geom_line() +
         geom_point() +
