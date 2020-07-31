@@ -64,8 +64,8 @@ Note that feature matrices will be returned and are expected to be input as
 \examples{
 set.seed(149)
 sce <- exampleSCE()
-sce <- spatialCluster(sce, 7)
-enhanced <- spatialEnhance(sce, 7, init=sce$spatial.cluster)
+sce <- spatialCluster(sce, 7, nrep=200)
+enhanced <- spatialEnhance(sce, 7, init=sce$spatial.cluster, nrep=200)
 enhanced <- enhanceFeatures(enhanced, sce, assay.type="logcounts")
 
 }
