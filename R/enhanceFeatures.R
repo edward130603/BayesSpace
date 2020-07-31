@@ -46,7 +46,7 @@ NULL
 
 #' @importFrom assertthat assert_that
 .enhance_features <- function(X.enhanced, X.ref, Y.ref, 
-    feature_names = rownames(Y.ref), model = c("lm", "dirichlet", "xgboost")) {
+    feature_names = rownames(Y.ref), model = c("xgboost", "dirichlet", "lm")) {
 
     assert_that(ncol(X.enhanced) == ncol(X.ref))
     assert_that(ncol(Y.ref) == nrow(X.ref))
@@ -110,15 +110,21 @@ NULL
     rownames(Y.enhanced) <- feature_names
     colnames(Y.enhanced) <- rownames(X.enhanced)
     
+    rmse <- numeric(length(feature_names))
+    names(rmse) <- feature_names
+    
     ## TODO: pass hyperparams through with ...
     ## TODO: add (optional) tuning of nrounds
     for (feature in feature_names) {
         fit <- xgboost(data=X.ref, label=Y.ref[feature, ], 
             objective="reg:squarederror", max_depth=2, eta=0.03, nrounds=100,
             nthread=1, verbose=FALSE)
+        
         Y.enhanced[feature, ] <- predict(fit, X.enhanced)
+        rmse[feature] <- fit$evaluation_log$train_rmse[100]
     }
     
+    attr(Y.enhanced, "rmse") <- rmse
     Y.enhanced
 }
 
