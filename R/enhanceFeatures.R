@@ -19,8 +19,8 @@
 #'   \code{sce.enhanced} and the modified SingleCellExperiment object is
 #'   returned.
 #'   
-#'   If \code{feature.matrix} is specified, the enhanced features are returned
-#'   directly as a matrix.
+#'   If \code{feature.matrix} is specified, or if a subset of features are
+#'   requested, the enhanced features are returned directly as a matrix.
 #' 
 #' @details 
 #' Enhanced features are computed by fitting a predictive model to a
@@ -133,7 +133,8 @@ NULL
 #' @importFrom SummarizedExperiment assay assay<- SummarizedExperiment
 #' @rdname enhanceFeatures
 enhanceFeatures <- function(sce.enhanced, sce.ref, use.dimred = "PCA",
-    assay.type="logcounts", altExp.type = NULL, feature.matrix = NULL, ...) {
+    assay.type="logcounts", altExp.type = NULL, feature.matrix = NULL, 
+    feature_names = NULL, model=c("xgboost", "dirichlet", "lm")) {
     
     X.enhanced <- reducedDim(sce.enhanced, use.dimred)
     X.ref <- reducedDim(sce.ref, use.dimred)
@@ -148,11 +149,22 @@ enhanceFeatures <- function(sce.enhanced, sce.ref, use.dimred = "PCA",
     
     msg <- "Spot features must have assigned rownames."
     assert_that(!is.null(rownames(Y.ref)), msg=msg)
-    Y.enhanced <- .enhance_features(X.enhanced, X.ref, Y.ref, ...)
+    
+    if (is.null(feature_names)) {
+        feature_names <- rownames(Y.ref)
+    } else {
+        feature_names <- intersect(feature_names, rownames(Y.ref))
+        skipped_features <- setdiff(feature_names, rownames(Y.ref))
+        if (length(skipped_features) > 0) {
+            message(sprintf("Skipping %d features not in sce.ref", length(skipped_features)))
+        }
+    }
+    
+    Y.enhanced <- .enhance_features(X.enhanced, X.ref, Y.ref, feature_names, model)
     
     ## TODO: add option to specify destination of enhanced features.
     ## For now, return in same form as input
-    if (!is.null(feature.matrix)) {
+    if (!is.null(feature.matrix) || (length(feature_names) != nrow(Y.ref))) {
         return(Y.enhanced)
     } else if (!is.null(altExp.type)) {
         Y.enhanced <- SummarizedExperiment(assays=list(altExp.type=Y.enhanced))

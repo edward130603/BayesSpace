@@ -12,7 +12,8 @@ enhanceFeatures(
   assay.type = "logcounts",
   altExp.type = NULL,
   feature.matrix = NULL,
-  ...
+  feature_names = NULL,
+  model = c("xgboost", "dirichlet", "lm")
 )
 }
 \arguments{
@@ -42,8 +43,8 @@ If \code{assay.type} or \code{altExp.type} are specified, the
   \code{sce.enhanced} and the modified SingleCellExperiment object is
   returned.
   
-  If \code{feature.matrix} is specified, the enhanced features are returned
-  directly as a matrix.
+  If \code{feature.matrix} is specified, or if a subset of features are
+  requested, the enhanced features are returned directly as a matrix.
 }
 \description{
 Predict log-normalized expression vectors from deconvolved PCs using linear 
