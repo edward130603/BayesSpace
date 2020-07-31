@@ -50,7 +50,11 @@ List iterate_deconv(arma::mat Y, List df_j, bool tdist, int nrep, int n, int n0,
   vec one_vec = ones<vec>(d);
   mat error_var = diagmat(one_vec)/d*jitter_scale; 
   Progress p(nrep - 1, verbose);
-  for (int i = 1; i < nrep; i++){
+  for (int i = 1; i < nrep; i++) {
+    // Check for interrupt every ~1-2 seconds (0.24s/iter based on 6k subspots)
+    if (i % 4 == 0)
+      Rcpp::checkUserInterrupt();
+    
     p.increment();
     if (i % 10 == 0){
       if (Progress::check_abort())
