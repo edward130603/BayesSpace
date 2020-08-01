@@ -10,7 +10,7 @@
 #' @param qs The values of q to evaluate.
 #' @param min_rep,max_rep Integers specifying the range of repetitions to
 #'   compute 
-#' @param force_retune If specified, existing tuning values in \code{sce} will
+#' @param force.retune If specified, existing tuning values in \code{sce} will
 #'   be overwritten.
 #' @param ... Other parameters are passed to \code{spatialCluster()}.
 #' 

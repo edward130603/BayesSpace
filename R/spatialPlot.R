@@ -23,14 +23,14 @@ NULL
 palette <- c("#0173b2", "#de8f05", "#029e73", "#d55e00", "#cc78bc",
              "#ca9161", "#fbafe4", "#949494", "#ece133", "#56b4e9")
 
-#' @importFrom ggplot2 ggplot geom_point scale_color_manual coord_fixed labs theme_void
+#' @importFrom ggplot2 ggplot geom_point scale_color_manual coord_fixed labs theme_void aes
 #'
 #' @export
 #' @rdname spatialPlot
 clusterPlot <- function(sce) {
     cdata <- data.frame(colData(sce))
     splot <- ggplot(cdata, aes(x=col, y=-row, color=factor(spatial.cluster))) +
-        geom_point(size=size) +
+        geom_point(size=3) +
         scale_color_manual(values = palette) +
         coord_fixed(ratio=sqrt(3)) +
         labs(color = "Cluster") +
@@ -39,13 +39,14 @@ clusterPlot <- function(sce) {
     splot
 }
 
-## TODO add arbitrary column (e.g. marker expression) instead of cluster
-## TODO maybe better to re-compute original positions from enhanced instead of passing sce.ref
-#' @importFrom ggplot2 ggplot geom_polygon scale_fill_manual coord_fixed labs theme_void
+#' @importFrom ggplot2 ggplot geom_polygon scale_fill_manual coord_fixed labs theme_void aes
 #'
 #' @export
 #' @rdname spatialPlot
 enhancePlot <- function(sce.enhanced, sce.ref) {
+## TODO add arbitrary column (e.g. marker expression) instead of cluster
+## TODO maybe better to re-compute original positions from enhanced instead of passing sce.ref
+
     ## TODO store these as attributes when running spatialEnhance
     inputs <- .prepare_inputs(sce.ref)
     

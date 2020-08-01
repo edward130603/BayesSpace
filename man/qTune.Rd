@@ -14,13 +14,13 @@ qTune(sce, qs = seq(3, 7), min_rep = 100, max_rep = 1000, ...)
 
 \item{qs}{The values of q to evaluate.}
 
+\item{force.retune}{If specified, existing tuning values in \code{sce} will
+be overwritten.}
+
 \item{...}{Other parameters are passed to \code{spatialCluster()}.}
 
 \item{min_rep, max_rep}{Integers specifying the range of repetitions to
 compute}
-
-\item{force_retune}{If specified, existing tuning values in \code{sce} will
-be overwritten.}
 }
 \value{
 \code{qTune()} returns a modified \code{sce} with tuning log 

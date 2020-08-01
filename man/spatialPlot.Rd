@@ -6,7 +6,7 @@
 \alias{enhancePlot}
 \title{Plot cluster labels in spatial context}
 \usage{
-clusterPlot(sce)
+clusterPlot(sce, size = 3)
 
 enhancePlot(sce.enhanced, sce.ref)
 }
