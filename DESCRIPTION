@@ -28,7 +28,9 @@ Imports:
     RCurl,
     DirichletReg,
     xgboost,
-    utils
+    utils,
+    ggplot2,
+    stringr
 Description: "Clustering and enhanced resolution of spatial transcriptomics datasets."
 License: MIT + file LICENSE
 RoxygenNote: 7.1.0
@@ -44,7 +46,6 @@ Suggests:
     testthat,
     knitr,
     rmarkdown,
-    ggplot2,
     spatialLIBD
 VignetteBuilder: knitr
 biocViews:
