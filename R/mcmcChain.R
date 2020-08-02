@@ -1,0 +1,194 @@
+#' Read MCMC chain associated with a BayesSpace clustering or enhancement
+#' 
+#' BayesSpace stores the MCMC chain associated with a clustering or enhancement
+#' on disk in an HDF5 file. The \code{mcmcChain()} function reads any parameters
+#' specified by the user into a \code{coda::mcmc} object compatible with
+#' TidyBayes.
+#' 
+#' @details 
+#' To interact with the HDF5 file directly, obtain the filename from the
+#' SingleCellExperiment's metadata: \code{metadata(sce)$chain.h5}. Each
+#' parameter is stored as a separate dataset in the file, and is represented as
+#' a matrix of size (n_iterations x n_parameter_indices).
+#' 
+#' @param sce SingleCellExperiment with a file path stored in its metadata.
+#' @param params List of model parameters to read
+#' 
+#' @return Returns an \code{mcmc} object containing the values of the requested
+#'   parameters over the constructed chain.
+#'   
+#' @examples
+#' set.seed(149)
+#' sce <- exampleSCE()
+#' sce <- spatialCluster(sce, 7, nrep=200, save.chain=TRUE)
+#' chain <- mcmcChain(sce)
+#' removeChain(sce)
+#' 
+#' @name mcmcChain
+NULL
+
+#' @importFrom rhdf5 h5createFile h5createDataset h5write
+.write_chain <- function(chain, h5.fname = NULL, params = NULL, 
+    chunk.length = 1000) {
+    
+    if (is.null(h5.fname)) {
+        h5.fname <- tempfile(fileext=".h5")
+    }
+    
+    if (is.null(params)) {
+        params <- names(chain)
+    }
+    
+    h5createFile(h5.fname)
+    
+    for (par.name in params) {
+        param <- chain[[par.name]]
+        dims <- dim(param)
+        chunk <- c(min(chunk.length, dims[1]), dims[2])
+        h5createDataset(h5.fname, par.name, dims, chunk=chunk)
+        
+        attr(param, "dims") <- .infer_param_dims(colnames(param))
+        
+        ## TODO: write colnames manually to avoid warnings about dimnames
+        ## when writing all attributes
+        suppressWarnings(h5write(param, h5.fname, par.name, write.attributes=TRUE))
+    }
+    
+    h5.fname
+}
+
+## Infer original dimensions of parameter (per iteration) from colnames
+##
+## Used to avoid writing colnames directly to HDF5 as attribute, which fails
+## for large parameters (e.g. Y)
+.infer_param_dims <- function(cnames) {
+    n_idxs <- length(cnames)
+    dims <- list()
+    
+    if (n_idxs == 1) {
+        dims <- c(1, 1)
+    } else if (!grepl(",", cnames[n_idxs])) {
+        dims <- c(n_idxs, 1)
+    } else {
+        dims <- gsub("[a-zA-Z_\\.]|\\[|\\]", "", cnames[n_idxs])
+        dims <- as.numeric(strsplit(dims, ",")[[1]])
+    }
+    
+    dims
+}
+
+#' @importFrom rhdf5 h5ls h5read
+#' @importFrom coda mcmc
+#' @importFrom purrr map
+.read_chain <- function(h5.fname, params = NULL) {
+    ## TODO: add option to subset last n rows/iterations
+    
+    if (is.null(params)) {
+        params <- h5ls(h5.fname)$name
+    }
+    
+    .read_param <- function(par.name) {
+        param <- as.matrix(h5read(h5.fname, par.name, read.attributes=TRUE))
+        dims <- attr(param, "dims")
+        colnames(param) <- .make_index_names(par.name, dims[1], dims[2])
+        
+        param
+    }
+    
+    xs <- map(params, .read_param)
+    x <- do.call(cbind, xs)
+    
+    ## TODO: specify thinning interval + start/end based on burn-in
+    ## may need to save iter_from in chain file
+    mcmc(x)
+}
+
+## Make colnames for parameter indices.
+.make_index_names <- function(name, m = NULL, n = NULL, dim = 1) {
+    if (is.null(m) || m == 1) {
+        name
+    } else if (is.null(n) || n == 1) {
+        paste0(name, "[", rep(seq_len(m)), "]")
+    } else if (dim == 1) {
+        paste0(name, "[", rep(seq_len(m), each=n), ",", rep(seq_len(n), m), "]")
+    } else {
+        paste0(name, "[", rep(seq_len(m), n), ",", rep(seq_len(n), each=m), "]")
+    }
+}
+
+## Tidy C++ outputs before writing to disk.
+##  1) Convert each parameter to matrix (n_iterations x n_indices) 
+##  2) Add appropriate colnames 
+##  3) Thin evenly (for enhance)
+#' @importFrom purrr map
+.clean_chain <- function(out, method = c("cluster", "enhance"), thin=100) 
+{
+    method <- match.arg(method)
+    n_iter <- nrow(out$z)  # this is technically n_iters / 100 for enhance
+    n <- ncol(out$z)
+    d <- ncol(out$lambda[[1]])
+    q <- ncol(out$mu)/d
+    
+    ## TODO: this is bugged if only one iteration saved. 
+    ## Add as.matrix to fix, but check for transposition
+    colnames(out$z) <- .make_index_names("z", n)
+    colnames(out$mu) <- .make_index_names("mu", q, d)
+    out$lambda <- .flatten_matrix_list(out$lambda, "lambda", d, d)
+    
+    if ("weights" %in% names(out)) {
+        colnames(out$weights) <- .make_index_names("weights", n)
+    }
+    
+    ## Include function-specific chain parameters
+    if (method == "cluster") {
+        out$plogLik <- as.matrix(out$plogLik)
+        colnames(out$plogLik) <- c("pLogLikelihood")
+    } else if (method == "enhance") {
+        out$Y <- .flatten_matrix_list(out$Y, "Y", n, d)
+        out$Ychange <- as.matrix(out$Ychange)
+        colnames(out$Ychange) <- c("Ychange")
+    }
+    
+    ## TODO: optionally thin cluster output too
+    if (method == "enhance") {
+        ## manually thin mu until updated in c++; 
+        ## keep init values for consistency with others
+        thinned_idx <- c(1, seq(thin, (n_iter - 1) * thin, thin))
+        out$mu <- out$mu[thinned_idx, ]
+        
+        ## Subset of a one-column matrix is a vector, not a matrix
+        out$Ychange <- as.matrix(out$Ychange[thinned_idx, ])
+        colnames(out$Ychange) <- c("Ychange")
+    }
+    
+    out
+}
+
+.flatten_matrix_list <- function(xs, ...) {
+    xs <- map(xs, function(x) as.vector(t(x)))
+    x <- do.call(rbind, xs)
+    colnames(x) <- .make_index_names(...)
+    
+    x
+}
+
+#' @export
+#' @rdname mcmcChain
+mcmcChain <- function(sce, params = NULL) {
+    if (!("chain.h5" %in% names(metadata(sce)))) {
+        stop("Path to chain file not available in object metadata.")
+    }
+    
+    .read_chain(metadata(sce)$chain.h5, params)
+}
+
+#' @export
+#' @rdname mcmcChain
+removeChain <- function(sce) {
+    if ("chain.h5" %in% names(metadata(sce))) {
+        if (file.exists(metadata(sce)$chain.h5)) {
+            file.remove(metadata(sce)$chain.h5)
+        }
+        metadata(sce)$chain.h5 <- NULL
+    }
+}
