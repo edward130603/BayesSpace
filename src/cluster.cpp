@@ -25,6 +25,9 @@ List iterate(arma::mat Y, List df_j, int nrep, int n, int d, double gamma, int q
   //Iterate
   colvec mu0vec = as<colvec>(mu0);
   for (int i = 1; i < nrep; i++){
+    // Check for interrupt every ~1-2 seconds (timing based on 5k spots)
+    if (i % 10 == 0)
+      Rcpp::checkUserInterrupt();
     
     //Update mu
     mat mu_i(q,d);
@@ -112,6 +115,9 @@ List iterate_vvv(arma::mat Y, List df_j, int nrep, int n, int d, double gamma, i
   //Iterate
   colvec mu0vec = as<colvec>(mu0);
   for (int i = 1; i < nrep; i++){
+    // Check for interrupt every ~1-2 seconds (timing based on 5k spots)
+    if (i % 10 == 0)
+      Rcpp::checkUserInterrupt();
     
     //Update mu
     mat mu_i(q,d);
@@ -204,6 +210,9 @@ List iterate_t (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, in
   //Iterate
   colvec mu0vec = as<colvec>(mu0);
   for (int i = 1; i < nrep; i++){
+    // Check for interrupt every ~1-2 seconds (timing based on 5k spots)
+    if (i % 10 == 0)
+      Rcpp::checkUserInterrupt();
     
     //Update mu
     mat mu_i(q,d);
@@ -299,6 +308,9 @@ List iterate_t_vvv (arma::mat Y, List df_j, int nrep, int n, int d, double gamma
   //Iterate
   colvec mu0vec = as<colvec>(mu0);
   for (int i = 1; i < nrep; i++){
+    // Check for interrupt every ~1-2 seconds (timing based on 5k spots)
+    if (i % 10 == 0)
+      Rcpp::checkUserInterrupt();
     
     //Update mu
     mat mu_i(q,d);
