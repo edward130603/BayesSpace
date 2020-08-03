@@ -198,7 +198,7 @@ List iterate_t (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, in
   mat df_sim_mu(nrep, q*d, fill::zeros);
   List df_sim_lambda(nrep);
   mat df_sim_w(nrep, n);
-  NumericVector plogLik(nrep, NA_REAL);
+  vec plogLik(nrep, fill::zeros);
   
   //Initialize parameters
   rowvec initmu = rep(mu0, q);
@@ -218,14 +218,13 @@ List iterate_t (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, in
     //Update mu
     mat mu_i(q,d);
     mat lambda_prev = df_sim_lambda[i-1];
-    NumericVector Ysums;
     for (int k = 1; k <= q; k++){
       uvec index_1k = find(df_sim_z.row(i-1) == k);
       int n_i = sum(w(index_1k)); 
       mat Yrows = Y.rows(index_1k);
       Yrows.each_col() %= w(index_1k);
-      Ysums = sum(Yrows, 0);
-      vec mean_i = inv(lambda0 + n_i * lambda_prev) * (lambda0 * mu0vec + lambda_prev * as<colvec>(Ysums)); //posterior mean
+      colvec Ysums = conv_to<colvec>::from(sum(Yrows, 0));
+      vec mean_i = inv(lambda0 + n_i * lambda_prev) * (lambda0 * mu0vec + lambda_prev * Ysums); //posterior mean
       mat var_i = inv(lambda0 + n_i * lambda_prev); //posterior variance
       mu_i.row(k-1) = rmvnorm(1, mean_i, var_i); //sample from posterior for mu
     }
@@ -250,6 +249,7 @@ List iterate_t (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, in
     double w_beta;
     df_sim_z.row(i) = df_sim_z.row(i-1);
     vec plogLikj(n, fill::zeros);
+    vec qvec = linspace(1, q, q);
 
     for (int j = 0; j < n; j++){
       w_beta = as_scalar(2/(resid.row(j) * lambda_i * resid.row(j).t() + 4)); //scale parameter
@@ -257,12 +257,11 @@ List iterate_t (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, in
       
       int z_j_prev = df_sim_z(i,j);
 
-      // Armadillo doesn't permit sampling from a set, but we can sample
-      // uniformly from a range of integers and exclude z_j_prev after      
-      int z_j_new = randi(distr_param(1, q));
-      while (z_j_new == z_j_prev) {
-        z_j_new = randi(distr_param(1, q));
-      }
+      // Armadillo doesn't permit sampling from a set, but we can randomly
+      // select an index
+      vec qlessk = qvec(find(qvec != z_j_prev));
+      int z_j_new_idx = randi(distr_param(0, q - 2));  // q-1 indices
+      int z_j_new = qlessk(z_j_new_idx);
 
       uvec j_vector = df_j[j];
       uvec i_vector(1); i_vector.fill(i);
@@ -284,6 +283,7 @@ List iterate_t (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, in
       df_sim_z(i,j) = sample(zsample, 1, true, probs)[0];
       plogLikj[j] = h_z_prev;
     }
+
     df_sim_w.row(i) = w.t();
     plogLik[i] = sum(plogLikj);
   }
