@@ -35,18 +35,19 @@ List iterate(arma::mat Y, List df_j, int nrep, int n, int d, double gamma, int q
       NumericVector Ysums;
       mat Yrows = Y.rows(index_1k);
       Ysums = sum(Yrows, 0);
-      vec mean_i = inv(lambda0 + n_i * lambda_prev) * (lambda0 * mu0vec + lambda_prev * as<colvec>(Ysums));
       mat var_i = inv(lambda0 + n_i * lambda_prev);
+      vec mean_i = var_i * (lambda0 * mu0vec + lambda_prev * as<colvec>(Ysums));
       mu_i.row(k-1) = rmvnorm(1, mean_i, var_i);
     }
     df_sim_mu.row(i) = vectorise(mu_i, 1);
     
     //Update lambda
-    mat mu_i_long(n,d);
+    mat mu_i_long(n, d);
     for (int j = 0; j < n; j++){
-      mu_i_long.row(j) = mu_i.row(df_sim_z(i-1, j)-1);
+      mu_i_long.row(j) = mu_i.row(df_sim_z(i - 1, j) - 1);
     }
-    mat sumofsq = (Y-mu_i_long).t() * (Y-mu_i_long);
+    mat residuals = Y - mu_i_long;
+    mat sumofsq = residuals.t() * residuals;
     vec beta_d(d); 
     beta_d.fill(beta);
     mat Vinv = diagmat(beta_d);
