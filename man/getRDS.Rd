@@ -18,3 +18,7 @@ sce A SingleCellExperiment with positional information in colData and
 \description{
 Download a processed sample from our S3 bucket
 }
+\examples{
+sce <- getRDS("2018_thrane_melanoma", "ST_mel1_rep2")
+
+}
