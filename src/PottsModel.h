@@ -34,13 +34,13 @@ public:
   
   // Construct model state by applying update rules to previous state
   PottsModel(ClusterParams params, PottsModel prev, List df_j)
-    : mu(arma::zeros(params.q, params.n_dims(), arma::fill::zeros)),
-      lambda(arma::zeros(params.n_dims(), params.n_dims(), arma::fill::zeros)),
+    : mu(arma::zeros(params.q, params.n_dims())),
+      lambda(arma::zeros(params.n_dims(), params.n_dims())),
       z(arma::zeros<arma::rowvec>(params.n_spots()))
   {
     mu = updateMu(params, prev);
-    lambda = updateLambda(params, this, prev);
-    z = updateZ(params, this, prev, df_j);
+    lambda = updateLambda(params, prev);
+    z = updateZ(params, prev, df_j);
     
     assert(mu.n_cols == params.n_dims());
     assert(mu.n_rows == params.q);
@@ -50,13 +50,13 @@ public:
   }
   
   arma::mat sigma() const { return inv(lambda); }
+  
+  // TODO: convert updates to member functions
+  arma::mat updateMu(ClusterParams params, PottsModel prev);
+  arma::mat updateLambda(ClusterParams params, PottsModel prev);
+  arma::mat updateZ(ClusterParams params, PottsModel prev, List df_j); // TODO: get rid of List
 };
 
-// TODO: convert updates to member functions
-arma::mat updateMu(ClusterParams params, PottsModel prev);
-arma::mat updateLambda(ClusterParams params, PottsModel curr, PottsModel prev);
-arma::mat updateZ(ClusterParams params, PottsModel curr, PottsModel prev, List df_j); // TODO: get rid of List
-
-// TODO: add likelihood/energy/poster computations
+// TODO: add likelihood/energy/posterior computations
 
 #endif

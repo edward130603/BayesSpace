@@ -33,13 +33,13 @@ List cluster_mcmc(arma::mat Y, List df_j, int nrep, int n_spots, int n_dims, dou
     curr = PottsModel();
     
     //Update mu
-    curr.mu = updateMu(params, chain.back());
+    curr.mu = curr.updateMu(params, chain.back());
     
     //Update lambda
-    curr.lambda = updateLambda(params, curr, chain.back());
+    curr.lambda = curr.updateLambda(params, chain.back());
     
     //Update z
-    arma::mat result = updateZ(params, curr, chain.back(), df_j);
+    arma::mat result = curr.updateZ(params, chain.back(), df_j);
     curr.z = result.row(0);
     plogLik[i] = arma::sum(result.row(1));
     

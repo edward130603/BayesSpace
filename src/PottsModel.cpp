@@ -6,7 +6,7 @@
 using namespace Rcpp;
 
 // Compute next mean vector
-arma::mat updateMu(ClusterParams params, PottsModel prev) {
+arma::mat PottsModel::updateMu(ClusterParams params, PottsModel prev) {
   arma::mat mu_i(params.q, params.n_dims(), arma::fill::zeros);
   
   for (int k = 1; k <= params.q; k++){
@@ -26,12 +26,12 @@ arma::mat updateMu(ClusterParams params, PottsModel prev) {
 }
 
 // Compute next covariance matrix
-arma::mat updateLambda(ClusterParams params, PottsModel curr, PottsModel prev) {
+arma::mat PottsModel::updateLambda(ClusterParams params, PottsModel prev) {
   
   arma::mat mu_i_long(params.n_spots(), params.n_dims(), arma::fill::zeros);
   
   for (int j = 0; j < params.n_spots(); j++){
-    mu_i_long.row(j) = curr.mu.row(prev.z[j] - 1);
+    mu_i_long.row(j) = this->mu.row(prev.z[j] - 1);
   }
   
   arma::mat sumofsq = (params.Y - mu_i_long).t() * (params.Y - mu_i_long);
@@ -67,7 +67,7 @@ double computeLogLikelihood(arma::rowvec x, int label, PottsModel state) {
 
 // Compute next set of cluster assignments and corresponding log-likelihoods
 // TODO: extract energy/likelihood computation
-arma::mat updateZ(ClusterParams params, PottsModel curr, PottsModel prev, List df_j) {
+arma::mat PottsModel::updateZ(ClusterParams params, PottsModel prev, List df_j) {
   
   arma::rowvec z = prev.z;
   arma::rowvec plogLikj(params.n_spots(), arma::fill::zeros);
@@ -86,11 +86,11 @@ arma::mat updateZ(ClusterParams params, PottsModel curr, PottsModel prev, List d
     // has neighbors
     if (neighbors.n_elem > 0) {
       // TODO: move this into PottsModel::computeLogPosterior() and PottsModel::computeAcceptance()
-      h_z_prev = computeEnergy(z, neighbors, z_j_prev, params) + computeLogLikelihood(params.Y.row(j), z_j_prev, curr);
-      h_z_new  = computeEnergy(z, neighbors, z_j_new, params) + computeLogLikelihood(params.Y.row(j), z_j_new, curr);
+      h_z_prev = computeEnergy(z, neighbors, z_j_prev, params) + computeLogLikelihood(params.Y.row(j), z_j_prev, *this);
+      h_z_new  = computeEnergy(z, neighbors, z_j_new, params) + computeLogLikelihood(params.Y.row(j), z_j_new, *this);
     } else {
-      h_z_prev = computeLogLikelihood(params.Y.row(j), z_j_prev, curr);
-      h_z_new  = computeLogLikelihood(params.Y.row(j), z_j_new, curr);
+      h_z_prev = computeLogLikelihood(params.Y.row(j), z_j_prev, *this);
+      h_z_new  = computeLogLikelihood(params.Y.row(j), z_j_new, *this);
     }
     
     double prob_j = std::min(exp(h_z_new - h_z_prev), 1.0);
