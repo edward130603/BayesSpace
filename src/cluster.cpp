@@ -236,7 +236,8 @@ List iterate_t (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, in
     for (int j = 0; j < n; j++){
       mu_i_long.row(j) = mu_i.row(df_sim_z(i-1, j)-1);
     }
-    mat sumofsq = (Y-mu_i_long).t() * diagmat(w) *  (Y-mu_i_long);
+    mat resid = Y - mu_i_long;
+    mat sumofsq = resid.t() * diagmat(w) * resid;
     vec beta_d(d); 
     beta_d.fill(beta);
     mat Vinv = diagmat(beta_d);
@@ -248,15 +249,21 @@ List iterate_t (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, in
     double w_alpha = (d+4)/2; //shape parameter
     double w_beta;
     df_sim_z.row(i) = df_sim_z.row(i-1);
-    IntegerVector qvec = seq_len(q);
-    NumericVector plogLikj(n, NA_REAL);
+    vec plogLikj(n, fill::zeros);
+
     for (int j = 0; j < n; j++){
-      w_beta = as_scalar(2/((Y.row(j)-mu_i_long.row(j))* lambda_i * (Y.row(j)-mu_i_long.row(j)).t() + 4)); //scale parameter
+      w_beta = as_scalar(2/(resid.row(j) * lambda_i * resid.row(j).t() + 4)); //scale parameter
       w[j] = R::rgamma(w_alpha, w_beta); //sample from posterior for w
       
       int z_j_prev = df_sim_z(i,j);
-      IntegerVector qlessk = qvec[qvec != z_j_prev];
-      int z_j_new = sample(qlessk, 1)[0];
+
+      // Armadillo doesn't permit sampling from a set, but we can sample
+      // uniformly from a range of integers and exclude z_j_prev after      
+      int z_j_new = randi(distr_param(1, q));
+      while (z_j_new == z_j_prev) {
+        z_j_new = randi(distr_param(1, q));
+      }
+
       uvec j_vector = df_j[j];
       uvec i_vector(1); i_vector.fill(i);
       double h_z_prev;
