@@ -1,7 +1,9 @@
 // [[Rcpp::plugins("cpp11")]]
-// [[Rcpp::depends(RcppArmadillo, RcppDist)]]
+// [[Rcpp::depends(RcppArmadillo, RcppDist, RcppProgress)]]
 #include <RcppDist.h>
 #include <RcppArmadillo.h>
+#include <progress.hpp>
+#include <progress_bar.hpp>
 using namespace Rcpp;
 using namespace arma;
 
@@ -31,22 +33,21 @@ List iterate(arma::mat Y, List df_j, int nrep, int n, int d, double gamma, int q
       uvec index_1k = find(df_sim_z.row(i-1) == k);
       int n_i = index_1k.n_elem;
       NumericVector Ysums;
-      for (int di = 0; di < d; di++){
-        mat Yrows = Y.rows(index_1k);
-        Ysums.push_back(sum(Yrows.col(di)));
-      }
-      vec mean_i = inv(lambda0 + n_i * lambda_prev) * (lambda0 * mu0vec + lambda_prev * as<colvec>(Ysums));
+      mat Yrows = Y.rows(index_1k);
+      Ysums = sum(Yrows, 0);
       mat var_i = inv(lambda0 + n_i * lambda_prev);
+      vec mean_i = var_i * (lambda0 * mu0vec + lambda_prev * as<colvec>(Ysums));
       mu_i.row(k-1) = rmvnorm(1, mean_i, var_i);
     }
     df_sim_mu.row(i) = vectorise(mu_i, 1);
     
     //Update lambda
-    mat mu_i_long(n,d);
+    mat mu_i_long(n, d);
     for (int j = 0; j < n; j++){
-      mu_i_long.row(j) = mu_i.row(df_sim_z(i-1, j)-1);
+      mu_i_long.row(j) = mu_i.row(df_sim_z(i - 1, j) - 1);
     }
-    mat sumofsq = (Y-mu_i_long).t() * (Y-mu_i_long);
+    mat residuals = Y - mu_i_long;
+    mat sumofsq = residuals.t() * residuals;
     vec beta_d(d); 
     beta_d.fill(beta);
     mat Vinv = diagmat(beta_d);
@@ -190,6 +191,8 @@ List iterate_t (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, in
   mat df_sim_z(nrep, n, fill::zeros);
   mat df_sim_mu(nrep, q*d, fill::zeros);
   List df_sim_lambda(nrep);
+  mat df_sim_w(nrep, n);
+
   NumericVector plogLik(nrep, NA_REAL);
   
   //Initialize parameters
@@ -198,6 +201,7 @@ List iterate_t (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, in
   df_sim_lambda[0] = lambda0;
   df_sim_z.row(0) = init.t();
   vec w = ones<vec>(n);
+  df_sim_w.row(0) = w.t();
   
   //Iterate
   colvec mu0vec = as<colvec>(mu0);
@@ -228,7 +232,7 @@ List iterate_t (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, in
     vec beta_d(d); 
     beta_d.fill(beta);
     mat Vinv = diagmat(beta_d);
-    mat lambda_i = rwish(sum(w) + alpha, inv(Vinv + sumofsq));
+    mat lambda_i = rwish(n + alpha, inv(Vinv + sumofsq));
     df_sim_lambda[i] = lambda_i;
     mat sigma_i = inv(lambda_i);
     
@@ -265,13 +269,10 @@ List iterate_t (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, in
       df_sim_z(i,j) = sample(zsample, 1, true, probs)[0];
       plogLikj[j] = h_z_prev;
     }
+    df_sim_w.row(i) = w.t();
     plogLik[i] = sum(plogLikj);
   }
-  List out = List::create(_["z"] = df_sim_z, _["mu"] = df_sim_mu, _["lambda"] = df_sim_lambda, _["weights"] = w, _["plogLik"] = plogLik);
-  return(out);
-}
-
-// [[Rcpp::export]]
+  List out = List::create(_["z"] = df_sim_z, _["mu"] = df_sim_mu, _["lambda"] = df_sim_lambda, _["weights"] = df_sim_w, _["plogLik"] = plogLik);
 List iterate_t_vvv (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, int q, arma::vec init, NumericVector mu0, arma::mat lambda0, double alpha, double beta){
   
   //Initalize matrices storing iterations
@@ -324,7 +325,7 @@ List iterate_t_vvv (arma::mat Y, List df_j, int nrep, int n, int d, double gamma
     mat Vinv = diagmat(beta_d);
     for (int k = 1; k <= q; k++){
       uvec index_1k = find(df_sim_z.row(i-1) == k);
-      int n_i = sum(w(index_1k)); 
+      int n_i = index_1k.n_elem;
       mat sumofsq = (Y.rows(index_1k)-mu_i_long.rows(index_1k)).t() * diagmat(w(index_1k)) * (Y.rows(index_1k)-mu_i_long.rows(index_1k));
       mat lambda_i = rwish(n_i + alpha, inv(Vinv + sumofsq));
       mat sigma_i = inv(lambda_i);
