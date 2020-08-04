@@ -265,7 +265,6 @@ List iterate_t (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, in
     df_sim_z.row(i) = df_sim_z.row(i-1);
     vec qvec = linspace(1, q, q);
 
-    vec h_z_new(n, fill::zeros);
     for (int j = 0; j < n; j++){
       w_beta = as_scalar(2/(resid.row(j) * lambda_i * resid.row(j).t() + 4)); //scale parameter
       w[j] = R::rgamma(w_alpha, w_beta); //sample from posterior for w
@@ -280,14 +279,15 @@ List iterate_t (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, in
 
       uvec j_vector = df_j[j];
       uvec i_vector(1); i_vector.fill(i);
+      double h_z_new;
       
       if (j_vector.size() != 0){
-        h_z_new(j) = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_new )) + dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i/w[j], true)[0];
+        h_z_new = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_new )) + dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i/w[j], true)[0];
       } else {
-        h_z_new(j) = dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i/w[j], true)[0];
+        h_z_new = dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i/w[j], true)[0];
       }
 
-      double prob_j = exp(h_z_new(j) - h_z_prev(j));
+      double prob_j = exp(h_z_new - h_z_prev(j));
       if (prob_j > 1){
         prob_j = 1;
       }
@@ -296,7 +296,7 @@ List iterate_t (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, in
       double r = ((double) std::rand() / RAND_MAX);
       if (r < prob_j) {
         df_sim_z(i, j) = z_j_new;
-        h_z_prev(j) = h_z_new(j);  // TODO check this update is correct
+        h_z_prev(j) = h_z_new;  // TODO check this update is correct
       } else {
         df_sim_z(i, j) = z_j_prev;
       }
