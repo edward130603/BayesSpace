@@ -21,6 +21,10 @@ cluster_mcmc <- function(Y, df_j, nrep, gamma, q, init, mu0, lambda0, alpha, bet
     .Call(`_BayesSpace_cluster_mcmc`, Y, df_j, nrep, gamma, q, init, mu0, lambda0, alpha, beta)
 }
 
+iterate_t_orig <- function(Y, df_j, nrep, n, d, gamma, q, init, mu0, lambda0, alpha, beta) {
+    .Call(`_BayesSpace_iterate_t_orig`, Y, df_j, nrep, n, d, gamma, q, init, mu0, lambda0, alpha, beta)
+}
+
 iterate_deconv <- function(Y, df_j, tdist, nrep, n, n0, d, gamma, q, init, subspots, verbose, jitter_scale, c, mu0, lambda0, alpha, beta) {
     .Call(`_BayesSpace_iterate_deconv`, Y, df_j, tdist, nrep, n, n0, d, gamma, q, init, subspots, verbose, jitter_scale, c, mu0, lambda0, alpha, beta)
 }
