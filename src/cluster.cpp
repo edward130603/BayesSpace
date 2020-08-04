@@ -264,7 +264,6 @@ List iterate_t (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, in
     double w_alpha = (d+4)/2; //shape parameter
     double w_beta;
     df_sim_z.row(i) = df_sim_z.row(i-1);
-    vec plogLikj(n, fill::zeros);
     vec qvec = linspace(1, q, q);
 
     vec h_z_new(n, fill::zeros);
@@ -304,12 +303,10 @@ List iterate_t (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, in
       } else {
         df_sim_z(i, j) = z_j_prev;
       }
-      
-      plogLikj[j] = h_z_prev(j);
     }
 
     df_sim_w.row(i) = w.t();
-    plogLik[i] = sum(plogLikj);
+    plogLik[i] = sum(h_z_prev);
   }
   List out = List::create(_["z"] = df_sim_z, _["mu"] = df_sim_mu, _["lambda"] = df_sim_lambda, _["weights"] = df_sim_w, _["plogLik"] = plogLik);
   return(out);
