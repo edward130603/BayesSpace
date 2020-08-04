@@ -46,7 +46,7 @@ List iterate(arma::mat Y, List df_j, int nrep, int n, int d, double gamma, int q
     df_sim_mu.row(i) = vectorise(mu_i, 1);
     
     //Update lambda
-    mat mu_i_long(n, d);
+    mat mu_i_long(n,d);
     for (int j = 0; j < n; j++){
       mu_i_long.row(j) = mu_i.row(df_sim_z(i-1, j)-1);
     }
