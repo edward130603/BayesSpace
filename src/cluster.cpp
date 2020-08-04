@@ -209,10 +209,6 @@ List iterate_t (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, in
   vec w = ones<vec>(n);
   df_sim_w.row(0) = w.t();
 
-  // Init RNG for accepting new z
-  std::random_device device;
-  std::mt19937 rng(device());
-  
   //Iterate
   colvec mu0vec = as<colvec>(mu0);
   for (int i = 1; i < nrep; i++){
@@ -287,8 +283,8 @@ List iterate_t (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, in
       }
 
       // Accept new cluster assignment with probability prob_j
-      std::bernoulli_distribution accept_new(prob_j);
-      if (accept_new(rng)) {
+      double r = ((double) std::rand() / RAND_MAX);
+      if (r < prob_j) {
         df_sim_z(i, j) = z_j_new;
       } else {
         df_sim_z(i, j) = z_j_prev;
