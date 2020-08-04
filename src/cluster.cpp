@@ -267,7 +267,8 @@ List iterate_t (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, in
       uvec j_vector = df_j[j];
       uvec i_vector(1); i_vector.fill(i);
       
-      // TODO: shouldn't one of these be cached?
+      // TODO: shouldn't one of these be cached? 
+      //   Refactor to store previous h_z in vector 
       double h_z_prev;
       double h_z_new;
       if (j_vector.size() != 0){
