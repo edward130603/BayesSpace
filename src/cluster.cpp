@@ -281,8 +281,6 @@ List iterate_t (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, in
       uvec j_vector = df_j[j];
       uvec i_vector(1); i_vector.fill(i);
       
-      // TODO: shouldn't one of these be cached? 
-      //   Refactor to store previous h_z in vector 
       if (j_vector.size() != 0){
         h_z_new(j) = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_new )) + dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i/w[j], true)[0];
       } else {
