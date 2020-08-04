@@ -22,7 +22,7 @@ List iterate(arma::mat Y, List df_j, int nrep, int n, int d, double gamma, int q
   df_sim_mu.row(0) = initmu;
   df_sim_lambda[0] = lambda0;
   df_sim_z.row(0) = init.t();
-
+  
   //Iterate
   colvec mu0vec = as<colvec>(mu0);
   for (int i = 1; i < nrep; i++){
@@ -39,8 +39,8 @@ List iterate(arma::mat Y, List df_j, int nrep, int n, int d, double gamma, int q
       NumericVector Ysums;
       mat Yrows = Y.rows(index_1k);
       Ysums = sum(Yrows, 0);
+      vec mean_i = inv(lambda0 + n_i * lambda_prev) * (lambda0 * mu0vec + lambda_prev * as<colvec>(Ysums));
       mat var_i = inv(lambda0 + n_i * lambda_prev);
-      vec mean_i = var_i * (lambda0 * mu0vec + lambda_prev * as<colvec>(Ysums));
       mu_i.row(k-1) = rmvnorm(1, mean_i, var_i);
     }
     df_sim_mu.row(i) = vectorise(mu_i, 1);
@@ -48,10 +48,9 @@ List iterate(arma::mat Y, List df_j, int nrep, int n, int d, double gamma, int q
     //Update lambda
     mat mu_i_long(n, d);
     for (int j = 0; j < n; j++){
-      mu_i_long.row(j) = mu_i.row(df_sim_z(i - 1, j) - 1);
+      mu_i_long.row(j) = mu_i.row(df_sim_z(i-1, j)-1);
     }
-    mat residuals = Y - mu_i_long;
-    mat sumofsq = residuals.t() * residuals;
+    mat sumofsq = (Y-mu_i_long).t() * (Y-mu_i_long);
     vec beta_d(d); 
     beta_d.fill(beta);
     mat Vinv = diagmat(beta_d);
@@ -240,8 +239,8 @@ List iterate_t (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, in
       mat Yrows = Y.rows(index_1k);
       Yrows.each_col() %= w(index_1k);
       colvec Ysums = conv_to<colvec>::from(sum(Yrows, 0));
-      vec mean_i = inv(lambda0 + n_i * lambda_prev) * (lambda0 * mu0vec + lambda_prev * Ysums); //posterior mean
       mat var_i = inv(lambda0 + n_i * lambda_prev); //posterior variance
+      vec mean_i = var_i * (lambda0 * mu0vec + lambda_prev * Ysums); //posterior mean
       mu_i.row(k-1) = rmvnorm(1, mean_i, var_i); //sample from posterior for mu
     }
     df_sim_mu.row(i) = vectorise(mu_i, 1);
