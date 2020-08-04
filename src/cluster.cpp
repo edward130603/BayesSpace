@@ -208,9 +208,24 @@ List iterate_t (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, in
   df_sim_z.row(0) = init.t();
   vec w = ones<vec>(n);
   df_sim_w.row(0) = w.t();
+  colvec mu0vec = as<colvec>(mu0);
+  mat sigma0 = inv(lambda0);
+
+  // Initialize h_z
+  vec h_z_prev(n, fill::zeros);
+  for (int j = 0; j < n; j++){
+    int z_j_prev = df_sim_z(0,j);
+    uvec i_vector(1); i_vector.fill(0);
+    uvec j_vector = df_j[j];
+
+    if (j_vector.size() != 0){
+      h_z_prev(j) = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_prev)) + dmvnorm(Y.row(j), mu0vec, sigma0/w[j], true)[0];
+    } else {
+      h_z_prev(j) = dmvnorm(Y.row(j), mu0vec, sigma0/w[j], true)[0];
+    }
+  }
 
   //Iterate
-  colvec mu0vec = as<colvec>(mu0);
   for (int i = 1; i < nrep; i++){
     // Check for interrupt every ~1-2 seconds (timing based on 5k spots)
     if (i % 10 == 0)
@@ -252,6 +267,7 @@ List iterate_t (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, in
     vec plogLikj(n, fill::zeros);
     vec qvec = linspace(1, q, q);
 
+    vec h_z_new(n, fill::zeros);
     for (int j = 0; j < n; j++){
       w_beta = as_scalar(2/(resid.row(j) * lambda_i * resid.row(j).t() + 4)); //scale parameter
       w[j] = R::rgamma(w_alpha, w_beta); //sample from posterior for w
@@ -269,16 +285,13 @@ List iterate_t (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, in
       
       // TODO: shouldn't one of these be cached? 
       //   Refactor to store previous h_z in vector 
-      double h_z_prev;
-      double h_z_new;
       if (j_vector.size() != 0){
-        h_z_prev = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_prev)) + dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i/w[j], true)[0];
-        h_z_new  = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_new )) + dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i/w[j], true)[0];
+        h_z_new(j) = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_new )) + dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i/w[j], true)[0];
       } else {
-        h_z_prev = dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i/w[j], true)[0];
-        h_z_new  = dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i/w[j], true)[0];
+        h_z_new(j) = dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i/w[j], true)[0];
       }
-      double prob_j = exp(h_z_new-h_z_prev);
+
+      double prob_j = exp(h_z_new(j) - h_z_prev(j));
       if (prob_j > 1){
         prob_j = 1;
       }
@@ -287,11 +300,12 @@ List iterate_t (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, in
       double r = ((double) std::rand() / RAND_MAX);
       if (r < prob_j) {
         df_sim_z(i, j) = z_j_new;
+        h_z_prev(j) = h_z_new(j);  // TODO check this update is correct
       } else {
         df_sim_z(i, j) = z_j_prev;
       }
       
-      plogLikj[j] = h_z_prev;
+      plogLikj[j] = h_z_prev(j);
     }
 
     df_sim_w.row(i) = w.t();
