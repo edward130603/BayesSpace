@@ -1,5 +1,6 @@
 // [[Rcpp::plugins("cpp11")]]
 // [[Rcpp::depends(RcppArmadillo, RcppDist, RcppProgress)]]
+#include <random>
 #include <RcppDist.h>
 #include <RcppArmadillo.h>
 #include <progress.hpp>
@@ -21,7 +22,7 @@ List iterate(arma::mat Y, List df_j, int nrep, int n, int d, double gamma, int q
   df_sim_mu.row(0) = initmu;
   df_sim_lambda[0] = lambda0;
   df_sim_z.row(0) = init.t();
-  
+
   //Iterate
   colvec mu0vec = as<colvec>(mu0);
   for (int i = 1; i < nrep; i++){
@@ -207,6 +208,10 @@ List iterate_t (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, in
   df_sim_z.row(0) = init.t();
   vec w = ones<vec>(n);
   df_sim_w.row(0) = w.t();
+
+  // Init RNG for accepting new z
+  std::random_device device;
+  std::mt19937 rng(device());
   
   //Iterate
   colvec mu0vec = as<colvec>(mu0);
@@ -265,6 +270,8 @@ List iterate_t (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, in
 
       uvec j_vector = df_j[j];
       uvec i_vector(1); i_vector.fill(i);
+      
+      // TODO: shouldn't one of these be cached?
       double h_z_prev;
       double h_z_new;
       if (j_vector.size() != 0){
@@ -278,9 +285,15 @@ List iterate_t (arma::mat Y, List df_j, int nrep, int n, int d, double gamma, in
       if (prob_j > 1){
         prob_j = 1;
       }
-      IntegerVector zsample = {z_j_prev, z_j_new};
-      NumericVector probs = {1-prob_j, prob_j};
-      df_sim_z(i,j) = sample(zsample, 1, true, probs)[0];
+
+      // Accept new cluster assignment with probability prob_j
+      std::bernoulli_distribution accept_new(prob_j);
+      if (accept_new(rng)) {
+        df_sim_z(i, j) = z_j_new;
+      } else {
+        df_sim_z(i, j) = z_j_prev;
+      }
+      
       plogLikj[j] = h_z_prev;
     }
 
