@@ -28,6 +28,22 @@ arma::mat update_mu(const arma::mat& Y, int q, const arma::rowvec& z_prev,
   return mu_i;
 }
 
+arma::mat update_lambda(const arma::mat& resid, const arma::rowvec& z_prev,
+                        const arma::vec& w, double alpha, double beta) {
+
+  int d = resid.n_cols;
+  int n = resid.n_rows;
+
+  mat sumofsq = resid.t() * diagmat(w) * resid;
+  vec beta_d(d); 
+  beta_d.fill(beta);
+  mat Vinv = diagmat(beta_d);
+  mat lambda_i = rwish(n + alpha, inv(Vinv + sumofsq));
+
+  return lambda_i;
+
+}
+
 // [[Rcpp::export]]
 List iterate_t_refactor(arma::mat Y, List df_j, int nrep, int n, int d, double gamma, int q, arma::vec init, NumericVector mu0, arma::mat lambda0, double alpha, double beta){
   
@@ -57,16 +73,15 @@ List iterate_t_refactor(arma::mat Y, List df_j, int nrep, int n, int d, double g
     mat mu_i = update_mu(Y, q, df_sim_z.row(i-1), w, lambda0, df_sim_lambda[i-1], mu0vec);
     df_sim_mu.row(i) = vectorise(mu_i, 1);
     
-    //Update lambda
+    // Compute residuals
     mat mu_i_long(n,d);
     for (int j = 0; j < n; j++){
-      mu_i_long.row(j) = mu_i.row(df_sim_z(i-1, j)-1);
+      mu_i_long.row(j) = mu_i.row(df_sim_z(i-1, j) - 1);
     }
-    mat sumofsq = (Y-mu_i_long).t() * diagmat(w) *  (Y-mu_i_long);
-    vec beta_d(d); 
-    beta_d.fill(beta);
-    mat Vinv = diagmat(beta_d);
-    mat lambda_i = rwish(n + alpha, inv(Vinv + sumofsq));
+    mat resid = Y - mu_i_long;
+
+    //Update lambda
+    mat lambda_i = update_lambda(resid, df_sim_z.row(i-1), w, alpha, beta);
     df_sim_lambda[i] = lambda_i;
     mat sigma_i = inv(lambda_i);
     
