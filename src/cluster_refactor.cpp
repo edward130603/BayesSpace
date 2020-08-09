@@ -1,12 +1,32 @@
 // [[Rcpp::plugins("cpp11")]]
 // [[Rcpp::depends(RcppArmadillo, RcppDist, RcppProgress)]]
-#include "dmvnorm.h"
 #include <RcppDist.h>
 #include <RcppArmadillo.h>
 #include <progress.hpp>
 #include <progress_bar.hpp>
 using namespace Rcpp;
 using namespace arma;
+
+arma::mat update_mu(const arma::mat& Y, int q, const arma::rowvec& z_prev, 
+                    const arma::vec& w, const arma::mat& lambda0, 
+                    const arma::mat& lambda_prev, const arma::colvec& mu0vec) {
+
+  mat mu_i(q, Y.n_cols);
+  NumericVector Ysums;
+
+  for (int k = 1; k <= q; k++){
+    uvec index_1k = find(z_prev == k);
+    int n_i = sum(w(index_1k)); 
+    mat Yrows = Y.rows(index_1k);
+    Yrows.each_col() %= w(index_1k);
+    Ysums = sum(Yrows, 0);
+    vec mean_i = inv(lambda0 + n_i * lambda_prev) * (lambda0 * mu0vec + lambda_prev * as<colvec>(Ysums));  //posterior mean
+    mat var_i = inv(lambda0 + n_i * lambda_prev);  //posterior variance
+    mu_i.row(k-1) = rmvnorm(1, mean_i, var_i);  //sample from posterior for mu
+  }
+
+  return mu_i;
+}
 
 // [[Rcpp::export]]
 List iterate_t_refactor(arma::mat Y, List df_j, int nrep, int n, int d, double gamma, int q, arma::vec init, NumericVector mu0, arma::mat lambda0, double alpha, double beta){
@@ -34,19 +54,7 @@ List iterate_t_refactor(arma::mat Y, List df_j, int nrep, int n, int d, double g
       Rcpp::checkUserInterrupt();
     
     //Update mu
-    mat mu_i(q,d);
-    mat lambda_prev = df_sim_lambda[i-1];
-    NumericVector Ysums;
-    for (int k = 1; k <= q; k++){
-      uvec index_1k = find(df_sim_z.row(i-1) == k);
-      int n_i = sum(w(index_1k)); 
-      mat Yrows = Y.rows(index_1k);
-      Yrows.each_col() %= w(index_1k);
-      Ysums = sum(Yrows, 0);
-      vec mean_i = inv(lambda0 + n_i * lambda_prev) * (lambda0 * mu0vec + lambda_prev * as<colvec>(Ysums)); //posterior mean
-      mat var_i = inv(lambda0 + n_i * lambda_prev); //posterior variance
-      mu_i.row(k-1) = rmvnorm(1, mean_i, var_i); //sample from posterior for mu
-    }
+    mat mu_i = update_mu(Y, q, df_sim_z.row(i-1), w, lambda0, df_sim_lambda[i-1], mu0vec);
     df_sim_mu.row(i) = vectorise(mu_i, 1);
     
     //Update lambda
@@ -80,11 +88,11 @@ List iterate_t_refactor(arma::mat Y, List df_j, int nrep, int n, int d, double g
       double h_z_prev;
       double h_z_new;
       if (j_vector.size() != 0){
-        h_z_prev = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_prev)) + dmvnorm_arma(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i/w[j], true)[0];
-        h_z_new  = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_new )) + dmvnorm_arma(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i/w[j], true)[0];
+        h_z_prev = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_prev)) + dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i/w[j], true)[0];
+        h_z_new  = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_new )) + dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i/w[j], true)[0];
       } else {
-        h_z_prev = dmvnorm_arma(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i/w[j], true)[0];
-        h_z_new  = dmvnorm_arma(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i/w[j], true)[0];
+        h_z_prev = dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i/w[j], true)[0];
+        h_z_new  = dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i/w[j], true)[0];
       }
       double prob_j = exp(h_z_new-h_z_prev);
       if (prob_j > 1){
