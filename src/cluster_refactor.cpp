@@ -44,6 +44,24 @@ arma::mat update_lambda(const arma::mat& resid, const arma::rowvec& z_prev,
 
 }
 
+// Per spot update
+// Can't extract from loop b/c will change output relative to original
+// TODO: replace magic 4 with defined constant
+double update_w_j(const arma::mat& resid, const arma::mat& lambda_i, int j) {
+  int d = resid.n_cols;
+
+  // shape parameter
+  double w_alpha = (d + 4) / 2;  
+
+  // scale parameter
+  double w_beta = as_scalar(2/(resid.row(j) * lambda_i * resid.row(j).t() + 4));
+
+  // sample from posterior for w
+  double w_j = R::rgamma(w_alpha, w_beta);  
+
+  return w_j;
+}
+
 // [[Rcpp::export]]
 List iterate_t_refactor(arma::mat Y, List df_j, int nrep, int n, int d, double gamma, int q, arma::vec init, NumericVector mu0, arma::mat lambda0, double alpha, double beta){
   
@@ -86,14 +104,11 @@ List iterate_t_refactor(arma::mat Y, List df_j, int nrep, int n, int d, double g
     mat sigma_i = inv(lambda_i);
     
     //Update z and w
-    double w_alpha = (d+4)/2; //shape parameter
-    double w_beta;
     df_sim_z.row(i) = df_sim_z.row(i-1);
     IntegerVector qvec = seq_len(q);
     NumericVector plogLikj(n, NA_REAL);
     for (int j = 0; j < n; j++){
-      w_beta = as_scalar(2/((Y.row(j)-mu_i_long.row(j))* lambda_i * (Y.row(j)-mu_i_long.row(j)).t() + 4)); //scale parameter
-      w[j] = R::rgamma(w_alpha, w_beta); //sample from posterior for w
+      w[j] = update_w_j(resid, lambda_i, j);
       
       int z_j_prev = df_sim_z(i,j);
       IntegerVector qlessk = qvec[qvec != z_j_prev];
