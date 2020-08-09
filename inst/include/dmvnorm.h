@@ -7,14 +7,16 @@
  *
  */
 
+#ifndef DMVNORM_H
+#define DMVNORM_H
+
 // [[Rcpp::plugins("cpp11")]]
 // [[Rcpp::depends(RcppArmadillo)]]
-#include "dmvnorm.h"
 #include <RcppArmadillo.h>
 
 static double const log2pi = std::log(2.0 * M_PI);
 
-arma::vec Mahalanobis(arma::mat const &x, 
+inline arma::vec Mahalanobis(arma::mat const &x, 
                       arma::vec const &center, 
                       arma::mat const &cov) {
     arma::mat x_cen = x.t();
@@ -25,7 +27,7 @@ arma::vec Mahalanobis(arma::mat const &x,
 }
 
 // [[Rcpp::export]]
-arma::vec dmvnorm_arma(arma::mat const &x, 
+inline arma::vec dmvnorm_arma(arma::mat const &x, 
                        arma::vec const &mean, 
                        arma::mat const &sigma, 
                        bool const logd) { 
@@ -38,3 +40,5 @@ arma::vec dmvnorm_arma(arma::mat const &x,
         return logretval;
     return exp(logretval);
 }
+
+#endif

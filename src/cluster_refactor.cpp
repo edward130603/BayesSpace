@@ -1,6 +1,6 @@
 // [[Rcpp::plugins("cpp11")]]
 // [[Rcpp::depends(RcppArmadillo, RcppDist, RcppProgress)]]
-#include "dmvnrm.h"
+#include "dmvnorm.h"
 #include <RcppDist.h>
 #include <RcppArmadillo.h>
 #include <progress.hpp>
@@ -80,11 +80,11 @@ List iterate_t_refactor(arma::mat Y, List df_j, int nrep, int n, int d, double g
       double h_z_prev;
       double h_z_new;
       if (j_vector.size() != 0){
-        h_z_prev = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_prev)) + dmvnrm_arma_fast(conv_to<mat>::from(Y.row(j)), vectorise(mu_i.row(z_j_prev-1)), sigma_i/w[j], true)[0];
-        h_z_new  = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_new )) + dmvnrm_arma_fast(conv_to<mat>::from(Y.row(j)), vectorise(mu_i.row(z_j_new -1)), sigma_i/w[j], true)[0];
+        h_z_prev = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_prev)) + dmvnorm_arma(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i/w[j], true)[0];
+        h_z_new  = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_new )) + dmvnorm_arma(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i/w[j], true)[0];
       } else {
-        h_z_prev = dmvnrm_arma_fast(conv_to<mat>::from(Y.row(j)), vectorise(mu_i.row(z_j_prev-1)), sigma_i/w[j], true)[0];
-        h_z_new  = dmvnrm_arma_fast(conv_to<mat>::from(Y.row(j)), vectorise(mu_i.row(z_j_new -1)), sigma_i/w[j], true)[0];
+        h_z_prev = dmvnorm_arma(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i/w[j], true)[0];
+        h_z_new  = dmvnorm_arma(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i/w[j], true)[0];
       }
       double prob_j = exp(h_z_new-h_z_prev);
       if (prob_j > 1){

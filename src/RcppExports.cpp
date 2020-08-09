@@ -186,48 +186,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// dmvnorm_arma
-arma::vec dmvnorm_arma(arma::mat const& x, arma::vec const& mean, arma::mat const& sigma, bool const logd);
-RcppExport SEXP _BayesSpace_dmvnorm_arma(SEXP xSEXP, SEXP meanSEXP, SEXP sigmaSEXP, SEXP logdSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat const& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< arma::vec const& >::type mean(meanSEXP);
-    Rcpp::traits::input_parameter< arma::mat const& >::type sigma(sigmaSEXP);
-    Rcpp::traits::input_parameter< bool const >::type logd(logdSEXP);
-    rcpp_result_gen = Rcpp::wrap(dmvnorm_arma(x, mean, sigma, logd));
-    return rcpp_result_gen;
-END_RCPP
-}
-// dmvnrm_arma
-arma::vec dmvnrm_arma(arma::mat const& x, arma::rowvec const& mean, arma::mat const& sigma, bool const logd);
-RcppExport SEXP _BayesSpace_dmvnrm_arma(SEXP xSEXP, SEXP meanSEXP, SEXP sigmaSEXP, SEXP logdSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat const& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< arma::rowvec const& >::type mean(meanSEXP);
-    Rcpp::traits::input_parameter< arma::mat const& >::type sigma(sigmaSEXP);
-    Rcpp::traits::input_parameter< bool const >::type logd(logdSEXP);
-    rcpp_result_gen = Rcpp::wrap(dmvnrm_arma(x, mean, sigma, logd));
-    return rcpp_result_gen;
-END_RCPP
-}
-// dmvnrm_arma_fast
-arma::vec dmvnrm_arma_fast(arma::mat const& x, arma::rowvec const& mean, arma::mat const& sigma, bool const logd);
-RcppExport SEXP _BayesSpace_dmvnrm_arma_fast(SEXP xSEXP, SEXP meanSEXP, SEXP sigmaSEXP, SEXP logdSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat const& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< arma::rowvec const& >::type mean(meanSEXP);
-    Rcpp::traits::input_parameter< arma::mat const& >::type sigma(sigmaSEXP);
-    Rcpp::traits::input_parameter< bool const >::type logd(logdSEXP);
-    rcpp_result_gen = Rcpp::wrap(dmvnrm_arma_fast(x, mean, sigma, logd));
-    return rcpp_result_gen;
-END_RCPP
-}
 // start_profiler
 SEXP start_profiler(SEXP str);
 RcppExport SEXP _BayesSpace_start_profiler(SEXP strSEXP) {
@@ -259,9 +217,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BayesSpace_iterate_t_orig", (DL_FUNC) &_BayesSpace_iterate_t_orig, 12},
     {"_BayesSpace_iterate_t_refactor", (DL_FUNC) &_BayesSpace_iterate_t_refactor, 12},
     {"_BayesSpace_iterate_deconv", (DL_FUNC) &_BayesSpace_iterate_deconv, 18},
-    {"_BayesSpace_dmvnorm_arma", (DL_FUNC) &_BayesSpace_dmvnorm_arma, 4},
-    {"_BayesSpace_dmvnrm_arma", (DL_FUNC) &_BayesSpace_dmvnrm_arma, 4},
-    {"_BayesSpace_dmvnrm_arma_fast", (DL_FUNC) &_BayesSpace_dmvnrm_arma_fast, 4},
     {"_BayesSpace_start_profiler", (DL_FUNC) &_BayesSpace_start_profiler, 1},
     {"_BayesSpace_stop_profiler", (DL_FUNC) &_BayesSpace_stop_profiler, 0},
     {NULL, NULL, 0}

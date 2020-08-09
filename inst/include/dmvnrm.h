@@ -6,18 +6,20 @@
  *
  */
 
+#ifndef DMVNRM_H
+#define DMVNRM_H
+
 // [[Rcpp::plugins("cpp11")]]
 // [[Rcpp::depends("RcppArmadillo")]]
-#include "dmvnrm.h"
 #include <RcppArmadillo.h>
   
 static double const log2pi = std::log(2.0 * M_PI);
 
 // [[Rcpp::export]]
-arma::vec dmvnrm_arma(arma::mat const &x,  
+inline arma::vec dmvnrm_arma(arma::mat const &x,  
                       arma::rowvec const &mean,  
                       arma::mat const &sigma, 
-                      bool const logd) { 
+                      bool const logd=false) { 
     using arma::uword;
     uword const n = x.n_rows, 
              xdim = x.n_cols;
@@ -39,7 +41,7 @@ arma::vec dmvnrm_arma(arma::mat const &x,
 }
 
 /* C++ version of the dtrmv BLAS function */
-void inplace_tri_mat_mult(arma::rowvec &x, arma::mat const &trimat){
+inline void inplace_tri_mat_mult(arma::rowvec &x, arma::mat const &trimat){
   arma::uword const n = trimat.n_cols;
   
   for(unsigned j = n; j-- > 0;){
@@ -51,10 +53,10 @@ void inplace_tri_mat_mult(arma::rowvec &x, arma::mat const &trimat){
 }
 
 // [[Rcpp::export]]
-arma::vec dmvnrm_arma_fast(arma::mat const &x,  
+inline arma::vec dmvnrm_arma_fast(arma::mat const &x,  
                            arma::rowvec const &mean,  
                            arma::mat const &sigma, 
-                           bool const logd) { 
+                           bool const logd=false) { 
     using arma::uword;
     uword const n = x.n_rows, 
              xdim = x.n_cols;
@@ -75,3 +77,5 @@ arma::vec dmvnrm_arma_fast(arma::mat const &x,
       return out;
     return exp(out);
 }
+
+#endif

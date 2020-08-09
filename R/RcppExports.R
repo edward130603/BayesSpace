@@ -33,18 +33,6 @@ iterate_deconv <- function(Y, df_j, tdist, nrep, n, n0, d, gamma, q, init, subsp
     .Call(`_BayesSpace_iterate_deconv`, Y, df_j, tdist, nrep, n, n0, d, gamma, q, init, subspots, verbose, jitter_scale, c, mu0, lambda0, alpha, beta)
 }
 
-dmvnorm_arma <- function(x, mean, sigma, logd) {
-    .Call(`_BayesSpace_dmvnorm_arma`, x, mean, sigma, logd)
-}
-
-dmvnrm_arma <- function(x, mean, sigma, logd) {
-    .Call(`_BayesSpace_dmvnrm_arma`, x, mean, sigma, logd)
-}
-
-dmvnrm_arma_fast <- function(x, mean, sigma, logd) {
-    .Call(`_BayesSpace_dmvnrm_arma_fast`, x, mean, sigma, logd)
-}
-
 start_profiler <- function(str) {
     .Call(`_BayesSpace_start_profiler`, str)
 }
