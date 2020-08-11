@@ -42,9 +42,10 @@ find_neighbors <- function(positions, radius,
 #' 
 #' @importFrom stats lm coef
 .compute_interspot_distances <- function(sce, scale.factor = 1.02) {
-    ## TODO: remove hardcoding of columns
-    dists <- list()
+    cols <- c("row", "col", "imagerow", "imagecol")
+    assert_that(all(cols %in% colnames(colData(sce))))
     
+    dists <- list()
     dists$xdist <- coef(lm(sce$imagecol ~ sce$col))[2]
     dists$ydist <- coef(lm(sce$imagerow ~ sce$row))[2]
     dists$radius <- (dists$xdist + dists$ydist) * scale.factor
@@ -173,38 +174,56 @@ addPCA <- function(sce, assay.type, pca.method, d = 15) {
     colnames(positions) <- c("x", "y")
     inputs$positions <- positions
     
-    dists <- .compute_interspot_distances(sce)
-    dists <- imap(dists, function(d, n) ifelse(is.null(get(n)), d, get(n)))
-    inputs <- c(inputs, dists)
+    ## TODO: add better check here against missing image coords
+    ## (necessary for thrane data)
+    if (is.null(radius) && is.null(xdist) && is.null(ydist)) {
+        dists <- .compute_interspot_distances(sce)
+        dists <- imap(dists, function(d, n) ifelse(is.null(get(n)), d, get(n)))
+        inputs <- c(inputs, dists)
+    } else {
+        inputs$radius <- radius
+        inputs$xdist <- xdist
+        inputs$ydist <- ydist
+    }
     
     inputs
 }
 
 #' Create minimal \code{SingleCellExperiment} for documentation examples.
 #' 
-#' @param n_PCs Number of principal components to simulate
 #' @param nrow Number of rows of spots
 #' @param ncol Number of columns of spots
+#' @param n_genes Number of genes to simulate
+#' @param n_PCs Number of principal components to include
 #' 
-#' @return A SingleCellExperiment object with no assays, a set of random PCs in
-#' \code{reducedDim(sce, "PCA")}, and positional data in \code{colData}. Spots
-#' are distributed over an (\code{nrow} x \code{ncol}) rectangle.
+#' @return A SingleCellExperiment object with simulated counts, corresponding
+#'   logcounts and PCs, and positional data in \code{colData}. Spots are
+#'   distributed over an (\code{nrow} x \code{ncol}) rectangle.
 #' 
 #' @details 
-#' Inspired by scuttle's \code{mockSCE}.
+#' Inspired by scuttle's \code{mockSCE()}.
 #' 
 #' @examples
 #' set.seed(149)
 #' sce <- exampleSCE()
 #' 
 #' @importFrom stats rnorm
-#' @importFrom SingleCellExperiment SingleCellExperiment
+#' @importFrom SingleCellExperiment SingleCellExperiment logcounts
+#' @importFrom scater logNormCounts
+#' @importFrom stats prcomp rnbinom runif
 #' @export
-exampleSCE <- function(n_PCs=15, nrow=10, ncol=20)
+exampleSCE <- function(nrow=8, ncol=12, n_genes=100, n_PCs=10)
 {
     n_spots <- nrow * ncol
-    PCs <- matrix(rnorm(n_spots * n_PCs), ncol=n_PCs)
     
+    ## Borrowed from scuttle::mockSCE()
+    mu <- 2 ^ runif(n_genes, 2, 10)
+    size <- 1 / (100 / mu + 0.5)
+    counts <- matrix(rnbinom(n_genes * n_spots, mu=mu, size=size), ncol=n_spots)
+    rownames(counts) <- paste0("gene_", seq_len(n_genes))
+    colnames(counts) <- paste0("spot_", seq_len(n_spots))
+
+    ## Make array coordinates - filled rectangle
     cdata <- list()
     cdata$row <- rep(seq_len(nrow), each=ncol)
     cdata$col <- rep(seq_len(ncol), nrow)
@@ -215,6 +234,41 @@ exampleSCE <- function(n_PCs=15, nrow=10, ncol=20)
     cdata$imagerow <- scale.factor * cdata$row + rnorm(n_spots)
     cdata$imagecol <- scale.factor * cdata$col + rnorm(n_spots)
     
-    SingleCellExperiment(assays=list(), colData=cdata,
-        reducedDims=list("PCA"=PCs))
+    ## Make SCE
+    ## note: scater::runPCA throws warning on our small sim data, so use prcomp
+    sce <- SingleCellExperiment(assays=list(counts=counts), colData=cdata)
+    sce <- logNormCounts(sce)
+    reducedDim(sce, "PCA") <- prcomp(t(logcounts(sce)))$x[, seq_len(n_PCs)]
+    
+    sce
+}
+
+#' Download a processed sample from our S3 bucket
+#' 
+#' @param dataset Dataset identifier (TODO: add function to list datasets/samples)
+#' @param sample Sample identifier
+#' 
+#' @return sce A SingleCellExperiment with positional information in colData and
+#'   PCs based on the top 2000 HVGs
+#'   
+#' @examples
+#' sce <- getRDS("2018_thrane_melanoma", "ST_mel1_rep2")
+#'
+#' @export 
+#' @importFrom RCurl url.exists
+#' @importFrom utils download.file
+#' @importFrom assertthat assert_that
+getRDS <- function(dataset, sample) {
+    
+    url <- "https://fh-pi-gottardo-r.s3.amazonaws.com/SpatialTranscriptomes/%s/%s.rds"
+    url <- sprintf(url, dataset, sample)
+    assert_that(url.exists(url), msg="Dataset/sample not available")
+    
+    ## TODO add caching (but probably through experimenthub)
+    dest <- tempfile(fileext=".rds")
+    
+    ## TODO switch to curl or httr (avoid writing to disk when not caching; 
+    ## one package for both downloading and checking url exists)
+    download.file(url, dest, quiet=TRUE, mode="wb")
+    readRDS(dest)
 }

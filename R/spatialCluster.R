@@ -41,7 +41,7 @@
 #' @examples
 #' set.seed(149)
 #' sce <- exampleSCE()
-#' sce <- spatialCluster(sce, 7)
+#' sce <- spatialCluster(sce, 7, nrep=200)
 #'
 #' @name spatialCluster
 NULL
@@ -95,6 +95,7 @@ cluster <- function(Y, positions, radius, q, init = rep(1, nrow(Y)),
 
 ## TODO make generic
 #' @importFrom stats kmeans
+#' @importFrom mclust Mclust mclustBIC
 #' @importFrom SingleCellExperiment reducedDim
 #' @importFrom SummarizedExperiment colData colData<-
 #' @importFrom S4Vectors metadata metadata<-
@@ -103,9 +104,9 @@ cluster <- function(Y, positions, radius, q, init = rep(1, nrow(Y)),
 #' @rdname spatialCluster
 spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     positions = NULL, position.cols = c("imagecol", "imagerow"), 
-    init = NULL, init.method = c("kmeans"), radius = NULL, 
-    model = c("normal", "t"), precision = c("equal", "variable"), 
-    nrep = 1000, gamma = 2, mu0 = NULL, lambda0 = NULL, alpha = 1, 
+    init = NULL, init.method = c("mclust", "kmeans"), radius = NULL, 
+    model = c("t", "normal"), precision = c("equal", "variable"), 
+    nrep = 50000, gamma = 3, mu0 = NULL, lambda0 = NULL, alpha = 1, 
     beta = 0.01, save.chain = FALSE, chain.fname = NULL) {
     
     inputs <- .prepare_inputs(sce, use.dimred=use.dimred, d=d, 
@@ -116,6 +117,8 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
         init.method <- match.arg(init.method)
         if (init.method == "kmeans") {
             init <- kmeans(inputs$PCs, centers=q)$cluster
+        } else if (init.method == "mclust") {
+            init <- Mclust(inputs$PCs, q, "EEE", verbose=FALSE)$classification
         }
     }
     
@@ -134,13 +137,14 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
         metadata(sce)$chain.h5 <- .write_chain(results, chain.fname)
     }
     
-    iter_from <- ifelse(nrep < 2000, max(2, nrep - 1000), 1000)
-    ## msg <- "Calculating labels using iterations %d through %d"
-    ## message(sprintf(msg, iter_from, nrep))
-    results$labels <- apply(results$z[iter_from:nrep, ], 2, Mode)
+    ## NOTE: swap below code for this to test against refactoring
+    ## colData(sce)$spatial.cluster <- apply(results$z[900:1000, ], 2, Mode)
     
-    ## TODO: switch to labels computed above (this is just for sanity test)
-    colData(sce)$spatial.cluster <- apply(results$z[900:1000, ], 2, Mode)
+    iter_from <- ifelse(nrep < 2000, max(2, nrep - 1000), 1000)
+    msg <- "Calculating labels using iterations %d through %d"
+    message(sprintf(msg, iter_from, nrep))
+    labels <- apply(results$z[iter_from:nrep, ], 2, Mode)
+    colData(sce)$spatial.cluster <- unname(labels)
     
     sce
 }

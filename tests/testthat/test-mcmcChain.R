@@ -53,3 +53,33 @@ test_that("List of matrices is flattened", {
   expect_equal(as.numeric(x[1, 7]), xs[[1]][2, 2])
   expect_equal(colnames(x)[7], "x[2,2]")
 })
+
+test_that("cleaning and saving works", {
+  sce <- exampleSCE()
+  n_rep <- 200
+  n_PCs <- ncol(reducedDim(sce, "PCA"))
+  n_spots <- ncol(sce)
+  q <- 4
+  
+  sce <- spatialCluster(sce, q, model="normal", nrep=n_rep, save.chain=TRUE)
+  chain <- mcmcChain(sce)
+  
+  # lambda + mu + ploglik + z
+  expect_equal(ncol(chain), n_PCs * n_PCs + q * n_PCs + 1 + n_spots)
+  expect_equal(nrow(chain), n_rep)
+  
+  sce <- spatialCluster(sce, q, model="t", nrep=n_rep, save.chain=TRUE)
+  chain <- mcmcChain(sce)
+  
+  # lambda + mu + ploglik + weights + z
+  expect_equal(ncol(chain), n_PCs * n_PCs + q * n_PCs + 1 + n_spots + n_spots)
+  expect_equal(nrow(chain), n_rep)
+  
+  enhanced <- spatialEnhance(sce, q, model="normal", nrep=n_rep, init=sce$spatial.cluster, save.chain=TRUE)
+  chain <- mcmcChain(enhanced)
+  expect_equal(nrow(chain), (n_rep / 100) + 1)
+  
+  enhanced <- spatialEnhance(sce, q, model="t", nrep=n_rep, init=sce$spatial.cluster, save.chain=TRUE)
+  chain <- mcmcChain(enhanced)
+  expect_equal(nrow(chain), (n_rep / 100) + 1)
+})

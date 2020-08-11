@@ -6,6 +6,7 @@ meta <- readRDS(system.file("testdata/maynard_151673_subset.metadata.rds", packa
 positions <- cdata[, c("imagecol", "imagerow")]
 
 test_that("Refactored clustering matches", {
+  skip("Set to match results from iterations 900:1000")
   set.seed(149)
   out <- cluster(Y = PCs, 
                  positions = as.matrix(positions), 
@@ -24,6 +25,7 @@ test_that("Refactored clustering matches", {
 })
 
 test_that("SCE clustering matches", {
+  skip("Set to match results from iterations 900:1000")
   sce <- SingleCellExperiment(assays=list(), reducedDims=list("PCA"=PCs), colData=cdata[, -6])
   
   set.seed(149)
@@ -33,6 +35,7 @@ test_that("SCE clustering matches", {
 })
 
 test_that("Refactored deconvolution (SCE) matches", {
+  skip("Based on 7 subspots not 6")
   truth <- read.csv(system.file("testdata/maynard_151673_subset.enhance_truth.csv.gz", package="BayesSpace"))
   sce <- SingleCellExperiment(assays=list(), reducedDims=list("PCA"=PCs), colData=cdata)
 

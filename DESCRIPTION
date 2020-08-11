@@ -27,7 +27,13 @@ Imports:
     coda,
     rhdf5,
     S4Vectors,
-    Matrix
+    Matrix,
+    assertthat,
+    mclust,
+    RCurl,
+    DirichletReg,
+    xgboost,
+    utils
 License: MIT + file LICENSE
 RoxygenNote: 7.1.0
 LinkingTo: 
@@ -41,7 +47,9 @@ Encoding: UTF-8
 Suggests: 
     testthat,
     knitr,
-    rmarkdown
+    rmarkdown,
+    ggplot2,
+    spatialLIBD
 VignetteBuilder: knitr
 biocViews:
     Software,
