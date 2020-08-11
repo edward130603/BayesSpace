@@ -73,13 +73,6 @@ double compute_pi_z() {
   
 }
 
-int sample_z_new(const arma::vec& qvec, int z_j_prev) {
-  vec qlessk = qvec(find(qvec != z_j_prev));
-  int z_j_new = Rcpp::RcppArmadillo::sample(qlessk, 1, false)[0];
-  
-  return z_j_new;
-}
-
 // int update_z_j(const arma::mat& Y, const arma::mat& mu_i, List df_j,
 //                const arma::mat& df_sim_z, const arma::mat& sigma_i,
 //                const arma::vec& w, const arma::vec& plogLik,
@@ -160,14 +153,18 @@ List iterate_t_refactor(arma::mat Y, List df_j, int nrep, int n, int d, double g
     
     //Update z and w
     df_sim_z.row(i) = df_sim_z.row(i-1);
-    const vec qvec = linspace(1, q, q);
+    const vec qvec = linspace(1, q - 1, q - 1);
     NumericVector plogLikj(n, NA_REAL);
 
     for (int j = 0; j < n; j++){
       w[j] = update_w_j(resid, lambda_i, j);
       
+      // Sample new cluster assignment
       int z_j_prev = df_sim_z(i,j);
-      int z_j_new = sample_z_new(qvec, z_j_prev);
+      int z_j_new = Rcpp::RcppArmadillo::sample(qvec, 1, false)[0];
+      if (z_j_new >= z_j_prev) {
+        z_j_new++;
+      }
       
       uvec j_vector = df_j[j];
       uvec i_vector(1); i_vector.fill(i);
