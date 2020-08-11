@@ -94,8 +94,6 @@ cluster <- function(Y, positions, radius, q, init = rep(1, nrow(Y)),
 }
 
 ## TODO make generic
-#' @importFrom stats kmeans
-#' @importFrom mclust Mclust mclustBIC
 #' @importFrom SingleCellExperiment reducedDim
 #' @importFrom SummarizedExperiment colData colData<-
 #' @importFrom S4Vectors metadata metadata<-
@@ -112,15 +110,8 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     inputs <- .prepare_inputs(sce, use.dimred=use.dimred, d=d, 
         positions=positions, position.cols=position.cols, radius=radius)
     
-    ## Initialize cluster assignments (use k-means for now)
-    if (is.null(init)) {
-        init.method <- match.arg(init.method)
-        if (init.method == "kmeans") {
-            init <- kmeans(inputs$PCs, centers=q)$cluster
-        } else if (init.method == "mclust") {
-            init <- Mclust(inputs$PCs, q, "EEE", verbose=FALSE)$classification
-        }
-    }
+    ## Initialize cluster assignments
+    sce <- .init_cluster(sce, q, inputs, init, init.method)
     
     ## TODO: pass these through with ...
     model <- match.arg(model)
@@ -129,8 +120,8 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     lambda0 <- if (is.null(lambda0)) diag(0.01, ncol(inputs$PCs)) else lambda0
     
     results <- cluster(inputs$PCs, inputs$positions, inputs$radius, q,
-        init=init, model=model, precision=precision, mu0=mu0, lambda0=lambda0, 
-        gamma=gamma, alpha=alpha, beta=beta, nrep=nrep)
+        init=sce$cluster.init, model=model, precision=precision, mu0=mu0, 
+        lambda0=lambda0, gamma=gamma, alpha=alpha, beta=beta, nrep=nrep)
     
     if (save.chain) {
         results <- .clean_chain(results)
@@ -146,5 +137,22 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     labels <- apply(results$z[iter_from:nrep, ], 2, Mode)
     colData(sce)$spatial.cluster <- unname(labels)
     
+    sce
+}
+
+## Initialize cluster assignments (use k-means for now)
+#' @importFrom stats kmeans
+#' @importFrom mclust Mclust mclustBIC
+.init_cluster <- function(sce, q, inputs, init = NULL, init.method = c("mclust", "kmeans")) {
+    if (is.null(init)) {
+        init.method <- match.arg(init.method)
+        if (init.method == "kmeans") {
+            init <- kmeans(inputs$PCs, centers=q)$cluster
+        } else if (init.method == "mclust") {
+            init <- Mclust(inputs$PCs, q, "EEE", verbose=FALSE)$classification
+        }
+    }
+    
+    sce$cluster.init <- init
     sce
 }
