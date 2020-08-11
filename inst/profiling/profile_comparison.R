@@ -1,3 +1,4 @@
+library(mclust)
 library(BayesSpace)
 
 set.seed(149)
