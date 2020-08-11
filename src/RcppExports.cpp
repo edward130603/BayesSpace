@@ -117,12 +117,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // iterate_t_refactor
-List iterate_t_refactor(arma::mat Y, List df_j, int nrep, int n, int d, double gamma, int q, arma::vec init, NumericVector mu0, arma::mat lambda0, double alpha, double beta);
+List iterate_t_refactor(const arma::mat& Y, List df_j, int nrep, int n, int d, double gamma, int q, arma::vec init, NumericVector mu0, arma::mat lambda0, double alpha, double beta);
 RcppExport SEXP _BayesSpace_iterate_t_refactor(SEXP YSEXP, SEXP df_jSEXP, SEXP nrepSEXP, SEXP nSEXP, SEXP dSEXP, SEXP gammaSEXP, SEXP qSEXP, SEXP initSEXP, SEXP mu0SEXP, SEXP lambda0SEXP, SEXP alphaSEXP, SEXP betaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Y(YSEXP);
     Rcpp::traits::input_parameter< List >::type df_j(df_jSEXP);
     Rcpp::traits::input_parameter< int >::type nrep(nrepSEXP);
     Rcpp::traits::input_parameter< int >::type n(nSEXP);
