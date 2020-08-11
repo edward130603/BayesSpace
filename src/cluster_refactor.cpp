@@ -64,51 +64,22 @@ double update_w_j(const arma::mat& resid, const arma::mat& lambda_i, int j) {
   return w_j;
 }
 
-double compute_h_z() {
-
-}
-
-// Spatial smoothing prior
-double compute_pi_z() {
+// TODO pass df_sim_z.row(i) instead of i_vector
+double compute_h_z(const arma::mat& df_sim_z, const arma::uvec& i_vector,
+                   const arma::uvec& j_vector, int z_j,
+                   const arma::rowvec& Y_j, const arma::rowvec& mu_k, 
+                   double w_j, const arma::mat& sigma_i, double gamma) {
   
+  // Spatial smoothing prior
+  double pi_z = 0;
+  if (j_vector.size() != 0) {
+    pi_z = gamma / j_vector.size() * 2 * accu((df_sim_z(i_vector, j_vector) == z_j));
+  }
+  
+  double h_z = pi_z + dmvnorm(Y_j, vectorise(mu_k), sigma_i/w_j, true)[0];
+  
+  return h_z;
 }
-
-// int update_z_j(const arma::mat& Y, const arma::mat& mu_i, List df_j,
-//                const arma::mat& df_sim_z, const arma::mat& sigma_i,
-//                const arma::vec& w, const arma::vec& plogLik,
-//                int q, int i, double gamma) {
-// 
-//   int n = Y.n_rows;
-//   NumericVector plogLikj(n, NA_REAL);
-// 
-//   for (int j = 0; j < n; j++){
-//     uvec j_vector = df_j[j];
-//     uvec i_vector(1); i_vector.fill(i);
-//     double h_z_prev;
-//     double h_z_new;
-// 
-//     // Has neighbors
-//     if (j_vector.size() != 0){
-//       h_z_prev = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_prev)) + dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i/w[j], true)[0];
-//       h_z_new  = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_new )) + dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i/w[j], true)[0];
-//     } else {
-//       h_z_prev = dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i/w[j], true)[0];
-//       h_z_new  = dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i/w[j], true)[0];
-//     }
-// 
-//     double prob_j = exp(h_z_new-h_z_prev);
-//     if (prob_j > 1){
-//       prob_j = 1;
-//     }
-// 
-//     IntegerVector zsample = {z_j_prev, z_j_new};
-//     NumericVector probs = {1 - prob_j, prob_j};
-//     df_sim_z(i,j) = sample(zsample, 1, true, probs)[0];
-//     plogLikj[j] = h_z_prev;
-//   }
-// 
-//   plogLik[i] = sum(plogLikj);
-// }
 
 // [[Rcpp::export]]
 List iterate_t_refactor(arma::mat Y, List df_j, int nrep, int n, int d, double gamma, int q, arma::vec init, NumericVector mu0, arma::mat lambda0, double alpha, double beta){
@@ -151,15 +122,16 @@ List iterate_t_refactor(arma::mat Y, List df_j, int nrep, int n, int d, double g
     df_sim_lambda[i] = lambda_i;
     mat sigma_i = inv(lambda_i);
     
-    //Update z and w
+    // Update z and w
     df_sim_z.row(i) = df_sim_z.row(i-1);
     const vec qvec = linspace(1, q - 1, q - 1);
     NumericVector plogLikj(n, NA_REAL);
 
     for (int j = 0; j < n; j++){
+      // Update spot weight
       w[j] = update_w_j(resid, lambda_i, j);
       
-      // Sample new cluster assignment
+      // Sample new cluster assignment (one-indexed)
       int z_j_prev = df_sim_z(i,j);
       int z_j_new = Rcpp::RcppArmadillo::sample(qvec, 1, false)[0];
       if (z_j_new >= z_j_prev) {
@@ -168,24 +140,16 @@ List iterate_t_refactor(arma::mat Y, List df_j, int nrep, int n, int d, double g
       
       uvec j_vector = df_j[j];
       uvec i_vector(1); i_vector.fill(i);
-      double h_z_prev;
-      double h_z_new;
-      if (j_vector.size() != 0){
-        h_z_prev = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_prev)) + dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i/w[j], true)[0];
-        h_z_new  = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_new )) + dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i/w[j], true)[0];
-      } else {
-        h_z_prev = dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i/w[j], true)[0];
-        h_z_new  = dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i/w[j], true)[0];
-      }
-      double prob_j = exp(h_z_new-h_z_prev);
-      if (prob_j > 1){
-        prob_j = 1;
-      }
+      double h_z_prev = compute_h_z(df_sim_z, i_vector, j_vector, z_j_prev, Y.row(j), mu_i.row(z_j_prev - 1), w[j], sigma_i, gamma);
+      double h_z_new = compute_h_z(df_sim_z, i_vector, j_vector, z_j_new, Y.row(j), mu_i.row(z_j_new - 1), w[j], sigma_i, gamma);
+      double prob_j = std::min(std::exp(h_z_new - h_z_prev), 1.0);
+
       IntegerVector zsample = {z_j_prev, z_j_new};
       NumericVector probs = {1-prob_j, prob_j};
-      df_sim_z(i,j) = sample(zsample, 1, true, probs)[0];
+      df_sim_z(i,j) = Rcpp::RcppArmadillo::sample(zsample, 1, true, probs)[0];
       plogLikj[j] = h_z_prev;
     }
+    
     df_sim_w.row(i) = w.t();
     plogLik[i] = sum(plogLikj);
   }
@@ -194,3 +158,6 @@ List iterate_t_refactor(arma::mat Y, List df_j, int nrep, int n, int d, double g
 
   return(out);
 }
+
+
+
