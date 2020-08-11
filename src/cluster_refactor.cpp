@@ -62,6 +62,52 @@ double update_w_j(const arma::mat& resid, const arma::mat& lambda_i, int j) {
   return w_j;
 }
 
+double compute_h_z() {
+
+}
+
+
+int update_z_j(const arma::mat& Y, const arma::mat& mu_i, List df_j, 
+               const arma::mat& df_sim_z, const arma::mat& sigma_i, 
+               const arma::vec& w, const arma::vec& plogLik, 
+               int q, int i, double gamma) {
+
+  int n = Y.n_rows;
+  IntegerVector qvec = seq_len(q);
+  NumericVector plogLikj(n, NA_REAL);
+
+  for (int j = 0; j < n; j++){
+    int z_j_prev = df_sim_z(i,j);
+    IntegerVector qlessk = qvec[qvec != z_j_prev];
+    int z_j_new = sample(qlessk, 1)[0];
+    uvec j_vector = df_j[j];
+    uvec i_vector(1); i_vector.fill(i);
+    double h_z_prev;
+    double h_z_new;
+
+    // Has neighbors
+    if (j_vector.size() != 0){
+      h_z_prev = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_prev)) + dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i/w[j], true)[0];
+      h_z_new  = gamma/j_vector.size() * 2*accu((df_sim_z(i_vector, j_vector) == z_j_new )) + dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i/w[j], true)[0];
+    } else {
+      h_z_prev = dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_prev-1)), sigma_i/w[j], true)[0];
+      h_z_new  = dmvnorm(Y.row(j), vectorise(mu_i.row(z_j_new -1)), sigma_i/w[j], true)[0];
+    }
+
+    double prob_j = exp(h_z_new-h_z_prev);
+    if (prob_j > 1){
+      prob_j = 1;
+    }
+
+    IntegerVector zsample = {z_j_prev, z_j_new};
+    NumericVector probs = {1 - prob_j, prob_j};
+    df_sim_z(i,j) = sample(zsample, 1, true, probs)[0];
+    plogLikj[j] = h_z_prev;
+  }
+
+  plogLik[i] = sum(plogLikj);
+}
+
 // [[Rcpp::export]]
 List iterate_t_refactor(arma::mat Y, List df_j, int nrep, int n, int d, double gamma, int q, arma::vec init, NumericVector mu0, arma::mat lambda0, double alpha, double beta){
   
@@ -107,6 +153,7 @@ List iterate_t_refactor(arma::mat Y, List df_j, int nrep, int n, int d, double g
     df_sim_z.row(i) = df_sim_z.row(i-1);
     IntegerVector qvec = seq_len(q);
     NumericVector plogLikj(n, NA_REAL);
+
     for (int j = 0; j < n; j++){
       w[j] = update_w_j(resid, lambda_i, j);
       
@@ -136,6 +183,8 @@ List iterate_t_refactor(arma::mat Y, List df_j, int nrep, int n, int d, double g
     df_sim_w.row(i) = w.t();
     plogLik[i] = sum(plogLikj);
   }
+
   List out = List::create(_["z"] = df_sim_z, _["mu"] = df_sim_mu, _["lambda"] = df_sim_lambda, _["weights"] = df_sim_w, _["plogLik"] = plogLik);
+
   return(out);
 }

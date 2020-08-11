@@ -22,3 +22,5 @@ tres.original <- system.time(c.original <- BayesSpace:::iterate_t_orig(Y=Y, q=q,
                                                               init=init, mu0=colMeans(Y), lambda0=diag(0.01, nrow = ncol(Y)), 
                                                               gamma=2, alpha=1, beta=0.01, nrep=nrep))
 z.original <- apply(c.original$z[2:1000, ], 2, BayesSpace:::Mode)
+
+all.equal(z.refactor, z.original)
