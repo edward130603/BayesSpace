@@ -24,4 +24,10 @@ tres.original <- system.time(c.original <- BayesSpace:::iterate_t_orig(Y=Y, q=q,
                                                               gamma=2, alpha=1, beta=0.01, nrep=nrep))
 z.original <- apply(c.original$z[2:1000, ], 2, BayesSpace:::Mode)
 
-all.equal(z.refactor, z.original)
+if (all.equal(z.refactor, z.original)) {
+    print("MATCH") 
+} else {
+    print("MISMATCH")
+}
+
+print(rbind(tres.refactor, tres.original))

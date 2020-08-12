@@ -82,7 +82,9 @@ double compute_h_z(const arma::mat& df_sim_z, const arma::uvec& i_vector,
 }
 
 // [[Rcpp::export]]
-List iterate_t_refactor(const arma::mat& Y, List df_j, int nrep, int n, int d, double gamma, int q, arma::vec init, NumericVector mu0, arma::mat lambda0, double alpha, double beta){
+List iterate_t_refactor(const arma::mat& Y, List df_j, int nrep, int n, int d,
+                        double gamma, int q, arma::vec init, NumericVector mu0,
+                        arma::mat lambda0, double alpha, double beta){
   
   //Initalize matrices storing iterations
   mat df_sim_z(nrep, n, fill::zeros);

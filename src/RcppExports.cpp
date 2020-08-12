@@ -166,27 +166,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// start_profiler
-SEXP start_profiler(SEXP str);
-RcppExport SEXP _BayesSpace_start_profiler(SEXP strSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type str(strSEXP);
-    rcpp_result_gen = Rcpp::wrap(start_profiler(str));
-    return rcpp_result_gen;
-END_RCPP
-}
-// stop_profiler
-SEXP stop_profiler();
-RcppExport SEXP _BayesSpace_stop_profiler() {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(stop_profiler());
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_BayesSpace_iterate", (DL_FUNC) &_BayesSpace_iterate, 12},
@@ -196,8 +175,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BayesSpace_iterate_t_orig", (DL_FUNC) &_BayesSpace_iterate_t_orig, 12},
     {"_BayesSpace_iterate_t_refactor", (DL_FUNC) &_BayesSpace_iterate_t_refactor, 12},
     {"_BayesSpace_iterate_deconv", (DL_FUNC) &_BayesSpace_iterate_deconv, 18},
-    {"_BayesSpace_start_profiler", (DL_FUNC) &_BayesSpace_start_profiler, 1},
-    {"_BayesSpace_stop_profiler", (DL_FUNC) &_BayesSpace_stop_profiler, 0},
     {NULL, NULL, 0}
 };
 
