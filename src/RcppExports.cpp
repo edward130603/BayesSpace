@@ -117,8 +117,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // iterate_t_refactor
-List iterate_t_refactor(const arma::mat& Y, List df_j, int nrep, int n, int d, double gamma, int q, arma::vec init, NumericVector mu0, arma::mat lambda0, double alpha, double beta);
-RcppExport SEXP _BayesSpace_iterate_t_refactor(SEXP YSEXP, SEXP df_jSEXP, SEXP nrepSEXP, SEXP nSEXP, SEXP dSEXP, SEXP gammaSEXP, SEXP qSEXP, SEXP initSEXP, SEXP mu0SEXP, SEXP lambda0SEXP, SEXP alphaSEXP, SEXP betaSEXP) {
+List iterate_t_refactor(const arma::mat& Y, List df_j, int nrep, int n, int d, double gamma, int q, arma::vec init, NumericVector mu0, arma::mat lambda0, double alpha, double beta, std::string model);
+RcppExport SEXP _BayesSpace_iterate_t_refactor(SEXP YSEXP, SEXP df_jSEXP, SEXP nrepSEXP, SEXP nSEXP, SEXP dSEXP, SEXP gammaSEXP, SEXP qSEXP, SEXP initSEXP, SEXP mu0SEXP, SEXP lambda0SEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP modelSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -134,7 +134,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::mat >::type lambda0(lambda0SEXP);
     Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
     Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
-    rcpp_result_gen = Rcpp::wrap(iterate_t_refactor(Y, df_j, nrep, n, d, gamma, q, init, mu0, lambda0, alpha, beta));
+    Rcpp::traits::input_parameter< std::string >::type model(modelSEXP);
+    rcpp_result_gen = Rcpp::wrap(iterate_t_refactor(Y, df_j, nrep, n, d, gamma, q, init, mu0, lambda0, alpha, beta, model));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -173,7 +174,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BayesSpace_iterate_t", (DL_FUNC) &_BayesSpace_iterate_t, 12},
     {"_BayesSpace_iterate_t_vvv", (DL_FUNC) &_BayesSpace_iterate_t_vvv, 12},
     {"_BayesSpace_iterate_t_orig", (DL_FUNC) &_BayesSpace_iterate_t_orig, 12},
-    {"_BayesSpace_iterate_t_refactor", (DL_FUNC) &_BayesSpace_iterate_t_refactor, 12},
+    {"_BayesSpace_iterate_t_refactor", (DL_FUNC) &_BayesSpace_iterate_t_refactor, 13},
     {"_BayesSpace_iterate_deconv", (DL_FUNC) &_BayesSpace_iterate_deconv, 18},
     {NULL, NULL, 0}
 };

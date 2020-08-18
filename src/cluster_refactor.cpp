@@ -125,7 +125,8 @@ double compute_h_z(const arma::mat& df_sim_z, const arma::uvec& i_vector,
 // [[Rcpp::export]]
 List iterate_t_refactor(const arma::mat& Y, List df_j, int nrep, int n, int d,
                         double gamma, int q, arma::vec init, NumericVector mu0,
-                        arma::mat lambda0, double alpha, double beta){
+                        arma::mat lambda0, double alpha, double beta, 
+                        std::string model){
   
   //Initalize matrices storing iterations
   mat df_sim_z(nrep, n, fill::zeros);
@@ -171,8 +172,11 @@ List iterate_t_refactor(const arma::mat& Y, List df_j, int nrep, int n, int d,
     NumericVector plogLikj(n, NA_REAL);
 
     for (int j = 0; j < n; j++){
-      // Update spot weight
-      w[j] = update_w_j(resid, lambda_i, j);
+      // Update spot weight (t-distributed error model)
+      // Under normal error model, weights remain one
+      if (model == "t") {
+          w[j] = update_w_j(resid, lambda_i, j);
+      }
       
       // Sample new cluster assignment (one-indexed)
       int z_j_prev = df_sim_z(i,j);
