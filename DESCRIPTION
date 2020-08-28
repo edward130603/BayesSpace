@@ -49,8 +49,7 @@ Encoding: UTF-8
 Suggests: 
     testthat,
     knitr,
-    rmarkdown,
-    spatialLIBD
+    rmarkdown
 VignetteBuilder: knitr
 biocViews:
     Software,

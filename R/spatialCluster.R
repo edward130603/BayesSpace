@@ -48,9 +48,9 @@ NULL
 
 #' @importFrom purrr map
 cluster <- function(Y, positions, radius, q, init = rep(1, nrow(Y)),
-    model = c("normal", "t"), precision = c("equal", "variable"),
+    model = c("t", "normal"), precision = c("equal", "variable"),
     mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)), 
-    gamma = 2, alpha = 1, beta = 0.01, nrep = 1000) {
+    gamma = 3, alpha = 1, beta = 0.01, nrep = 1000) {
     
     positions <- as.matrix(positions)
     Y <- as.matrix(Y)
