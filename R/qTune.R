@@ -41,7 +41,7 @@
 #' @name qTune
 NULL
 
-#' @importFrom ggplot2 ggplot geom_line geom_point xlab ylab labs theme_bw
+#' @importFrom ggplot2 ggplot aes_ geom_line geom_point xlab ylab labs theme_bw
 #' 
 #' @export
 #' @rdname qTune
@@ -51,7 +51,7 @@ qPlot <- function(sce, qs=seq(3, 7), force.retune=FALSE, ...) {
     }
     
     logliks <- attr(sce, "q.logliks")
-    qplot <- ggplot(data=logliks, aes(x=q, y=-loglik)) +
+    qplot <- ggplot(data=logliks, aes_(x=~q, y=~(-loglik))) +
         geom_line() +
         geom_point() +
         xlab("Number of clusters (q)") +
