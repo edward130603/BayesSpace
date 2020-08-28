@@ -5,4 +5,4 @@
 #' https://github.com/ropensci/eia/blob/master/vignettes/precompile.R
 
 knitr::knit("vignettes/BayesSpace.Rmd.orig", output="vignettes/BayesSpace.Rmd")
-system("mv BayesSpace-*.png vignettes/")
+system2("mv", c("BayesSpace-*.png", "vignettes/"))

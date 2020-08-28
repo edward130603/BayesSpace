@@ -83,7 +83,7 @@ enhancePlot <- function(sce.enhanced, sce.ref) {
                      1,5,6,
                      1,2,7,
                      1,4,5),]
-    group <- c(rep(1:6,each=3)) #six triangles
+    group <- c(rep(seq(1, 6), each=3)) #six triangles
     
     n0 <- nrow(positions)
     positions_long <- positions[rep(seq_len(n0), 18), ]
@@ -92,15 +92,15 @@ enhancePlot <- function(sce.enhanced, sce.ref) {
     
     positions_long[,"x"] <- positions_long[,"x"] + shift_long[,"Var1"]
     positions_long[,"y"] <- positions_long[,"y"] + shift_long[,"Var2"]
-    group_long <- paste(rep(seq_len(n0), 18),rep(rep(1:6,each=3), each=n0), sep="_")
-    group_long2 <- data.frame(apply(str_split(group_long, "_", simplify=T),2, as.numeric))
+    group_long <- paste(rep(seq_len(n0), 18),rep(rep(seq(1, 6), each=3), each=n0), sep="_")
+    group_long2 <- data.frame(apply(str_split(group_long, "_", simplify=TRUE), 2, as.numeric))
     
     #add columns
     colnames(group_long2) <- c("j0", "poly")
     cols <- as.matrix(cols)
     cols_long <- matrix(nrow=nrow(positions_long), ncol=ncol(cols))
     colnames(cols_long) <- colnames(cols)
-    for(i in 1:nrow(positions_long)){
+    for(i in seq_len(nrow(positions_long))){
         # print(i)
         # print(group_long2$j0[i]+(group_long2$poly[i]-1)*n0)
         cols_long[i,] <- cols[group_long2$j0[i], ]#+(group_long2$poly[i]-1)*n0,]

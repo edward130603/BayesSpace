@@ -3,11 +3,12 @@ Version: 0.1.0
 Date: 2020-05-26
 Title: Clustering and Resolution Enhancement of Spatial Transcriptomes
 Authors@R: c(
-    person("Edward", "Zhao", role=c("cre", "aut"), email="ezhao@fredhutch.org"))
-Author:
-    Edward Zhao [aut, cre]
+    person("Edward", "Zhao", role=c("cre", "aut"), email="ezhao@fredhutch.org"),
+    person("Matt", "Stone", role=c("aut"), email="mstone@fredhutch.org"),
+    person("Xing", "Ren", role=c("ctb"), email="xren2@fredhutch.org"),
+    person("Raphael", "Gottardo", role=c("ctb"), email="rgottard@fredhutch.org"))
 Maintainer:
-    Edward Zhao <ezhao@fredhutch.org>
+    Matt Stone <mstone@fredhutch.org>
 Description: BayesSpace clusters a low-dimensional representation of the gene 
     expression matrix, incorporating a spatial prior to encourage neighboring 
     spots to cluster together. The method can enhance the resolution of the 
@@ -54,4 +55,5 @@ VignetteBuilder: knitr
 biocViews:
     Software,
     Clustering,
-    Transcriptomics
+    Transcriptomics,
+    GeneExpression
