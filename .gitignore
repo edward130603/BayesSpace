@@ -49,7 +49,6 @@ vignettes/*.png
 *.so
 *.dll
 
-.Rbuildignore
 .RDataTmp
 *.Rproj
 inst/doc
