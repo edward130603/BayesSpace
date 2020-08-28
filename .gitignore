@@ -57,3 +57,6 @@ inst/doc
 *.swp
 doc
 Meta
+
+# profiling outputs (unless forced)
+inst/profiling/

@@ -14,10 +14,14 @@ This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute
 Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
 
 ```{r}
+times <- read.csv(here::here("inst/profiling/refactor_timing.mac.csv"))
+```
+
+```{r}
 palette <- c("#0173b2", "#de8f05", "#029e73", "#d55e00", "#cc78bc", 
              "#ca9161", "#fbafe4", "#949494", "#ece133", "#56b4e9")
 
-ggplot(data=times, aes(x=nspots, y=elapsed, color=factor(nrep))) +
+p1 <- ggplot(data=times, aes(x=nspots, y=elapsed, color=factor(nrep))) +
     geom_point() +
     geom_line(aes(linetype=factor(method))) +
     scale_color_manual(values=palette) +
@@ -31,16 +35,23 @@ ggplot(data=times, aes(x=nspots, y=elapsed, color=factor(nrep))) +
 times$sec_per <- (times$elapsed / times$nspots) / times$nrep
 
 set.seed(149)
-ggplot(data=times, aes(x=factor(method), y=sec_per)) +
+p2 <- ggplot(data=times, aes(x=factor(method), y=sec_per)) +
     geom_boxplot(outlier.shape=NA) +
     geom_jitter(aes(color=factor(nrep), shape=factor(nspots)), height=0, size=2.5, width=0.1) +
     scale_color_manual(values=palette) +
-    ylim(0, 3e-5) +
+    ylim(0, 1e-5) +
     labs(title="Runtime comparison", color="# iterations", shape="# spots") +
     xlab("Method") +
     ylab("Runtime (seconds per spot per iteration)") +
     theme_bw()
 ```
+
+```{r fig.width=14, fig.height=7}
+library(patchwork)
+p1 + p2
+ggsave(here::here("inst/profiling/runtime_comparison.rhino.pdf"))
+```
+
 
 ```{r}
 delta <- times %>% 
