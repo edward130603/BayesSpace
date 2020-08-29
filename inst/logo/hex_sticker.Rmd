@@ -5,7 +5,17 @@ output: html_notebook
 
 Make hex sticker
 
+
+## Make spot grid
+
+7 rows x (6 or 7) columns of hexes assigned to three clusters.
+
+Each hex is regular, oriented vertically (vertices at top and bottom center, and
+left/right sides parallel to y-axis), and is 1 unit wide (measured from edge to
+edge).
+
 ```{r}
+# First, make grids of hex centers.
 make_grid <- function(nx, ny) {
     xs <- seq_len(nx)
     ys <- seq_len(ny)
@@ -15,11 +25,15 @@ make_grid <- function(nx, ny) {
 }
 
 n <- 7
+
+# Make two grids, one for rows with 6 hexes and one for rows with 7
+# then interleave by offsetting y coordinates
 pos1 <- make_grid(n, floor(n/2))
 pos2 <- make_grid(n - 1, ceiling(n/2))
 pos1$y.pos <- pos1$y.pos * 2
 pos2$y.pos <- (pos2$y.pos - 1) * 2 + 1
 
+# Sort by column then by row, and assign cluster labels
 positions <- rbind(pos1, pos2)
 positions <- arrange(positions, y.pos, x.pos)
 positions$spot <- seq_len(nrow(positions))
@@ -36,21 +50,27 @@ positions$cluster <- c(3, 3, 1, 1, 2, 2,
 r <- 1/2
 R <- (2 / sqrt(3)) * r
 
+# Offset rows with 7 clusters by 0.5
 idx <- positions$y %% 2 == 0
 positions[idx, "x.pos"] <- positions[idx, "x.pos"] - 0.5
+
+# Shift centers up so rows are adjacent
 positions[, "y.pos"] <- positions[, "y.pos"] * R * (3/2)
 
+# vertices of each hex (with respect to center coordinates)
 # start at top center, loop clockwise
 hex_vertices <- data.frame(x.offset=c(0, r, r, 0, -r, -r),
                            y.offset=c(-R, -R/2, R/2, R, R/2, -R/2))
-# ggplot(data=hex_vertices, aes(x=x, y=y)) + geom_polygon() + coord_equal()
 
+# Compute vertex coordinates in frame of plot
 poly_positions <- merge(positions, hex_vertices)
 poly_positions$x.vertex = poly_positions$x.pos + poly_positions$x.offset
 poly_positions$y.vertex = poly_positions$y.pos + poly_positions$y.offset
 ```
 
+Subspot outlines for all spots.
 ```{r}
+# Make lists of triangle vertices (with respect to hex center)
 tri_offsets <- do.call(rbind, list(
     data.frame(x.offset=c(0, 0, r), y.offset=c(0, -R, -R/2), subspot=1),
     data.frame(x.offset=c(0, r, r), y.offset=c(0, -R/2, R/2), subspot=2),
@@ -60,13 +80,15 @@ tri_offsets <- do.call(rbind, list(
     data.frame(x.offset=c(0, -r, 0), y.offset=c(0, -R/2, -R), subspot=6)
     ))
 
+# Define subspot coordinates for all hex centers
 tri_positions <- merge(positions, tri_offsets)
 tri_positions$x.vertex = tri_positions$x.pos + tri_positions$x.offset
 tri_positions$y.vertex = tri_positions$y.pos + tri_positions$y.offset
 tri_positions$subspot.id <- paste0(tri_positions$spot, ".", tri_positions$subspot)
 ```
 
-
+Pick a few spots for enhancement. Assign clusters to subspots, and plot the
+enhanced spots over the regular spots.
 ```{r}
 tri_spots <- c(2, 11, 17, 31, 34, 42)
 tri_positions[tri_positions$spot == 2, "cluster"] <- rep(c(3, 1, 3, 3, 3, 3), each=3)
@@ -79,6 +101,8 @@ tri_positions[tri_positions$spot == 17, "cluster"] <- rep(c(3, 3, 1, 1, 1, 1), e
 tri_pos <- tri_positions[tri_positions$spot %in% tri_spots, ]
 ```
 
+Fill in around the upper vertices and sides so there are no gaps within the hex
+sticker.
 ```{r}
 corners <- data.frame(x.pos=c(3.5, 3.5), 
                       y.pos=c(0 * R * 3/2, (n+1) * R * 3/2),
@@ -101,8 +125,7 @@ corner_positions$x.vertex = corner_positions$x.pos + corner_positions$x.offset
 corner_positions$y.vertex = corner_positions$y.pos + corner_positions$y.offset
 ```
 
-Remove parts that stick out past hex
-
+Remove parts that stick out past hex sticker border.
 ```{r}
 x_vertices = c(3.5, 7, 7, 3.5, 0, 0, 3.5)
 y_vertices = c(-1, 2.5, 9.5, 13, 9.5, 2.5, -1) * R
@@ -118,37 +141,43 @@ poly_pos2 <- poly_positions %>% filter(in_hex(x.vertex, y.vertex))
 corner_pos2 <- corner_positions %>% filter(in_hex(x.vertex, y.vertex))
 ```
 
-
+Make plot of spot hexes.
 ```{r}
-palette <- c("#264653", "#E76F51", "#E9C46A")# "#E76F51")
+palette <- c("#264653", "#E76F51", "#E9C46A")
+enhanced.color <- "#F4A261"
+
+palette <- c("#293241", "#3D5A80", "#98C1D9")
+enhanced.color <- "#EE6C4D"
+
 hexplot <- ggplot(data=poly_pos2, aes(x=x.vertex, y=-y.vertex, group=spot, fill=factor(cluster))) + 
     # geom_polygon(data=border, aes(x=x, y=-y), fill="#000000") +
     geom_polygon() +
-    geom_polygon(data=tri_pos, aes(group=subspot.id), color='#F4A261') +
+    geom_polygon(data=tri_pos, aes(group=subspot.id), color=enhanced.color) +
     geom_polygon(data=corner_pos2) +
     coord_equal() +
     scale_fill_manual(values=palette) +
-    scale_color_manual(values=c("F4A261")) +
     guides(fill=FALSE, color=FALSE) +
     theme_void()
 hexplot
 ```
 
 ```{r}
-font_add_google("Josefin Sans", "josefin")
+sysfonts::font_add_google("Alata", "alata")
 ```
 
-
+Make sticker!
 ```{r fig.width=6, fig.height=6}
 family <- "alata"
 scale <- 2.19
-s <- sticker(hexplot, package="BayesSpace", 
-             p_family=family, p_size=18, 
+s <- hexSticker::sticker(hexplot, package="BayesSpace", 
+             p_family=family, p_size=20, 
              s_x=1, s_y=1, s_width=1.3*scale, s_height=1*scale,
              p_y=1,
-             # s_x=1, s_y=.65, s_width=1.3, s_height=1,
              p_color="#FFFFFF",
-             h_color='#264653', h_fill="#2A9D8F", h_size=2) +
-ggsave(sprintf("BayesSpace_filled_v3.png", family), width=6, height=6)
+             h_color='#E0FBFC', h_size=2,
+             filename="BayesSpace_logo.png") +
+  
+# overwrite file with better size
+ggsave("BayesSpace_logo.png", width=6, height=6)
 s
 ```
