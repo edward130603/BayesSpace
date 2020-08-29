@@ -29,6 +29,7 @@ data/
 # produced vignettes
 vignettes/*.html
 vignettes/*.pdf
+vignettes/*.png
 
 # OAuth2 token, see https://github.com/hadley/httr/releases/tag/v0.3
 .httr-oauth
@@ -48,7 +49,6 @@ vignettes/*.pdf
 *.so
 *.dll
 
-.Rbuildignore
 .RDataTmp
 *.Rproj
 inst/doc
@@ -57,3 +57,5 @@ inst/doc
 *.swp
 doc
 Meta
+
+*.nb.html

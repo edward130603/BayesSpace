@@ -23,15 +23,18 @@ NULL
 palette <- c("#0173b2", "#de8f05", "#029e73", "#d55e00", "#cc78bc",
              "#ca9161", "#fbafe4", "#949494", "#ece133", "#56b4e9")
 
-#' @importFrom ggplot2 ggplot geom_point scale_color_manual coord_fixed labs theme_void aes
+#' @importFrom ggplot2 ggplot aes_ geom_point scale_color_manual coord_fixed labs theme_void
 #'
 #' @export
 #' @rdname spatialPlot
 clusterPlot <- function(sce) {
     cdata <- data.frame(colData(sce))
-    splot <- ggplot(cdata, aes(x=col, y=-row, color=factor(spatial.cluster))) +
+    # TODO: redo with geom_polygon/square for ST
+    # TODO: redo with geom_polygon/hex so it scales and matches enhancePlot
+    splot <- ggplot(cdata, aes_(x=~col, y=~(-row), color=~factor(spatial.cluster))) +
         geom_point(size=3) +
-        scale_color_manual(values = palette) +
+        # scale_color_manual(values = palette) +
+        # TODO accomodate more than 10 values in default palette
         coord_fixed(ratio=sqrt(3)) +
         labs(color = "Cluster") +
         theme_void()   
@@ -39,7 +42,7 @@ clusterPlot <- function(sce) {
     splot
 }
 
-#' @importFrom ggplot2 ggplot geom_polygon scale_fill_manual coord_fixed labs theme_void aes
+#' @importFrom ggplot2 ggplot aes_ geom_polygon scale_fill_manual coord_fixed labs theme_void
 #'
 #' @export
 #' @rdname spatialPlot
@@ -54,9 +57,9 @@ enhancePlot <- function(sce.enhanced, sce.ref) {
         inputs$ydist*1.01, data.frame(sce.enhanced$spatial.cluster))
     colnames(positions_plot) <- c("x", "y", "group", "spatial.cluster")
 
-    eplot <- ggplot(positions_plot, aes(x=x, y=-y, group=group, fill=factor(spatial.cluster))) +
+    eplot <- ggplot(positions_plot, aes_(x=~x, y=~(-y), group=~group, fill=~factor(spatial.cluster))) +
         geom_polygon() +
-        scale_fill_manual(values=palette) +
+        # scale_fill_manual(values=palette) +
         coord_fixed(ratio=sqrt(1)) +
         labs(fill="Cluster") +
         theme_void()
@@ -80,7 +83,7 @@ enhancePlot <- function(sce.enhanced, sce.ref) {
                      1,5,6,
                      1,2,7,
                      1,4,5),]
-    group <- c(rep(1:6,each=3)) #six triangles
+    group <- c(rep(seq(1, 6), each=3)) #six triangles
     
     n0 <- nrow(positions)
     positions_long <- positions[rep(seq_len(n0), 18), ]
@@ -89,17 +92,18 @@ enhancePlot <- function(sce.enhanced, sce.ref) {
     
     positions_long[,"x"] <- positions_long[,"x"] + shift_long[,"Var1"]
     positions_long[,"y"] <- positions_long[,"y"] + shift_long[,"Var2"]
-    group_long <- paste(rep(seq_len(n0), 18),rep(rep(1:6,each=3), each=n0), sep="_")
-    group_long2 <- data.frame(apply(str_split(group_long, "_", simplify=T),2, as.numeric))
+    group_long <- paste(rep(seq_len(n0), 18),rep(rep(seq(1, 6), each=3), each=n0), sep="_")
+    group_long2 <- data.frame(apply(str_split(group_long, "_", simplify=TRUE), 2, as.numeric))
     
     #add columns
     colnames(group_long2) <- c("j0", "poly")
     cols <- as.matrix(cols)
     cols_long <- matrix(nrow=nrow(positions_long), ncol=ncol(cols))
     colnames(cols_long) <- colnames(cols)
-    for(i in 1:nrow(positions_long)){
-        print(i)
-        cols_long[i,] <- cols[group_long2$j0[i]+(group_long2$poly[i]-1)*n0,]
+    for(i in seq_len(nrow(positions_long))){
+        # print(i)
+        # print(group_long2$j0[i]+(group_long2$poly[i]-1)*n0)
+        cols_long[i,] <- cols[group_long2$j0[i], ]#+(group_long2$poly[i]-1)*n0,]
     }
     data.frame(positions_long, group=group_long, cols_long)
 }

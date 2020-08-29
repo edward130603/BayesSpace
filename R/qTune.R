@@ -41,7 +41,7 @@
 #' @name qTune
 NULL
 
-#' @importFrom ggplot2 ggplot geom_line geom_point xlab ylab labs
+#' @importFrom ggplot2 ggplot aes_ geom_line geom_point xlab ylab labs theme_bw
 #' 
 #' @export
 #' @rdname qTune
@@ -51,12 +51,13 @@ qPlot <- function(sce, qs=seq(3, 7), force.retune=FALSE, ...) {
     }
     
     logliks <- attr(sce, "q.logliks")
-    qplot <- ggplot(data=logliks, aes(x=q, y=-loglik)) +
+    qplot <- ggplot(data=logliks, aes_(x=~q, y=~(-loglik))) +
         geom_line() +
         geom_point() +
         xlab("Number of clusters (q)") +
         ylab("Negative log likelihood") +
-        labs(title="spatialCluster likelihood as a function of q")
+        labs(title="spatialCluster likelihood as a function of q") +
+        theme_bw()
     
     qplot
 }
@@ -77,7 +78,7 @@ qTune <- function(sce, qs=seq(3, 7), min_rep=100, max_rep=1000, ...) {
     init.args <- c("init", "init.method")
     init.args <- compact(args[init.args])
     
-    cluster.args <- discard(names(args), function(x) {x %in% c(input.args, init.args)})
+    cluster.args <- discard(names(args), function(x) {x %in% c(names(input.args), names(init.args))})
     cluster.args <- compact(args[cluster.args])
     cluster.args$nrep <- max_rep
     
