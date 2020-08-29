@@ -23,23 +23,55 @@ NULL
 palette <- c("#0173b2", "#de8f05", "#029e73", "#d55e00", "#cc78bc",
              "#ca9161", "#fbafe4", "#949494", "#ece133", "#56b4e9")
 
-#' @importFrom ggplot2 ggplot aes_ geom_point scale_color_manual coord_fixed labs theme_void
+#' @importFrom ggplot2 ggplot aes_ geom_point scale_color_manual coord_equal labs theme_void
 #'
 #' @export
 #' @rdname spatialPlot
-clusterPlot <- function(sce) {
+clusterPlot <- function(sce, platform=c("Visium", "ST")) {
+    # TODO: add platform/lattice to sce metadata instead of passing
+    platform <- match.arg(platform)
+    
     cdata <- data.frame(colData(sce))
+    message("Making spots")
+    if (platform == "Visium") {
+        vertices <- .make_hex_spots(cdata)
+    } else {
+        vertices <- .make_square_spots(cdata)
+    }
+    
     # TODO: redo with geom_polygon/square for ST
     # TODO: redo with geom_polygon/hex so it scales and matches enhancePlot
-    splot <- ggplot(cdata, aes_(x=~col, y=~(-row), color=~factor(spatial.cluster))) +
-        geom_point(size=3) +
-        # scale_color_manual(values = palette) +
-        # TODO accomodate more than 10 values in default palette
-        coord_fixed(ratio=sqrt(3)) +
-        labs(color = "Cluster") +
-        theme_void()   
+    message("plotting spots")
+    splot <- ggplot(data=vertices, 
+                    aes_(x=~x.vertex, y=~y.vertex, group=~spot, fill=~factor(fill))) + 
+        geom_polygon() +
+        # scale_fill_manual() +
+        labs(fill="Cluster") +
+        coord_equal() +
+        theme_void()
     
     splot
+}
+
+.make_hex_spots <- function(cdata) {
+   NULL
+}
+
+.make_square_spots <- function(cdata, fill.col="spatial.cluster") {
+    # Square spots are referenced by top left vertex
+    spot_positions <- cdata[, c("col", "row", fill.col)]
+    colnames(spot_positions) <- c("x.pos", "y.pos", "fill")
+    spot_positions$spot <- rownames(spot_positions)
+    
+    vertex_offsets <- data.frame(x.offset=c(0, 1, 1, 0),
+                                  y.offset=c(0, 0, 1, 1))
+    
+    spot_vertices <- merge(spot_positions, vertex_offsets)
+    
+    spot_vertices$x.vertex <- spot_vertices$x.pos + spot_vertices$x.offset
+    spot_vertices$y.vertex <- spot_vertices$y.pos + spot_vertices$y.offset
+    
+    as.data.frame(spot_vertices)
 }
 
 #' @importFrom ggplot2 ggplot aes_ geom_polygon scale_fill_manual coord_fixed labs theme_void
