@@ -79,7 +79,8 @@ enhancePlot <- function(sce, platform=c("Visium", "ST")) {
     splot
 }
 
-## Helper to extract x, y, fill ID
+#' Helper to extract x, y, fill ID
+#' @keywords internal
 .select_spot_positions <- function(cdata, x="col", y="row", fill.col="spatial.cluster") {
     spot_positions <- cdata[, c(x, y, fill.col)]
     colnames(spot_positions) <- c("x.pos", "y.pos", "fill")
@@ -88,14 +89,16 @@ enhancePlot <- function(sce, platform=c("Visium", "ST")) {
     spot_positions
 }
 
-## Compute vertex coordinates for each spot in frame of plot
-##
-## @param spot_positions Center for hex, top left for square
-## @param vertex_offsets Data frame of (x, y) offsets wrt spot position for each
-##   vertex of spot
-## 
-## @returns Cartesian product of positions and offsets, with coordinates 
-##   computed as (pos + offset)
+#' Compute vertex coordinates for each spot in frame of plot
+#'
+#' @param spot_positions Center for hex, top left for square
+#' @param vertex_offsets Data frame of (x, y) offsets wrt spot position for each
+#'   vertex of spot
+#' 
+#' @return Cartesian product of positions and offsets, with coordinates
+#'   computed as (pos + offset)
+#'
+#' @keywords internal
 .make_spot_vertices <- function(spot_positions, vertex_offsets) {
     spot_vertices <- merge(spot_positions, vertex_offsets)
     spot_vertices$x.vertex <- spot_vertices$x.pos + spot_vertices$x.offset
@@ -104,7 +107,9 @@ enhancePlot <- function(sce, platform=c("Visium", "ST")) {
     as.data.frame(spot_vertices)
 }
 
-## Make vertices for each hex spot
+#' Make vertices for each hex spot
+#' 
+#' @keywords internal
 .make_hex_spots <- function(cdata) {
     spot_positions <- .select_spot_positions(cdata)
     spot_positions <- .adjust_hex_centers(spot_positions)
@@ -122,10 +127,12 @@ enhancePlot <- function(sce, platform=c("Visium", "ST")) {
     spot_vertices
 }
 
-## Adjust hex spot positions so hexagons are adjacent to each other in plot
-##
-## Spots are regular hexagons with one unit of horizontal distance
-## between centers
+#' Adjust hex spot positions so hexagons are adjacent to each other in plot
+#'
+#' Spots are regular hexagons with one unit of horizontal distance
+#' between centers
+#' 
+#' @keywords internal
 .adjust_hex_centers <- function(spot_positions) {
     ## R = circumradius, distance from center to vertex
     ## r = inradius, distance from center to edge midpoint
@@ -147,9 +154,11 @@ enhancePlot <- function(sce, platform=c("Visium", "ST")) {
     spot_positions
 }
 
-## Make vertices for each square spot
-##
-## Squares are simple, just mae a unit square at each array coordinate
+#' Make vertices for each square spot
+#'
+#' Squares are simple, just mae a unit square at each array coordinate
+#' 
+#' @keywords internal
 .make_square_spots <- function(cdata, fill.col="spatial.cluster", scale.factor=1) {
     spot_positions <- .select_spot_positions(cdata)
     
@@ -160,8 +169,10 @@ enhancePlot <- function(sce, platform=c("Visium", "ST")) {
     .make_spot_vertices(spot_positions, vertex_offsets)
 }
 
-## Helper to pull out subspot position columns
-## Probably redundant with select_spot_positions above, but we need subspot.idx
+#' Helper to pull out subspot position columns
+#' Probably redundant with select_spot_positions above, but we need subspot.idx
+#' 
+#' @keywords internal
 .select_subspot_positions <- function(cdata, x="spot.col", y="spot.row", fill.col="spatial.cluster") {
     spot_positions <- cdata[, c(x, y, fill.col, "subspot.idx")]
     colnames(spot_positions) <- c("x.pos", "y.pos", "fill", "subspot.idx")
@@ -170,7 +181,9 @@ enhancePlot <- function(sce, platform=c("Visium", "ST")) {
     spot_positions
 }
 
-## Make vertices for each triangle subspot of a hex
+#' Make vertices for each triangle subspot of a hex
+#' 
+#' @keywords internal
 .make_triangle_subspots <- function(cdata, fill.col="spatial.cluster") {
     spot_positions <- .select_subspot_positions(cdata, x="spot.col", y="spot.row")
     spot_positions <- .adjust_hex_centers(spot_positions)
