@@ -181,7 +181,7 @@ enhancePlot <- function(sce, platform=c("Visium", "ST")) {
     R <- (2 / sqrt(3)) * r
     
     ## Make lists of triangle vertices (with respect to hex center)
-    ## subspot.idx is same ordering as `shift`` in spatialEnhance
+    ## subspot.idx is same ordering as `shift` in spatialEnhance
     ## that is, beginning in top right and proceeding clockwise, (1, 5, 3, 4, 6, 2)
     vertex_offsets <- do.call(rbind, list(
         data.frame(x.offset=c(0, 0, r), y.offset=c(0, -R, -R/2), subspot.idx=1),
