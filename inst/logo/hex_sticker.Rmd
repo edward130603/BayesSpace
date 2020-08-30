@@ -15,6 +15,13 @@ left/right sides parallel to y-axis), and is 1 unit wide (measured from edge to
 edge).
 
 ```{r}
+suppressPackageStartupMessages({
+  library(dplyr)
+})
+```
+
+
+```{r}
 # First, make grids of hex centers.
 make_grid <- function(nx, ny) {
     xs <- seq_len(nx)
@@ -51,7 +58,7 @@ r <- 1/2
 R <- (2 / sqrt(3)) * r
 
 # Offset rows with 7 clusters by 0.5
-idx <- positions$y %% 2 == 0
+idx <- positions$y.pos %% 2 == 0
 positions[idx, "x.pos"] <- positions[idx, "x.pos"] - 0.5
 
 # Shift centers up so rows are adjacent
