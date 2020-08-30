@@ -11,14 +11,14 @@ clusterPlot(sce, platform = c("Visium", "ST"))
 enhancePlot(sce, platform = c("Visium", "ST"))
 }
 \arguments{
-\item{sce}{A SingleCellExperiment object containing the spatial data and
-cluster assignments in \code{sce$spatial.cluster}.}
+\item{sce}{SingleCellExperiment containing cluster assignments in 
+\code{sce$spatial.cluster}}
 
-\item{sce.enhanced, sce.ref}{The enhanced subspots and original spots,
-respectively.}
+\item{platform}{Spatial sequencing platform. If "Visium", the hex spot layout
+will be used, otherwise square spots will be plotted.}
 }
 \value{
-Both functions return a ggplot object.
+Both functions return a \code{ggplot} object.
 }
 \description{
 After running \code{spatialCluster()} or \code{spatialEnhance()}, we can

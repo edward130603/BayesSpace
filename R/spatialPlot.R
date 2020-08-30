@@ -4,12 +4,12 @@
 #' visualize the cluster assignments of each spot using \code{clusterPlot()} or
 #' \code{enhancePlot()}, respectively.
 #' 
-#' @param sce A SingleCellExperiment object containing the spatial data and
-#'   cluster assignments in \code{sce$spatial.cluster}.
-#' @param sce.enhanced,sce.ref The enhanced subspots and original spots,
-#'   respectively.
+#' @param sce SingleCellExperiment containing cluster assignments in
+#'   \code{sce$spatial.cluster}
+#' @param platform Spatial sequencing platform. If "Visium", the hex spot layout
+#'   will be used, otherwise square spots will be plotted.
 #' 
-#' @return Both functions return a ggplot object. 
+#' @return Both functions return a \code{ggplot} object.
 #' 
 #' @examples
 #' set.seed(149)
@@ -23,6 +23,8 @@ NULL
 palette <- c("#0173b2", "#de8f05", "#029e73", "#d55e00", "#cc78bc",
              "#ca9161", "#fbafe4", "#949494", "#ece133", "#56b4e9")
 
+#' Plot spatial cluster assignments.
+#'
 #' @importFrom ggplot2 ggplot aes_ geom_polygon scale_fill_manual coord_equal labs theme_void
 #'
 #' @export
@@ -50,6 +52,8 @@ clusterPlot <- function(sce, platform=c("Visium", "ST")) {
     splot
 }
 
+#' Plot enhanced spatial cluster assignments.
+#'
 #' @importFrom ggplot2 ggplot aes_ geom_polygon scale_fill_manual coord_equal labs theme_void
 #'
 #' @export
@@ -111,6 +115,11 @@ enhancePlot <- function(sce, platform=c("Visium", "ST")) {
 #' 
 #' @keywords internal
 .make_hex_spots <- function(cdata) {
+    ## R = circumradius, distance from center to vertex
+    ## r = inradius, distance from center to edge midpoint
+    r <- 1/2
+    R <- (2 / sqrt(3)) * r
+
     spot_positions <- .select_spot_positions(cdata)
     spot_positions <- .adjust_hex_centers(spot_positions)
 
