@@ -57,10 +57,15 @@ NULL
     h5.fname
 }
 
-## Infer original dimensions of parameter (per iteration) from colnames
-##
-## Used to avoid writing colnames directly to HDF5 as attribute, which fails
-## for large parameters (e.g. Y)
+#' Infer original dimensions of parameter (per iteration) from colnames
+#'
+#' Used to avoid writing colnames directly to HDF5 as attribute, which fails
+#' for large parameters (e.g. Y)
+#' 
+#' @param cnames List of column names
+#' @return Numeric vector (nrow, ncol)
+#' 
+#' @keywords internal
 .infer_param_dims <- function(cnames) {
     n_idxs <- length(cnames)
     dims <- list()
@@ -77,6 +82,15 @@ NULL
     dims
 }
 
+#' Load saved chain from disk.
+#' 
+#' @param h5.fname Path to hdf5 file containing chain
+#' @param params List of parameters to read from file (will read all by default)
+#' 
+#' @return MCMC chain, represented as a \code{coda::mcmc} object
+#' 
+#' @keywords internal
+#' 
 #' @importFrom rhdf5 h5ls h5read
 #' @importFrom coda mcmc
 #' @importFrom purrr map
@@ -103,7 +117,19 @@ NULL
     mcmc(x)
 }
 
-## Make colnames for parameter indices.
+#' Make colnames for parameter indices.
+#' 
+#' Scalar parameters are named \code{"name"}.
+#' Vector parameters are named \code{"name[i]"}.
+#' Matrix parameters are named \code{"name[i,j]"}.
+#' 
+#' @param name Parameter name
+#' @param m,n Dimensions of parameter (m=nrow, n=ncol)
+#' @param dim Dimensionality of parameter (0=scalar, 1=vector, 2=matrix)
+#' 
+#' @return List of names for parameter values
+#' 
+#' @keywords internal
 .make_index_names <- function(name, m = NULL, n = NULL, dim = 1) {
     if (is.null(m) || m == 1) {
         name
@@ -116,10 +142,22 @@ NULL
     }
 }
 
-## Tidy C++ outputs before writing to disk.
-##  1) Convert each parameter to matrix (n_iterations x n_indices) 
-##  2) Add appropriate colnames 
-##  3) Thin evenly (for enhance)
+#' Tidy C++ outputs before writing to disk.
+#' 
+#' 1) Convert each parameter to matrix (n_iterations x n_indices) 
+#' 2) Add appropriate colnames 
+#' 3) Thin evenly (for enhance)
+#'
+#' @param out List returned by \code{cluster()} or \code{deconvolve()}.
+#' @param method Whether the output came from clustering or enhancement.
+#'   (Different params are included in each.)
+#' @param thin Thinning rate. Some enhanced parameters are thinned within C++
+#'   loop, others (\code{mu} and \code{Ychange}) need to be thinned afterwards.
+#'   
+#' @return List with standardized parameters
+#'   
+#' @keywords internal
+#' 
 #' @importFrom purrr map
 .clean_chain <- function(out, method = c("cluster", "enhance"), thin=100) 
 {
@@ -164,6 +202,13 @@ NULL
     out
 }
 
+#' Convert a list of matrices to a single matrix, where each row is a flattened
+#' matrix from the original list
+#' 
+#' @param xs List of matrices
+#' @return Matrix
+#' 
+#' @keywords internal
 .flatten_matrix_list <- function(xs, ...) {
     xs <- map(xs, function(x) as.vector(t(x)))
     x <- do.call(rbind, xs)
