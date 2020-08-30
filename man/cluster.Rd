@@ -2,7 +2,7 @@
 % Please edit documentation in R/spatialCluster.R
 \name{cluster}
 \alias{cluster}
-\title{Wrapper around C++ \code{cluster()} function}
+\title{Wrapper around C++ \code{iterate_*()} functions}
 \usage{
 cluster(
   Y,
@@ -21,6 +21,6 @@ cluster(
 )
 }
 \description{
-Wrapper around C++ \code{cluster()} function
+Wrapper around C++ \code{iterate_*()} functions
 }
 \keyword{internal}

@@ -62,6 +62,9 @@
 NULL
 
 ## TODO: re-order arguments so all keyword arguments come after positionals
+#' Wrapper around C++ \code{iterate_deconv()} function
+#' 
+#' @keywords internal
 #' @importFrom stats cov
 deconvolve <- function(Y, positions, nrep = 1000, gamma = 2, xdist, ydist, q, 
     init, model = "normal", platform = c("Visium", "ST"), verbose = TRUE, 
@@ -109,7 +112,15 @@ deconvolve <- function(Y, positions, nrep = 1000, gamma = 2, xdist, ydist, q,
     out
 }
 
-## Define offsets for each subspot layout
+#' Define offsets for each subspot layout.
+#' 
+#' Hex spots are divided into 6 triangular subspots, square spots are divided
+#' into 9 squares. Offsets are relative to the spot center.
+#' 
+#' @param n_subspots_per Number of subspots per spot
+#' @return Matrix of x and y offsets, one row per subspot
+#' 
+#' @keywords internal
 .make_subspot_offsets <- function(n_subspots_per) {
     if (n_subspots_per == 6) {
         rbind(expand.grid(c(1/3, -1/3), c(1/3,-1/3)), expand.grid(c(2/3, -2/3), 0))
@@ -122,17 +133,18 @@ deconvolve <- function(Y, positions, nrep = 1000, gamma = 2, xdist, ydist, q,
     }
 }
 
-## Add subspot labels and offset row/col locations before making enhanced SCE.
-##
-## Subspots are stored as (1.1, 2.1, 3.1, ..., 1.2, 2.2, 3.2, ...)
-##
-## @param cdata Table of colData (imagerow and imagecol; from deconv$positions)
-## @param sce Original sce (to obtain number of spots and original row/col)
-## @param n_subspots_per Number of subspots per spot
-## 
-## @return Data frame with added subspot names, parent spot indices, and offset
-##   row/column coordinates
-##
+#' Add subspot labels and offset row/col locations before making enhanced SCE.
+#'
+#' Subspots are stored as (1.1, 2.1, 3.1, ..., 1.2, 2.2, 3.2, ...)
+#'
+#' @param cdata Table of colData (imagerow and imagecol; from deconv$positions)
+#' @param sce Original sce (to obtain number of spots and original row/col)
+#' @param n_subspots_per Number of subspots per spot
+#' 
+#' @return Data frame with added subspot names, parent spot indices, and offset
+#'   row/column coordinates
+#'
+#' @keywords internal
 #' @importFrom assertthat assert_that
 .make_subspot_coldata <- function(positions, sce, n_subspots_per) {
     cdata <- as.data.frame(positions)

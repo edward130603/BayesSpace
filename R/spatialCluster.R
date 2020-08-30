@@ -46,7 +46,7 @@
 #' @name spatialCluster
 NULL
 
-#' Wrapper around C++ \code{cluster()} function
+#' Wrapper around C++ \code{iterate_*()} functions
 #' 
 #' @keywords internal
 #' 
