@@ -79,6 +79,7 @@ enhancePlot <- function(sce, platform=c("Visium", "ST")) {
     splot
 }
 
+## Helper to extract x, y, fill ID
 .select_spot_positions <- function(cdata, x="col", y="row", fill.col="spatial.cluster") {
     spot_positions <- cdata[, c(x, y, fill.col)]
     colnames(spot_positions) <- c("x.pos", "y.pos", "fill")
@@ -87,10 +88,15 @@ enhancePlot <- function(sce, platform=c("Visium", "ST")) {
     spot_positions
 }
 
-## Compute vertex coordinates for each spot
-## Positions are upper left corners for square and centers for hex
+## Compute vertex coordinates for each spot in frame of plot
+##
+## @param spot_positions Center for hex, top left for square
+## @param vertex_offsets Data frame of (x, y) offsets wrt spot position for each
+##   vertex of spot
+## 
+## @returns Cartesian product of positions and offsets, with coordinates 
+##   computed as (pos + offset)
 .make_spot_vertices <- function(spot_positions, vertex_offsets) {
-    # Compute vertex coordinates in frame of plot
     spot_vertices <- merge(spot_positions, vertex_offsets)
     spot_vertices$x.vertex <- spot_vertices$x.pos + spot_vertices$x.offset
     spot_vertices$y.vertex <- spot_vertices$y.pos + spot_vertices$y.offset
@@ -98,9 +104,8 @@ enhancePlot <- function(sce, platform=c("Visium", "ST")) {
     as.data.frame(spot_vertices)
 }
 
-## Hex spots are referenced by center
+## Make vertices for each hex spot
 .make_hex_spots <- function(cdata) {
-
     spot_positions <- .select_spot_positions(cdata)
     spot_positions <- .adjust_hex_centers(spot_positions)
 
@@ -117,6 +122,8 @@ enhancePlot <- function(sce, platform=c("Visium", "ST")) {
     spot_vertices
 }
 
+## Adjust hex spot positions so hexagons are adjacent to each other in plot
+##
 ## Spots are regular hexagons with one unit of horizontal distance
 ## between centers
 .adjust_hex_centers <- function(spot_positions) {
@@ -140,16 +147,21 @@ enhancePlot <- function(sce, platform=c("Visium", "ST")) {
     spot_positions
 }
 
-## Square spots are referenced by top left vertex
+## Make vertices for each square spot
+##
+## Squares are simple, just mae a unit square at each array coordinate
 .make_square_spots <- function(cdata, fill.col="spatial.cluster", scale.factor=1) {
+    spot_positions <- .select_spot_positions(cdata)
+    
     vertex_offsets <- data.frame(x.offset=c(0, 1, 1, 0),
                                   y.offset=c(0, 0, 1, 1))
     vertex_offsets <- vertex_offsets * scale.factor
-    spot_positions <- .select_spot_positions(cdata)
 
     .make_spot_vertices(spot_positions, vertex_offsets)
 }
 
+## Helper to pull out subspot position columns
+## Probably redundant with select_spot_positions above, but we need subspot.idx
 .select_subspot_positions <- function(cdata, x="spot.col", y="spot.row", fill.col="spatial.cluster") {
     spot_positions <- cdata[, c(x, y, fill.col, "subspot.idx")]
     colnames(spot_positions) <- c("x.pos", "y.pos", "fill", "subspot.idx")
@@ -158,6 +170,7 @@ enhancePlot <- function(sce, platform=c("Visium", "ST")) {
     spot_positions
 }
 
+## Make vertices for each triangle subspot of a hex
 .make_triangle_subspots <- function(cdata, fill.col="spatial.cluster") {
     spot_positions <- .select_subspot_positions(cdata, x="spot.col", y="spot.row")
     spot_positions <- .adjust_hex_centers(spot_positions)
@@ -167,7 +180,9 @@ enhancePlot <- function(sce, platform=c("Visium", "ST")) {
     r <- 1/2
     R <- (2 / sqrt(3)) * r
     
-    # Make lists of triangle vertices (with respect to hex center)
+    ## Make lists of triangle vertices (with respect to hex center)
+    ## subspot.idx is same ordering as `shift`` in spatialEnhance
+    ## that is, beginning in top right and proceeding clockwise, (1, 5, 3, 4, 6, 2)
     vertex_offsets <- do.call(rbind, list(
         data.frame(x.offset=c(0, 0, r), y.offset=c(0, -R, -R/2), subspot.idx=1),
         data.frame(x.offset=c(0, r, r), y.offset=c(0, -R/2, R/2), subspot.idx=5),
@@ -177,6 +192,8 @@ enhancePlot <- function(sce, platform=c("Visium", "ST")) {
         data.frame(x.offset=c(0, -r, 0), y.offset=c(0, -R/2, -R), subspot.idx=2)
     ))
     
+    ## note that instead of cartesian product, `merge()` does an outer join
+    ## on subspot.idx here
     spot_vertices <- .make_spot_vertices(spot_positions, vertex_offsets)
     spot_vertices$y.vertex <- -spot_vertices$y.vertex
     
