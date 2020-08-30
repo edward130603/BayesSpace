@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Plot cluster labels in spatial context — spatialPlot • BayesSpace</title>
+<title>Compute vertex coordinates for each spot in frame of plot — .make_spot_vertices • BayesSpace</title>
 
 
 <!-- jquery -->
@@ -39,10 +39,8 @@
 
 
 
-<meta property="og:title" content="Plot cluster labels in spatial context — spatialPlot" />
-<meta property="og:description" content="After running spatialCluster() or spatialEnhance(), we can
-visualize the cluster assignments of each spot using clusterPlot() or
-enhancePlot(), respectively." />
+<meta property="og:title" content="Compute vertex coordinates for each spot in frame of plot — .make_spot_vertices" />
+<meta property="og:description" content="Compute vertex coordinates for each spot in frame of plot" />
 
 
 
@@ -111,46 +109,36 @@ enhancePlot(), respectively." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Plot cluster labels in spatial context</h1>
+    <h1>Compute vertex coordinates for each spot in frame of plot</h1>
     
-    <div class="hidden name"><code>spatialPlot.Rd</code></div>
+    <div class="hidden name"><code>dot-make_spot_vertices.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>After running <code><a href='spatialCluster.html'>spatialCluster()</a></code> or <code><a href='spatialEnhance.html'>spatialEnhance()</a></code>, we can
-visualize the cluster assignments of each spot using <code>clusterPlot()</code> or
-<code>enhancePlot()</code>, respectively.</p>
+    <p>Compute vertex coordinates for each spot in frame of plot</p>
     </div>
 
-    <pre class="usage"><span class='fu'>clusterPlot</span>(<span class='no'>sce</span>, <span class='kw'>platform</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"Visium"</span>, <span class='st'>"ST"</span>))
-
-<span class='fu'>enhancePlot</span>(<span class='no'>sce</span>, <span class='kw'>platform</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"Visium"</span>, <span class='st'>"ST"</span>))</pre>
+    <pre class="usage"><span class='fu'>.make_spot_vertices</span>(<span class='no'>spot_positions</span>, <span class='no'>vertex_offsets</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>sce</th>
-      <td><p>A SingleCellExperiment object containing the spatial data and
-cluster assignments in <code>sce$spatial.cluster</code>.</p></td>
+      <th>spot_positions</th>
+      <td><p>Center for hex, top left for square</p></td>
     </tr>
     <tr>
-      <th>sce.enhanced, sce.ref</th>
-      <td><p>The enhanced subspots and original spots,
-respectively.</p></td>
+      <th>vertex_offsets</th>
+      <td><p>Data frame of (x, y) offsets wrt spot position for each
+vertex of spot</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>Both functions return a ggplot object.</p>
+    <p>Cartesian product of positions and offsets, with coordinates
+  computed as (pos + offset)</p>
 
-    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/Random.html'>set.seed</a></span>(<span class='fl'>149</span>)
-<span class='no'>sce</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='exampleSCE.html'>exampleSCE</a></span>()
-<span class='no'>sce</span>$<span class='no'>spatial.cluster</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/Round.html'>floor</a></span>(<span class='fu'><a href='https://rdrr.io/r/stats/Uniform.html'>runif</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/nrow.html'>ncol</a></span>(<span class='no'>sce</span>), <span class='fl'>1</span>, <span class='fl'>4</span>))
-<span class='fu'>clusterPlot</span>(<span class='no'>sce</span>)</div><div class='output co'>#&gt; <span class='error'>Error in data.frame(x.offset = c(0, r, r, 0, -r, -r), y.offset = c(-R,     -R/2, R/2, R, R/2, -R/2)): object 'r' not found</span></div><div class='input'>
-</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

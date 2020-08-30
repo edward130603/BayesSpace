@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Plot cluster labels in spatial context — spatialPlot • BayesSpace</title>
+<title>Tidy C++ outputs before writing to disk. — .clean_chain • BayesSpace</title>
 
 
 <!-- jquery -->
@@ -39,10 +39,10 @@
 
 
 
-<meta property="og:title" content="Plot cluster labels in spatial context — spatialPlot" />
-<meta property="og:description" content="After running spatialCluster() or spatialEnhance(), we can
-visualize the cluster assignments of each spot using clusterPlot() or
-enhancePlot(), respectively." />
+<meta property="og:title" content="Tidy C++ outputs before writing to disk. — .clean_chain" />
+<meta property="og:description" content="1) Convert each parameter to matrix (n_iterations x n_indices) 
+2) Add appropriate colnames 
+3) Thin evenly (for enhance)" />
 
 
 
@@ -111,46 +111,42 @@ enhancePlot(), respectively." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Plot cluster labels in spatial context</h1>
+    <h1>Tidy C++ outputs before writing to disk.</h1>
     
-    <div class="hidden name"><code>spatialPlot.Rd</code></div>
+    <div class="hidden name"><code>dot-clean_chain.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>After running <code><a href='spatialCluster.html'>spatialCluster()</a></code> or <code><a href='spatialEnhance.html'>spatialEnhance()</a></code>, we can
-visualize the cluster assignments of each spot using <code>clusterPlot()</code> or
-<code>enhancePlot()</code>, respectively.</p>
+    <p>1) Convert each parameter to matrix (n_iterations x n_indices) 
+2) Add appropriate colnames 
+3) Thin evenly (for enhance)</p>
     </div>
 
-    <pre class="usage"><span class='fu'>clusterPlot</span>(<span class='no'>sce</span>, <span class='kw'>platform</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"Visium"</span>, <span class='st'>"ST"</span>))
-
-<span class='fu'>enhancePlot</span>(<span class='no'>sce</span>, <span class='kw'>platform</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"Visium"</span>, <span class='st'>"ST"</span>))</pre>
+    <pre class="usage"><span class='fu'>.clean_chain</span>(<span class='no'>out</span>, <span class='kw'>method</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"cluster"</span>, <span class='st'>"enhance"</span>), <span class='kw'>thin</span> <span class='kw'>=</span> <span class='fl'>100</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>sce</th>
-      <td><p>A SingleCellExperiment object containing the spatial data and
-cluster assignments in <code>sce$spatial.cluster</code>.</p></td>
+      <th>out</th>
+      <td><p>List returned by <code>cluster()</code> or <code>deconvolve()</code>.</p></td>
     </tr>
     <tr>
-      <th>sce.enhanced, sce.ref</th>
-      <td><p>The enhanced subspots and original spots,
-respectively.</p></td>
+      <th>method</th>
+      <td><p>Whether the output came from clustering or enhancement.
+(Different params are included in each.)</p></td>
+    </tr>
+    <tr>
+      <th>thin</th>
+      <td><p>Thinning rate. Some enhanced parameters are thinned within C++
+loop, others (<code>mu</code> and <code>Ychange</code>) need to be thinned afterwards.</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>Both functions return a ggplot object.</p>
+    <p>List with standardized parameters</p>
 
-    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/Random.html'>set.seed</a></span>(<span class='fl'>149</span>)
-<span class='no'>sce</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='exampleSCE.html'>exampleSCE</a></span>()
-<span class='no'>sce</span>$<span class='no'>spatial.cluster</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/Round.html'>floor</a></span>(<span class='fu'><a href='https://rdrr.io/r/stats/Uniform.html'>runif</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/nrow.html'>ncol</a></span>(<span class='no'>sce</span>), <span class='fl'>1</span>, <span class='fl'>4</span>))
-<span class='fu'>clusterPlot</span>(<span class='no'>sce</span>)</div><div class='output co'>#&gt; <span class='error'>Error in data.frame(x.offset = c(0, r, r, 0, -r, -r), y.offset = c(-R,     -R/2, R/2, R, R/2, -R/2)): object 'r' not found</span></div><div class='input'>
-</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

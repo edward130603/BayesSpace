@@ -1,7 +1,7 @@
 ---
 title: "BayesSpace"
-author: "Edward Zhao, Xing Ren, Matt Stone, and Raphael Gottardo"
-date: "2020-08-28"
+author: "Edward Zhao, Matt Stone, Xing Ren, and Raphael Gottardo"
+date: "2020-08-30"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{BayesSpace}
@@ -110,15 +110,23 @@ The enhanced SingleCellExperiment includes an index to the parent spot in the or
 
 ```r
 head(colData(enhanced))
-#> DataFrame with 6 rows and 7 columns
-#>              spot.idx subspot.idx       row       col  imagerow  imagecol spatial.cluster
-#>             <numeric>   <integer> <numeric> <numeric> <numeric> <numeric>       <numeric>
-#> subspot_1.1         1           1   7.33333   15.3333   7.33333   15.3333               1
-#> subspot_2.1         2           1   7.33333   16.3333   7.33333   16.3333               2
-#> subspot_3.1         3           1   7.33333   17.3333   7.33333   17.3333               2
-#> subspot_4.1         4           1   7.33333   18.3333   7.33333   18.3333               2
-#> subspot_5.1         5           1   8.33333   13.3333   8.33333   13.3333               1
-#> subspot_6.1         6           1   8.33333   14.3333   8.33333   14.3333               1
+#> DataFrame with 6 rows and 9 columns
+#>              spot.idx subspot.idx  spot.row  spot.col       row       col  imagerow  imagecol
+#>             <numeric>   <integer> <integer> <integer> <numeric> <numeric> <numeric> <numeric>
+#> subspot_1.1         1           1         7        15   7.33333   15.3333   7.33333   15.3333
+#> subspot_2.1         2           1         7        16   7.33333   16.3333   7.33333   16.3333
+#> subspot_3.1         3           1         7        17   7.33333   17.3333   7.33333   17.3333
+#> subspot_4.1         4           1         7        18   7.33333   18.3333   7.33333   18.3333
+#> subspot_5.1         5           1         8        13   8.33333   13.3333   8.33333   13.3333
+#> subspot_6.1         6           1         8        14   8.33333   14.3333   8.33333   14.3333
+#>             spatial.cluster
+#>                   <numeric>
+#> subspot_1.1               1
+#> subspot_2.1               2
+#> subspot_3.1               3
+#> subspot_4.1               3
+#> subspot_5.1               1
+#> subspot_6.1               1
 ```
 
 
@@ -164,12 +172,12 @@ row. Columns are named with the parameter name and index (if any).
 ```r
 chain <- mcmcChain(sce)
 chain[1:5, 1:5]
-#>      lambda[1,1] lambda[1,2] lambda[1,3] lambda[1,4]  lambda[1,5]
-#> [1,]  0.01000000  0.00000000  0.00000000 0.000000000  0.000000000
-#> [2,]  0.07716601  0.02809490  0.04923277 0.029632058  0.004986712
-#> [3,]  0.07275226  0.04208836  0.03762690 0.008965030  0.002487695
-#> [4,]  0.07805325  0.04867904  0.03494542 0.005154332 -0.017679223
-#> [5,]  0.08875719  0.04706201  0.05793587 0.004569161 -0.059733913
+#>      lambda[1,1] lambda[1,2] lambda[1,3] lambda[1,4]   lambda[1,5]
+#> [1,]  0.01000000  0.00000000  0.00000000 0.000000000  0.0000000000
+#> [2,]  0.08840958 -0.04725375  0.05372259 0.038636232 -0.0053985586
+#> [3,]  0.07707432 -0.04138119  0.04046272 0.017109309 -0.0004981363
+#> [4,]  0.08220634 -0.04982772  0.03761156 0.005765817 -0.0205914192
+#> [5,]  0.09618645 -0.05293014  0.06389211 0.018119364 -0.0518914784
 ```
 
 To remove the HDF5 file from disk and remove its path from the metadata, use

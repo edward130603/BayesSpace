@@ -23,87 +23,192 @@ NULL
 palette <- c("#0173b2", "#de8f05", "#029e73", "#d55e00", "#cc78bc",
              "#ca9161", "#fbafe4", "#949494", "#ece133", "#56b4e9")
 
-#' @importFrom ggplot2 ggplot aes_ geom_point scale_color_manual coord_fixed labs theme_void
+#' @importFrom ggplot2 ggplot aes_ geom_polygon scale_fill_manual coord_equal labs theme_void
 #'
 #' @export
 #' @rdname spatialPlot
-clusterPlot <- function(sce) {
+clusterPlot <- function(sce, platform=c("Visium", "ST")) {
+    # TODO: add user-specified palette
+    # TODO: add platform/lattice to sce metadata instead of passing
+    platform <- match.arg(platform)
+
     cdata <- data.frame(colData(sce))
-    # TODO: redo with geom_polygon/square for ST
-    # TODO: redo with geom_polygon/hex so it scales and matches enhancePlot
-    splot <- ggplot(cdata, aes_(x=~col, y=~(-row), color=~factor(spatial.cluster))) +
-        geom_point(size=3) +
-        # scale_color_manual(values = palette) +
-        # TODO accomodate more than 10 values in default palette
-        coord_fixed(ratio=sqrt(3)) +
-        labs(color = "Cluster") +
-        theme_void()   
-    
+    if (platform == "Visium") {
+        vertices <- .make_hex_spots(cdata)
+    } else {
+        vertices <- .make_square_spots(cdata)
+    }
+
+    splot <- ggplot(data=vertices, 
+                    aes_(x=~x.vertex, y=~y.vertex, group=~spot, fill=~factor(fill))) + 
+        geom_polygon() +
+        # scale_fill_manual() +
+        labs(fill="Cluster") +
+        coord_equal() +
+        theme_void()
+
     splot
 }
 
-#' @importFrom ggplot2 ggplot aes_ geom_polygon scale_fill_manual coord_fixed labs theme_void
+#' @importFrom ggplot2 ggplot aes_ geom_polygon scale_fill_manual coord_equal labs theme_void
 #'
 #' @export
 #' @rdname spatialPlot
-enhancePlot <- function(sce.enhanced, sce.ref) {
-## TODO add arbitrary column (e.g. marker expression) instead of cluster
-## TODO maybe better to re-compute original positions from enhanced instead of passing sce.ref
+enhancePlot <- function(sce, platform=c("Visium", "ST")) {
+    # TODO: add user-specified palette
+    # TODO: add platform/lattice to sce metadata instead of passing
+    platform <- match.arg(platform)
 
-    ## TODO store these as attributes when running spatialEnhance
-    inputs <- .prepare_inputs(sce.ref)
-    
-    positions_plot <- .polygon_positions(inputs$positions, inputs$xdist*1.01, 
-        inputs$ydist*1.01, data.frame(sce.enhanced$spatial.cluster))
-    colnames(positions_plot) <- c("x", "y", "group", "spatial.cluster")
+    cdata <- data.frame(colData(sce))
+    ## TODO: add "enhanced" to metadata and put this logic in clusterPlot()
+    if (platform == "Visium") {
+        vertices <- .make_triangle_subspots(cdata)
+    } else {
+        vertices <- .make_square_spots(cdata, scale.factor=(1/3))
+    }
 
-    eplot <- ggplot(positions_plot, aes_(x=~x, y=~(-y), group=~group, fill=~factor(spatial.cluster))) +
+    ## TODO: add color (edge color) parameter
+    splot <- ggplot(data=vertices,
+                    aes_(x=~x.vertex, y=~y.vertex, group=~spot, fill=~factor(fill))) +
         geom_polygon() +
-        # scale_fill_manual(values=palette) +
-        coord_fixed(ratio=sqrt(1)) +
+        # scale_fill_manual() +
         labs(fill="Cluster") +
+        coord_equal() +
         theme_void()
-        
-    eplot
+
+    splot
 }
 
-## (Written by Ed) Make polygon borders for each subspot
-## 
-## @param positions Dataframe of spot positions
-## @param xdist,ydist Interspot distance
-## @param cols Subspot level values (e.g. cluster label)
-#' @importFrom stringr str_split
-.polygon_positions <- function(positions, xdist, ydist, cols) {
-    colnames(positions) <- c("x", "y")
-    shift <- data.frame(Var1=c(0, 1,   0,   -1,  -1,   0,    1),
-                       Var2=c(0, 1/3, 2/3, 1/3, -1/3, -2/3, -1/3))
-    shift2 <- shift[c(1,2,3, #each row is one polygon
-                     1,3,4,
-                     1,6,7,
-                     1,5,6,
-                     1,2,7,
-                     1,4,5),]
-    group <- c(rep(seq(1, 6), each=3)) #six triangles
+#' Helper to extract x, y, fill ID
+#' @keywords internal
+.select_spot_positions <- function(cdata, x="col", y="row", fill.col="spatial.cluster") {
+    spot_positions <- cdata[, c(x, y, fill.col)]
+    colnames(spot_positions) <- c("x.pos", "y.pos", "fill")
+    spot_positions$spot <- rownames(spot_positions)
+
+    spot_positions
+}
+
+#' Compute vertex coordinates for each spot in frame of plot
+#'
+#' @param spot_positions Center for hex, top left for square
+#' @param vertex_offsets Data frame of (x, y) offsets wrt spot position for each
+#'   vertex of spot
+#' 
+#' @return Cartesian product of positions and offsets, with coordinates
+#'   computed as (pos + offset)
+#'
+#' @keywords internal
+.make_spot_vertices <- function(spot_positions, vertex_offsets) {
+    spot_vertices <- merge(spot_positions, vertex_offsets)
+    spot_vertices$x.vertex <- spot_vertices$x.pos + spot_vertices$x.offset
+    spot_vertices$y.vertex <- spot_vertices$y.pos + spot_vertices$y.offset
+
+    as.data.frame(spot_vertices)
+}
+
+#' Make vertices for each hex spot
+#' 
+#' @keywords internal
+.make_hex_spots <- function(cdata) {
+    spot_positions <- .select_spot_positions(cdata)
+    spot_positions <- .adjust_hex_centers(spot_positions)
+
+    ## vertices of each hex (with respect to center coordinates)
+    ## start at top center, loop clockwise
+    vertex_offsets <- data.frame(x.offset=c(0, r, r, 0, -r, -r),
+                                 y.offset=c(-R, -R/2, R/2, R, R/2, -R/2))
+
+    spot_vertices <- .make_spot_vertices(spot_positions, vertex_offsets)
+
+    ## Flip to match image orientation
+    spot_vertices$y.vertex <- -spot_vertices$y.vertex
+
+    spot_vertices
+}
+
+#' Adjust hex spot positions so hexagons are adjacent to each other in plot
+#'
+#' Spots are regular hexagons with one unit of horizontal distance
+#' between centers
+#' 
+#' @keywords internal
+.adjust_hex_centers <- function(spot_positions) {
+    ## R = circumradius, distance from center to vertex
+    ## r = inradius, distance from center to edge midpoint
+    r <- 1/2
+    R <- (2 / sqrt(3)) * r
     
-    n0 <- nrow(positions)
-    positions_long <- positions[rep(seq_len(n0), 18), ]
-    shift2 <- t(t(shift2)*c(xdist, ydist))
-    shift_long <- shift2[rep(seq_len(18), each=n0), ]
+    ## Start at (1-indexed origin)
+    spot_positions$x.pos <- spot_positions$x.pos - min(spot_positions$x.pos) + 1
+    spot_positions$y.pos <- spot_positions$y.pos - min(spot_positions$y.pos) + 1
     
-    positions_long[,"x"] <- positions_long[,"x"] + shift_long[,"Var1"]
-    positions_long[,"y"] <- positions_long[,"y"] + shift_long[,"Var2"]
-    group_long <- paste(rep(seq_len(n0), 18),rep(rep(seq(1, 6), each=3), each=n0), sep="_")
-    group_long2 <- data.frame(apply(str_split(group_long, "_", simplify=TRUE), 2, as.numeric))
+    ## Shift centers up so rows are adjacent
+    spot_positions$y.pos <- spot_positions$y.pos * R * (3/2)
     
-    #add columns
-    colnames(group_long2) <- c("j0", "poly")
-    cols <- as.matrix(cols)
-    cols_long <- matrix(nrow=nrow(positions_long), ncol=ncol(cols))
-    colnames(cols_long) <- colnames(cols)
-    for(i in seq_len(nrow(positions_long))){
-        # print(i)
-        # print(group_long2$j0[i]+(group_long2$poly[i]-1)*n0)
-        cols_long[i,] <- cols[group_long2$j0[i], ]#+(group_long2$poly[i]-1)*n0,]
-    }
-    data.frame(positions_long, group=group_long, cols_long)
+    ## Spot columns are offset by row
+    ## (i.e. odd rows have odd numbered columns, even rows have even)
+    ## Shift centers to the left so columns are adjacent (but hexes stay offset)
+    spot_positions$x.pos <- (spot_positions$x.pos + 1) / 2
+    
+    spot_positions
+}
+
+#' Make vertices for each square spot
+#'
+#' Squares are simple, just mae a unit square at each array coordinate
+#' 
+#' @keywords internal
+.make_square_spots <- function(cdata, fill.col="spatial.cluster", scale.factor=1) {
+    spot_positions <- .select_spot_positions(cdata)
+    
+    vertex_offsets <- data.frame(x.offset=c(0, 1, 1, 0),
+                                  y.offset=c(0, 0, 1, 1))
+    vertex_offsets <- vertex_offsets * scale.factor
+
+    .make_spot_vertices(spot_positions, vertex_offsets)
+}
+
+#' Helper to pull out subspot position columns
+#' Probably redundant with select_spot_positions above, but we need subspot.idx
+#' 
+#' @keywords internal
+.select_subspot_positions <- function(cdata, x="spot.col", y="spot.row", fill.col="spatial.cluster") {
+    spot_positions <- cdata[, c(x, y, fill.col, "subspot.idx")]
+    colnames(spot_positions) <- c("x.pos", "y.pos", "fill", "subspot.idx")
+    spot_positions$spot <- rownames(spot_positions)
+    
+    spot_positions
+}
+
+#' Make vertices for each triangle subspot of a hex
+#' 
+#' @keywords internal
+.make_triangle_subspots <- function(cdata, fill.col="spatial.cluster") {
+    spot_positions <- .select_subspot_positions(cdata, x="spot.col", y="spot.row")
+    spot_positions <- .adjust_hex_centers(spot_positions)
+    
+    ## R = circumradius, distance from center to vertex
+    ## r = inradius, distance from center to edge midpoint
+    r <- 1/2
+    R <- (2 / sqrt(3)) * r
+    
+    ## Make lists of triangle vertices (with respect to hex center)
+    ## subspot.idx is same ordering as `shift` in spatialEnhance
+    ## that is, beginning in top right and proceeding clockwise, (1, 5, 3, 4, 6, 2)
+    vertex_offsets <- do.call(rbind, list(
+        data.frame(x.offset=c(0, 0, r), y.offset=c(0, -R, -R/2), subspot.idx=1),
+        data.frame(x.offset=c(0, r, r), y.offset=c(0, -R/2, R/2), subspot.idx=5),
+        data.frame(x.offset=c(0, r, 0), y.offset=c(0, R/2, R), subspot.idx=3),
+        data.frame(x.offset=c(0, 0, -r), y.offset=c(0, R, R/2), subspot.idx=4),
+        data.frame(x.offset=c(0, -r, -r), y.offset=c(0, R/2, -R/2), subspot.idx=6),
+        data.frame(x.offset=c(0, -r, 0), y.offset=c(0, -R/2, -R), subspot.idx=2)
+    ))
+    
+    ## note that instead of cartesian product, `merge()` does an outer join
+    ## on subspot.idx here
+    spot_vertices <- .make_spot_vertices(spot_positions, vertex_offsets)
+    spot_vertices$y.vertex <- -spot_vertices$y.vertex
+    
+    spot_vertices
 }

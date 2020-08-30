@@ -46,6 +46,10 @@
 #' @name spatialCluster
 NULL
 
+#' Wrapper around C++ \code{iterate_*()} functions
+#' 
+#' @keywords internal
+#' 
 #' @importFrom purrr map
 cluster <- function(Y, positions, radius, q, init = rep(1, nrow(Y)),
     model = c("t", "normal"), precision = c("equal", "variable"),
@@ -93,7 +97,7 @@ cluster <- function(Y, positions, radius, q, init = rep(1, nrow(Y)),
         q=q, init=init, mu0=mu0, lambda0=lambda0, alpha=alpha, beta=beta)
 }
 
-## TODO make generic
+## TODO make generic for SCE/matrix instead of wrapping cluster() ?
 #' @importFrom SingleCellExperiment reducedDim
 #' @importFrom SummarizedExperiment colData colData<-
 #' @importFrom S4Vectors metadata metadata<-
@@ -140,7 +144,19 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     sce
 }
 
-## Initialize cluster assignments (use k-means for now)
+#' Initialize cluster assignments
+#' 
+#' @param sce SingleCellExperiment
+#' @param q Number of clusters
+#' @param inputs Results from .prepare_inputs() (TODO: store this in sce)
+#' @param init Vector of initial cluster assignments
+#' @param init.method Initialization clustering algorithm
+#' 
+#' @return Modified sce with initial cluster assignments stored in
+#'   colData$cluster.init (TODO: return vector instead)
+#' 
+#' @keywords internal
+#' 
 #' @importFrom stats kmeans
 #' @importFrom mclust Mclust mclustBIC
 .init_cluster <- function(sce, q, inputs, init = NULL, init.method = c("mclust", "kmeans")) {

@@ -6,9 +6,9 @@
 \alias{enhancePlot}
 \title{Plot cluster labels in spatial context}
 \usage{
-clusterPlot(sce)
+clusterPlot(sce, platform = c("Visium", "ST"))
 
-enhancePlot(sce.enhanced, sce.ref)
+enhancePlot(sce, platform = c("Visium", "ST"))
 }
 \arguments{
 \item{sce}{A SingleCellExperiment object containing the spatial data and
