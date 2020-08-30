@@ -23,7 +23,7 @@ NULL
 palette <- c("#0173b2", "#de8f05", "#029e73", "#d55e00", "#cc78bc",
              "#ca9161", "#fbafe4", "#949494", "#ece133", "#56b4e9")
 
-#' @importFrom ggplot2 ggplot aes_ geom_point scale_color_manual coord_equal labs theme_void
+#' @importFrom ggplot2 ggplot aes_ geom_polygon scale_fill_manual coord_equal labs theme_void
 #'
 #' @export
 #' @rdname spatialPlot
@@ -50,7 +50,7 @@ clusterPlot <- function(sce, platform=c("Visium", "ST")) {
     splot
 }
 
-#' @importFrom ggplot2 ggplot aes_ geom_point scale_color_manual coord_equal labs theme_void
+#' @importFrom ggplot2 ggplot aes_ geom_polygon scale_fill_manual coord_equal labs theme_void
 #'
 #' @export
 #' @rdname spatialPlot
