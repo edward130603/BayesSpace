@@ -50,6 +50,35 @@ clusterPlot <- function(sce, platform=c("Visium", "ST")) {
     splot
 }
 
+#' @importFrom ggplot2 ggplot aes_ geom_point scale_color_manual coord_equal labs theme_void
+#'
+#' @export
+#' @rdname spatialPlot
+enhancePlot <- function(sce, platform=c("Visium", "ST")) {
+    # TODO: add user-specified palette
+    # TODO: add platform/lattice to sce metadata instead of passing
+    platform <- match.arg(platform)
+
+    cdata <- data.frame(colData(sce))
+    ## TODO: add "enhanced" to metadata and put this logic in clusterPlot()
+    if (platform == "Visium") {
+        vertices <- .make_hex_spots(cdata)
+    } else {
+        vertices <- .make_square_spots(cdata, scale.factor=(1/3))
+    }
+
+    ## TODO: add color (edge color) parameter
+    splot <- ggplot(data=vertices,
+                    aes_(x=~x.vertex, y=~y.vertex, group=~spot, fill=~factor(fill))) +
+        geom_polygon() +
+        # scale_fill_manual() +
+        labs(fill="Cluster") +
+        coord_equal() +
+        theme_void()
+
+    splot
+}
+
 .select_spot_positions <- function(cdata, fill.col="spatial.cluster") {
     spot_positions <- cdata[, c("col", "row", fill.col)]
     colnames(spot_positions) <- c("x.pos", "y.pos", "fill")
@@ -106,11 +135,11 @@ clusterPlot <- function(sce, platform=c("Visium", "ST")) {
     spot_vertices
 }
 
-.make_square_spots <- function(cdata, fill.col="spatial.cluster") {
+.make_square_spots <- function(cdata, fill.col="spatial.cluster", scale.factor=1) {
     ## Square spots are referenced by top left vertex
     vertex_offsets <- data.frame(x.offset=c(0, 1, 1, 0),
                                   y.offset=c(0, 0, 1, 1))
-
+    vertex_offsets <- vertex_offsets * scale.factor
     spot_positions <- .select_spot_positions(cdata)
 
     .make_spot_vertices(spot_positions, vertex_offsets)
@@ -118,9 +147,8 @@ clusterPlot <- function(sce, platform=c("Visium", "ST")) {
 
 #' @importFrom ggplot2 ggplot aes_ geom_polygon scale_fill_manual coord_fixed labs theme_void
 #'
-#' @export
 #' @rdname spatialPlot
-enhancePlot <- function(sce.enhanced, sce.ref) {
+enhancePlot_v1 <- function(sce.enhanced, sce.ref) {
 ## TODO add arbitrary column (e.g. marker expression) instead of cluster
 ## TODO maybe better to re-compute original positions from enhanced instead of passing sce.ref
 
