@@ -4,14 +4,11 @@
 \alias{spatialPlot}
 \alias{clusterPlot}
 \alias{enhancePlot}
-\alias{enhancePlot_v1}
 \title{Plot cluster labels in spatial context}
 \usage{
 clusterPlot(sce, platform = c("Visium", "ST"))
 
 enhancePlot(sce, platform = c("Visium", "ST"))
-
-enhancePlot_v1(sce.enhanced, sce.ref)
 }
 \arguments{
 \item{sce}{A SingleCellExperiment object containing the spatial data and
