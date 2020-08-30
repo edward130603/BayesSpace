@@ -1,7 +1,7 @@
 # BayesSpace
 
   <!-- badges: start -->
-  [![R build status](https://github.com/edward130603/BayesSpace/workflows/check-bioc/badge.svg)](https://github.com/edward130603/BayesSpace/actions)
+  [![R build status](https://github.com/edward130603/BayesSpace/workflows/R-CMD-check-bioc/badge.svg)](https://github.com/edward130603/BayesSpace/actions)
   <!-- badges: end -->
 
 BayesSpace provides tools for clustering and enhancing the resolution of spatial gene expression experiments. 
