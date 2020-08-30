@@ -35,8 +35,7 @@ Imports:
     DirichletReg,
     xgboost,
     utils,
-    ggplot2,
-    stringr
+    ggplot2
 License: MIT + file LICENSE
 RoxygenNote: 7.1.0
 LinkingTo: 
