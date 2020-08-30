@@ -16,6 +16,8 @@
 #' @docType package
 #' @name BayesSpace
 #' 
+#' @keywords internal
+#'
 #' @importFrom Rcpp evalCpp
 #' @importFrom SummarizedExperiment assayNames
 #' @importFrom SingleCellExperiment altExpNames

@@ -22,3 +22,4 @@ List df_j, where \code{df_j[[i]]} is a vector of zero-indexed
 Compute pairwise distances between all spots and return list of neighbors
 for each spot.
 }
+\keyword{internal}

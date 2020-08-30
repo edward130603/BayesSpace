@@ -23,3 +23,4 @@ The enhancement algorithm deconvolves spot-level expression into imputed
 cell-level signals.
 }
 
+\keyword{internal}

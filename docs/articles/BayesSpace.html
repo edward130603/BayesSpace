@@ -67,9 +67,9 @@
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>BayesSpace</h1>
-                        <h4 class="author">Edward Zhao, Xing Ren, Matt Stone, and Raphael Gottardo</h4>
+                        <h4 class="author">Edward Zhao, Matt Stone, Xing Ren, and Raphael Gottardo</h4>
             
-            <h4 class="date">2020-08-28</h4>
+            <h4 class="date">2020-08-30</h4>
       
       
       <div class="hidden name"><code>BayesSpace.Rmd</code></div>
@@ -135,15 +135,23 @@
                            <span class="kw">position.cols</span><span class="kw">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"col"</span>, <span class="st">"row"</span>), <span class="kw">xdist</span><span class="kw">=</span><span class="fl">1</span>, <span class="kw">ydist</span><span class="kw">=</span><span class="fl">1</span>, <span class="kw">save.chain</span><span class="kw">=</span><span class="fl">TRUE</span>)</pre></body></html></div>
 <p>The enhanced SingleCellExperiment includes an index to the parent spot in the original <code>sce</code> (<code>spot.idx</code>), along with an index to the subspot. It adds the offsets to the original spot coordinates, and provides the enhanced cluster label (<code>spatial.cluster</code>).</p>
 <div class="sourceCode" id="cb9"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="fu">colData</span>(<span class="no">enhanced</span>))
-<span class="co">#&gt; DataFrame with 6 rows and 7 columns</span>
-<span class="co">#&gt;              spot.idx subspot.idx       row       col  imagerow  imagecol spatial.cluster</span>
-<span class="co">#&gt;             &lt;numeric&gt;   &lt;integer&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;       &lt;numeric&gt;</span>
-<span class="co">#&gt; subspot_1.1         1           1   7.33333   15.3333   7.33333   15.3333               1</span>
-<span class="co">#&gt; subspot_2.1         2           1   7.33333   16.3333   7.33333   16.3333               2</span>
-<span class="co">#&gt; subspot_3.1         3           1   7.33333   17.3333   7.33333   17.3333               2</span>
-<span class="co">#&gt; subspot_4.1         4           1   7.33333   18.3333   7.33333   18.3333               2</span>
-<span class="co">#&gt; subspot_5.1         5           1   8.33333   13.3333   8.33333   13.3333               1</span>
-<span class="co">#&gt; subspot_6.1         6           1   8.33333   14.3333   8.33333   14.3333               1</span></pre></body></html></div>
+<span class="co">#&gt; DataFrame with 6 rows and 9 columns</span>
+<span class="co">#&gt;              spot.idx subspot.idx  spot.row  spot.col       row       col  imagerow  imagecol</span>
+<span class="co">#&gt;             &lt;numeric&gt;   &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;</span>
+<span class="co">#&gt; subspot_1.1         1           1         7        15   7.33333   15.3333   7.33333   15.3333</span>
+<span class="co">#&gt; subspot_2.1         2           1         7        16   7.33333   16.3333   7.33333   16.3333</span>
+<span class="co">#&gt; subspot_3.1         3           1         7        17   7.33333   17.3333   7.33333   17.3333</span>
+<span class="co">#&gt; subspot_4.1         4           1         7        18   7.33333   18.3333   7.33333   18.3333</span>
+<span class="co">#&gt; subspot_5.1         5           1         8        13   8.33333   13.3333   8.33333   13.3333</span>
+<span class="co">#&gt; subspot_6.1         6           1         8        14   8.33333   14.3333   8.33333   14.3333</span>
+<span class="co">#&gt;             spatial.cluster</span>
+<span class="co">#&gt;                   &lt;numeric&gt;</span>
+<span class="co">#&gt; subspot_1.1               1</span>
+<span class="co">#&gt; subspot_2.1               2</span>
+<span class="co">#&gt; subspot_3.1               3</span>
+<span class="co">#&gt; subspot_4.1               3</span>
+<span class="co">#&gt; subspot_5.1               1</span>
+<span class="co">#&gt; subspot_6.1               1</span></pre></body></html></div>
 <p>We can plot the enhanced cluster assignments as above.</p>
 <div class="sourceCode" id="cb10"><html><body><pre class="r"><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html">as.data.frame</a></span>(<span class="fu">colData</span>(<span class="no">enhanced</span>)), <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">col</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">row</span>, <span class="kw">fill</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span>(<span class="no">spatial.cluster</span>))) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span>(<span class="kw">size</span> <span class="kw">=</span> <span class="fl">2.5</span>, <span class="kw">pch</span> <span class="kw">=</span> <span class="fl">22</span>) +
@@ -164,12 +172,12 @@
 <p>The chain is provided as a <code><a href="https://rdrr.io/pkg/coda/man/mcmc.html">coda::mcmc</a></code> object, which can be analyzed with <a href="https://mjskay.github.io/tidybayes/">TidyBayes</a> or as a matrix. The object has one row per iteration, with the values of the parameters concatenated across the row. Columns are named with the parameter name and index (if any).</p>
 <div class="sourceCode" id="cb12"><html><body><pre class="r"><span class="no">chain</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/mcmcChain.html">mcmcChain</a></span>(<span class="no">sce</span>)
 <span class="no">chain</span>[<span class="fl">1</span>:<span class="fl">5</span>, <span class="fl">1</span>:<span class="fl">5</span>]
-<span class="co">#&gt;      lambda[1,1] lambda[1,2] lambda[1,3] lambda[1,4]  lambda[1,5]</span>
-<span class="co">#&gt; [1,]  0.01000000  0.00000000  0.00000000 0.000000000  0.000000000</span>
-<span class="co">#&gt; [2,]  0.07716601  0.02809490  0.04923277 0.029632058  0.004986712</span>
-<span class="co">#&gt; [3,]  0.07275226  0.04208836  0.03762690 0.008965030  0.002487695</span>
-<span class="co">#&gt; [4,]  0.07805325  0.04867904  0.03494542 0.005154332 -0.017679223</span>
-<span class="co">#&gt; [5,]  0.08875719  0.04706201  0.05793587 0.004569161 -0.059733913</span></pre></body></html></div>
+<span class="co">#&gt;      lambda[1,1] lambda[1,2] lambda[1,3] lambda[1,4]   lambda[1,5]</span>
+<span class="co">#&gt; [1,]  0.01000000  0.00000000  0.00000000 0.000000000  0.0000000000</span>
+<span class="co">#&gt; [2,]  0.08840958 -0.04725375  0.05372259 0.038636232 -0.0053985586</span>
+<span class="co">#&gt; [3,]  0.07707432 -0.04138119  0.04046272 0.017109309 -0.0004981363</span>
+<span class="co">#&gt; [4,]  0.08220634 -0.04982772  0.03761156 0.005765817 -0.0205914192</span>
+<span class="co">#&gt; [5,]  0.09618645 -0.05293014  0.06389211 0.018119364 -0.0518914784</span></pre></body></html></div>
 <p>To remove the HDF5 file from disk and remove its path from the metadata, use <code><a href="../reference/mcmcChain.html">removeChain()</a></code>.</p>
 </div>
   </div>

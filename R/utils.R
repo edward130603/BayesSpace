@@ -7,7 +7,8 @@
 #' 
 #' @return List df_j, where \code{df_j[[i]]} is a vector of zero-indexed
 #'   neighbors of i.
-#'         
+#'
+#' @keywords internal
 #' @importFrom stats dist
 find_neighbors <- function(positions, radius,
     method = c("manhattan", "euclidean")) {
@@ -40,6 +41,7 @@ find_neighbors <- function(positions, radius,
 #' 
 #' @return doubles xdist, ydist, radius
 #' 
+#' @keywords internal
 #' @importFrom stats lm coef
 .compute_interspot_distances <- function(sce, scale.factor = 1.02) {
     cols <- c("row", "col", "imagerow", "imagecol")
@@ -61,6 +63,7 @@ find_neighbors <- function(positions, radius,
 #'
 #' @return mode Numeric scalar, most frequent element in x
 #'
+#' @keywords internal
 Mode <- function(x) {
     ux <- unique(x)
     ux[which.max(tabulate(match(x, ux)))]
@@ -152,7 +155,10 @@ addPCA <- function(sce, assay.type, pca.method, d = 15) {
     sce
 }
 
-## Prepare cluster/deconvolve inputs from SingleCellExperiment object
+#' Prepare cluster/deconvolve inputs from SingleCellExperiment object
+#'
+#' @keywords internal
+#'
 #' @importFrom SingleCellExperiment reducedDimNames
 #' @importFrom purrr imap
 .prepare_inputs <- function(sce, use.dimred = "PCA", d = 15, 

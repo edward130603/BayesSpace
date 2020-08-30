@@ -1,6 +1,6 @@
 ---
 title: "BayesSpace"
-author: "Edward Zhao, Xing Ren, Matt Stone, and Raphael Gottardo"
+author: "Edward Zhao, Matt Stone, Xing Ren, and Raphael Gottardo"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
