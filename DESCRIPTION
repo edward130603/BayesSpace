@@ -9,11 +9,12 @@ Authors@R: c(
     person("Raphael", "Gottardo", role=c("ctb"), email="rgottard@fredhutch.org"))
 Maintainer:
     Matt Stone <mstone@fredhutch.org>
-Description: Clusters a low-dimensional representation of the gene expression
-    matrix, incorporating a spatial prior to encourage neighboring spots to 
-    cluster together. The method can enhance the resolution of the 
-    low-dimensional representation into "sub-spots", for which features such as
-    gene expression or cell type composition can be imputed.
+Description: Tools for clustering and enhancing the resolution of spatial gene
+    expression experiments. BayesSpace clusters a low-dimensional representation
+    of the gene expression matrix, incorporating a spatial prior to encourage
+    neighboring spots to cluster together. The method can enhance the resolution
+    of the low-dimensional representation into "sub-spots", for which features
+    such as gene expression or cell type composition can be imputed.
 Depends:
     R (>= 4.0.0)
 Imports:
