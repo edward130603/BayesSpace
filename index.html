@@ -12,11 +12,12 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="pkgdown.css" rel="stylesheet">
 <script src="pkgdown.js"></script><meta property="og:title" content="Clustering and Resolution Enhancement of Spatial Transcriptomes">
-<meta property="og:description" content='Clusters a low-dimensional representation of the gene expression
-    matrix, incorporating a spatial prior to encourage neighboring spots to 
-    cluster together. The method can enhance the resolution of the 
-    low-dimensional representation into "sub-spots", for which features such as
-    gene expression or cell type composition can be imputed.'>
+<meta property="og:description" content='Tools for clustering and enhancing the resolution of spatial gene
+    expression experiments. BayesSpace clusters a low-dimensional representation
+    of the gene expression matrix, incorporating a spatial prior to encourage
+    neighboring spots to cluster together. The method can enhance the resolution
+    of the low-dimensional representation into "sub-spots", for which features
+    such as gene expression or cell type composition can be imputed.'>
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
@@ -69,12 +70,17 @@
 
       </header><div class="row">
   <div class="contents col-md-9">
-<div id="bayesspace" class="section level1">
+<div id="bayesspace-" class="section level1">
 <div class="page-header"><h1 class="hasAnchor">
-<a href="#bayesspace" class="anchor"></a>BayesSpace</h1></div>
-<p><!-- badges: start --> <a href="https://github.com/edward130603/BayesSpace/actions"><img src="https://github.com/edward130603/BayesSpace/workflows/check-bioc/badge.svg" alt="R build status"></a> <!-- badges: end --></p>
+<a href="#bayesspace-" class="anchor"></a>BayesSpace <img src="inst/logo/BayesSpace_logo.png" align="right" width="115">
+</h1></div>
+<p><!-- badges: start --> <a href="https://github.com/edward130603/BayesSpace/actions"><img src="https://github.com/edward130603/BayesSpace/workflows/R-CMD-check-bioc/badge.svg" alt="R build status"></a> <!-- badges: end --></p>
+<div id="overview" class="section level2">
+<h2 class="hasAnchor">
+<a href="#overview" class="anchor"></a>Overview</h2>
 <p>BayesSpace provides tools for clustering and enhancing the resolution of spatial gene expression experiments.</p>
 <p>BayesSpace clusters a low-dimensional representation of the gene expression matrix, incorporating a spatial prior to encourage neighboring spots to cluster together. The method can enhance the resolution of the low-dimensional representation into “sub-spots”, for which features such as gene expression or cell type composition can be imputed.</p>
+</div>
 <div id="installation" class="section level2">
 <h2 class="hasAnchor">
 <a href="#installation" class="anchor"></a>Installation</h2>
@@ -82,6 +88,7 @@
 <pre><code># Install devtools if necessary
 if (!requireNamespace("devtools", quietly = TRUE))
     install.packages("devtools")
+
 devtools::install_github("edward130603/BayesSpace")</code></pre>
 <div id="notes" class="section level3">
 <h3 class="hasAnchor">
@@ -100,17 +107,25 @@ devtools::install_github("edward130603/BayesSpace")</code></pre>
 <li><small><a href="https://opensource.org/licenses/mit-license.php">MIT</a> + file <a href="LICENSE-text.html">LICENSE</a></small></li>
 </ul>
 </div>
+<div class="developers">
+<h2>Developers</h2>
+<ul class="list-unstyled">
+<li>Edward Zhao <br><small class="roles"> Author </small>  </li>
+<li>Matt Stone <br><small class="roles"> Author, maintainer </small>  </li>
+<li><a href="authors.html">All authors...</a></li>
+</ul>
+</div>
 
   </div>
 </div>
 
 
       <footer><div class="copyright">
-  <p>Developed by .</p>
+  <p>Developed by Edward Zhao, Matt Stone.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.9000.</p>
 </div>
 
       </footer>

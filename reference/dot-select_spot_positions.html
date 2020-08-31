@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Helper to extract x, y, fill ID — .select_spot_positions • BayesSpace</title>
+<title>Helper to extract x, y, fill ID from colData — .select_spot_positions • BayesSpace</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Helper to extract x, y, fill ID — .select_spot_positions" />
-<meta property="og:description" content="Helper to extract x, y, fill ID" />
+<meta property="og:title" content="Helper to extract x, y, fill ID from colData — .select_spot_positions" />
+<meta property="og:description" content="Helper to extract x, y, fill ID from colData" />
 
 
 
@@ -109,23 +109,26 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Helper to extract x, y, fill ID</h1>
+    <h1>Helper to extract x, y, fill ID from colData</h1>
     
     <div class="hidden name"><code>dot-select_spot_positions.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Helper to extract x, y, fill ID</p>
+    <p>Helper to extract x, y, fill ID from colData</p>
     </div>
 
     <pre class="usage"><span class='fu'>.select_spot_positions</span>(
-  <span class='no'>cdata</span>,
-  <span class='kw'>x</span> <span class='kw'>=</span> <span class='st'>"col"</span>,
-  <span class='kw'>y</span> <span class='kw'>=</span> <span class='st'>"row"</span>,
-  <span class='kw'>fill.col</span> <span class='kw'>=</span> <span class='st'>"spatial.cluster"</span>
+  <span class='kw'>cdata</span>,
+  x = <span class='st'>"col"</span>,
+  y = <span class='st'>"row"</span>,
+  fill.col = <span class='st'>"spatial.cluster"</span>
 )</pre>
 
 
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+
+    <p>Dataframe of (x.pos, y.pos, fill) for each spot</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -138,11 +141,11 @@
 
       <footer>
       <div class="copyright">
-  <p>Developed by .</p>
+  <p>Developed by Edward Zhao, Matt Stone.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.9000.</p>
 </div>
 
       </footer>

@@ -63,7 +63,7 @@
 
       
 
-      </header><div class="row">
+      </header><script src="BayesSpace_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>BayesSpace</h1>
@@ -78,25 +78,33 @@
 
     
     
-<div class="sourceCode" id="cb1"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/message.html">suppressPackageStartupMessages</a></span>({
-  <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">SingleCellExperiment</span>)
-  <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">ggplot2</span>)
-  <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">BayesSpace</span>)
-})</pre></body></html></div>
+<div class="sourceCode" id="cb1"><pre class="downlit">
+<span class="fu"><a href="https://rdrr.io/r/base/message.html">suppressPackageStartupMessages</a></span>({
+  <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="kw">SingleCellExperiment</span>)
+  <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="kw"><a href="http://ggplot2.tidyverse.org">ggplot2</a></span>)
+  <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="kw">BayesSpace</span>)
+})
+</pre></div>
 <div id="preprocessing" class="section level2">
 <h2 class="hasAnchor">
 <a href="#preprocessing" class="anchor"></a>Preprocessing</h2>
 <p>We’ll obtain one of the melanoma samples from the 2018 Spatial Transcriptomics paper for this example.</p>
 <p>TODO: switch to a subset of a Visium dataset so we don’t need to specify position.cols and radius in demo</p>
-<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="no">sce</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/getRDS.html">getRDS</a></span>(<span class="kw">dataset</span><span class="kw">=</span><span class="st">"2018_thrane_melanoma"</span>, <span class="kw">sample</span><span class="kw">=</span><span class="st">"ST_mel1_rep2"</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb2"><pre class="downlit">
+<span class="kw">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getRDS.html">getRDS</a></span>(dataset=<span class="st">"2018_thrane_melanoma"</span>, sample=<span class="st">"ST_mel1_rep2"</span>)
+</pre></div>
 <p>Our processed datasets already include PCs, but in general it’s necessary to preprocess samples by running PCA. We recommend running PCA on only the top highly variable genes.</p>
-<div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span>(<span class="fl">102</span>)
-<span class="no">dec</span> <span class="kw">&lt;-</span> <span class="kw pkg">scran</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/pkg/scran/man/modelGeneVar.html">modelGeneVar</a></span>(<span class="no">sce</span>)
-<span class="no">top</span> <span class="kw">&lt;-</span> <span class="kw pkg">scran</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/pkg/scran/man/getTopHVGs.html">getTopHVGs</a></span>(<span class="no">dec</span>, <span class="kw">n</span><span class="kw">=</span><span class="fl">2000</span>)
-<span class="no">sce</span> <span class="kw">&lt;-</span> <span class="kw pkg">scater</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/pkg/scater/man/runPCA.html">runPCA</a></span>(<span class="no">sce</span>, <span class="kw">subset_row</span><span class="kw">=</span><span class="no">top</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb3"><pre class="downlit">
+<span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span>(<span class="fl">102</span>)
+<span class="kw">dec</span> <span class="op">&lt;-</span> <span class="kw">scran</span>::<span class="fu"><a href="https://rdrr.io/pkg/scran/man/modelGeneVar.html">modelGeneVar</a></span>(<span class="kw">sce</span>)
+<span class="kw">top</span> <span class="op">&lt;-</span> <span class="kw">scran</span>::<span class="fu"><a href="https://rdrr.io/pkg/scran/man/getTopHVGs.html">getTopHVGs</a></span>(<span class="kw">dec</span>, n=<span class="fl">2000</span>)
+<span class="kw">sce</span> <span class="op">&lt;-</span> <span class="kw">scater</span>::<span class="fu"><a href="https://rdrr.io/pkg/scater/man/runPCA.html">runPCA</a></span>(<span class="kw">sce</span>, subset_row=<span class="kw">top</span>)
+</pre></div>
 <p>We can use the <code><a href="../reference/qTune.html">qTune()</a></code> and <code><a href="../reference/qTune.html">qPlot()</a></code> functions to help choose the number of clusters to use in our analysis.</p>
-<div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="no">sce</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/qTune.html">qTune</a></span>(<span class="no">sce</span>, <span class="kw">position.cols</span><span class="kw">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"col"</span>, <span class="st">"row"</span>), <span class="kw">radius</span><span class="kw">=</span><span class="fl">1</span>)
-<span class="fu"><a href="../reference/qTune.html">qPlot</a></span>(<span class="no">sce</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb4"><pre class="downlit">
+<span class="kw">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/qTune.html">qTune</a></span>(<span class="kw">sce</span>, position.cols=<span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"col"</span>, <span class="st">"row"</span>), radius=<span class="fl">1</span>)
+<span class="fu"><a href="../reference/qTune.html">qPlot</a></span>(<span class="kw">sce</span>)
+</pre></div>
 <p><img src="BayesSpace-tuning_q-1.png" title="plot of chunk tuning_q" alt="plot of chunk tuning_q" width="100%"></p>
 </div>
 <div id="clustering" class="section level2">
@@ -104,11 +112,14 @@
 <a href="#clustering" class="anchor"></a>Clustering</h2>
 <p>The <code><a href="../reference/spatialCluster.html">spatialCluster()</a></code> function will cluster the spots, and add the predicted cluster labels to <code>colData(sce)</code>. Typically, and for analyses in the paper, we suggest running with at least 10,000 iterations (<code>nrep=10000</code>), but we use 1,000 iteration in this demonstration for the sake of runtime.</p>
 <p>TODO: clarify row/col vs imagerow/imagecol, and ST vs visium</p>
-<div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span>(<span class="fl">149</span>)
-<span class="no">sce</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/spatialCluster.html">spatialCluster</a></span>(<span class="no">sce</span>, <span class="kw">q</span><span class="kw">=</span><span class="fl">4</span>, <span class="kw">init.method</span><span class="kw">=</span><span class="st">"mclust"</span>, <span class="kw">model</span><span class="kw">=</span><span class="st">"t"</span>, <span class="kw">nrep</span><span class="kw">=</span><span class="fl">10000</span>,
-                      <span class="kw">position.cols</span><span class="kw">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"col"</span>, <span class="st">"row"</span>), <span class="kw">radius</span><span class="kw">=</span><span class="fl">1</span>, <span class="kw">save.chain</span><span class="kw">=</span><span class="fl">TRUE</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb5"><pre class="downlit">
+<span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span>(<span class="fl">149</span>)
+<span class="kw">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spatialCluster.html">spatialCluster</a></span>(<span class="kw">sce</span>, q=<span class="fl">4</span>, init.method=<span class="st">"mclust"</span>, model=<span class="st">"t"</span>, nrep=<span class="fl">10000</span>, 
+                      position.cols=<span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"col"</span>, <span class="st">"row"</span>), radius=<span class="fl">1</span>, save.chain=<span class="fl">TRUE</span>)
+</pre></div>
 <p>Both the mclust initialization (<code>cluster.init</code>) and the BayesSpace cluster assignments (<code>spatial.cluster</code>) are now available in the SingleCellExperiment’s <code>colData</code>.</p>
-<div class="sourceCode" id="cb6"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="fu">colData</span>(<span class="no">sce</span>))
+<div class="sourceCode" id="cb6"><pre class="downlit">
+<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="fu">colData</span>(<span class="kw">sce</span>))
 <span class="co">#&gt; DataFrame with 6 rows and 5 columns</span>
 <span class="co">#&gt;            row       col sizeFactor cluster.init spatial.cluster</span>
 <span class="co">#&gt;      &lt;integer&gt; &lt;integer&gt;  &lt;numeric&gt;    &lt;numeric&gt;       &lt;numeric&gt;</span>
@@ -117,24 +128,30 @@
 <span class="co">#&gt; 7x17         7        17   0.331247            2               2</span>
 <span class="co">#&gt; 7x18         7        18   0.420747            3               2</span>
 <span class="co">#&gt; 8x13         8        13   0.255453            1               1</span>
-<span class="co">#&gt; 8x14         8        14   1.473439            1               1</span></pre></body></html></div>
+<span class="co">#&gt; 8x14         8        14   1.473439            1               1</span>
+</pre></div>
 <p>We can plot the cluster assignments over the spatial locations of the spots.</p>
-<div class="sourceCode" id="cb7"><html><body><pre class="r"><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html">as.data.frame</a></span>(<span class="fu">colData</span>(<span class="no">sce</span>)), <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">col</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">row</span>, <span class="kw">fill</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span>(<span class="no">spatial.cluster</span>))) +
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span>(<span class="kw">size</span> <span class="kw">=</span> <span class="fl">7</span>, <span class="kw">pch</span> <span class="kw">=</span> <span class="fl">22</span>) +
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="kw">NULL</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="kw">NULL</span>, <span class="kw">fill</span> <span class="kw">=</span> <span class="st">"Cluster"</span>) +
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html">scale_fill_manual</a></span>(<span class="kw">values</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"purple"</span>, <span class="st">"red"</span>, <span class="st">"blue"</span>, <span class="st">"yellow"</span>)) +
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_void</a></span>() +
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html">coord_fixed</a></span>()</pre></body></html></div>
+<div class="sourceCode" id="cb7"><pre class="downlit">
+<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html">as.data.frame</a></span>(<span class="fu">colData</span>(<span class="kw">sce</span>)), <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(x = <span class="kw">col</span>, y = <span class="kw">row</span>, fill = <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span>(<span class="kw">spatial.cluster</span>))) <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span>(size = <span class="fl">7</span>, pch = <span class="fl">22</span>) <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(x = <span class="kw">NULL</span>, y = <span class="kw">NULL</span>, fill = <span class="st">"Cluster"</span>) <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html">scale_fill_manual</a></span>(values = <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"purple"</span>, <span class="st">"red"</span>, <span class="st">"blue"</span>, <span class="st">"yellow"</span>)) <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_void</a></span>() <span class="op">+</span> 
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html">coord_fixed</a></span>()
+</pre></div>
 <p><img src="BayesSpace-cluster.plot-1.png" title="plot of chunk cluster.plot" alt="plot of chunk cluster.plot" width="100%"></p>
 </div>
 <div id="enhanced-resolution" class="section level2">
 <h2 class="hasAnchor">
 <a href="#enhanced-resolution" class="anchor"></a>Enhanced resolution</h2>
 <p>The <code><a href="../reference/spatialEnhance.html">spatialEnhance()</a></code> function will enhance the resolution of the principal components, and add these PCs as well as predicted cluster labels at subspot resolution to a new SingleCellExperiment.</p>
-<div class="sourceCode" id="cb8"><html><body><pre class="r"><span class="no">enhanced</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/spatialEnhance.html">spatialEnhance</a></span>(<span class="no">sce</span>, <span class="kw">q</span><span class="kw">=</span><span class="fl">4</span>, <span class="kw">init</span><span class="kw">=</span><span class="no">sce</span>$<span class="no">spatial.cluster</span>, <span class="kw">model</span><span class="kw">=</span><span class="st">"t"</span>, <span class="kw">nrep</span><span class="kw">=</span><span class="fl">10000</span>,
-                           <span class="kw">position.cols</span><span class="kw">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"col"</span>, <span class="st">"row"</span>), <span class="kw">xdist</span><span class="kw">=</span><span class="fl">1</span>, <span class="kw">ydist</span><span class="kw">=</span><span class="fl">1</span>, <span class="kw">save.chain</span><span class="kw">=</span><span class="fl">TRUE</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb8"><pre class="downlit">
+<span class="kw">enhanced</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spatialEnhance.html">spatialEnhance</a></span>(<span class="kw">sce</span>, q=<span class="fl">4</span>, init=<span class="kw">sce</span><span class="op">$</span><span class="kw">spatial.cluster</span>, model=<span class="st">"t"</span>, nrep=<span class="fl">10000</span>, 
+                           position.cols=<span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"col"</span>, <span class="st">"row"</span>), xdist=<span class="fl">1</span>, ydist=<span class="fl">1</span>, save.chain=<span class="fl">TRUE</span>)
+</pre></div>
 <p>The enhanced SingleCellExperiment includes an index to the parent spot in the original <code>sce</code> (<code>spot.idx</code>), along with an index to the subspot. It adds the offsets to the original spot coordinates, and provides the enhanced cluster label (<code>spatial.cluster</code>).</p>
-<div class="sourceCode" id="cb9"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="fu">colData</span>(<span class="no">enhanced</span>))
+<div class="sourceCode" id="cb9"><pre class="downlit">
+<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="fu">colData</span>(<span class="kw">enhanced</span>))
 <span class="co">#&gt; DataFrame with 6 rows and 9 columns</span>
 <span class="co">#&gt;              spot.idx subspot.idx  spot.row  spot.col       row       col  imagerow  imagecol</span>
 <span class="co">#&gt;             &lt;numeric&gt;   &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;</span>
@@ -151,18 +168,23 @@
 <span class="co">#&gt; subspot_3.1               3</span>
 <span class="co">#&gt; subspot_4.1               3</span>
 <span class="co">#&gt; subspot_5.1               1</span>
-<span class="co">#&gt; subspot_6.1               1</span></pre></body></html></div>
+<span class="co">#&gt; subspot_6.1               1</span>
+</pre></div>
 <p>We can plot the enhanced cluster assignments as above.</p>
-<div class="sourceCode" id="cb10"><html><body><pre class="r"><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html">as.data.frame</a></span>(<span class="fu">colData</span>(<span class="no">enhanced</span>)), <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">col</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">row</span>, <span class="kw">fill</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span>(<span class="no">spatial.cluster</span>))) +
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span>(<span class="kw">size</span> <span class="kw">=</span> <span class="fl">2.5</span>, <span class="kw">pch</span> <span class="kw">=</span> <span class="fl">22</span>) +
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="kw">NULL</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="kw">NULL</span>, <span class="kw">fill</span> <span class="kw">=</span> <span class="st">"Cluster"</span>) +
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html">scale_fill_manual</a></span>(<span class="kw">values</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"purple"</span>, <span class="st">"red"</span>, <span class="st">"blue"</span>, <span class="st">"yellow"</span>)) +
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_void</a></span>() +
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html">coord_fixed</a></span>()</pre></body></html></div>
+<div class="sourceCode" id="cb10"><pre class="downlit">
+<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html">as.data.frame</a></span>(<span class="fu">colData</span>(<span class="kw">enhanced</span>)), <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(x = <span class="kw">col</span>, y = <span class="kw">row</span>, fill = <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span>(<span class="kw">spatial.cluster</span>))) <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span>(size = <span class="fl">2.5</span>, pch = <span class="fl">22</span>) <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(x = <span class="kw">NULL</span>, y = <span class="kw">NULL</span>, fill = <span class="st">"Cluster"</span>) <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html">scale_fill_manual</a></span>(values = <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"purple"</span>, <span class="st">"red"</span>, <span class="st">"blue"</span>, <span class="st">"yellow"</span>)) <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_void</a></span>() <span class="op">+</span> 
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html">coord_fixed</a></span>()
+</pre></div>
 <p><img src="BayesSpace-enhance.plot-1.png" title="plot of chunk enhance.plot" alt="plot of chunk enhance.plot" width="100%"></p>
 <p>Note that the enhanced PCs are stored as a <code>reducedDim</code> and the enhanced SingleCellExperiment has no assays. To impute expression (or other features) at subspot resolution, we need to run <code><a href="../reference/enhanceFeatures.html">enhanceFeatures()</a></code> afterwards.</p>
 <p>By default, log-normalized expression (<code><a href="https://rdrr.io/pkg/SingleCellExperiment/man/assays.html">logcounts(sce)</a></code>) is imputed, but other assays or arbitrary features can be specified.</p>
-<div class="sourceCode" id="cb11"><html><body><pre class="r"><span class="no">enhanced</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/enhanceFeatures.html">enhanceFeatures</a></span>(<span class="no">enhanced</span>, <span class="no">sce</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb11"><pre class="downlit">
+<span class="kw">enhanced</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/enhanceFeatures.html">enhanceFeatures</a></span>(<span class="kw">enhanced</span>, <span class="kw">sce</span>) 
+</pre></div>
 <p>TODO: add outputs/plot for enhanceFeatures</p>
 </div>
 <div id="accessing-markov-chains" class="section level2">
@@ -170,14 +192,16 @@
 <a href="#accessing-markov-chains" class="anchor"></a>Accessing Markov chains</h2>
 <p>If <code>save.chain</code> is set to <code>TRUE</code> in either <code><a href="../reference/spatialCluster.html">spatialCluster()</a></code> or <code><a href="../reference/spatialEnhance.html">spatialEnhance()</a></code>, the chain associated with the respective MCMC run is preserved to disk as an HDF5 file. The path to this file is stored in the SingleCellExperiment’s metadata at <code>metadata(sce)$h5.chain</code>, and can be read directly using <code><a href="../reference/mcmcChain.html">mcmcChain()</a></code>.</p>
 <p>The chain is provided as a <code><a href="https://rdrr.io/pkg/coda/man/mcmc.html">coda::mcmc</a></code> object, which can be analyzed with <a href="https://mjskay.github.io/tidybayes/">TidyBayes</a> or as a matrix. The object has one row per iteration, with the values of the parameters concatenated across the row. Columns are named with the parameter name and index (if any).</p>
-<div class="sourceCode" id="cb12"><html><body><pre class="r"><span class="no">chain</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/mcmcChain.html">mcmcChain</a></span>(<span class="no">sce</span>)
-<span class="no">chain</span>[<span class="fl">1</span>:<span class="fl">5</span>, <span class="fl">1</span>:<span class="fl">5</span>]
+<div class="sourceCode" id="cb12"><pre class="downlit">
+<span class="kw">chain</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mcmcChain.html">mcmcChain</a></span>(<span class="kw">sce</span>)
+<span class="kw">chain</span>[<span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">5</span>]
 <span class="co">#&gt;      lambda[1,1] lambda[1,2] lambda[1,3] lambda[1,4]   lambda[1,5]</span>
 <span class="co">#&gt; [1,]  0.01000000  0.00000000  0.00000000 0.000000000  0.0000000000</span>
 <span class="co">#&gt; [2,]  0.08840958 -0.04725375  0.05372259 0.038636232 -0.0053985586</span>
 <span class="co">#&gt; [3,]  0.07707432 -0.04138119  0.04046272 0.017109309 -0.0004981363</span>
 <span class="co">#&gt; [4,]  0.08220634 -0.04982772  0.03761156 0.005765817 -0.0205914192</span>
-<span class="co">#&gt; [5,]  0.09618645 -0.05293014  0.06389211 0.018119364 -0.0518914784</span></pre></body></html></div>
+<span class="co">#&gt; [5,]  0.09618645 -0.05293014  0.06389211 0.018119364 -0.0518914784</span>
+</pre></div>
 <p>To remove the HDF5 file from disk and remove its path from the metadata, use <code><a href="../reference/mcmcChain.html">removeChain()</a></code>.</p>
 </div>
   </div>
@@ -193,11 +217,11 @@
 
 
       <footer><div class="copyright">
-  <p>Developed by .</p>
+  <p>Developed by Edward Zhao, Matt Stone.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.9000.</p>
 </div>
 
       </footer>
