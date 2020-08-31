@@ -1,8 +1,10 @@
-# BayesSpace
+# BayesSpace <img src="inst/logo/BayesSpace_logo.png" align="right" width="100" />
 
   <!-- badges: start -->
   [![R build status](https://github.com/edward130603/BayesSpace/workflows/R-CMD-check-bioc/badge.svg)](https://github.com/edward130603/BayesSpace/actions)
   <!-- badges: end -->
+
+## Overview 
 
 BayesSpace provides tools for clustering and enhancing the resolution of spatial gene expression experiments. 
 
@@ -20,6 +22,7 @@ BayesSpace will be available on BioConductor soon. Until then, it can be install
 # Install devtools if necessary
 if (!requireNamespace("devtools", quietly = TRUE))
     install.packages("devtools")
+
 devtools::install_github("edward130603/BayesSpace")
 ```
 
