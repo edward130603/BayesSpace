@@ -9,11 +9,9 @@ spatialCluster(
   q,
   use.dimred = "PCA",
   d = 15,
-  positions = NULL,
-  position.cols = c("imagecol", "imagerow"),
+  platform = c("Visium", "ST"),
   init = NULL,
   init.method = c("mclust", "kmeans"),
-  radius = NULL,
   model = c("t", "normal"),
   precision = c("equal", "variable"),
   nrep = 50000,
@@ -36,20 +34,10 @@ spatialCluster(
 
 \item{d}{Number of top principal components to use when clustering.}
 
-\item{positions}{A matrix or dataframe with two columns (x, y) that gives
-the spatial coordinates of each spot.}
-
-\item{position.cols}{If \code{positions} is not provided, use these columns 
-from \code{colData(sce)} as spatial coordinates (x, y).}
-
 \item{init}{Initial cluster assignments for spots.}
 
 \item{init.method}{If \code{init} is not provided, cluster the top \code{d} 
 PCs with this method to obtain initial cluster assignments.}
-
-\item{radius}{The maximum (L1) distance for two spots to be considered
-neighbors. If not provided, the distance will be estimated using
-\code{lm(image.coord ~ array.coord)}.}
 
 \item{model}{Error model. ('normal' or 't')}
 
@@ -73,6 +61,16 @@ is set to a diagonal matrix \eqn{0.01 I}.}
 \item{save.chain}{If true, save the MCMC chain to an HDF5 file.}
 
 \item{chain.fname}{File path for saved chain. Tempfile used if not provided.}
+
+\item{positions}{A matrix or dataframe with two columns (x, y) that gives
+the spatial coordinates of each spot.}
+
+\item{position.cols}{If \code{positions} is not provided, use these columns 
+from \code{colData(sce)} as spatial coordinates (x, y).}
+
+\item{radius}{The maximum (L1) distance for two spots to be considered
+neighbors. If not provided, the distance will be estimated using
+\code{lm(image.coord ~ array.coord)}.}
 }
 \value{
 Returns a modified \code{sce} with cluster assignments stored in

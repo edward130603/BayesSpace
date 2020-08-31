@@ -7,14 +7,11 @@
 spatialEnhance(
   sce,
   q,
+  platform = c("Visium", "ST"),
   use.dimred = "PCA",
   d = 15,
-  positions = NULL,
-  position.cols = c("imagecol", "imagerow"),
   init = NULL,
-  init.method = c("spatialCluster", "kmeans"),
-  xdist = NULL,
-  ydist = NULL,
+  init.method = c("spatialCluster", "mclust", "kmeans"),
   model = c("t", "normal"),
   nrep = 2e+05,
   gamma = 3,
@@ -24,7 +21,6 @@ spatialEnhance(
   beta = 0.01,
   save.chain = FALSE,
   chain.fname = NULL,
-  platform = c("Visium", "ST"),
   jitter_scale = 5,
   jitter_prior = 0.3,
   verbose = FALSE
@@ -35,27 +31,18 @@ spatialEnhance(
 
 \item{q}{The number of clusters.}
 
+\item{platform}{Spatial transcriptomic platform. Specify 'Visium' for hex 
+lattice geometry or 'ST' for square lattice geometry.}
+
 \item{use.dimred}{Name of a reduced dimensionality result in 
 \code{reducedDims(sce)}. If provided, cluster on these features directly.}
 
 \item{d}{Number of top principal components to use when clustering.}
 
-\item{positions}{A matrix or dataframe with two columns (x, y) that gives
-the spatial coordinates of each spot.}
-
-\item{position.cols}{If \code{positions} is not provided, use these columns 
-from \code{colData(sce)} as spatial coordinates (x, y).}
-
 \item{init}{Initial cluster assignments for spots.}
 
 \item{init.method}{If \code{init} is not provided, cluster the top \code{d} 
 PCs with this method to obtain initial cluster assignments.}
-
-\item{xdist}{The distance along x-axis between neighboring spots. If not 
-provided, the distance will be estimated using \code{lm(imagecol ~ col)}.}
-
-\item{ydist}{The distance along y-axis between neighboring spots. If not
-provided, the distance will be estimated using \code{lm(imagerow ~ row)}.}
 
 \item{model}{Error model. ('normal' or 't')}
 
@@ -77,9 +64,6 @@ is set to a diagonal matrix \eqn{0.01 I}.}
 
 \item{chain.fname}{File path for saved chain. Tempfile used if not provided.}
 
-\item{platform}{Spatial transcriptomic platform. Specify 'Visium' for hex 
-lattice geometry or 'ST' for square lattice geometry.}
-
 \item{jitter_scale}{Controls the amount of jittering. Small amounts of 
 jittering are more likely to be accepted but result in exploring the space
 more slowly. We suggest tuning \code{jitter_scale} so that Ychange is on 
@@ -91,6 +75,18 @@ if the jittered values are not expected to vary much from the overall mean
 of the spot.}
 
 \item{verbose}{Log progress to stderr.}
+
+\item{positions}{A matrix or dataframe with two columns (x, y) that gives
+the spatial coordinates of each spot.}
+
+\item{position.cols}{If \code{positions} is not provided, use these columns 
+from \code{colData(sce)} as spatial coordinates (x, y).}
+
+\item{xdist}{The distance along x-axis between neighboring spots. If not 
+provided, the distance will be estimated using \code{lm(imagecol ~ col)}.}
+
+\item{ydist}{The distance along y-axis between neighboring spots. If not
+provided, the distance will be estimated using \code{lm(imagerow ~ row)}.}
 }
 \value{
 Returns a new SingleCellExperiment object. By default, the 

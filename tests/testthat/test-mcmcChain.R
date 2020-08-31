@@ -61,14 +61,14 @@ test_that("cleaning and saving works", {
   n_spots <- ncol(sce)
   q <- 4
   
-  sce <- spatialCluster(sce, q, model="normal", nrep=n_rep, save.chain=TRUE)
+  sce <- spatialCluster(sce, q, model="normal", platform="ST", nrep=n_rep, save.chain=TRUE)
   chain <- mcmcChain(sce)
   
   # lambda + mu + ploglik + z
   expect_equal(ncol(chain), n_PCs * n_PCs + q * n_PCs + 1 + n_spots)
   expect_equal(nrow(chain), n_rep)
   
-  sce <- spatialCluster(sce, q, model="t", nrep=n_rep, save.chain=TRUE)
+  sce <- spatialCluster(sce, q, model="t", platform="ST", nrep=n_rep, save.chain=TRUE)
   chain <- mcmcChain(sce)
   
   # lambda + mu + ploglik + weights + z

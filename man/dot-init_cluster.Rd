@@ -4,18 +4,18 @@
 \alias{.init_cluster}
 \title{Initialize cluster assignments}
 \usage{
-.init_cluster(sce, q, inputs, init = NULL, init.method = c("mclust", "kmeans"))
+.init_cluster(Y, q, init = NULL, init.method = c("mclust", "kmeans"))
 }
 \arguments{
-\item{sce}{SingleCellExperiment}
-
 \item{q}{Number of clusters}
-
-\item{inputs}{Results from .prepare_inputs() (TODO: store this in sce)}
 
 \item{init}{Vector of initial cluster assignments}
 
 \item{init.method}{Initialization clustering algorithm}
+
+\item{sce}{SingleCellExperiment}
+
+\item{inputs}{Results from .prepare_inputs() (TODO: store this in sce)}
 }
 \value{
 Modified sce with initial cluster assignments stored in

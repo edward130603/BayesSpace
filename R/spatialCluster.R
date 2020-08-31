@@ -52,19 +52,15 @@ NULL
 #' 
 #' @keywords internal
 #' @importFrom purrr map
-cluster <- function(Y, positions, radius, q, init = rep(1, nrow(Y)),
+cluster <- function(Y, q, df_j, init = rep(1, nrow(Y)),
     model = c("t", "normal"), precision = c("equal", "variable"),
     mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)), 
     gamma = 3, alpha = 1, beta = 0.01, nrep = 1000) {
     
-    positions <- as.matrix(positions)
     Y <- as.matrix(Y)
     d <- ncol(Y)
     n <- nrow(Y)
     
-    if ((nrow(positions) != n) | (length(init) != n)) {
-        stop("Dimensions of Y, positions, and init do not match")
-    }
     if ((length(mu0) != d) | (ncol(lambda0) != d)) {
         stop("Dimensions of mu0 or lambda0 do not match input data Y")
     }
@@ -75,9 +71,6 @@ cluster <- function(Y, positions, radius, q, init = rep(1, nrow(Y)),
     if (q == 1) {
         return(list(z=matrix(rep(1, n), nrow=1)))
     }
-    
-    ## TODO: pass boolean matrix to cpp instead of using sapply?
-    df_j <- find_neighbors(positions, radius, "manhattan")
     
     message("Fitting model...")
     if (model == "normal") {
@@ -106,36 +99,49 @@ cluster <- function(Y, positions, radius, q, init = rep(1, nrow(Y)),
 #' @export
 #' @rdname spatialCluster
 spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
-    positions = NULL, position.cols = c("imagecol", "imagerow"), 
-    init = NULL, init.method = c("mclust", "kmeans"), radius = NULL, 
+    platform=c("Visium", "ST"),
+    init = NULL, init.method = c("mclust", "kmeans"),
     model = c("t", "normal"), precision = c("equal", "variable"), 
     nrep = 50000, gamma = 3, mu0 = NULL, lambda0 = NULL, alpha = 1, 
     beta = 0.01, save.chain = FALSE, chain.fname = NULL) {
     
-    inputs <- .prepare_inputs(sce, use.dimred=use.dimred, d=d, 
-        positions=positions, position.cols=position.cols, radius=radius)
+    if (!(use.dimred %in% reducedDimNames(sce))) 
+        stop(sprintf("reducedDim %s not found in input SCE", use.dimred))
+
+    ## Get PCs
+    Y <- reducedDim(sce, use.dimred)
+    d <- min(ncol(Y), d)
+    Y <- Y[, seq_len(d)]
     
-    ## Initialize cluster assignments
-    sce <- .init_cluster(sce, q, inputs, init, init.method)
+    ## Get indices of neighboring spots, and initialize cluster assignments
+    df_j <- .find_neighbors(sce, match.arg(platform))
+    init <- .init_cluster(Y, q, init, init.method)
     
     ## TODO: pass these through with ...
     model <- match.arg(model)
     precision <- match.arg(precision)
-    mu0 <- if (is.null(mu0)) colMeans(inputs$PCs) else mu0
-    lambda0 <- if (is.null(lambda0)) diag(0.01, ncol(inputs$PCs)) else lambda0
+    mu0 <- if (is.null(mu0)) colMeans(Y) else mu0
+    lambda0 <- if (is.null(lambda0)) diag(0.01, ncol(Y)) else lambda0
     
-    results <- cluster(inputs$PCs, inputs$positions, inputs$radius, q,
-        init=sce$cluster.init, model=model, precision=precision, mu0=mu0, 
+    ## Run clustering
+    results <- cluster(Y, q, df_j, init=init, 
+        model=model, precision=precision, mu0=mu0, 
         lambda0=lambda0, gamma=gamma, alpha=alpha, beta=beta, nrep=nrep)
     
+    ## Save MCMC chain
     if (save.chain) {
         results <- .clean_chain(results)
         metadata(sce)$chain.h5 <- .write_chain(results, chain.fname)
     }
     
+    ## Save metadata (TODO: add neighbors?)
+    sce$cluster.init <- init
+    metadata(sce)$BayesSpace.platform <- platform
+    metadata(sce)$BayesSpace.is_enhanced <- FALSE
+    
+    ## Save modal cluster assignments
     ## NOTE: swap below code for this to test against refactoring
     ## colData(sce)$spatial.cluster <- apply(results$z[900:1000, ], 2, Mode)
-    
     iter_from <- ifelse(nrep < 2000, max(2, nrep - 1000), 1000)
     msg <- "Calculating labels using iterations %d through %d"
     message(sprintf(msg, iter_from, nrep))
@@ -208,16 +214,15 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
 #' 
 #' @importFrom stats kmeans
 #' @importFrom mclust Mclust mclustBIC
-.init_cluster <- function(sce, q, inputs, init = NULL, init.method = c("mclust", "kmeans")) {
+.init_cluster <- function(Y, q, init = NULL, init.method = c("mclust", "kmeans")) {
     if (is.null(init)) {
         init.method <- match.arg(init.method)
         if (init.method == "kmeans") {
-            init <- kmeans(inputs$PCs, centers=q)$cluster
+            init <- kmeans(Y, centers=q)$cluster
         } else if (init.method == "mclust") {
-            init <- Mclust(inputs$PCs, q, "EEE", verbose=FALSE)$classification
+            init <- Mclust(Y, q, "EEE", verbose=FALSE)$classification
         }
     }
     
-    sce$cluster.init <- init
-    sce
+    init
 }
