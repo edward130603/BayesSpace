@@ -157,6 +157,8 @@ jobs:
               biocversion="devel"
           elif echo "$GITHUB_REF" | grep -q "RELEASE_"; then
               biocversion="release"
+          else
+              biocversion="devel"
           fi
 
           ## Define the R and Bioconductor version numbers
