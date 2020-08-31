@@ -75,18 +75,6 @@ if the jittered values are not expected to vary much from the overall mean
 of the spot.}
 
 \item{verbose}{Log progress to stderr.}
-
-\item{positions}{A matrix or dataframe with two columns (x, y) that gives
-the spatial coordinates of each spot.}
-
-\item{position.cols}{If \code{positions} is not provided, use these columns 
-from \code{colData(sce)} as spatial coordinates (x, y).}
-
-\item{xdist}{The distance along x-axis between neighboring spots. If not 
-provided, the distance will be estimated using \code{lm(imagecol ~ col)}.}
-
-\item{ydist}{The distance along y-axis between neighboring spots. If not
-provided, the distance will be estimated using \code{lm(imagerow ~ row)}.}
 }
 \value{
 Returns a new SingleCellExperiment object. By default, the 

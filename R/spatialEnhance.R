@@ -12,17 +12,9 @@
 #' @param use.dimred Name of a reduced dimensionality result in 
 #'   \code{reducedDims(sce)}. If provided, cluster on these features directly. 
 #' @param d Number of top principal components to use when clustering.
-#' @param positions A matrix or dataframe with two columns (x, y) that gives
-#'   the spatial coordinates of each spot.
-#' @param position.cols If \code{positions} is not provided, use these columns 
-#'   from \code{colData(sce)} as spatial coordinates (x, y).
 #' @param init Initial cluster assignments for spots.
 #' @param init.method If \code{init} is not provided, cluster the top \code{d} 
 #'   PCs with this method to obtain initial cluster assignments.
-#' @param xdist The distance along x-axis between neighboring spots. If not 
-#'   provided, the distance will be estimated using \code{lm(imagecol ~ col)}.
-#' @param ydist The distance along y-axis between neighboring spots. If not
-#'   provided, the distance will be estimated using \code{lm(imagerow ~ row)}.
 #' @param model Error model. ('normal' or 't')
 #' @param nrep The number of MCMC iterations.
 #' @param gamma Smoothing parameter. (Values in range of 1-3 seem to work well.)

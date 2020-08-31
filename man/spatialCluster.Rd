@@ -34,6 +34,9 @@ spatialCluster(
 
 \item{d}{Number of top principal components to use when clustering.}
 
+\item{platform}{Spatial transcriptomic platform. Specify 'Visium' for hex 
+lattice geometry or 'ST' for square lattice geometry.}
+
 \item{init}{Initial cluster assignments for spots.}
 
 \item{init.method}{If \code{init} is not provided, cluster the top \code{d} 
@@ -61,16 +64,6 @@ is set to a diagonal matrix \eqn{0.01 I}.}
 \item{save.chain}{If true, save the MCMC chain to an HDF5 file.}
 
 \item{chain.fname}{File path for saved chain. Tempfile used if not provided.}
-
-\item{positions}{A matrix or dataframe with two columns (x, y) that gives
-the spatial coordinates of each spot.}
-
-\item{position.cols}{If \code{positions} is not provided, use these columns 
-from \code{colData(sce)} as spatial coordinates (x, y).}
-
-\item{radius}{The maximum (L1) distance for two spots to be considered
-neighbors. If not provided, the distance will be estimated using
-\code{lm(image.coord ~ array.coord)}.}
 }
 \value{
 Returns a modified \code{sce} with cluster assignments stored in
