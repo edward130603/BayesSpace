@@ -83,7 +83,10 @@ enhancePlot <- function(sce, platform=c("Visium", "ST")) {
     splot
 }
 
-#' Helper to extract x, y, fill ID
+#' Helper to extract x, y, fill ID from colData
+#' 
+#' @return Dataframe of (x.pos, y.pos, fill) for each spot
+#' 
 #' @keywords internal
 .select_spot_positions <- function(cdata, x="col", y="row", fill.col="spatial.cluster") {
     spot_positions <- cdata[, c(x, y, fill.col)]
@@ -113,6 +116,9 @@ enhancePlot <- function(sce, platform=c("Visium", "ST")) {
 
 #' Make vertices for each hex spot
 #' 
+#' @return Table of (x.pos, y.pos, spot, fill); where \code{spot} groups the
+#'   vertices outlining the spot's border
+#' 
 #' @keywords internal
 .make_hex_spots <- function(cdata) {
     ## R = circumradius, distance from center to vertex
@@ -141,6 +147,8 @@ enhancePlot <- function(sce, platform=c("Visium", "ST")) {
 #' Spots are regular hexagons with one unit of horizontal distance
 #' between centers
 #' 
+#' @return Shifted spot centers
+#' 
 #' @keywords internal
 .adjust_hex_centers <- function(spot_positions) {
     ## R = circumradius, distance from center to vertex
@@ -167,6 +175,9 @@ enhancePlot <- function(sce, platform=c("Visium", "ST")) {
 #'
 #' Squares are simple, just mae a unit square at each array coordinate
 #' 
+#' @return Table of (x.pos, y.pos, spot, fill); where \code{spot} groups the
+#'   vertices outlining the spot's border
+#' 
 #' @keywords internal
 .make_square_spots <- function(cdata, fill.col="spatial.cluster", scale.factor=1) {
     spot_positions <- .select_spot_positions(cdata)
@@ -181,6 +192,8 @@ enhancePlot <- function(sce, platform=c("Visium", "ST")) {
 #' Helper to pull out subspot position columns
 #' Probably redundant with select_spot_positions above, but we need subspot.idx
 #' 
+#' @return Dataframe of (x.pos, y.pos, fill) for each spot
+#' 
 #' @keywords internal
 .select_subspot_positions <- function(cdata, x="spot.col", y="spot.row", fill.col="spatial.cluster") {
     spot_positions <- cdata[, c(x, y, fill.col, "subspot.idx")]
@@ -192,6 +205,9 @@ enhancePlot <- function(sce, platform=c("Visium", "ST")) {
 
 #' Make vertices for each triangle subspot of a hex
 #' 
+#' @return Table of (x.pos, y.pos, spot, fill); where \code{spot} groups the
+#'   vertices outlining the spot's border
+#'
 #' @keywords internal
 .make_triangle_subspots <- function(cdata, fill.col="spatial.cluster") {
     spot_positions <- .select_subspot_positions(cdata, x="spot.col", y="spot.row")

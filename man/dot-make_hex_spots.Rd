@@ -6,6 +6,10 @@
 \usage{
 .make_hex_spots(cdata)
 }
+\value{
+Table of (x.pos, y.pos, spot, fill); where \code{spot} groups the
+  vertices outlining the spot's border
+}
 \description{
 Make vertices for each hex spot
 }

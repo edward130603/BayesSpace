@@ -48,8 +48,9 @@ NULL
 
 #' Wrapper around C++ \code{iterate_*()} functions
 #' 
-#' @keywords internal
+#' @return List of clustering parameter values at each iteration
 #' 
+#' @keywords internal
 #' @importFrom purrr map
 cluster <- function(Y, positions, radius, q, init = rep(1, nrow(Y)),
     model = c("t", "normal"), precision = c("equal", "variable"),

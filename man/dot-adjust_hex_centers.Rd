@@ -6,6 +6,9 @@
 \usage{
 .adjust_hex_centers(spot_positions)
 }
+\value{
+Shifted spot centers
+}
 \description{
 Spots are regular hexagons with one unit of horizontal distance
 between centers

@@ -157,6 +157,9 @@ addPCA <- function(sce, assay.type, pca.method, d = 15) {
 
 #' Prepare cluster/deconvolve inputs from SingleCellExperiment object
 #'
+#' @return List of PCs, names of columns with x/y positions, and inter-spot
+#'   distances
+#' 
 #' @keywords internal
 #'
 #' @importFrom SingleCellExperiment reducedDimNames

@@ -17,6 +17,7 @@ edge).
 ```{r}
 suppressPackageStartupMessages({
   library(dplyr)
+  library(ggplot2)
 })
 ```
 
@@ -164,7 +165,9 @@ hexplot <- ggplot(data=poly_pos2, aes(x=x.vertex, y=-y.vertex, group=spot, fill=
     coord_equal() +
     scale_fill_manual(values=palette) +
     guides(fill=FALSE, color=FALSE) +
-    theme_void()
+    theme_void() +
+    hexSticker::theme_transparent()
+    
 hexplot
 ```
 
@@ -185,6 +188,6 @@ s <- hexSticker::sticker(hexplot, package="BayesSpace",
              filename="BayesSpace_logo.png") +
   
 # overwrite file with better size
-ggsave("BayesSpace_logo.png", width=6, height=6)
+ggsave("BayesSpace_logo.png", width=(6/1.1547005), height=6, bg="transparent")
 s
 ```

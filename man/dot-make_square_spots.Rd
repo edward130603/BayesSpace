@@ -6,6 +6,10 @@
 \usage{
 .make_square_spots(cdata, fill.col = "spatial.cluster", scale.factor = 1)
 }
+\value{
+Table of (x.pos, y.pos, spot, fill); where \code{spot} groups the
+  vertices outlining the spot's border
+}
 \description{
 Squares are simple, just mae a unit square at each array coordinate
 }
