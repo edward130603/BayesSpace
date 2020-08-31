@@ -188,6 +188,6 @@ s <- hexSticker::sticker(hexplot, package="BayesSpace",
              filename="BayesSpace_logo.png") +
   
 # overwrite file with better size
-ggsave("BayesSpace_logo.png", width=6, height=6, bg="transparent")
+ggsave("BayesSpace_logo.png", width=(6/1.1547005), height=6, bg="transparent")
 s
 ```
