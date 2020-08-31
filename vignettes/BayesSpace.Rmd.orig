@@ -33,7 +33,6 @@ suppressPackageStartupMessages({
 We'll obtain one of the melanoma samples from the 2018 Spatial Transcriptomics
 paper for this example.
 
-TODO: switch to a subset of a Visium dataset so we don't need to specify position.cols and radius in demo
 ```{r download}
 sce <- getRDS(dataset="2018_thrane_melanoma", sample="ST_mel1_rep2")
 ```
@@ -49,9 +48,9 @@ sce <- scater::runPCA(sce, subset_row=top)
 ```
 
 We can use the `qTune()` and `qPlot()` functions to help choose the number of
-clusters to use in our analysis.
+clusters to use in our analysis. 
 ```{r tuning_q}
-sce <- qTune(sce, position.cols=c("col", "row"), radius=1)
+sce <- qTune(sce, platform="ST", d=7, nrep=100)
 qPlot(sce)
 ```
 
@@ -61,11 +60,11 @@ cluster labels to `colData(sce)`. Typically, and for analyses in the paper, we
 suggest running with at least 10,000 iterations (`nrep=10000`), but we use 1,000
 iteration in this demonstration for the sake of runtime.
 
-TODO: clarify row/col vs imagerow/imagecol, and ST vs visium
 ```{r cluster}
 set.seed(149)
-sce <- spatialCluster(sce, q=4, init.method="mclust", model="t", nrep=10000, 
-                      position.cols=c("col", "row"), radius=1, save.chain=TRUE)
+sce <- spatialCluster(sce, q=4, platform="ST", d=7,
+                      init.method="mclust", model="t", nrep=1000, 
+                      save.chain=TRUE)
 ```
 
 Both the mclust initialization (`cluster.init`) and the BayesSpace cluster assignments (`spatial.cluster`) are now available in the SingleCellExperiment's `colData`.
@@ -76,12 +75,7 @@ head(colData(sce))
 
 We can plot the cluster assignments over the spatial locations of the spots.
 ```{r cluster.plot, fig.width=7, fig.height=5}
-ggplot(as.data.frame(colData(sce)), aes(x = col, y = row, fill = factor(spatial.cluster))) +
-  geom_point(size = 7, pch = 22) +
-  labs(x = NULL, y = NULL, fill = "Cluster") +
-  scale_fill_manual(values = c("purple", "red", "blue", "yellow")) +
-  theme_void() + 
-  coord_fixed()
+clusterPlot(sce, platform="ST")
 ```
 
 ## Enhanced resolution
@@ -90,8 +84,8 @@ The `spatialEnhance()` function will enhance the resolution of the principal
 components, and add these PCs as well as predicted cluster labels at subspot
 resolution to a new SingleCellExperiment.
 ```{r enhance, eval=TRUE}
-enhanced <- spatialEnhance(sce, q=4, init=sce$spatial.cluster, model="t", nrep=10000, 
-                           position.cols=c("col", "row"), xdist=1, ydist=1, save.chain=TRUE)
+enhanced <- spatialEnhance(sce, q=4, platform="ST", d=7,
+                           model="t", nrep=10000, save.chain=TRUE)
 ```
 
 The enhanced SingleCellExperiment includes an index to the parent spot in the original `sce` (`spot.idx`), along with an index to the subspot. It adds the offsets to the original spot coordinates, and provides the enhanced cluster label (`spatial.cluster`).
@@ -102,12 +96,7 @@ head(colData(enhanced))
 
 We can plot the enhanced cluster assignments as above.
 ```{r enhance.plot, eval=TRUE, fig.width=7, fig.height=5}
-ggplot(as.data.frame(colData(enhanced)), aes(x = col, y = row, fill = factor(spatial.cluster))) +
-  geom_point(size = 2.5, pch = 22) +
-  labs(x = NULL, y = NULL, fill = "Cluster") +
-  scale_fill_manual(values = c("purple", "red", "blue", "yellow")) +
-  theme_void() + 
-  coord_fixed()
+enhancePlot(enhanced, platform="ST")
 ```
 
 Note that the enhanced PCs are stored as a `reducedDim` and the enhanced
