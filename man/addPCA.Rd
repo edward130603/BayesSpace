@@ -22,3 +22,4 @@ Returns \code{sce} with PCs added to its \code{reducedDims}
 Supports 'basic' PCA via scater, denoised PCA via scran, and blocked geneset
 PCA. Results will be stored in \code{reducedDim(sce, 'PCA')}.
 }
+\keyword{internal}

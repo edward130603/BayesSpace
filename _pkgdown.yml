@@ -1,3 +1,21 @@
 template:
   params:
     bootswatch: flatly
+
+reference:
+    - title: Spatial analysis
+      contents:
+      - spatialCluster
+      - spatialEnhance
+      - enhanceFeatures
+      - spatialPlot
+      
+    - title: Model tuning and inspection
+      contents:
+      - qTune
+      - mcmcChain
+      
+    - title: Loading example datasets
+      contents:
+      - getRDS
+      - exampleSCE
