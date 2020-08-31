@@ -6,7 +6,7 @@
 \alias{enhancePlot}
 \title{Plot cluster labels in spatial context}
 \usage{
-clusterPlot(sce, platform = c("Visium", "ST"))
+clusterPlot(sce, platform = c("Visium", "ST"), fill = "spatial.cluster")
 
 enhancePlot(sce, platform = c("Visium", "ST"))
 }

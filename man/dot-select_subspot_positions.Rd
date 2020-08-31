@@ -9,7 +9,7 @@ Probably redundant with select_spot_positions above, but we need subspot.idx}
   cdata,
   x = "spot.col",
   y = "spot.row",
-  fill.col = "spatial.cluster"
+  fill = "spatial.cluster"
 )
 }
 \value{

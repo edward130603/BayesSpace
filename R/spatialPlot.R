@@ -29,16 +29,16 @@ palette <- c("#0173b2", "#de8f05", "#029e73", "#d55e00", "#cc78bc",
 #'
 #' @export
 #' @rdname spatialPlot
-clusterPlot <- function(sce, platform=c("Visium", "ST")) {
+clusterPlot <- function(sce, platform=c("Visium", "ST"), fill="spatial.cluster") {
     # TODO: add user-specified palette
     # TODO: add platform/lattice to sce metadata instead of passing
     platform <- match.arg(platform)
 
     cdata <- data.frame(colData(sce))
     if (platform == "Visium") {
-        vertices <- .make_hex_spots(cdata)
+        vertices <- .make_hex_spots(cdata, fill)
     } else {
-        vertices <- .make_square_spots(cdata)
+        vertices <- .make_square_spots(cdata, fill)
     }
 
     splot <- ggplot(data=vertices, 
@@ -88,9 +88,20 @@ enhancePlot <- function(sce, platform=c("Visium", "ST")) {
 #' @return Dataframe of (x.pos, y.pos, fill) for each spot
 #' 
 #' @keywords internal
-.select_spot_positions <- function(cdata, x="col", y="row", fill.col="spatial.cluster") {
-    spot_positions <- cdata[, c(x, y, fill.col)]
-    colnames(spot_positions) <- c("x.pos", "y.pos", "fill")
+#' @importFrom assertthat assert_that
+.select_spot_positions <- function(cdata, x="col", y="row", fill="spatial.cluster") {
+    ## Provide either a column name or vector of labels/values
+    assert_that(is.vector(fill) | is.character(fill))
+    
+    if (is.character(fill)) {
+        spot_positions <- cdata[, c(x, y, fill)]
+        colnames(spot_positions) <- c("x.pos", "y.pos", "fill")    
+    } else if (is.vector(fill)) {
+        assert_that(nrow(cdata) == length(fill))
+        spot_positions <- cdata[, c(x, y)]
+        colnames(spot_positions) <- c("x.pos", "y.pos")    
+        spot_positions$fill <- fill
+    }
     spot_positions$spot <- rownames(spot_positions)
 
     spot_positions
@@ -120,13 +131,13 @@ enhancePlot <- function(sce, platform=c("Visium", "ST")) {
 #'   vertices outlining the spot's border
 #' 
 #' @keywords internal
-.make_hex_spots <- function(cdata) {
+.make_hex_spots <- function(cdata, fill) {
     ## R = circumradius, distance from center to vertex
     ## r = inradius, distance from center to edge midpoint
     r <- 1/2
     R <- (2 / sqrt(3)) * r
 
-    spot_positions <- .select_spot_positions(cdata)
+    spot_positions <- .select_spot_positions(cdata, fill=fill)
     spot_positions <- .adjust_hex_centers(spot_positions)
 
     ## vertices of each hex (with respect to center coordinates)
@@ -179,8 +190,8 @@ enhancePlot <- function(sce, platform=c("Visium", "ST")) {
 #'   vertices outlining the spot's border
 #' 
 #' @keywords internal
-.make_square_spots <- function(cdata, fill.col="spatial.cluster", scale.factor=1) {
-    spot_positions <- .select_spot_positions(cdata)
+.make_square_spots <- function(cdata, fill="spatial.cluster", scale.factor=1) {
+    spot_positions <- .select_spot_positions(cdata, fill=fill)
     
     vertex_offsets <- data.frame(x.offset=c(0, 1, 1, 0),
                                   y.offset=c(0, 0, 1, 1))
@@ -195,9 +206,20 @@ enhancePlot <- function(sce, platform=c("Visium", "ST")) {
 #' @return Dataframe of (x.pos, y.pos, fill) for each spot
 #' 
 #' @keywords internal
-.select_subspot_positions <- function(cdata, x="spot.col", y="spot.row", fill.col="spatial.cluster") {
-    spot_positions <- cdata[, c(x, y, fill.col, "subspot.idx")]
-    colnames(spot_positions) <- c("x.pos", "y.pos", "fill", "subspot.idx")
+.select_subspot_positions <- function(cdata, x="spot.col", y="spot.row", fill="spatial.cluster") {
+    ## Provide either a column name or vector of labels/values
+    assert_that(is.vector(fill) | is.character(fill))
+    
+    if (is.character(fill)) {
+        spot_positions <- cdata[, c(x, y, "subspot.idx", fill)]
+        colnames(spot_positions) <- c("x.pos", "y.pos", "subspot.idx", "fill")
+    } else if (is.vector(fill)) {
+        assert_that(nrow(cdata) == length(fill))
+        spot_positions <- cdata[, c(x, y, "subspot.idx")]
+        colnames(spot_positions) <- c("x.pos", "y.pos", "subspot.idx")    
+        spot_positions$fill <- fill
+    }
+
     spot_positions$spot <- rownames(spot_positions)
     
     spot_positions
@@ -209,8 +231,8 @@ enhancePlot <- function(sce, platform=c("Visium", "ST")) {
 #'   vertices outlining the spot's border
 #'
 #' @keywords internal
-.make_triangle_subspots <- function(cdata, fill.col="spatial.cluster") {
-    spot_positions <- .select_subspot_positions(cdata, x="spot.col", y="spot.row")
+.make_triangle_subspots <- function(cdata, fill="spatial.cluster") {
+    spot_positions <- .select_subspot_positions(cdata, x="spot.col", y="spot.row", fill=fill)
     spot_positions <- .adjust_hex_centers(spot_positions)
     
     ## R = circumradius, distance from center to vertex
