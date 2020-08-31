@@ -1,4 +1,4 @@
-# BayesSpace <img src="inst/logo/BayesSpace_logo.png" align="right" width="135" />
+# BayesSpace <img src="inst/logo/BayesSpace_logo.png" align="right" width="115" />
 
   <!-- badges: start -->
   [![R build status](https://github.com/edward130603/BayesSpace/workflows/R-CMD-check-bioc/badge.svg)](https://github.com/edward130603/BayesSpace/actions)
