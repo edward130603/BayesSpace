@@ -145,6 +145,54 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     sce
 }
 
+#' Find neighboring spots based on array coordinates
+#' 
+#' @param sce SingleCellExperiment
+#' @param platform If "Visium", select six neighboring spots around center; if
+#'   "ST", select four adjacent spots.
+#' @return \code{df_j} a list of neighbor indices (zero-indexed) for each spot
+#' 
+#' @keywords internal
+.find_neighbors <- function(sce, platform) {
+    if (platform == "Visium") {
+        ## Spots to left and right, two above, two below
+        offsets <- data.frame(x.offset=c(-2, 2, -1,  1, -1, 1),
+                              y.offset=c( 0, 0, -1, -1,  1, 1))
+    } else if (platform == "ST") {
+        ## L1 radius of 1 (spots above, right, below, and left)
+        offsets <- data.frame(x.offset=c( 0, 1, 0, -1),
+                              y.offset=c(-1, 0, 1,  0))
+    } else {
+        stop(sprintf(".find_neighbors: Unsupported platform %s", platform))
+    }
+    
+    ## Get array coordinates (and label by index of spot in SCE)
+    spot.positions <- colData(sce)[, c("col", "row")]
+    spot.positions$spot.idx <- seq_len(nrow(spot.positions))
+    
+    ## Compute coordinates of each possible spot neighbor
+    neighbor.positions <- merge(spot.positions, offsets)
+    neighbor.positions$x.pos <- neighbor.positions$col + neighbor.positions$x.offset
+    neighbor.positions$y.pos <- neighbor.positions$row + neighbor.positions$y.offset
+    
+    ## Select spots that exist at neighbor coordinates
+    neighbors <- merge(as.data.frame(neighbor.positions), 
+                       as.data.frame(spot.positions), 
+                       by.x=c("x.pos", "y.pos"), by.y=c("col", "row"),
+                       suffixes=c(".primary", ".neighbor"))
+    
+    ## Shift to zero-indexing for C++
+    neighbors$spot.idx.neighbor <- neighbors$spot.idx.neighbor - 1
+    
+    ## Group neighbor indices by spot 
+    ## (sort first for consistency with older implementation)
+    neighbors <- neighbors[order(neighbors$spot.idx.primary, 
+                                 neighbors$spot.idx.neighbor), ]
+    df_j <- split(neighbors$spot.idx.neighbor, neighbors$spot.idx.primary)
+    
+    unname(df_j)
+}
+
 #' Initialize cluster assignments
 #' 
 #' @param sce SingleCellExperiment
