@@ -64,6 +64,8 @@ NULL
 ## TODO: re-order arguments so all keyword arguments come after positionals
 #' Wrapper around C++ \code{iterate_deconv()} function
 #' 
+#' @return List of enhancement parameter values at each iteration
+#' 
 #' @keywords internal
 #' @importFrom stats cov
 deconvolve <- function(Y, positions, nrep = 1000, gamma = 2, xdist, ydist, q, 

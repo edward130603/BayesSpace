@@ -6,6 +6,10 @@
 \usage{
 .make_triangle_subspots(cdata, fill.col = "spatial.cluster")
 }
+\value{
+Table of (x.pos, y.pos, spot, fill); where \code{spot} groups the
+  vertices outlining the spot's border
+}
 \description{
 Make vertices for each triangle subspot of a hex
 }

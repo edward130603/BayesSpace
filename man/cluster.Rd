@@ -20,6 +20,9 @@ cluster(
   nrep = 1000
 )
 }
+\value{
+List of clustering parameter values at each iteration
+}
 \description{
 Wrapper around C++ \code{iterate_*()} functions
 }

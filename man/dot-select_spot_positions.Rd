@@ -2,7 +2,7 @@
 % Please edit documentation in R/spatialPlot.R
 \name{.select_spot_positions}
 \alias{.select_spot_positions}
-\title{Helper to extract x, y, fill ID}
+\title{Helper to extract x, y, fill ID from colData}
 \usage{
 .select_spot_positions(
   cdata,
@@ -11,7 +11,10 @@
   fill.col = "spatial.cluster"
 )
 }
+\value{
+Dataframe of (x.pos, y.pos, fill) for each spot
+}
 \description{
-Helper to extract x, y, fill ID
+Helper to extract x, y, fill ID from colData
 }
 \keyword{internal}

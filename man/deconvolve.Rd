@@ -24,6 +24,9 @@ deconvolve(
   beta = 0.01
 )
 }
+\value{
+List of enhancement parameter values at each iteration
+}
 \description{
 Wrapper around C++ \code{iterate_deconv()} function
 }

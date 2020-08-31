@@ -15,6 +15,10 @@
   ydist = NULL
 )
 }
+\value{
+List of PCs, names of columns with x/y positions, and inter-spot
+  distances
+}
 \description{
 Prepare cluster/deconvolve inputs from SingleCellExperiment object
 }

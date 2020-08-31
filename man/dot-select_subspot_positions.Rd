@@ -12,6 +12,9 @@ Probably redundant with select_spot_positions above, but we need subspot.idx}
   fill.col = "spatial.cluster"
 )
 }
+\value{
+Dataframe of (x.pos, y.pos, fill) for each spot
+}
 \description{
 Helper to pull out subspot position columns
 Probably redundant with select_spot_positions above, but we need subspot.idx

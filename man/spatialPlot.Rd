@@ -11,7 +11,7 @@ clusterPlot(sce, platform = c("Visium", "ST"))
 enhancePlot(sce, platform = c("Visium", "ST"))
 }
 \arguments{
-\item{sce}{SingleCellExperiment containing cluster assignments in 
+\item{sce}{SingleCellExperiment containing cluster assignments in
 \code{sce$spatial.cluster}}
 
 \item{platform}{Spatial sequencing platform. If "Visium", the hex spot layout
