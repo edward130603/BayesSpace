@@ -154,8 +154,17 @@ Make plot of spot hexes.
 palette <- c("#264653", "#E76F51", "#E9C46A")
 enhanced.color <- "#F4A261"
 
-palette <- c("#293241", "#3D5A80", "#98C1D9")
-enhanced.color <- "#EE6C4D"
+# https://coolors.co/3d5a80-98c1d9-e0fbfc-ee6c4d-293241
+palette <- c("#293241", "#3D5A80", "#A82E10")
+palette <- c("#293241", "#3D5A80", "#95290E")
+# palette <- c("#293241", "#3D5A80", "#83240C")
+enhanced.color <- "#98C1D9"
+
+# https://coolors.co/5f0f40-9a031e-fb8b24-e36414-0f4c5c
+palette <- c("#5F0F40", "#0F4C5C", "#9A031E")
+enhanced.color <- "#FB8B24"
+
+label <- data.frame(x=c(3.5), y=c(-3.5), label="BayesSpace")
 
 hexplot <- ggplot(data=poly_pos2, aes(x=x.vertex, y=-y.vertex, group=spot, fill=factor(cluster))) + 
     # geom_polygon(data=border, aes(x=x, y=-y), fill="#000000") +
@@ -179,15 +188,22 @@ Make sticker!
 ```{r fig.width=6, fig.height=6}
 family <- "alata"
 scale <- 2.19
+
+p.color <- "#E0FBFC"
+fname <- "BayesSpace_logo.png"
+
+p.color <- enhanced.color
+fname <- "BayesSpace_logo_alt.png"
+
 s <- hexSticker::sticker(hexplot, package="BayesSpace", 
              p_family=family, p_size=20, 
              s_x=1, s_y=1, s_width=1.3*scale, s_height=1*scale,
              p_y=1,
-             p_color="#FFFFFF",
-             h_color='#E0FBFC', h_size=2,
-             filename="BayesSpace_logo.png") +
+             p_color=p.color,
+             h_color=enhanced.color, h_size=2,
+             filename=fname) +
   
 # overwrite file with better size
-ggsave("BayesSpace_logo.png", width=(6/1.1547005), height=6, bg="transparent")
+ggsave(fname, width=(6/1.1547005), height=6, bg="transparent")
 s
 ```
