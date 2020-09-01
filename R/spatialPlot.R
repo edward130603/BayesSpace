@@ -64,7 +64,8 @@ clusterPlot <- function(sce, platform=c("Visium", "ST"),
 #'
 #' @export
 #' @rdname spatialPlot
-enhancePlot <- function(sce, platform=c("Visium", "ST")) {
+enhancePlot <- function(sce, platform=c("Visium", "ST"),
+                        fill="spatial.cluster", palette=NULL) {
     # TODO: add user-specified palette
     # TODO: add platform/lattice to sce metadata instead of passing
     platform <- match.arg(platform)
@@ -72,12 +73,13 @@ enhancePlot <- function(sce, platform=c("Visium", "ST")) {
     cdata <- data.frame(colData(sce))
     ## TODO: add "enhanced" to metadata and put this logic in clusterPlot()
     if (platform == "Visium") {
-        vertices <- .make_triangle_subspots(cdata)
+        vertices <- .make_triangle_subspots(cdata, fill)
     } else {
-        vertices <- .make_square_spots(cdata, scale.factor=(1/3))
+        vertices <- .make_square_spots(cdata, fill, scale.factor=(1/3))
     }
 
     ## TODO: add color (edge color) parameter
+    ## TODO: extract this into a function that gets called by clusterPlot too
     splot <- ggplot(data=vertices,
                     aes_(x=~x.vertex, y=~y.vertex, group=~spot, fill=~factor(fill))) +
         geom_polygon() +
@@ -85,6 +87,9 @@ enhancePlot <- function(sce, platform=c("Visium", "ST")) {
         labs(fill="Cluster") +
         coord_equal() +
         theme_void()
+    
+    if (!is.null(palette))
+        splot <- splot + scale_fill_manual(values=palette)
 
     splot
 }

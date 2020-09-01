@@ -13,7 +13,12 @@ clusterPlot(
   palette = NULL
 )
 
-enhancePlot(sce, platform = c("Visium", "ST"))
+enhancePlot(
+  sce,
+  platform = c("Visium", "ST"),
+  fill = "spatial.cluster",
+  palette = NULL
+)
 }
 \arguments{
 \item{sce}{SingleCellExperiment containing cluster assignments in
