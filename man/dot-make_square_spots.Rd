@@ -4,7 +4,7 @@
 \alias{.make_square_spots}
 \title{Make vertices for each square spot}
 \usage{
-.make_square_spots(cdata, fill.col = "spatial.cluster", scale.factor = 1)
+.make_square_spots(cdata, fill = "spatial.cluster", scale.factor = 1)
 }
 \value{
 Table of (x.pos, y.pos, spot, fill); where \code{spot} groups the

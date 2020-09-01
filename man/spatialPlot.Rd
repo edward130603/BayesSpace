@@ -6,7 +6,12 @@
 \alias{enhancePlot}
 \title{Plot cluster labels in spatial context}
 \usage{
-clusterPlot(sce, platform = c("Visium", "ST"))
+clusterPlot(
+  sce,
+  platform = c("Visium", "ST"),
+  fill = "spatial.cluster",
+  palette = NULL
+)
 
 enhancePlot(sce, platform = c("Visium", "ST"))
 }
@@ -16,6 +21,11 @@ enhancePlot(sce, platform = c("Visium", "ST"))
 
 \item{platform}{Spatial sequencing platform. If "Visium", the hex spot layout
 will be used, otherwise square spots will be plotted.}
+
+\item{fill}{Name of a column in \code{colData(sce)} or a vector of values to
+use as fill for each spot}
+
+\item{palette}{Optional vector of hex codes to use for discrete spot values}
 }
 \value{
 Both functions return a \code{ggplot} object.

@@ -1,7 +1,0 @@
-pandoc: 2.8.1
-pkgdown: 1.5.1
-pkgdown_sha: ~
-articles:
-  BayesSpace: BayesSpace.html
-last_built: 2020-08-30T20:38Z
-

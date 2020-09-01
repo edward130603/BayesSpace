@@ -6,9 +6,8 @@
 \usage{
 cluster(
   Y,
-  positions,
-  radius,
   q,
+  df_j,
   init = rep(1, nrow(Y)),
   model = c("t", "normal"),
   precision = c("equal", "variable"),

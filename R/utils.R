@@ -90,6 +90,8 @@ Mode <- function(x) {
 #'   * \code{rotation} Rotation matrix (block diagonal for each set of PCs)
 #'   * \code{genesets} List of gene sets in each block
 #'   
+#' @keywords internal
+#' 
 #' @importFrom Matrix bdiag
 runGenesetPCA <- function(expr, n_pcs = 20, n_hvgs = 2000, genesets = list()) {
     ## Compute top HVGs, excluding any that appear in user-specified gene sets
@@ -135,6 +137,8 @@ runGenesetPCA <- function(expr, n_pcs = 20, n_hvgs = 2000, genesets = list()) {
 #' @param d Number of principal components to keep
 #' 
 #' @return Returns \code{sce} with PCs added to its \code{reducedDims}
+#' 
+#' @keywords internal
 addPCA <- function(sce, assay.type, pca.method, d = 15) {
     if (pca.method == "PCA") {
         sce <- scater::runPCA(sce, exprs_values=assay.type, ncomponents=d)

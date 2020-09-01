@@ -170,7 +170,7 @@ hexplot <- ggplot(data=poly_pos2, aes(x=x.vertex, y=-y.vertex, group=spot, fill=
     # geom_polygon(data=border, aes(x=x, y=-y), fill="#000000") +
     geom_polygon() +
     geom_polygon(data=corner_pos2) +
-    geom_polygon(data=tri_pos, aes(group=subspot.id), color=enhanced.color, size=0.7) +
+    geom_polygon(data=tri_pos, aes(group=subspot.id), color=enhanced.color, size=1) +
     coord_equal() +
     scale_fill_manual(values=palette) +
     guides(fill=FALSE, color=FALSE) +
@@ -196,15 +196,22 @@ Make sticker!
 ```{r fig.width=6, fig.height=6}
 family <- "alata"
 scale <- 2.19
+
+p.color <- "#E0FBFC"
+fname <- "BayesSpace_logo.png"
+
+# p.color <- enhanced.color
+# fname <- "BayesSpace_logo_alt.png"
+
 s <- hexSticker::sticker(hexplot, package="BayesSpace", 
              p_family=family, p_size=22, 
              s_x=1, s_y=1, s_width=1.3*scale, s_height=1*scale,
              p_y=1,
-             p_color="#E0FBFC",
-             h_color='#293241', h_size=2,
-             filename="BayesSpace_logo.png") +
+             p_color=p.color,
+             h_color=enhanced.color, h_size=2,
+             filename=fname) +
   
 # overwrite file with better size
-ggsave("BayesSpace_logo.png", width=(6/1.1547005), height=6, bg="transparent")
+ggsave(fname, width=(6/1.1547005), height=6, bg="transparent")
 s
 ```

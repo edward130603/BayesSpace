@@ -50,7 +50,9 @@ Encoding: UTF-8
 Suggests: 
     testthat,
     knitr,
-    rmarkdown
+    rmarkdown,
+    patchwork,
+    igraph
 VignetteBuilder: knitr
 biocViews:
     Software,

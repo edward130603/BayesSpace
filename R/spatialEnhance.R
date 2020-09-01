@@ -7,20 +7,14 @@
 #' 
 #' @param sce A SingleCellExperiment object containing the spatial data.
 #' @param q The number of clusters.
+#' @param platform Spatial transcriptomic platform. Specify 'Visium' for hex 
+#'   lattice geometry or 'ST' for square lattice geometry.
 #' @param use.dimred Name of a reduced dimensionality result in 
 #'   \code{reducedDims(sce)}. If provided, cluster on these features directly. 
 #' @param d Number of top principal components to use when clustering.
-#' @param positions A matrix or dataframe with two columns (x, y) that gives
-#'   the spatial coordinates of each spot.
-#' @param position.cols If \code{positions} is not provided, use these columns 
-#'   from \code{colData(sce)} as spatial coordinates (x, y).
 #' @param init Initial cluster assignments for spots.
 #' @param init.method If \code{init} is not provided, cluster the top \code{d} 
 #'   PCs with this method to obtain initial cluster assignments.
-#' @param xdist The distance along x-axis between neighboring spots. If not 
-#'   provided, the distance will be estimated using \code{lm(imagecol ~ col)}.
-#' @param ydist The distance along y-axis between neighboring spots. If not
-#'   provided, the distance will be estimated using \code{lm(imagerow ~ row)}.
 #' @param model Error model. ('normal' or 't')
 #' @param nrep The number of MCMC iterations.
 #' @param gamma Smoothing parameter. (Values in range of 1-3 seem to work well.)
@@ -32,8 +26,6 @@
 #' @param beta Hyperparameter for Wishart distributed precision lambda.
 #' @param save.chain If true, save the MCMC chain to an HDF5 file. 
 #' @param chain.fname File path for saved chain. Tempfile used if not provided.
-#' @param platform Spatial transcriptomic platform. Specify 'Visium' for hex 
-#'   lattice geometry or 'ST' for square lattice geometry.
 #' @param jitter_scale Controls the amount of jittering. Small amounts of 
 #'   jittering are more likely to be accepted but result in exploring the space
 #'   more slowly. We suggest tuning \code{jitter_scale} so that Ychange is on 
@@ -62,6 +54,8 @@
 NULL
 
 ## TODO: re-order arguments so all keyword arguments come after positionals
+## TODO: update offset code to be based on array coordinates, as in cluster,
+##   instead of image coordinates
 #' Wrapper around C++ \code{iterate_deconv()} function
 #' 
 #' @return List of enhancement parameter values at each iteration
@@ -178,20 +172,28 @@ deconvolve <- function(Y, positions, nrep = 1000, gamma = 2, xdist, ydist, q,
 #' @rdname spatialEnhance
 #' @importFrom SingleCellExperiment SingleCellExperiment reducedDim<-
 #' @importFrom SummarizedExperiment rowData 
-spatialEnhance <- function(sce, q, use.dimred = "PCA", d = 15, 
-    positions = NULL, position.cols = c("imagecol", "imagerow"), 
-    init = NULL, init.method = c("spatialCluster", "kmeans"),
-    xdist = NULL, ydist = NULL, 
+spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
+    use.dimred = "PCA", d = 15,
+    init = NULL, init.method = c("spatialCluster", "mclust", "kmeans"),
     model = c("t", "normal"), nrep = 200000, gamma = 3, 
     mu0 = NULL, lambda0 = NULL, alpha = 1, beta = 0.01, 
-    save.chain = FALSE, chain.fname = NULL, platform = c("Visium", "ST"), 
+    save.chain = FALSE, chain.fname = NULL,
     jitter_scale = 5, jitter_prior = 0.3, verbose = FALSE) {
+
+    platform <- match.arg(platform)
+    if (platform == "Visium") {
+        position.cols <- c("imagecol", "imagerow")
+        xdist <- ydist <- NULL  # Compute with .prepare_inputs
+    } else if (platform == "ST") {
+        position.cols <- c("col", "row")
+        xdist <- ydist <- 1
+    }
     
     inputs <- .prepare_inputs(sce, use.dimred=use.dimred, d=d,
-        positions=positions, position.cols=position.cols,
+        positions=NULL, position.cols=position.cols,
         xdist=xdist, ydist=ydist)
-    
-    ## Initialize cluster assignments (use k-means for now)
+
+    ## Initialize cluster assignments (use spatialCluster by default)
     if (is.null(init)) {
         init.method <- match.arg(init.method)
         if (init.method == "spatialCluster") {
@@ -199,14 +201,13 @@ spatialEnhance <- function(sce, q, use.dimred = "PCA", d = 15,
             msg <- paste0(msg, "if using spatialCluster to initialize.")
             assert_that("spatial.cluster" %in% colnames(colData(sce)), msg=msg)
             init <- sce$spatial.cluster
-        } else if (init.method == "kmeans") {
-            init <- kmeans(inputs$PCs, centers=q)$cluster
+        } else {
+            init <- .init_cluster(inputs$PCs, q, init, init.method)
         }
     }
     
     ## TODO: pass these through with ...
     model <- match.arg(model)
-    platform <- match.arg(platform)
     mu0 <- if (is.null(mu0)) colMeans(inputs$PCs) else mu0
     lambda0 <- if (is.null(lambda0)) diag(0.01, ncol(inputs$PCs)) else lambda0
     

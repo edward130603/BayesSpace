@@ -32,3 +32,4 @@ If a set of highly variable genes (HVGs) is not included in the list of
 gene sets (using the name \code{hvgs}), the top \code{n_hvgs} will be
 computed using scran and added to the list of gene sets.
 }
+\keyword{internal}

@@ -71,23 +71,31 @@ qTune <- function(sce, qs=seq(3, 7), min_rep=100, max_rep=1000, ...) {
     ## TODO: refactor args into a ClusterConfig object and store as sce attribute
     args <- list(...)
     
-    input.args <- c("use.dimred", "d", "positions", "position.cols", "radius")
-    input.args <- compact(args[input.args])
-    inputs <- do.call(.prepare_inputs, c(list(sce=sce), input.args))
+    ## Get PCs
+    use.dimred <- if (is.null(args$use.dimred)) "PCA" else args$use.dimred
+    d <- if (is.null(args$d)) 15 else as.integer(args$d)
+    Y <- reducedDim(sce, use.dimred)
+    d <- min(ncol(Y), d)
+    Y <- Y[, seq_len(d)]
     
+    ## Get neighbors
+    platform <- if (is.null(args$platform)) "Visium" else args$platform
+    df_j <- .find_neighbors(sce, platform)
+    
+    ## Parse args from ... for cluster initialization
     init.args <- c("init", "init.method")
     init.args <- compact(args[init.args])
     
-    cluster.args <- discard(names(args), function(x) {x %in% c(names(input.args), names(init.args))})
+    ## Parse args from ... for BayesSpace clustering
+    cluster.args <- discard(names(args), function(x) {x %in% c(c("use.dimred", "d", "platform"), names(init.args))})
     cluster.args <- compact(args[cluster.args])
     cluster.args$nrep <- max_rep
     
     logliks <- list()
     for (q in qs) {
-        sce <- do.call(.init_cluster, c(list(sce=sce, q=q, inputs=inputs), init.args))
+        init <- do.call(.init_cluster, c(list(Y=Y, q=q), init.args))
         
-        input.args <- list(Y=inputs$PCs, positions=inputs$positions, 
-                           radius=inputs$radius, q=q, init=sce$cluster.init)
+        input.args <- list(Y=Y, q=q, df_j=df_j, init=init)
         
         results <- do.call(cluster, c(input.args, cluster.args))
         logliks[[q]] <- data.frame(q=q, loglik=mean(results$plogLik[min_rep:max_rep]))

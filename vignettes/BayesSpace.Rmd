@@ -1,7 +1,7 @@
 ---
 title: "BayesSpace"
 author: "Edward Zhao, Matt Stone, Xing Ren, and Raphael Gottardo"
-date: "2020-08-30"
+date: "2020-08-31"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{BayesSpace}
@@ -25,7 +25,6 @@ suppressPackageStartupMessages({
 We'll obtain one of the melanoma samples from the 2018 Spatial Transcriptomics
 paper for this example.
 
-TODO: switch to a subset of a Visium dataset so we don't need to specify position.cols and radius in demo
 
 ```r
 sce <- getRDS(dataset="2018_thrane_melanoma", sample="ST_mel1_rep2")
@@ -43,14 +42,14 @@ sce <- scater::runPCA(sce, subset_row=top)
 ```
 
 We can use the `qTune()` and `qPlot()` functions to help choose the number of
-clusters to use in our analysis.
+clusters to use in our analysis. 
 
 ```r
-sce <- qTune(sce, position.cols=c("col", "row"), radius=1)
+sce <- qTune(sce, platform="ST", d=7, nrep=100)
 qPlot(sce)
 ```
 
-<img src="BayesSpace-tuning_q-1.png" title="plot of chunk tuning_q" alt="plot of chunk tuning_q" width="100%" />
+<img src="figures/BayesSpace-tuning_q-1.png" title="plot of chunk tuning_q" alt="plot of chunk tuning_q" width="100%" />
 
 ## Clustering
 The `spatialCluster()` function will cluster the spots, and add the predicted
@@ -58,12 +57,12 @@ cluster labels to `colData(sce)`. Typically, and for analyses in the paper, we
 suggest running with at least 10,000 iterations (`nrep=10000`), but we use 1,000
 iteration in this demonstration for the sake of runtime.
 
-TODO: clarify row/col vs imagerow/imagecol, and ST vs visium
 
 ```r
 set.seed(149)
-sce <- spatialCluster(sce, q=4, init.method="mclust", model="t", nrep=10000, 
-                      position.cols=c("col", "row"), radius=1, save.chain=TRUE)
+sce <- spatialCluster(sce, q=4, platform="ST", d=7,
+                      init.method="mclust", model="t", nrep=1000, 
+                      save.chain=TRUE)
 ```
 
 Both the mclust initialization (`cluster.init`) and the BayesSpace cluster assignments (`spatial.cluster`) are now available in the SingleCellExperiment's `colData`.
@@ -75,7 +74,7 @@ head(colData(sce))
 #>      <integer> <integer>  <numeric>    <numeric>       <numeric>
 #> 7x15         7        15   0.795588            1               1
 #> 7x16         7        16   0.307304            1               1
-#> 7x17         7        17   0.331247            2               2
+#> 7x17         7        17   0.331247            2               1
 #> 7x18         7        18   0.420747            3               2
 #> 8x13         8        13   0.255453            1               1
 #> 8x14         8        14   1.473439            1               1
@@ -85,15 +84,10 @@ head(colData(sce))
 We can plot the cluster assignments over the spatial locations of the spots.
 
 ```r
-ggplot(as.data.frame(colData(sce)), aes(x = col, y = row, fill = factor(spatial.cluster))) +
-  geom_point(size = 7, pch = 22) +
-  labs(x = NULL, y = NULL, fill = "Cluster") +
-  scale_fill_manual(values = c("purple", "red", "blue", "yellow")) +
-  theme_void() + 
-  coord_fixed()
+clusterPlot(sce, platform="ST")
 ```
 
-<img src="BayesSpace-cluster.plot-1.png" title="plot of chunk cluster.plot" alt="plot of chunk cluster.plot" width="100%" />
+<img src="figures/BayesSpace-cluster.plot-1.png" title="plot of chunk cluster.plot" alt="plot of chunk cluster.plot" width="100%" />
 
 ## Enhanced resolution
 
@@ -102,8 +96,8 @@ components, and add these PCs as well as predicted cluster labels at subspot
 resolution to a new SingleCellExperiment.
 
 ```r
-enhanced <- spatialEnhance(sce, q=4, init=sce$spatial.cluster, model="t", nrep=10000, 
-                           position.cols=c("col", "row"), xdist=1, ydist=1, save.chain=TRUE)
+enhanced <- spatialEnhance(sce, q=4, platform="ST", d=7,
+                           model="t", nrep=10000, save.chain=TRUE)
 ```
 
 The enhanced SingleCellExperiment includes an index to the parent spot in the original `sce` (`spot.idx`), along with an index to the subspot. It adds the offsets to the original spot coordinates, and provides the enhanced cluster label (`spatial.cluster`).
@@ -111,37 +105,32 @@ The enhanced SingleCellExperiment includes an index to the parent spot in the or
 ```r
 head(colData(enhanced))
 #> DataFrame with 6 rows and 9 columns
-#>              spot.idx subspot.idx  spot.row  spot.col       row       col  imagerow  imagecol
-#>             <numeric>   <integer> <integer> <integer> <numeric> <numeric> <numeric> <numeric>
-#> subspot_1.1         1           1         7        15   7.33333   15.3333   7.33333   15.3333
-#> subspot_2.1         2           1         7        16   7.33333   16.3333   7.33333   16.3333
-#> subspot_3.1         3           1         7        17   7.33333   17.3333   7.33333   17.3333
-#> subspot_4.1         4           1         7        18   7.33333   18.3333   7.33333   18.3333
-#> subspot_5.1         5           1         8        13   8.33333   13.3333   8.33333   13.3333
-#> subspot_6.1         6           1         8        14   8.33333   14.3333   8.33333   14.3333
-#>             spatial.cluster
-#>                   <numeric>
-#> subspot_1.1               1
-#> subspot_2.1               2
-#> subspot_3.1               3
-#> subspot_4.1               3
-#> subspot_5.1               1
-#> subspot_6.1               1
+#>              spot.idx subspot.idx  spot.row  spot.col       row
+#>             <numeric>   <integer> <integer> <integer> <numeric>
+#> subspot_1.1         1           1         7        15   7.33333
+#> subspot_2.1         2           1         7        16   7.33333
+#> subspot_3.1         3           1         7        17   7.33333
+#> subspot_4.1         4           1         7        18   7.33333
+#> subspot_5.1         5           1         8        13   8.33333
+#> subspot_6.1         6           1         8        14   8.33333
+#>                   col  imagerow  imagecol spatial.cluster
+#>             <numeric> <numeric> <numeric>       <numeric>
+#> subspot_1.1   15.3333   7.33333   15.3333               1
+#> subspot_2.1   16.3333   7.33333   16.3333               1
+#> subspot_3.1   17.3333   7.33333   17.3333               4
+#> subspot_4.1   18.3333   7.33333   18.3333               3
+#> subspot_5.1   13.3333   8.33333   13.3333               1
+#> subspot_6.1   14.3333   8.33333   14.3333               1
 ```
 
 
 We can plot the enhanced cluster assignments as above.
 
 ```r
-ggplot(as.data.frame(colData(enhanced)), aes(x = col, y = row, fill = factor(spatial.cluster))) +
-  geom_point(size = 2.5, pch = 22) +
-  labs(x = NULL, y = NULL, fill = "Cluster") +
-  scale_fill_manual(values = c("purple", "red", "blue", "yellow")) +
-  theme_void() + 
-  coord_fixed()
+enhancePlot(enhanced, platform="ST")
 ```
 
-<img src="BayesSpace-enhance.plot-1.png" title="plot of chunk enhance.plot" alt="plot of chunk enhance.plot" width="100%" />
+<img src="figures/BayesSpace-enhance.plot-1.png" title="plot of chunk enhance.plot" alt="plot of chunk enhance.plot" width="100%" />
 
 Note that the enhanced PCs are stored as a `reducedDim` and the enhanced
 SingleCellExperiment has no assays. To impute expression (or other features) at
@@ -172,12 +161,12 @@ row. Columns are named with the parameter name and index (if any).
 ```r
 chain <- mcmcChain(sce)
 chain[1:5, 1:5]
-#>      lambda[1,1] lambda[1,2] lambda[1,3] lambda[1,4]   lambda[1,5]
-#> [1,]  0.01000000  0.00000000  0.00000000 0.000000000  0.0000000000
-#> [2,]  0.08840958 -0.04725375  0.05372259 0.038636232 -0.0053985586
-#> [3,]  0.07707432 -0.04138119  0.04046272 0.017109309 -0.0004981363
-#> [4,]  0.08220634 -0.04982772  0.03761156 0.005765817 -0.0205914192
-#> [5,]  0.09618645 -0.05293014  0.06389211 0.018119364 -0.0518914784
+#>      lambda[1,1]   lambda[1,2] lambda[1,3] lambda[1,4]   lambda[1,5]
+#> [1,]  0.01000000  0.0000000000  0.00000000  0.00000000  0.0000000000
+#> [2,]  0.08881814 -0.0069607125  0.04701671  0.05811048 -0.0183519085
+#> [3,]  0.09769463 -0.0101249422  0.05003421  0.04333985  0.0009460308
+#> [4,]  0.12711317 -0.0092963084  0.05873454  0.02999497 -0.0143671288
+#> [5,]  0.12208723 -0.0004291535  0.06095618  0.03279684 -0.0129103679
 ```
 
 To remove the HDF5 file from disk and remove its path from the metadata, use

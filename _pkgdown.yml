@@ -1,3 +1,40 @@
 template:
   params:
     bootswatch: flatly
+
+reference:
+  - title: Spatial analysis
+    contents:
+    - spatialCluster
+    - spatialEnhance
+    - enhanceFeatures
+    - spatialPlot
+    
+  - title: Model tuning and inspection
+    contents:
+    - qTune
+    - mcmcChain
+    
+  - title: Loading example datasets
+    contents:
+    - getRDS
+    - exampleSCE
+    
+navbar:
+  type: default
+  left:
+  - icon: fa-home
+    href: index.html
+  - text: Get started
+    href: articles/BayesSpace.html
+  - text: Reference
+    href: reference/index.html
+  - text: Examples
+    menu:
+    - text: Melanoma (Thrane et al., 2018)
+      href: articles/thrane_melanoma.html
+  - text: Changelog
+    href: news/index.html
+  right:
+  - icon: fa-github fa-lg
+    href: https://github.com/edward130603/BayesSpace
