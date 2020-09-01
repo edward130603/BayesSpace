@@ -8,6 +8,9 @@
 #'   \code{sce$spatial.cluster}
 #' @param platform Spatial sequencing platform. If "Visium", the hex spot layout
 #'   will be used, otherwise square spots will be plotted.
+#' @param fill Name of a column in \code{colData(sce)} or a vector of values to
+#'   use as fill for each spot
+#' @param palette Optional vector of hex codes to use for discrete spot values
 #' 
 #' @return Both functions return a \code{ggplot} object.
 #' 
@@ -29,7 +32,8 @@ palette <- c("#0173b2", "#de8f05", "#029e73", "#d55e00", "#cc78bc",
 #'
 #' @export
 #' @rdname spatialPlot
-clusterPlot <- function(sce, platform=c("Visium", "ST"), fill="spatial.cluster") {
+clusterPlot <- function(sce, platform=c("Visium", "ST"),
+                        fill="spatial.cluster", palette=NULL) {
     # TODO: add user-specified palette
     # TODO: add platform/lattice to sce metadata instead of passing
     platform <- match.arg(platform)
@@ -42,12 +46,14 @@ clusterPlot <- function(sce, platform=c("Visium", "ST"), fill="spatial.cluster")
     }
 
     splot <- ggplot(data=vertices, 
-                    aes_(x=~x.vertex, y=~y.vertex, group=~spot, fill=~factor(fill))) + 
+                    aes_(x=~x.vertex, y=~y.vertex, group=~spot, fill=~factor(fill))) +
         geom_polygon() +
-        # scale_fill_manual() +
         labs(fill="Cluster") +
         coord_equal() +
         theme_void()
+
+    if (!is.null(palette))
+        splot <- splot + scale_fill_manual(values=palette)
 
     splot
 }
