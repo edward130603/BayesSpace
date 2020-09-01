@@ -8,24 +8,14 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  out.width="100%",
-  fig.width=7, fig.height=5,
-  dpi=300, fig.path="figures/melanoma-",
-  message=FALSE, warning=FALSE, error=FALSE
-)
-```
 
-```{r setup}
-suppressPackageStartupMessages({
-    library(SingleCellExperiment)
-    library(BayesSpace)
-    library(ggplot2)
-    library(patchwork)
-})
+
+
+```r
+library(SingleCellExperiment)
+library(BayesSpace)
+library(ggplot2)
+library(patchwork)
 ```
 
 Overview
@@ -38,12 +28,14 @@ Processing the data
 
 A cleaned `SingleCellExperiment` object containing the dataset is available
 through BayesSpace.
-```{r}
+
+```r
 melanoma1.2 <- getRDS("2018_thrane_melanoma", "ST_mel1_rep2")
 ```
 
 We preprocess the data by performing PCA on the top 2,000 HVGs.
-```{r}
+
+```r
 set.seed(100)
 dec <- scran::modelGeneVar(melanoma1.2)
 top <- scran::getTopHVGs(dec, n = 2000)
@@ -57,7 +49,8 @@ Clustering with BayesSpace
 
 We cluster the first seven principal components, specifying 4 clusters.
 
-```{r spatialCluster}
+
+```r
 q <- 4  # Number of clusters
 d <- 7  # Number of PCs
 
@@ -71,6 +64,8 @@ clusterPlot(melanoma1.2, platform="ST", palette=palette) +
     labs(title="BayesSpace")
 ```
 
+<img src="figures/melanoma-spatialCluster-1.png" title="plot of chunk spatialCluster" alt="plot of chunk spatialCluster" width="100%" />
+
 
 
 Comparison to other clustering algorithms
@@ -78,13 +73,16 @@ Comparison to other clustering algorithms
 
 We cluster the first seven principal components, specifying 4 clusters when 
 necessary.
-```{r compare.clusters, warning=FALSE, message=FALSE}
+
+```r
 Y1.2 <- reducedDim(melanoma1.2, "PCA")[, seq_len(d)]
 
 ## mclust (BayesSpace initialization)
 library(mclust)
 set.seed(100)
 mclust.labels <- Mclust(Y1.2, q, "EEE")$classification
+#> fitting ...
+#>   |                                                                   |                                                           |   0%  |                                                                   |==============================                             |  50%  |                                                                   |===========================================================| 100%
 
 ## K-means
 set.seed(103)
@@ -100,19 +98,4 @@ giotto.fname <- system.file("extdata", "thrane_HMRF_domains.csv", package = "Bay
 giotto.labels <- read.csv(giotto.fname)$HMRF_PCA_k4_b.2
 ```
 
-```{r cluster.comparison, echo=FALSE, fig.width=7*1.3, fig.height=5*1.3}
-p.mclust <- clusterPlot(sce, platform="ST", fill=mclust.labels, palette=palette) + 
-    guides(fill=FALSE) +
-    labs(title="mclust")
-p.km <- clusterPlot(sce, platform="ST", fill=km.labels, palette=palette[c(3, 1, 4, 2)]) + 
-    guides(fill=FALSE) +
-    labs(title="K-means")
-p.louvain <- clusterPlot(sce, platform="ST", fill=louvain.labels, palette=palette[c(3, 2, 1, 4)]) +
-    guides(fill=FALSE) +
-    labs(title="Louvain")
-p.giotto <- clusterPlot(sce, platform="ST", fill=giotto.labels, palette=palette[c(4, 2, 1, 3)]) +
-    guides(fill=FALSE) +
-    labs(title="Giotto")
-
-(p.mclust | p.km) / (p.louvain + p.giotto)
-```
+<img src="figures/melanoma-cluster.comparison-1.png" title="plot of chunk cluster.comparison" alt="plot of chunk cluster.comparison" width="100%" />
