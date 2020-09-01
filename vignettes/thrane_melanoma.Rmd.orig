@@ -69,6 +69,17 @@ clusterPlot(melanoma1.2, platform="ST", palette=palette) +
     labs(title="BayesSpace")
 ```
 
+Enhancing resolution with BayesSpace
+------------------------------------
+```{r}
+melanoma.enhanced <- spatialEnhance(melanoma1.2, q=q, d=d, platform="ST",
+                                    gamma=2, nrep=1000, 
+                                    jitter_scale=3.5, jitter_prior=0.3)
+```
+
+```{r}
+enhancePlot(melanoma.enhanced, platform="ST", palette=palette)
+```
 
 
 Comparison to other clustering algorithms
