@@ -119,6 +119,7 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     lambda0 <- if (is.null(lambda0)) diag(0.01, ncol(Y)) else lambda0
     
     ## Run clustering
+    ## TODO: set default gamma to 2 if platform=ST and not specified
     results <- cluster(Y, q, df_j, init=init, 
         model=model, precision=precision, mu0=mu0, 
         lambda0=lambda0, gamma=gamma, alpha=alpha, beta=beta, nrep=nrep)

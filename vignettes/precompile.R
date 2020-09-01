@@ -5,4 +5,6 @@
 #' https://github.com/ropensci/eia/blob/master/vignettes/precompile.R
 
 knitr::knit("vignettes/BayesSpace.Rmd.orig", output="vignettes/BayesSpace.Rmd")
-system2("mv", c("BayesSpace-*.png", "vignettes/"))
+# knitr::knit("vignettes/2018_thrane_melanoma.Rmd.orig", output="vignettes/2018_thrane_melanoma.Rmd")
+system2("mv", c("figures/BayesSpace-*.png", "vignettes/figures/"))
+system2("mv", c("figures/melanoma-*", "vignettes/figures/"))

@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
   comment = "#>",
   out.width="100%",
   fig.width=7, fig.height=5,
-  dpi=300, fig.path="BayesSpace-",
+  dpi=300, fig.path="figures/BayesSpace-",
   message=FALSE, warning=FALSE, error=FALSE
 )
 ```
