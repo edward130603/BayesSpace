@@ -79,7 +79,7 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fa fa-home"></span>
      
   </a>
 </li>
@@ -89,12 +89,29 @@
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Examples
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/thrane_melanoma.html">Melanoma (Thrane et al., 2018)</a>
+    </li>
+  </ul>
+</li>
 <li>
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
-        
+        <li>
+  <a href="https://github.com/edward130603/BayesSpace">
+    <span class="fa fa-github fa-lg"></span>
+     
+  </a>
+</li>
       </ul>
       
     </div><!--/.nav-collapse -->
@@ -122,7 +139,7 @@
     <tbody>
       <tr>
         <th colspan="2">
-          <h2 id="section-all-functions" class="hasAnchor"><a href="#section-all-functions" class="anchor"></a>All functions</h2>
+          <h2 id="section-spatial-analysis" class="hasAnchor"><a href="#section-spatial-analysis" class="anchor"></a>Spatial analysis</h2>
           <p class="section-desc"></p>
         </th>
       </tr>
@@ -132,49 +149,6 @@
       
       
       <tr>
-        
-        <td>
-          <p><code><a href="addPCA.html">addPCA()</a></code> </p>
-        </td>
-        <td><p>Add PCA output to a SingleCellExperiment</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="enhanceFeatures.html">enhanceFeatures()</a></code> </p>
-        </td>
-        <td><p>Predict log-normalized expression vectors from deconvolved PCs using linear 
-regression.</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="exampleSCE.html">exampleSCE()</a></code> </p>
-        </td>
-        <td><p>Create minimal <code>SingleCellExperiment</code> for documentation examples.</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="getRDS.html">getRDS()</a></code> </p>
-        </td>
-        <td><p>Download a processed sample from our S3 bucket</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="mcmcChain.html">mcmcChain()</a></code> <code><a href="mcmcChain.html">removeChain()</a></code> </p>
-        </td>
-        <td><p>Read MCMC chain associated with a BayesSpace clustering or enhancement</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="qTune.html">qPlot()</a></code> <code><a href="qTune.html">qTune()</a></code> </p>
-        </td>
-        <td><p>Tuning the choice of q (number of clusters) before running spatialCluster</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="runGenesetPCA.html">runGenesetPCA()</a></code> </p>
-        </td>
-        <td><p>Run 'blocked' PCA on HVGs and gene sets of interest</p></td>
-      </tr><tr>
         
         <td>
           <p><code><a href="spatialCluster.html">spatialCluster()</a></code> </p>
@@ -189,9 +163,66 @@ regression.</p></td>
       </tr><tr>
         
         <td>
+          <p><code><a href="enhanceFeatures.html">enhanceFeatures()</a></code> </p>
+        </td>
+        <td><p>Predict log-normalized expression vectors from deconvolved PCs using linear 
+regression.</p></td>
+      </tr><tr>
+        
+        <td>
           <p><code><a href="spatialPlot.html">clusterPlot()</a></code> <code><a href="spatialPlot.html">enhancePlot()</a></code> </p>
         </td>
         <td><p>Plot cluster labels in spatial context</p></td>
+      </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-model-tuning-and-inspection" class="hasAnchor"><a href="#section-model-tuning-and-inspection" class="anchor"></a>Model tuning and inspection</h2>
+          <p class="section-desc"></p>
+        </th>
+      </tr>
+      
+      
+    </tbody><tbody>
+      
+      
+      <tr>
+        
+        <td>
+          <p><code><a href="qTune.html">qPlot()</a></code> <code><a href="qTune.html">qTune()</a></code> </p>
+        </td>
+        <td><p>Tuning the choice of q (number of clusters) before running spatialCluster</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="mcmcChain.html">mcmcChain()</a></code> <code><a href="mcmcChain.html">removeChain()</a></code> </p>
+        </td>
+        <td><p>Read MCMC chain associated with a BayesSpace clustering or enhancement</p></td>
+      </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-loading-example-datasets" class="hasAnchor"><a href="#section-loading-example-datasets" class="anchor"></a>Loading example datasets</h2>
+          <p class="section-desc"></p>
+        </th>
+      </tr>
+      
+      
+    </tbody><tbody>
+      
+      
+      <tr>
+        
+        <td>
+          <p><code><a href="getRDS.html">getRDS()</a></code> </p>
+        </td>
+        <td><p>Download a processed sample from our S3 bucket</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="exampleSCE.html">exampleSCE()</a></code> </p>
+        </td>
+        <td><p>Create minimal <code>SingleCellExperiment</code> for documentation examples.</p></td>
       </tr>
     </tbody>
     </table>

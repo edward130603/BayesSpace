@@ -82,7 +82,7 @@ enhancePlot(), respectively." />
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fa fa-home"></span>
      
   </a>
 </li>
@@ -92,12 +92,29 @@ enhancePlot(), respectively." />
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Examples
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/thrane_melanoma.html">Melanoma (Thrane et al., 2018)</a>
+    </li>
+  </ul>
+</li>
 <li>
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
-        
+        <li>
+  <a href="https://github.com/edward130603/BayesSpace">
+    <span class="fa fa-github fa-lg"></span>
+     
+  </a>
+</li>
       </ul>
       
     </div><!--/.nav-collapse -->
@@ -122,7 +139,12 @@ visualize the cluster assignments of each spot using <code>clusterPlot()</code> 
 <code>enhancePlot()</code>, respectively.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>clusterPlot</span>(<span class='kw'>sce</span>, platform = <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"Visium"</span>, <span class='st'>"ST"</span>))
+    <pre class="usage"><span class='fu'>clusterPlot</span>(
+  <span class='kw'>sce</span>,
+  platform = <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"Visium"</span>, <span class='st'>"ST"</span>),
+  fill = <span class='st'>"spatial.cluster"</span>,
+  palette = <span class='kw'>NULL</span>
+)
 
 <span class='fu'>enhancePlot</span>(<span class='kw'>sce</span>, platform = <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"Visium"</span>, <span class='st'>"ST"</span>))</pre>
 
@@ -138,6 +160,15 @@ visualize the cluster assignments of each spot using <code>clusterPlot()</code> 
       <th>platform</th>
       <td><p>Spatial sequencing platform. If "Visium", the hex spot layout
 will be used, otherwise square spots will be plotted.</p></td>
+    </tr>
+    <tr>
+      <th>fill</th>
+      <td><p>Name of a column in <code>colData(sce)</code> or a vector of values to
+use as fill for each spot</p></td>
+    </tr>
+    <tr>
+      <th>palette</th>
+      <td><p>Optional vector of hex codes to use for discrete spot values</p></td>
     </tr>
     </table>
 

@@ -80,7 +80,7 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fa fa-home"></span>
      
   </a>
 </li>
@@ -90,12 +90,29 @@
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Examples
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/thrane_melanoma.html">Melanoma (Thrane et al., 2018)</a>
+    </li>
+  </ul>
+</li>
 <li>
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
-        
+        <li>
+  <a href="https://github.com/edward130603/BayesSpace">
+    <span class="fa fa-github fa-lg"></span>
+     
+  </a>
+</li>
       </ul>
       
     </div><!--/.nav-collapse -->
@@ -118,22 +135,14 @@
     <p>Initialize cluster assignments</p>
     </div>
 
-    <pre class="usage"><span class='fu'>.init_cluster</span>(<span class='kw'>sce</span>, <span class='kw'>q</span>, <span class='kw'>inputs</span>, init = <span class='kw'>NULL</span>, init.method = <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"mclust"</span>, <span class='st'>"kmeans"</span>))</pre>
+    <pre class="usage"><span class='fu'>.init_cluster</span>(<span class='kw'>Y</span>, <span class='kw'>q</span>, init = <span class='kw'>NULL</span>, init.method = <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"mclust"</span>, <span class='st'>"kmeans"</span>))</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>sce</th>
-      <td><p>SingleCellExperiment</p></td>
-    </tr>
-    <tr>
       <th>q</th>
       <td><p>Number of clusters</p></td>
-    </tr>
-    <tr>
-      <th>inputs</th>
-      <td><p>Results from .prepare_inputs() (TODO: store this in sce)</p></td>
     </tr>
     <tr>
       <th>init</th>
@@ -142,6 +151,14 @@
     <tr>
       <th>init.method</th>
       <td><p>Initialization clustering algorithm</p></td>
+    </tr>
+    <tr>
+      <th>sce</th>
+      <td><p>SingleCellExperiment</p></td>
+    </tr>
+    <tr>
+      <th>inputs</th>
+      <td><p>Results from .prepare_inputs() (TODO: store this in sce)</p></td>
     </tr>
     </table>
 

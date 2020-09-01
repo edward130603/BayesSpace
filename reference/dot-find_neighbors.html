@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>BayesSpace: A package for processing spatial transcriptomes — BayesSpace • BayesSpace</title>
+<title>Find neighboring spots based on array coordinates — .find_neighbors • BayesSpace</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="BayesSpace: A package for processing spatial transcriptomes — BayesSpace" />
-<meta property="og:description" content="TODO: flesh out package description (or link to vignette)" />
+<meta property="og:title" content="Find neighboring spots based on array coordinates — .find_neighbors" />
+<meta property="og:description" content="Find neighboring spots based on array coordinates" />
 
 
 
@@ -126,33 +126,34 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>BayesSpace: A package for processing spatial transcriptomes</h1>
+    <h1>Find neighboring spots based on array coordinates</h1>
     
-    <div class="hidden name"><code>BayesSpace.Rd</code></div>
+    <div class="hidden name"><code>dot-find_neighbors.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>TODO: flesh out package description (or link to vignette)</p>
+    <p>Find neighboring spots based on array coordinates</p>
     </div>
 
+    <pre class="usage"><span class='fu'>.find_neighbors</span>(<span class='kw'>sce</span>, <span class='kw'>platform</span>)</pre>
 
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>sce</th>
+      <td><p>SingleCellExperiment</p></td>
+    </tr>
+    <tr>
+      <th>platform</th>
+      <td><p>If "Visium", select six neighboring spots around center; if
+"ST", select four adjacent spots.</p></td>
+    </tr>
+    </table>
 
-    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>The BayesSpace package provides two primary functions:
-<code><a href='spatialCluster.html'>spatialCluster()</a></code> and <code><a href='spatialEnhance.html'>spatialEnhance()</a></code>.</p>
-    <h2 class="hasAnchor" id="clustering"><a class="anchor" href="#clustering"></a>Clustering</h2>
-
-    
-
-<p>The clustering algorithm groups neighboring spots together by expression
-profile.</p>
-    <h2 class="hasAnchor" id="enhancement"><a class="anchor" href="#enhancement"></a>Enhancement</h2>
-
-    
-
-<p>The enhancement algorithm deconvolves spot-level expression into imputed
-cell-level signals.</p>
+    <p><code>df_j</code> a list of neighbor indices (zero-indexed) for each spot</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
