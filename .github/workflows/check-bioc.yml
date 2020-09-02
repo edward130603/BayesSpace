@@ -50,7 +50,7 @@ name: R-CMD-check-bioc
 ## "/nocache" in the commit message.
 env:
   has_testthat: 'true'
-  run_covr: 'true'
+  run_covr: 'false'
   run_pkgdown: 'true'
   has_RUnit: 'false'
   cache-version: 'cache-v1'
