@@ -2,8 +2,7 @@
 % Please edit documentation in R/enhanceFeatures.R
 \name{enhanceFeatures}
 \alias{enhanceFeatures}
-\title{Predict log-normalized expression vectors from deconvolved PCs using linear 
-regression.}
+\title{Predict feature vectors from deconvolved PCs.}
 \usage{
 enhanceFeatures(
   sce.enhanced,
@@ -47,8 +46,7 @@ If \code{assay.type} or \code{altExp.type} are specified, the
   requested, the enhanced features are returned directly as a matrix.
 }
 \description{
-Predict log-normalized expression vectors from deconvolved PCs using linear 
-regression.
+Predict feature vectors from deconvolved PCs.
 }
 \details{
 Enhanced features are computed by fitting a predictive model to a
