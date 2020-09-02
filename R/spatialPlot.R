@@ -11,6 +11,10 @@
 #' @param fill Name of a column in \code{colData(sce)} or a vector of values to
 #'   use as fill for each spot
 #' @param palette Optional vector of hex codes to use for discrete spot values
+#' @param color Optional hex code to set color of borders around spots. Set to
+#'   \code{NA} to remove borders.
+#' @param ... Additional arguments for \code{geom_polygon()}. \code{size}, to
+#'   specify the linewidth of these borders, is likely the most useful.
 #' 
 #' @return Both functions return a \code{ggplot} object.
 #' 
@@ -33,8 +37,9 @@ palette <- c("#0173b2", "#de8f05", "#029e73", "#d55e00", "#cc78bc",
 #' @export
 #' @rdname spatialPlot
 clusterPlot <- function(sce, platform=c("Visium", "ST"),
-                        fill="spatial.cluster", palette=NULL) {
-    # TODO: add user-specified palette
+                        fill="spatial.cluster", 
+                        palette=NULL, color="#d8dcd6", ...) {
+    
     # TODO: add platform/lattice to sce metadata instead of passing
     platform <- match.arg(platform)
 
@@ -47,7 +52,7 @@ clusterPlot <- function(sce, platform=c("Visium", "ST"),
 
     splot <- ggplot(data=vertices, 
                     aes_(x=~x.vertex, y=~y.vertex, group=~spot, fill=~factor(fill))) +
-        geom_polygon() +
+        geom_polygon(color=color, ...) +
         labs(fill="Cluster") +
         coord_equal() +
         theme_void()
@@ -65,8 +70,9 @@ clusterPlot <- function(sce, platform=c("Visium", "ST"),
 #' @export
 #' @rdname spatialPlot
 enhancePlot <- function(sce, platform=c("Visium", "ST"),
-                        fill="spatial.cluster", palette=NULL) {
-    # TODO: add user-specified palette
+                        fill="spatial.cluster", 
+                        palette=NULL, color="#d8dcd6", ...) {
+    
     # TODO: add platform/lattice to sce metadata instead of passing
     platform <- match.arg(platform)
 
@@ -78,12 +84,10 @@ enhancePlot <- function(sce, platform=c("Visium", "ST"),
         vertices <- .make_square_spots(cdata, fill, scale.factor=(1/3))
     }
 
-    ## TODO: add color (edge color) parameter
     ## TODO: extract this into a function that gets called by clusterPlot too
     splot <- ggplot(data=vertices,
                     aes_(x=~x.vertex, y=~y.vertex, group=~spot, fill=~factor(fill))) +
-        geom_polygon() +
-        # scale_fill_manual() +
+        geom_polygon(color=color, ...) +
         labs(fill="Cluster") +
         coord_equal() +
         theme_void()

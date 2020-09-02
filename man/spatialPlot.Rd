@@ -10,14 +10,18 @@ clusterPlot(
   sce,
   platform = c("Visium", "ST"),
   fill = "spatial.cluster",
-  palette = NULL
+  palette = NULL,
+  color = "#d8dcd6",
+  ...
 )
 
 enhancePlot(
   sce,
   platform = c("Visium", "ST"),
   fill = "spatial.cluster",
-  palette = NULL
+  palette = NULL,
+  color = "#d8dcd6",
+  ...
 )
 }
 \arguments{
@@ -31,6 +35,12 @@ will be used, otherwise square spots will be plotted.}
 use as fill for each spot}
 
 \item{palette}{Optional vector of hex codes to use for discrete spot values}
+
+\item{color}{Optional hex code to set color of borders around spots. Set to
+\code{NA} to remove borders.}
+
+\item{...}{Additional arguments for \code{geom_polygon()}. \code{size}, to
+specify the linewidth of these borders, is likely the most useful.}
 }
 \value{
 Both functions return a \code{ggplot} object.
