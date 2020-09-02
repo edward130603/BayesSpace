@@ -244,6 +244,9 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
         params <- c("z", "mu", "lambda", "weights", "Y", "Ychange")
         metadata(enhanced)$chain.h5 <- .write_chain(deconv, chain.fname, params)
     }
+    
+    metadata(enhanced)$BayesSpace.platform <- platform
+    metadata(enhanced)$BayesSpace.is_enhanced <- TRUE
 
     enhanced
 }
