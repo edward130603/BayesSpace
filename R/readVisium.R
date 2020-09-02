@@ -17,8 +17,14 @@
 #'   \code{BayesSpace.platform} is set to "Visium", and is used to determine
 #'   spot layout and neighborhood structure, and \code{BayesSpace.is_enhanced}
 #'   is set to \code{FALSE} to denote the object contains spot-level data.
+#'   
+#' @examples
+#' \dontrun{
+#' sce <- readVisium("path/to/outs/")
+#' }
 #' 
 #' @export
+#' @importFrom utils read.csv read.table
 #' @importFrom scater uniquifyFeatureNames
 #' @importFrom Matrix readMM
 #' @importFrom SingleCellExperiment SingleCellExperiment

@@ -20,6 +20,10 @@
 #' 
 #' @return SingleCellExperiment with PCA and BayesSpace metadata
 #' 
+#' @examples
+#' sce <- exampleSCE()
+#' sce <- spatialPreprocess(sce)
+#' 
 #' @export
 #' @importFrom scater logNormCounts runPCA
 #' @importFrom scran modelGeneVar getTopHVGs

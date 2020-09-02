@@ -43,3 +43,8 @@ SingleCellExperiment with PCA and BayesSpace metadata
 Adds metadata required for downstream analyses, and (optionally) performs PCA
 on log-normalized expression of top HVGs.
 }
+\examples{
+sce <- exampleSCE()
+sce <- spatialPreprocess(sce)
+
+}

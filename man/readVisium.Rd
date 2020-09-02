@@ -29,3 +29,9 @@ We store two variables associated with downstream BayesSpace
   spot layout and neighborhood structure, and \code{BayesSpace.is_enhanced}
   is set to \code{FALSE} to denote the object contains spot-level data.
 }
+\examples{
+\dontrun{
+sce <- readVisium("path/to/outs/")
+}
+
+}
