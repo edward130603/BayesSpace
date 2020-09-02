@@ -1,7 +1,7 @@
 ---
 title: "BayesSpace"
 author: "Edward Zhao, Matt Stone, Xing Ren, and Raphael Gottardo"
-date: "2020-08-31"
+date: "2020-09-02"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{BayesSpace}
@@ -74,7 +74,7 @@ head(colData(sce))
 #>      <integer> <integer>  <numeric>    <numeric>       <numeric>
 #> 7x15         7        15   0.795588            1               1
 #> 7x16         7        16   0.307304            1               1
-#> 7x17         7        17   0.331247            2               1
+#> 7x17         7        17   0.331247            2               2
 #> 7x18         7        18   0.420747            3               2
 #> 8x13         8        13   0.255453            1               1
 #> 8x14         8        14   1.473439            1               1
@@ -105,22 +105,22 @@ The enhanced SingleCellExperiment includes an index to the parent spot in the or
 ```r
 head(colData(enhanced))
 #> DataFrame with 6 rows and 9 columns
-#>              spot.idx subspot.idx  spot.row  spot.col       row
-#>             <numeric>   <integer> <integer> <integer> <numeric>
-#> subspot_1.1         1           1         7        15   7.33333
-#> subspot_2.1         2           1         7        16   7.33333
-#> subspot_3.1         3           1         7        17   7.33333
-#> subspot_4.1         4           1         7        18   7.33333
-#> subspot_5.1         5           1         8        13   8.33333
-#> subspot_6.1         6           1         8        14   8.33333
-#>                   col  imagerow  imagecol spatial.cluster
-#>             <numeric> <numeric> <numeric>       <numeric>
-#> subspot_1.1   15.3333   7.33333   15.3333               1
-#> subspot_2.1   16.3333   7.33333   16.3333               1
-#> subspot_3.1   17.3333   7.33333   17.3333               4
-#> subspot_4.1   18.3333   7.33333   18.3333               3
-#> subspot_5.1   13.3333   8.33333   13.3333               1
-#> subspot_6.1   14.3333   8.33333   14.3333               1
+#>              spot.idx subspot.idx  spot.row  spot.col       row       col  imagerow  imagecol
+#>             <numeric>   <integer> <integer> <integer> <numeric> <numeric> <numeric> <numeric>
+#> subspot_1.1         1           1         7        15   7.33333   15.3333   7.33333   15.3333
+#> subspot_2.1         2           1         7        16   7.33333   16.3333   7.33333   16.3333
+#> subspot_3.1         3           1         7        17   7.33333   17.3333   7.33333   17.3333
+#> subspot_4.1         4           1         7        18   7.33333   18.3333   7.33333   18.3333
+#> subspot_5.1         5           1         8        13   8.33333   13.3333   8.33333   13.3333
+#> subspot_6.1         6           1         8        14   8.33333   14.3333   8.33333   14.3333
+#>             spatial.cluster
+#>                   <numeric>
+#> subspot_1.1               1
+#> subspot_2.1               1
+#> subspot_3.1               2
+#> subspot_4.1               2
+#> subspot_5.1               1
+#> subspot_6.1               1
 ```
 
 
@@ -161,12 +161,12 @@ row. Columns are named with the parameter name and index (if any).
 ```r
 chain <- mcmcChain(sce)
 chain[1:5, 1:5]
-#>      lambda[1,1]   lambda[1,2] lambda[1,3] lambda[1,4]   lambda[1,5]
-#> [1,]  0.01000000  0.0000000000  0.00000000  0.00000000  0.0000000000
-#> [2,]  0.08881814 -0.0069607125  0.04701671  0.05811048 -0.0183519085
-#> [3,]  0.09769463 -0.0101249422  0.05003421  0.04333985  0.0009460308
-#> [4,]  0.12711317 -0.0092963084  0.05873454  0.02999497 -0.0143671288
-#> [5,]  0.12208723 -0.0004291535  0.06095618  0.03279684 -0.0129103679
+#>      lambda[1,1] lambda[1,2] lambda[1,3] lambda[1,4]  lambda[1,5]
+#> [1,]  0.01000000  0.00000000  0.00000000  0.00000000  0.000000000
+#> [2,]  0.09065264  0.01599435  0.04866983  0.05789578 -0.022612195
+#> [3,]  0.10375926  0.01838875  0.05361772  0.04831287 -0.007296185
+#> [4,]  0.13979944  0.02971359  0.06851518  0.01947540 -0.028207805
+#> [5,]  0.12860330  0.03170548  0.07052906  0.02538183 -0.023469784
 ```
 
 To remove the HDF5 file from disk and remove its path from the metadata, use
