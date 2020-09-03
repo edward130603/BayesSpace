@@ -9,7 +9,11 @@ reference:
     - spatialCluster
     - spatialEnhance
     - enhanceFeatures
-    - spatialPlot
+    
+  - title: Visualization
+    contents:
+    - clusterPlot
+    - featurePlot
     
   - title: Model tuning and inspection
     contents:

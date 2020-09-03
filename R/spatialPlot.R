@@ -1,24 +1,3 @@
-#' Plot spot labels or features in spatial context.
-#'
-#' After running \code{spatialCluster()} or \code{spatialEnhance()}, we can
-#' visualize the cluster assignments of each spot using \code{clusterPlot()} or
-#' \code{enhancePlot()}, respectively.
-#' 
-#' @param sce SingleCellExperiment containing cluster assignments in
-#'   \code{sce$spatial.cluster}
-#' @param fill Values used to color each spot.  
-#'   \itemize{
-#'     \item \code{clusterPlot()}: The name of a column in \code{colData(sce)}
-#'   or a vector of discrete values.
-#'     \item \code{featurePlot()}: The name of a gene/row in \code{counts(sce)} or a
-#'   vector of continuous values.
-#'   }
-#' @param palette Optional vector of hex codes to use for discrete spot values.
-#' @param low,mid,high Optional hex codes for low, mid, and high values of the
-#'   color gradient used for continuous spot values.
-#' @param diverging If true, use a diverging color gradient in
-#'   \code{featurePlot()} (e.g. when plotting a fold change) instead of a
-#'   sequential gradient (e.g. when plotting expression).
 #' @param color Optional hex code to set color of borders around spots. Set to
 #'   \code{NA} to remove borders.
 #' @param ... Additional arguments for \code{geom_polygon()}. \code{size}, to
@@ -33,26 +12,33 @@
 #'   NOTE: specifying this argument is only necessary if \code{sce} was not
 #'   created by \code{spatialCluster()} or \code{spatialEnhance()}.
 #' 
-#' @return Both functions return a \code{ggplot} object.
-#' 
-#' @examples
-#' set.seed(149)
-#' sce <- exampleSCE()
-#' sce$spatial.cluster <- floor(runif(ncol(sce), 1, 4))
-#' clusterPlot(sce)
-#'
+#' @keywords internal
 #' @name spatialPlot
 NULL
 
 palette <- c("#0173b2", "#de8f05", "#029e73", "#d55e00", "#cc78bc",
              "#ca9161", "#fbafe4", "#949494", "#ece133", "#56b4e9")
 
-#' Plot spatial cluster assignments.
+#' Plot spatial cluster assignments. 
+#' 
+#' @param sce SingleCellExperiment. If \code{fill} is specified and is a string,
+#'   it must exist as a column in \code{colData(sce)}.
+#' @param label Labels used to color each spot. May be the name of a column in
+#'   \code{colData(sce)}, or a vector of discrete values.
+#' @param palette Optional vector of hex codes to use for discrete spot values.
+#' @inheritParams spatialPlot
+#' 
+#' @return Returns a ggplot object.
+#' 
+#' @examples
+#' sce <- exampleSCE()
+#' clusterPlot(sce)
+#'
+#' @family spatial plotting functions
 #'
 #' @importFrom ggplot2 ggplot aes_ geom_polygon scale_fill_manual coord_equal labs theme_void
-#'
 #' @export
-clusterPlot <- function(sce, fill="spatial.cluster",
+clusterPlot <- function(sce, label="spatial.cluster",
                         palette=NULL, color=NULL,
                         platform=NULL, is.enhanced=NULL,
                         ...) {
@@ -60,7 +46,7 @@ clusterPlot <- function(sce, fill="spatial.cluster",
     platform <- .get_default_platform(sce, platform)
     is.enhanced <- .get_default_is.enhanced(sce, is.enhanced)
     
-    vertices <- .make_vertices(sce, fill, platform, is.enhanced)
+    vertices <- .make_vertices(sce, label, platform, is.enhanced)
     
     ## No borders around subspots by default
     if (is.null(color)) {
@@ -80,14 +66,35 @@ clusterPlot <- function(sce, fill="spatial.cluster",
     splot
 }
 
-#' Plot spatial expression
+#' Plot spatial gene expression.
+#' 
+#' @param sce SingleCellExperiment. If \code{feature} is specified and is a 
+#'   string, it must exist as a row in the specified assay of \code{sce}.
+#' @param feature Feature vector used to color each spot. May be the name of a
+#'   gene/row in an assay of \code{sce}, or a vector of continuous values.
+#' @param assay.type String indicating which assay in \code{sce} the expression
+#'   vector should be taken from.
+#' @param low,mid,high Optional hex codes for low, mid, and high values of the
+#'   color gradient used for continuous spot values.
+#' @param diverging If true, use a diverging color gradient in
+#'   \code{featurePlot()} (e.g. when plotting a fold change) instead of a
+#'   sequential gradient (e.g. when plotting expression).
+#' @inheritParams spatialPlot
+#' 
+#' @return Returns a ggplot object.
+#' 
+#' @examples
+#' sce <- exampleSCE()
+#' featurePlot(sce, "gene_2")
+#' 
+#' @family spatial plotting functions
 #'
 #' @importFrom ggplot2 ggplot aes_ geom_polygon scale_fill_gradient scale_fill_gradient2 coord_equal labs theme_void
 #' @importFrom scales muted
-#'
 #' @export
-#' @rdname spatialPlot
-featurePlot <- function(sce, fill, diverging=FALSE,
+featurePlot <- function(sce, feature,
+                        assay.type="logcounts", 
+                        diverging=FALSE,
                         low=NULL, high=NULL, mid=NULL,
                         color=NULL,
                         platform=NULL, is.enhanced=NULL,
@@ -99,10 +106,18 @@ featurePlot <- function(sce, fill, diverging=FALSE,
     ## extract expression from logcounts if a gene name is passed.
     ## otherwise, assume a vector of counts was passed and let
     ## .make_vertices helpers check validity
-    ## TODO: accommodate multiple genes as input (by aggregating or faceting)
-    if (is.character(fill)) {
-        fill <- logcounts(sce)[fill, ]
-    } 
+    ## TODO: accommofeatureltiple genes as input (by aggregating or faceting)
+    if (is.character(feature)) {
+        fill <- assay(sce, assay.type)[feature, ]
+        fill.name <- feature
+    } else {
+        fill <- feature
+        
+        # TODO: make this an argument?
+        # easily overwritable with labs() though and want to encourage 
+        # composing ggplot functions instead of passing everything as arg
+        fill.name <- "Expression"
+    }
     
     vertices <- .make_vertices(sce, fill, platform, is.enhanced)
     
@@ -113,8 +128,8 @@ featurePlot <- function(sce, fill, diverging=FALSE,
     
     splot <- ggplot(data=vertices, 
                     aes_(x=~x.vertex, y=~y.vertex, group=~spot, fill=~fill)) +
-        geom_polygon(color=color, ...) +
-        labs(fill=fill) +
+        geom_polygon(color=color) +#, ...) +
+        labs(fill=fill.name) +
         coord_equal() +
         theme_void()
     
