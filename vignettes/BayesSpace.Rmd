@@ -91,7 +91,8 @@ melanoma <- spatialPreprocess(melanoma, platform="ST",
 ### Selecting the number of clusters
 
 We can use the `qTune()` and `qPlot()` functions to help choose `q`, the number
-of clusters to use in our analysis.
+of clusters to use in our analysis.  
+
 * `qTune()` runs the BayesSpace clustering algorithm for multiple specified
 values of `q` (by default, 3 through 7) and computes their average
 pseudo-log-likelihood. It accepts any arguments to `spatialCluster()`.
