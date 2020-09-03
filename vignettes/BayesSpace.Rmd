@@ -1,7 +1,7 @@
 ---
 title: "BayesSpace"
 author: "Edward Zhao, Matt Stone, Xing Ren, and Raphael Gottardo"
-date: "2020-09-02"
+date: "2020-09-03"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{BayesSpace}
@@ -101,7 +101,7 @@ choosing a `q` around the elbow of this plot.
 
 
 ```r
-melanoma <- qTune(melanoma, qs=seq(3, 7), platform="ST", d=7)
+melanoma <- qTune(melanoma, qs=seq(2, 10), platform="ST", d=7)
 qPlot(melanoma)
 ```
 
@@ -132,22 +132,14 @@ assignments (`spatial.cluster`) are now available in the SingleCellExperiment's
 ```r
 head(colData(melanoma))
 #> DataFrame with 6 rows and 5 columns
-#>            row       col sizeFactor cluster.init
-#>      <integer> <integer>  <numeric>    <numeric>
-#> 7x15         7        15   0.795588            1
-#> 7x16         7        16   0.307304            1
-#> 7x17         7        17   0.331247            2
-#> 7x18         7        18   0.420747            3
-#> 8x13         8        13   0.255453            1
-#> 8x14         8        14   1.473439            1
-#>      spatial.cluster
-#>            <numeric>
-#> 7x15               1
-#> 7x16               1
-#> 7x17               2
-#> 7x18               2
-#> 8x13               1
-#> 8x14               1
+#>            row       col sizeFactor cluster.init spatial.cluster
+#>      <integer> <integer>  <numeric>    <numeric>       <numeric>
+#> 7x15         7        15   0.795588            1               1
+#> 7x16         7        16   0.307304            1               1
+#> 7x17         7        17   0.331247            2               2
+#> 7x18         7        18   0.420747            3               2
+#> 8x13         8        13   0.255453            1               1
+#> 8x14         8        14   1.473439            1               1
 ```
 
 We can plot the cluster assignments over the spatial locations of the spots with
@@ -160,6 +152,8 @@ clusterPlot(melanoma)
 <img src="figures/BayesSpace-cluster.plot-1.png" title="plot of chunk cluster.plot" alt="plot of chunk cluster.plot" width="100%" />
 
 ## Enhanced resolution
+
+### Clustering at enhanced resolution
 
 The `spatialEnhance()` function will enhance the resolution of the principal
 components, and add these PCs as well as predicted cluster labels at subspot
@@ -178,30 +172,22 @@ label (`spatial.cluster`).
 ```r
 head(colData(melanoma.enhanced))
 #> DataFrame with 6 rows and 9 columns
-#>              spot.idx subspot.idx  spot.row  spot.col
-#>             <numeric>   <integer> <integer> <integer>
-#> subspot_1.1         1           1         7        15
-#> subspot_2.1         2           1         7        16
-#> subspot_3.1         3           1         7        17
-#> subspot_4.1         4           1         7        18
-#> subspot_5.1         5           1         8        13
-#> subspot_6.1         6           1         8        14
-#>                   row       col  imagerow  imagecol
-#>             <numeric> <numeric> <numeric> <numeric>
-#> subspot_1.1   7.33333   15.3333   7.33333   15.3333
-#> subspot_2.1   7.33333   16.3333   7.33333   16.3333
-#> subspot_3.1   7.33333   17.3333   7.33333   17.3333
-#> subspot_4.1   7.33333   18.3333   7.33333   18.3333
-#> subspot_5.1   8.33333   13.3333   8.33333   13.3333
-#> subspot_6.1   8.33333   14.3333   8.33333   14.3333
-#>             spatial.cluster
-#>                   <numeric>
-#> subspot_1.1               1
-#> subspot_2.1               1
-#> subspot_3.1               2
-#> subspot_4.1               3
-#> subspot_5.1               1
-#> subspot_6.1               1
+#>              spot.idx subspot.idx  spot.row  spot.col       row       col  imagerow
+#>             <numeric>   <integer> <integer> <integer> <numeric> <numeric> <numeric>
+#> subspot_1.1         1           1         7        15   7.33333   15.3333   7.33333
+#> subspot_2.1         2           1         7        16   7.33333   16.3333   7.33333
+#> subspot_3.1         3           1         7        17   7.33333   17.3333   7.33333
+#> subspot_4.1         4           1         7        18   7.33333   18.3333   7.33333
+#> subspot_5.1         5           1         8        13   8.33333   13.3333   8.33333
+#> subspot_6.1         6           1         8        14   8.33333   14.3333   8.33333
+#>              imagecol spatial.cluster
+#>             <numeric>       <numeric>
+#> subspot_1.1   15.3333               1
+#> subspot_2.1   16.3333               1
+#> subspot_3.1   17.3333               2
+#> subspot_4.1   18.3333               3
+#> subspot_5.1   13.3333               1
+#> subspot_6.1   14.3333               1
 ```
 
 We can plot the enhanced cluster assignments as above.
@@ -212,18 +198,70 @@ clusterPlot(melanoma.enhanced)
 
 <img src="figures/BayesSpace-enhance.plot-1.png" title="plot of chunk enhance.plot" alt="plot of chunk enhance.plot" width="100%" />
 
-Note that the enhanced PCs are stored as a `reducedDim` and the enhanced
-SingleCellExperiment has no assays. To impute expression (or other features) at
-subspot resolution, we need to run `enhanceFeatures()` afterwards.
+### Enhancing the resolution of gene expression
 
-By default, log-normalized expression (`logcounts(sce)`) is imputed, but other
-assays or arbitrary features can be specified.
+BayesSpace operates on the principal components of the gene expression matrix,
+and `spatialEnhance()` therefore computes enhanced resolution PC vectors.
+Enhanced gene expression is not computed directly, and is instead imputed using
+a regression algorithm. For each gene, a model using the PC vectors of each spot
+is trained to predict the spot-level gene expression, and the fitted model is
+used to predict subspot expression from the subspot PCs. 
+
+Gene expression enhancement is implemented in the `enhanceFeatures()` function.
+BayesSpace predicts expression with
+[`xgboost`](https://xgboost.readthedocs.io/en/latest/) by default, but linear
+and Dirichlet regression are also available via the `model` argument.
+
+`enhanceFeatures()` can be used to impute subspot-level expression for all
+genes, or for a subset of genes of interest. Here, we'll demonstrate by
+enhancing the expression of four marker genes: PMEL (melanoma), CD2 (T-cells),
+CD19 (B-cells), and COL1A1 (fibroblasts).
+
+<!-- TODO: swap CD2 for CD7? -->
 
 ```r
-melanoma.enhanced <- enhanceFeatures(melanoma.enhanced, melanoma) 
+markers <- c("PMEL", "CD2", "CD19", "COL1A1")
+melanoma.enhanced <- enhanceFeatures(melanoma.enhanced, melanoma, feature_names=markers)
 ```
 
-TODO: add outputs/plot for enhanceFeatures
+By default, log-normalized expression (`logcounts(sce)`) is imputed, although
+other assays or arbitrary feature matrices can be specified.
+
+```r
+logcounts(melanoma.enhanced)[markers, 1:5]
+#>        subspot_1.1 subspot_2.1 subspot_3.1 subspot_4.1 subspot_5.1
+#> PMEL     2.4870646   2.7509048   2.8261802   3.0204065   2.3573151
+#> CD2      0.2912743   0.2620982   0.1512688   0.1964293   0.2641788
+#> CD19     0.7622972   0.1347447   0.2185815   0.6592661   0.5862058
+#> COL1A1   1.0887744   1.0368935   0.5175448   0.2758219   1.6262674
+```
+
+Spatial gene expression is visualized with `featurePlot()`.
+
+```r
+featurePlot(melanoma.enhanced, "PMEL")
+```
+
+<img src="figures/BayesSpace-enhanced.featurePlot-1.png" title="plot of chunk enhanced.featurePlot" alt="plot of chunk enhanced.featurePlot" width="100%" />
+
+Here, we compare the spatial expression of the imputed marker genes.
+
+```r
+enhanced.plots <- purrr::map(markers, function(x) featurePlot(melanoma.enhanced, x))
+patchwork::wrap_plots(enhanced.plots, ncol=2)
+```
+
+<img src="figures/BayesSpace-enhanced.markers-1.png" title="plot of chunk enhanced.markers" alt="plot of chunk enhanced.markers" width="100%" />
+
+And we can compare to the spot-level expression.
+
+```r
+spot.plots <- purrr::map(markers, function(x) featurePlot(melanoma, x))
+patchwork::wrap_plots(c(enhanced.plots, spot.plots), ncol=4)
+```
+
+<img src="figures/BayesSpace-compare.resolution-1.png" title="plot of chunk compare.resolution" alt="plot of chunk compare.resolution" width="100%" />
+
 
 ## Accessing Markov chains
 
@@ -241,18 +279,12 @@ row. Columns are named with the parameter name and index (if any).
 ```r
 chain <- mcmcChain(melanoma)
 chain[1:5, 1:5]
-#>      lambda[1,1]  lambda[1,2] lambda[1,3] lambda[1,4]
-#> [1,]  0.01000000  0.000000000  0.00000000  0.00000000
-#> [2,]  0.09722481 -0.007032172 -0.04138590  0.06750923
-#> [3,]  0.10005081 -0.011770303 -0.05441956  0.05277598
-#> [4,]  0.13415146 -0.016241599 -0.06767107  0.02913552
-#> [5,]  0.12653856 -0.003725852 -0.05992947  0.03122306
-#>        lambda[1,5]
-#> [1,]  0.000000e+00
-#> [2,] -1.657124e-02
-#> [3,] -5.511917e-05
-#> [4,] -1.965898e-02
-#> [5,] -2.359439e-02
+#>      lambda[1,1]  lambda[1,2] lambda[1,3] lambda[1,4]   lambda[1,5]
+#> [1,]  0.01000000  0.000000000  0.00000000  0.00000000  0.000000e+00
+#> [2,]  0.09722481 -0.007032172 -0.04138590  0.06750923 -1.657124e-02
+#> [3,]  0.10005081 -0.011770303 -0.05441956  0.05277598 -5.511917e-05
+#> [4,]  0.13415146 -0.016241599 -0.06767107  0.02913552 -1.965898e-02
+#> [5,]  0.12653856 -0.003725852 -0.05992947  0.03122306 -2.359439e-02
 ```
 
 To remove the HDF5 file from disk and remove its path from the metadata, use
