@@ -6,22 +6,32 @@
 #' 
 #' @param sce SingleCellExperiment containing cluster assignments in
 #'   \code{sce$spatial.cluster}
-#' @param fill Name of a column in \code{colData(sce)} or a vector of values to
-#'   use as fill for each spot
-#' @param palette Optional vector of hex codes to use for discrete spot values
+#' @param fill Values used to color each spot.  
+#'   \itemize{
+#'     \item \code{clusterPlot()}: The name of a column in \code{colData(sce)}
+#'   or a vector of discrete values.
+#'     \item \code{featurePlot()}: The name of a gene/row in \code{counts(sce)} or a
+#'   vector of continuous values.
+#'   }
+#' @param palette Optional vector of hex codes to use for discrete spot values.
+#' @param low,mid,high Optional hex codes for low, mid, and high values of the
+#'   color gradient used for continuous spot values.
+#' @param diverging If true, use a diverging color gradient in
+#'   \code{featurePlot()} (e.g. when plotting a fold change) instead of a
+#'   sequential gradient (e.g. when plotting expression).
 #' @param color Optional hex code to set color of borders around spots. Set to
 #'   \code{NA} to remove borders.
 #' @param ... Additional arguments for \code{geom_polygon()}. \code{size}, to
 #'   specify the linewidth of these borders, is likely the most useful.
 #' @param platform Spatial sequencing platform. If "Visium", the hex spot layout
-#'   will be used, otherwise square spots will be plotted. (NOTE: specifying
-#'   this argument is only necessary if \code{sce} was not created by
-#'   \code{spatialCluster()} or \code{spatialEnhance()}.)
+#'   will be used, otherwise square spots will be plotted.\cr
+#'   NOTE: specifying this argument is only necessary if \code{sce} was not
+#'   created by \code{spatialCluster()} or \code{spatialEnhance()}.
 #' @param is.enhanced True if \code{sce} contains subspot-level data instead of
 #'   spots. Spatial sequencing platform. If true, the respective subspot lattice
-#'   for each platform will be plotted. (NOTE: specifying this argument is only
-#'   necessary if \code{sce} was not created by \code{spatialCluster()} or
-#'   \code{spatialEnhance()}.)
+#'   for each platform will be plotted.\cr
+#'   NOTE: specifying this argument is only necessary if \code{sce} was not
+#'   created by \code{spatialCluster()} or \code{spatialEnhance()}.
 #' 
 #' @return Both functions return a \code{ggplot} object.
 #' 
@@ -42,7 +52,6 @@ palette <- c("#0173b2", "#de8f05", "#029e73", "#d55e00", "#cc78bc",
 #' @importFrom ggplot2 ggplot aes_ geom_polygon scale_fill_manual coord_equal labs theme_void
 #'
 #' @export
-#' @rdname spatialPlot
 clusterPlot <- function(sce, fill="spatial.cluster",
                         palette=NULL, color=NULL,
                         platform=NULL, is.enhanced=NULL,
@@ -71,7 +80,57 @@ clusterPlot <- function(sce, fill="spatial.cluster",
     splot
 }
 
-## Plot spatial expression.
+#' Plot spatial expression
+#'
+#' @importFrom ggplot2 ggplot aes_ geom_polygon scale_fill_gradient scale_fill_gradient2 coord_equal labs theme_void
+#' @importFrom scales muted
+#'
+#' @export
+#' @rdname spatialPlot
+featurePlot <- function(sce, fill, diverging=FALSE,
+                        low=NULL, high=NULL, mid=NULL,
+                        color=NULL,
+                        platform=NULL, is.enhanced=NULL,
+                        ...) {
+    
+    platform <- .get_default_platform(sce, platform)
+    is.enhanced <- .get_default_is.enhanced(sce, is.enhanced)
+    
+    ## extract expression from logcounts if a gene name is passed.
+    ## otherwise, assume a vector of counts was passed and let
+    ## .make_vertices helpers check validity
+    ## TODO: accommodate multiple genes as input (by aggregating or faceting)
+    if (is.character(fill)) {
+        fill <- logcounts(sce)[fill, ]
+    } 
+    
+    vertices <- .make_vertices(sce, fill, platform, is.enhanced)
+    
+    ## No borders around subspots by default
+    if (is.null(color)) {
+        color <- if (is.enhanced) NA else "#d8dcd6"
+    }
+    
+    splot <- ggplot(data=vertices, 
+                    aes_(x=~x.vertex, y=~y.vertex, group=~spot, fill=~fill)) +
+        geom_polygon(color=color, ...) +
+        labs(fill=fill) +
+        coord_equal() +
+        theme_void()
+    
+    if (diverging) {
+        low = if (is.null(low)) "#F0F0F0" else low
+        high = if (is.null(high)) muted("red") else high
+        splot <- splot + scale_fill_gradient(low=low, high=high)
+    } else {
+        low = if (is.null(low)) muted("blue") else low
+        mid = if (is.null(mid)) "#F0F0F0" else mid
+        high = if (is.null(high)) muted("red") else high
+        splot <- splot + scale_fill_gradient2(low=low, mid=mid, high=high)
+    }
+    
+    splot
+}
 
 
 
@@ -111,7 +170,7 @@ clusterPlot <- function(sce, fill="spatial.cluster",
 }
 
 ## Helpers to permit overriding default platform/is.enhanced
-## TODO: may be cleaner to refactor this into a single function
+## TODO: find the cleaner way to do this that definitely exists
 .get_default_platform <- function(sce, platform) {
     if (is.null(platform)) {
         if (exists("BayesSpace.platform", metadata(sce))) {

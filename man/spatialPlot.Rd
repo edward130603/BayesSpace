@@ -3,6 +3,7 @@
 \name{spatialPlot}
 \alias{spatialPlot}
 \alias{clusterPlot}
+\alias{featurePlot}
 \title{Plot spot labels or features in spatial context.}
 \usage{
 clusterPlot(
@@ -14,32 +15,57 @@ clusterPlot(
   is.enhanced = NULL,
   ...
 )
+
+featurePlot(
+  sce,
+  fill,
+  diverging = FALSE,
+  low = NULL,
+  high = NULL,
+  mid = NULL,
+  color = NULL,
+  platform = NULL,
+  is.enhanced = NULL,
+  ...
+)
 }
 \arguments{
 \item{sce}{SingleCellExperiment containing cluster assignments in
 \code{sce$spatial.cluster}}
 
-\item{fill}{Name of a column in \code{colData(sce)} or a vector of values to
-use as fill for each spot}
+\item{fill}{Values used to color each spot.
+\itemize{
+  \item \code{clusterPlot()}: The name of a column in \code{colData(sce)}
+or a vector of discrete values.
+  \item \code{featurePlot()}: The name of a gene/row in \code{counts(sce)} or a
+vector of continuous values.
+}}
 
-\item{palette}{Optional vector of hex codes to use for discrete spot values}
+\item{palette}{Optional vector of hex codes to use for discrete spot values.}
 
 \item{color}{Optional hex code to set color of borders around spots. Set to
 \code{NA} to remove borders.}
 
 \item{platform}{Spatial sequencing platform. If "Visium", the hex spot layout
-will be used, otherwise square spots will be plotted. (NOTE: specifying
-this argument is only necessary if \code{sce} was not created by
-\code{spatialCluster()} or \code{spatialEnhance()}.)}
+will be used, otherwise square spots will be plotted.\cr
+NOTE: specifying this argument is only necessary if \code{sce} was not
+created by \code{spatialCluster()} or \code{spatialEnhance()}.}
 
 \item{is.enhanced}{True if \code{sce} contains subspot-level data instead of
 spots. Spatial sequencing platform. If true, the respective subspot lattice
-for each platform will be plotted. (NOTE: specifying this argument is only
-necessary if \code{sce} was not created by \code{spatialCluster()} or
-\code{spatialEnhance()}.)}
+for each platform will be plotted.\cr
+NOTE: specifying this argument is only necessary if \code{sce} was not
+created by \code{spatialCluster()} or \code{spatialEnhance()}.}
 
 \item{...}{Additional arguments for \code{geom_polygon()}. \code{size}, to
 specify the linewidth of these borders, is likely the most useful.}
+
+\item{diverging}{If true, use a diverging color gradient in
+\code{featurePlot()} (e.g. when plotting a fold change) instead of a
+sequential gradient (e.g. when plotting expression).}
+
+\item{low, mid, high}{Optional hex codes for low, mid, and high values of the
+color gradient used for continuous spot values.}
 }
 \value{
 Both functions return a \code{ggplot} object.

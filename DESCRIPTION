@@ -36,7 +36,8 @@ Imports:
     DirichletReg,
     xgboost,
     utils,
-    ggplot2
+    ggplot2,
+    scales
 License: MIT + file LICENSE
 RoxygenNote: 7.1.0
 LinkingTo: 
