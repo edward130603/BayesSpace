@@ -134,8 +134,10 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     
     ## Save metadata (TODO: add neighbors?)
     sce$cluster.init <- init
-    metadata(sce)$BayesSpace.platform <- platform
-    metadata(sce)$BayesSpace.is_enhanced <- FALSE
+    if (!exists("BayesSpace.data", metadata(sce)))
+        metadata(sce)$BayesSpace.data <- list()
+    metadata(sce)$BayesSpace.data$platform <- platform
+    metadata(sce)$BayesSpace.data$is.enhanced <- FALSE
     
     ## Save modal cluster assignments
     ## NOTE: swap below code for this to test against refactoring

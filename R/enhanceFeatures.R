@@ -1,7 +1,9 @@
 #' Predict feature vectors from deconvolved PCs.
 #' 
 #' @param sce.enhanced SingleCellExperiment object with enhanced PCs.
-#' @param sce.ref SingleCellExperiment object with original PCs and expression..
+#' @param sce.ref SingleCellExperiment object with original PCs and expression.
+#' @param feature_names List of genes/features to predict expression/values for.
+#' @param model Model used to predict enhanced values.
 #' @param use.dimred Name of dimension reduction to use.
 #' @param assay.type Expression matrix in \code{assays(sce.ref)} to predict.
 #' @param altExp.type Expression matrix in \code{altExps(sce.ref)} to predict.
@@ -10,8 +12,6 @@
 #'   attached to \code{sce.ref}. Must have columns corresponding to the spots in
 #'   \code{sce.ref}. Overrides \code{assay.type} and \code{altExp.type} if
 #'   specified.
-#' @param feature_names List of genes/features to predict expression/values for.
-#' @param model Model used to predict enhanced values.
 #' 
 #' @return If \code{assay.type} or \code{altExp.type} are specified, the
 #'   enhanced features are stored in the corresponding slot of
@@ -131,9 +131,9 @@ NULL
 #' @importFrom SingleCellExperiment reducedDim altExp altExp<-
 #' @importFrom SummarizedExperiment assay assay<- SummarizedExperiment
 #' @rdname enhanceFeatures
-enhanceFeatures <- function(sce.enhanced, sce.ref, use.dimred = "PCA",
-    assay.type="logcounts", altExp.type = NULL, feature.matrix = NULL, 
-    feature_names = NULL, model=c("xgboost", "dirichlet", "lm")) {
+enhanceFeatures <- function(sce.enhanced, sce.ref, feature_names = NULL,
+    model=c("xgboost", "dirichlet", "lm"), use.dimred = "PCA",
+    assay.type="logcounts", altExp.type = NULL, feature.matrix = NULL) {
     
     X.enhanced <- reducedDim(sce.enhanced, use.dimred)
     X.ref <- reducedDim(sce.ref, use.dimred)
@@ -163,13 +163,24 @@ enhanceFeatures <- function(sce.enhanced, sce.ref, use.dimred = "PCA",
     
     ## TODO: add option to specify destination of enhanced features.
     ## For now, return in same form as input
-    if (!is.null(feature.matrix) || (length(feature_names) != nrow(Y.ref))) {
+    if (!is.null(feature.matrix)) {
         return(Y.enhanced)
     } else if (!is.null(altExp.type)) {
         Y.enhanced <- SummarizedExperiment(assays=list(altExp.type=Y.enhanced))
         altExp(sce.enhanced, altExp.type) <- Y.enhanced
     } else {
-        assay(sce.enhanced, assay.type) <- Y.enhanced
+        ## If we only enhanced a subset of features, need to add NA vectors for
+        ## the remaining features so the number of rows within the SCE remains
+        ## consistent
+        if (length(feature_names) != nrow(Y.ref)) {
+            Y.full <- matrix(data=NA, nrow=nrow(Y.ref), ncol=ncol(sce.enhanced))
+            rownames(Y.full) <- rownames(Y.ref)
+            colnames(Y.full) <- colnames(Y.enhanced)
+            Y.full[feature_names, ] <- Y.enhanced
+            assay(sce.enhanced, assay.type) <- Y.full
+        } else {
+            assay(sce.enhanced, assay.type) <- Y.enhanced
+        }
     }
     
     return(sce.enhanced)

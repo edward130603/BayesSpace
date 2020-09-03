@@ -1,5 +1,5 @@
 
-#' Load a Visium spatial dataset as a SingleCellExperiment
+#' Load a Visium spatial dataset as a SingleCellExperiment.
 #' 
 #' @param dirname Path to spaceranger output directory (e.g. "sampleID/outs/").
 #'   This directory must contain the counts matrix and feature/barcode TSVs in
@@ -13,10 +13,14 @@
 #'   stored in columns \code{imagerow} and \code{imagecol}.
 #'   
 #' @details We store two variables associated with downstream BayesSpace
-#'   functions in the SingleCellExperiment's metadata.
-#'   \code{BayesSpace.platform} is set to "Visium", and is used to determine
-#'   spot layout and neighborhood structure, and \code{BayesSpace.is_enhanced}
-#'   is set to \code{FALSE} to denote the object contains spot-level data.
+#'   functions in a list called \code{BayesSpace.data} in the
+#'   SingleCellExperiment's \code{metadata}.
+#'   \itemize{
+#'     \item \code{platform} is set to "Visium", and is used to determine spot
+#'       layout and neighborhood structure.
+#'     \item \code{is.enhanced} is set to \code{FALSE} to denote the object
+#'       contains spot-level data.
+#'   }
 #'   
 #' @examples
 #' \dontrun{
@@ -61,8 +65,9 @@ readVisium <- function(dirname) {
                                 rowData=rowData,
                                 colData=colData)
     
-    metadata(sce)$BayesSpace.platform <- "Visium"
-    metadata(sce)$BayesSpace.is_enhanced <- FALSE
+    metadata(sce)$BayesSpace.data <- list()
+    metadata(sce)$BayesSpace.data$platform <- "Visium"
+    metadata(sce)$BayesSpace.data$is.enhanced <- FALSE
     
     sce
 }

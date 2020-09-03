@@ -52,8 +52,9 @@ melanoma <- getRDS(dataset="2018_thrane_melanoma", sample="ST_mel1_rep2")
 
 <!-- TODO: add this metadata to the RDS on S3 -->
 ```{r include=FALSE}
-metadata(melanoma)$BayesSpace.platform <- "ST"
-metadata(melanoma)$BayesSpace.is_enhanced <- FALSE
+metadata(melanoma)$BayesSpace.data <- list()
+metadata(melanoma)$BayesSpace.data$platform <- "ST"
+metadata(melanoma)$BayesSpace.data$is_enhanced <- FALSE
 ```
 
 
@@ -107,7 +108,7 @@ pseudo-log-likelihood. It accepts any arguments to `spatialCluster()`.
 choosing a `q` around the elbow of this plot.
 
 ```{r tuning_q}
-melanoma <- qTune(melanoma, qs=seq(3, 7), platform="ST", d=7)
+melanoma <- qTune(melanoma, qs=seq(2, 10), platform="ST", d=7)
 qPlot(melanoma)
 ```
 
@@ -143,6 +144,8 @@ clusterPlot(melanoma)
 
 ## Enhanced resolution
 
+### Clustering at enhanced resolution
+
 The `spatialEnhance()` function will enhance the resolution of the principal
 components, and add these PCs as well as predicted cluster labels at subspot
 resolution to a new `SingleCellExperiment`.
@@ -164,17 +167,54 @@ We can plot the enhanced cluster assignments as above.
 clusterPlot(melanoma.enhanced)
 ```
 
-Note that the enhanced PCs are stored as a `reducedDim` and the enhanced
-SingleCellExperiment has no assays. To impute expression (or other features) at
-subspot resolution, we need to run `enhanceFeatures()` afterwards.
+### Enhancing the resolution of gene expression
 
-By default, log-normalized expression (`logcounts(sce)`) is imputed, but other
-assays or arbitrary features can be specified.
-```{r enhanceFeatures, eval=FALSE}
-melanoma.enhanced <- enhanceFeatures(melanoma.enhanced, melanoma) 
+BayesSpace operates on the principal components of the gene expression matrix,
+and `spatialEnhance()` therefore computes enhanced resolution PC vectors.
+Enhanced gene expression is not computed directly, and is instead imputed using
+a regression algorithm. For each gene, a model using the PC vectors of each spot
+is trained to predict the spot-level gene expression, and the fitted model is
+used to predict subspot expression from the subspot PCs. 
+
+Gene expression enhancement is implemented in the `enhanceFeatures()` function.
+BayesSpace predicts expression with
+[`xgboost`](https://xgboost.readthedocs.io/en/latest/) by default, but linear
+and Dirichlet regression are also available via the `model` argument.
+
+`enhanceFeatures()` can be used to impute subspot-level expression for all
+genes, or for a subset of genes of interest. Here, we'll demonstrate by
+enhancing the expression of four marker genes: PMEL (melanoma), CD2 (T-cells),
+CD19 (B-cells), and COL1A1 (fibroblasts).
+
+<!-- TODO: swap CD2 for CD7? -->
+```{r enhanceFeatures}
+markers <- c("PMEL", "CD2", "CD19", "COL1A1")
+melanoma.enhanced <- enhanceFeatures(melanoma.enhanced, melanoma, feature_names=markers)
 ```
 
-TODO: add outputs/plot for enhanceFeatures
+By default, log-normalized expression (`logcounts(sce)`) is imputed, although
+other assays or arbitrary feature matrices can be specified.
+```{r enhanced.logcount}
+logcounts(melanoma.enhanced)[markers, 1:5]
+```
+
+Spatial gene expression is visualized with `featurePlot()`.
+```{r enhanced.featurePlot}
+featurePlot(melanoma.enhanced, "PMEL")
+```
+
+Here, we compare the spatial expression of the imputed marker genes.
+```{r enhanced.markers, fig.width=12, fig.height=8}
+enhanced.plots <- purrr::map(markers, function(x) featurePlot(melanoma.enhanced, x))
+patchwork::wrap_plots(enhanced.plots, ncol=2)
+```
+
+And we can compare to the spot-level expression.
+```{r compare.resolution, fig.width=16, fig.height=8}
+spot.plots <- purrr::map(markers, function(x) featurePlot(melanoma, x))
+patchwork::wrap_plots(c(enhanced.plots, spot.plots), ncol=4)
+```
+
 
 ## Accessing Markov chains
 

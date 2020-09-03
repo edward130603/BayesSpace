@@ -188,8 +188,8 @@ featurePlot <- function(sce, feature,
 ## TODO: find the cleaner way to do this that definitely exists
 .get_default_platform <- function(sce, platform) {
     if (is.null(platform)) {
-        if (exists("BayesSpace.platform", metadata(sce))) {
-            platform <- metadata(sce)$BayesSpace.platform
+        if (exists("BayesSpace.data", metadata(sce))) {
+            platform <- metadata(sce)$BayesSpace.data$platform
         } else {
             warning(c("Platform not defined in sce metadata.\n",
                       "  Using default 'Visium' (use platform='ST' for ST)."))
@@ -200,8 +200,8 @@ featurePlot <- function(sce, feature,
 
 .get_default_is.enhanced <- function(sce, is.enhanced) {
     if (is.null(is.enhanced)) {
-        if (exists("BayesSpace.is_enhanced", metadata(sce))) {
-            is.enhanced <- metadata(sce)$BayesSpace.is_enhanced
+        if (exists("BayesSpace.data", metadata(sce))) {
+            is.enhanced <- metadata(sce)$BayesSpace.data$is.enhanced
         } else {
             warning(c("SCE does not indicate whether data are spots or subspots.\n",
                       "  Using default spots (set is.enhanced=TRUE for subspots)."))
