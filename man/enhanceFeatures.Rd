@@ -7,18 +7,22 @@
 enhanceFeatures(
   sce.enhanced,
   sce.ref,
+  feature_names = NULL,
+  model = c("xgboost", "dirichlet", "lm"),
   use.dimred = "PCA",
   assay.type = "logcounts",
   altExp.type = NULL,
-  feature.matrix = NULL,
-  feature_names = NULL,
-  model = c("xgboost", "dirichlet", "lm")
+  feature.matrix = NULL
 )
 }
 \arguments{
 \item{sce.enhanced}{SingleCellExperiment object with enhanced PCs.}
 
-\item{sce.ref}{SingleCellExperiment object with original PCs and expression..}
+\item{sce.ref}{SingleCellExperiment object with original PCs and expression.}
+
+\item{feature_names}{List of genes/features to predict expression/values for.}
+
+\item{model}{Model used to predict enhanced values.}
 
 \item{use.dimred}{Name of dimension reduction to use.}
 
@@ -31,10 +35,6 @@ Overrides \code{assay.type} if specified.}
 attached to \code{sce.ref}. Must have columns corresponding to the spots in
 \code{sce.ref}. Overrides \code{assay.type} and \code{altExp.type} if
 specified.}
-
-\item{feature_names}{List of genes/features to predict expression/values for.}
-
-\item{model}{Model used to predict enhanced values.}
 }
 \value{
 If \code{assay.type} or \code{altExp.type} are specified, the
