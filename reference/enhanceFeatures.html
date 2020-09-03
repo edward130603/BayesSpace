@@ -138,12 +138,12 @@
     <pre class="usage"><span class='fu'>enhanceFeatures</span>(
   <span class='no'>sce.enhanced</span>,
   <span class='no'>sce.ref</span>,
+  <span class='kw'>feature_names</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>model</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"xgboost"</span>, <span class='st'>"dirichlet"</span>, <span class='st'>"lm"</span>),
   <span class='kw'>use.dimred</span> <span class='kw'>=</span> <span class='st'>"PCA"</span>,
   <span class='kw'>assay.type</span> <span class='kw'>=</span> <span class='st'>"logcounts"</span>,
   <span class='kw'>altExp.type</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>feature.matrix</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>feature_names</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>model</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"xgboost"</span>, <span class='st'>"dirichlet"</span>, <span class='st'>"lm"</span>)
+  <span class='kw'>feature.matrix</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
 )</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -155,7 +155,15 @@
     </tr>
     <tr>
       <th>sce.ref</th>
-      <td><p>SingleCellExperiment object with original PCs and expression..</p></td>
+      <td><p>SingleCellExperiment object with original PCs and expression.</p></td>
+    </tr>
+    <tr>
+      <th>feature_names</th>
+      <td><p>List of genes/features to predict expression/values for.</p></td>
+    </tr>
+    <tr>
+      <th>model</th>
+      <td><p>Model used to predict enhanced values.</p></td>
     </tr>
     <tr>
       <th>use.dimred</th>
@@ -176,14 +184,6 @@ Overrides <code>assay.type</code> if specified.</p></td>
 attached to <code>sce.ref</code>. Must have columns corresponding to the spots in
 <code>sce.ref</code>. Overrides <code>assay.type</code> and <code>altExp.type</code> if
 specified.</p></td>
-    </tr>
-    <tr>
-      <th>feature_names</th>
-      <td><p>List of genes/features to predict expression/values for.</p></td>
-    </tr>
-    <tr>
-      <th>model</th>
-      <td><p>Model used to predict enhanced values.</p></td>
     </tr>
     </table>
 
