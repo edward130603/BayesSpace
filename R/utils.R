@@ -256,8 +256,9 @@ exampleSCE <- function(nrow=8, ncol=12, n_genes=100, n_PCs=10)
     ## Add cluster labels for clusterPlot() examples
     sce$spatial.cluster <- floor(runif(ncol(sce), 1, 4))
     
-    metadata(sce)$BayesSpace.platform <- "ST"
-    metadata(sce)$BayesSpace.is_enhanced <- FALSE
+    metadata(sce)$BayesSpace.data <- list()
+    metadata(sce)$BayesSpace.data$platform <- "ST"
+    metadata(sce)$BayesSpace.data$is.enhanced <- FALSE
     
     sce
 }

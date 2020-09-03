@@ -2,7 +2,7 @@
 % Please edit documentation in R/readVisium.R
 \name{readVisium}
 \alias{readVisium}
-\title{Load a Visium spatial dataset as a SingleCellExperiment}
+\title{Load a Visium spatial dataset as a SingleCellExperiment.}
 \usage{
 readVisium(dirname)
 }
@@ -20,14 +20,18 @@ SingleCellExperiment containing the counts matrix in \code{counts}
   stored in columns \code{imagerow} and \code{imagecol}.
 }
 \description{
-Load a Visium spatial dataset as a SingleCellExperiment
+Load a Visium spatial dataset as a SingleCellExperiment.
 }
 \details{
 We store two variables associated with downstream BayesSpace
-  functions in the SingleCellExperiment's metadata.
-  \code{BayesSpace.platform} is set to "Visium", and is used to determine
-  spot layout and neighborhood structure, and \code{BayesSpace.is_enhanced}
-  is set to \code{FALSE} to denote the object contains spot-level data.
+  functions in a list called \code{BayesSpace.data} in the
+  SingleCellExperiment's \code{metadata}.
+  \itemize{
+    \item \code{platform} is set to "Visium", and is used to determine spot
+      layout and neighborhood structure.
+    \item \code{is.enhanced} is set to \code{FALSE} to denote the object
+      contains spot-level data.
+  }
 }
 \examples{
 \dontrun{

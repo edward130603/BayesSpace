@@ -42,13 +42,13 @@ spatialPreprocess <- function(sce, platform=c("Visium", "ST"),
     }
      
     ## Set BayesSpace metadata
-    ## TODO: make this an attribute, or a list?
-    metadata(sce)$BayesSpace.platform <- match.arg(platform)
-    metadata(sce)$BayesSpace.is_enhanced <- FALSE
+    metadata(sce)$BayesSpace.data <- list()
+    metadata(sce)$BayesSpace.data$platform <- match.arg(platform)
+    metadata(sce)$BayesSpace.data$is.enhanced <- FALSE
    
     ## TODO: allow specification of arbitrary dimension reduction 
-    # metadata(sce)$BayesSpace.use_dimred <- use.dimred
-    # metadata(sce)$BayesSpace.d <- n.PCs
+    # metadata(sce)$BayesSpace.data$use_dimred <- use.dimred
+    # metadata(sce)$BayesSpace.data$d <- n.PCs
     
     sce
 }

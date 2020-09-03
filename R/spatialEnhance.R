@@ -245,8 +245,10 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
         metadata(enhanced)$chain.h5 <- .write_chain(deconv, chain.fname, params)
     }
     
-    metadata(enhanced)$BayesSpace.platform <- platform
-    metadata(enhanced)$BayesSpace.is_enhanced <- TRUE
+    ## Add metadata to new SingleCellExperiment object
+    metadata(enhanced)$BayesSpace.data <- list()
+    metadata(enhanced)$BayesSpace.data$platform <- platform
+    metadata(enhanced)$BayesSpace.data$is.enhanced <- TRUE
 
     enhanced
 }
