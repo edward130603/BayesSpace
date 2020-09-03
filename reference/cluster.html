@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Wrapper around C++ iterate_*() functions — cluster • BayesSpace</title>
+<title>Wrapper around C++ <code>iterate_*()</code> functions — cluster • BayesSpace</title>
 
 
 <!-- jquery -->
@@ -39,7 +39,7 @@
 
 
 
-<meta property="og:title" content="Wrapper around C++ iterate_*() functions — cluster" />
+<meta property="og:title" content="Wrapper around C++ <code>iterate_*()</code> functions — cluster" />
 <meta property="og:description" content="Wrapper around C++ iterate_*() functions" />
 
 
@@ -136,18 +136,18 @@
     </div>
 
     <pre class="usage"><span class='fu'>cluster</span>(
-  <span class='kw'>Y</span>,
-  <span class='kw'>q</span>,
-  <span class='kw'>df_j</span>,
-  init = <span class='fu'><a href='https://rdrr.io/r/base/rep.html'>rep</a></span>(<span class='fl'>1</span>, <span class='fu'><a href='https://rdrr.io/r/base/nrow.html'>nrow</a></span>(<span class='kw'>Y</span>)),
-  model = <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"t"</span>, <span class='st'>"normal"</span>),
-  precision = <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"equal"</span>, <span class='st'>"variable"</span>),
-  mu0 = <span class='fu'><a href='https://rdrr.io/r/base/colSums.html'>colMeans</a></span>(<span class='kw'>Y</span>),
-  lambda0 = <span class='fu'><a href='https://rdrr.io/r/base/diag.html'>diag</a></span>(<span class='fl'>0.01</span>, nrow = <span class='fu'><a href='https://rdrr.io/r/base/nrow.html'>ncol</a></span>(<span class='kw'>Y</span>)),
-  gamma = <span class='fl'>3</span>,
-  alpha = <span class='fl'>1</span>,
-  beta = <span class='fl'>0.01</span>,
-  nrep = <span class='fl'>1000</span>
+  <span class='no'>Y</span>,
+  <span class='no'>q</span>,
+  <span class='no'>df_j</span>,
+  <span class='kw'>init</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/rep.html'>rep</a></span>(<span class='fl'>1</span>, <span class='fu'><a href='https://rdrr.io/r/base/nrow.html'>nrow</a></span>(<span class='no'>Y</span>)),
+  <span class='kw'>model</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"t"</span>, <span class='st'>"normal"</span>),
+  <span class='kw'>precision</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"equal"</span>, <span class='st'>"variable"</span>),
+  <span class='kw'>mu0</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/colSums.html'>colMeans</a></span>(<span class='no'>Y</span>),
+  <span class='kw'>lambda0</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/diag.html'>diag</a></span>(<span class='fl'>0.01</span>, <span class='kw'>nrow</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/nrow.html'>ncol</a></span>(<span class='no'>Y</span>)),
+  <span class='kw'>gamma</span> <span class='kw'>=</span> <span class='fl'>3</span>,
+  <span class='kw'>alpha</span> <span class='kw'>=</span> <span class='fl'>1</span>,
+  <span class='kw'>beta</span> <span class='kw'>=</span> <span class='fl'>0.01</span>,
+  <span class='kw'>nrep</span> <span class='kw'>=</span> <span class='fl'>1000</span>
 )</pre>
 
 
@@ -170,7 +170,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.9000.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
 </div>
 
       </footer>

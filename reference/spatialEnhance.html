@@ -142,25 +142,25 @@ xdist and ydist instead of total dist...(maybe would be better to change
     </div>
 
     <pre class="usage"><span class='fu'>spatialEnhance</span>(
-  <span class='kw'>sce</span>,
-  <span class='kw'>q</span>,
-  platform = <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"Visium"</span>, <span class='st'>"ST"</span>),
-  use.dimred = <span class='st'>"PCA"</span>,
-  d = <span class='fl'>15</span>,
-  init = <span class='kw'>NULL</span>,
-  init.method = <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"spatialCluster"</span>, <span class='st'>"mclust"</span>, <span class='st'>"kmeans"</span>),
-  model = <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"t"</span>, <span class='st'>"normal"</span>),
-  nrep = <span class='fl'>2e+05</span>,
-  gamma = <span class='fl'>3</span>,
-  mu0 = <span class='kw'>NULL</span>,
-  lambda0 = <span class='kw'>NULL</span>,
-  alpha = <span class='fl'>1</span>,
-  beta = <span class='fl'>0.01</span>,
-  save.chain = <span class='fl'>FALSE</span>,
-  chain.fname = <span class='kw'>NULL</span>,
-  jitter_scale = <span class='fl'>5</span>,
-  jitter_prior = <span class='fl'>0.3</span>,
-  verbose = <span class='fl'>FALSE</span>
+  <span class='no'>sce</span>,
+  <span class='no'>q</span>,
+  <span class='kw'>platform</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"Visium"</span>, <span class='st'>"ST"</span>),
+  <span class='kw'>use.dimred</span> <span class='kw'>=</span> <span class='st'>"PCA"</span>,
+  <span class='kw'>d</span> <span class='kw'>=</span> <span class='fl'>15</span>,
+  <span class='kw'>init</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>init.method</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"spatialCluster"</span>, <span class='st'>"mclust"</span>, <span class='st'>"kmeans"</span>),
+  <span class='kw'>model</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"t"</span>, <span class='st'>"normal"</span>),
+  <span class='kw'>nrep</span> <span class='kw'>=</span> <span class='fl'>2e+05</span>,
+  <span class='kw'>gamma</span> <span class='kw'>=</span> <span class='fl'>3</span>,
+  <span class='kw'>mu0</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>lambda0</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>alpha</span> <span class='kw'>=</span> <span class='fl'>1</span>,
+  <span class='kw'>beta</span> <span class='kw'>=</span> <span class='fl'>0.01</span>,
+  <span class='kw'>save.chain</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>chain.fname</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>jitter_scale</span> <span class='kw'>=</span> <span class='fl'>5</span>,
+  <span class='kw'>jitter_prior</span> <span class='kw'>=</span> <span class='fl'>0.3</span>,
+  <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>
 )</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -267,10 +267,8 @@ of the spot.</p></td>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/Random.html'>set.seed</a></span>(<span class='fl'>149</span>)
-<span class='kw'>sce</span> <span class='op'>&lt;-</span> <span class='fu'><a href='exampleSCE.html'>exampleSCE</a></span>()
-<span class='kw'>sce</span> <span class='op'>&lt;-</span> <span class='fu'><a href='spatialCluster.html'>spatialCluster</a></span>(<span class='kw'>sce</span>, <span class='fl'>7</span>, nrep=<span class='fl'>200</span>)
-</div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='output co'>#&gt; <span class='message'>Calculating labels using iterations 2 through 200</span></div><div class='input'><span class='kw'>enhanced</span> <span class='op'>&lt;-</span> <span class='fu'>spatialEnhance</span>(<span class='kw'>sce</span>, <span class='fl'>7</span>, init=<span class='kw'>sce</span><span class='op'>$</span><span class='kw'>spatial.cluster</span>, nrep=<span class='fl'>200</span>)
-</div><div class='output co'>#&gt; <span class='message'>Calculating neighbors...</span></div><div class='output co'>#&gt; <span class='message'>Neighbors were identified for 576 out of 576 spots.</span></div><div class='output co'>#&gt; <span class='message'>Calculating labels using iterations 100 through 200</span></div><div class='input'>
+<span class='no'>sce</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='exampleSCE.html'>exampleSCE</a></span>()
+<span class='no'>sce</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='spatialCluster.html'>spatialCluster</a></span>(<span class='no'>sce</span>, <span class='fl'>7</span>, <span class='kw'>nrep</span><span class='kw'>=</span><span class='fl'>200</span>)</div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='output co'>#&gt; <span class='message'>Calculating labels using iterations 2 through 200</span></div><div class='input'><span class='no'>enhanced</span> <span class='kw'>&lt;-</span> <span class='fu'>spatialEnhance</span>(<span class='no'>sce</span>, <span class='fl'>7</span>, <span class='kw'>init</span><span class='kw'>=</span><span class='no'>sce</span>$<span class='no'>spatial.cluster</span>, <span class='kw'>nrep</span><span class='kw'>=</span><span class='fl'>200</span>)</div><div class='output co'>#&gt; <span class='message'>Calculating neighbors...</span></div><div class='output co'>#&gt; <span class='message'>Neighbors were identified for 576 out of 576 spots.</span></div><div class='output co'>#&gt; <span class='message'>Calculating labels using iterations 100 through 200</span></div><div class='input'>
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -287,7 +285,7 @@ of the spot.</p></td>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.9000.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
 </div>
 
       </footer>

@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Add PCA output to a SingleCellExperiment — addPCA • BayesSpace</title>
+<title>Plot spatial gene expression. — featurePlot • BayesSpace</title>
 
 
 <!-- jquery -->
@@ -39,9 +39,8 @@
 
 
 
-<meta property="og:title" content="Add PCA output to a SingleCellExperiment — addPCA" />
-<meta property="og:description" content="Supports 'basic' PCA via scater, denoised PCA via scran, and blocked geneset
-PCA. Results will be stored in reducedDim(sce, 'PCA')." />
+<meta property="og:title" content="Plot spatial gene expression. — featurePlot" />
+<meta property="og:description" content="Plot spatial gene expression." />
 
 
 
@@ -127,43 +126,97 @@ PCA. Results will be stored in reducedDim(sce, 'PCA')." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Add PCA output to a SingleCellExperiment</h1>
+    <h1>Plot spatial gene expression.</h1>
     
-    <div class="hidden name"><code>addPCA.Rd</code></div>
+    <div class="hidden name"><code>featurePlot.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Supports 'basic' PCA via scater, denoised PCA via scran, and blocked geneset
-PCA. Results will be stored in <code>reducedDim(sce, 'PCA')</code>.</p>
+    <p>Plot spatial gene expression.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>addPCA</span>(<span class='no'>sce</span>, <span class='no'>assay.type</span>, <span class='no'>pca.method</span>, <span class='kw'>d</span> <span class='kw'>=</span> <span class='fl'>15</span>)</pre>
+    <pre class="usage"><span class='fu'>featurePlot</span>(
+  <span class='no'>sce</span>,
+  <span class='no'>feature</span>,
+  <span class='kw'>assay.type</span> <span class='kw'>=</span> <span class='st'>"logcounts"</span>,
+  <span class='kw'>diverging</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>low</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>high</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>mid</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>color</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>platform</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>is.enhanced</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='no'>...</span>
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>sce</th>
-      <td><p>SingleCellExperiment</p></td>
+      <td><p>SingleCellExperiment. If <code>feature</code> is specified and is a 
+string, it must exist as a row in the specified assay of <code>sce</code>.</p></td>
+    </tr>
+    <tr>
+      <th>feature</th>
+      <td><p>Feature vector used to color each spot. May be the name of a
+gene/row in an assay of <code>sce</code>, or a vector of continuous values.</p></td>
     </tr>
     <tr>
       <th>assay.type</th>
-      <td><p>Assay in <code>sce</code> to compute PCA on</p></td>
+      <td><p>String indicating which assay in <code>sce</code> the expression
+vector should be taken from.</p></td>
     </tr>
     <tr>
-      <th>pca.method</th>
-      <td><p>PCA method to apply</p></td>
+      <th>diverging</th>
+      <td><p>If true, use a diverging color gradient in
+<code>featurePlot()</code> (e.g. when plotting a fold change) instead of a
+sequential gradient (e.g. when plotting expression).</p></td>
     </tr>
     <tr>
-      <th>d</th>
-      <td><p>Number of principal components to keep</p></td>
+      <th>low, mid, high</th>
+      <td><p>Optional hex codes for low, mid, and high values of the
+color gradient used for continuous spot values.</p></td>
+    </tr>
+    <tr>
+      <th>color</th>
+      <td><p>Optional hex code to set color of borders around spots. Set to
+<code>NA</code> to remove borders.</p></td>
+    </tr>
+    <tr>
+      <th>platform</th>
+      <td><p>Spatial sequencing platform. If "Visium", the hex spot layout
+will be used, otherwise square spots will be plotted.<br />
+NOTE: specifying this argument is only necessary if <code>sce</code> was not
+created by <code><a href='spatialCluster.html'>spatialCluster()</a></code> or <code><a href='spatialEnhance.html'>spatialEnhance()</a></code>.</p></td>
+    </tr>
+    <tr>
+      <th>is.enhanced</th>
+      <td><p>True if <code>sce</code> contains subspot-level data instead of
+spots. Spatial sequencing platform. If true, the respective subspot lattice
+for each platform will be plotted.<br />
+NOTE: specifying this argument is only necessary if <code>sce</code> was not
+created by <code><a href='spatialCluster.html'>spatialCluster()</a></code> or <code><a href='spatialEnhance.html'>spatialEnhance()</a></code>.</p></td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td><p>Additional arguments for <code>geom_polygon()</code>. <code>size</code>, to
+specify the linewidth of these borders, is likely the most useful.</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>Returns <code>sce</code> with PCs added to its <code>reducedDims</code></p>
+    <p>Returns a ggplot object.</p>
+    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
+    <div class='dont-index'><p>Other spatial plotting functions: 
+<code><a href='clusterPlot.html'>clusterPlot</a>()</code></p></div>
+
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='no'>sce</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='exampleSCE.html'>exampleSCE</a></span>()
+<span class='fu'>featurePlot</span>(<span class='no'>sce</span>, <span class='st'>"gene_2"</span>)</div><div class='img'><img src='featurePlot-1.png' alt='' width='700' height='433' /></div><div class='input'>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
