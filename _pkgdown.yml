@@ -5,19 +5,25 @@ template:
 reference:
   - title: Spatial analysis
     contents:
+    - spatialPreprocess
     - spatialCluster
     - spatialEnhance
     - enhanceFeatures
-    - spatialPlot
+    
+  - title: Visualization
+    contents:
+    - clusterPlot
+    - featurePlot
     
   - title: Model tuning and inspection
     contents:
     - qTune
     - mcmcChain
     
-  - title: Loading example datasets
+  - title: Loading datasets
     contents:
     - getRDS
+    - readVisium
     - exampleSCE
     
 navbar:

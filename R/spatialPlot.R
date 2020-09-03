@@ -1,53 +1,61 @@
-#' Plot cluster labels in spatial context
-#'
-#' After running \code{spatialCluster()} or \code{spatialEnhance()}, we can
-#' visualize the cluster assignments of each spot using \code{clusterPlot()} or
-#' \code{enhancePlot()}, respectively.
-#' 
-#' @param sce SingleCellExperiment containing cluster assignments in
-#'   \code{sce$spatial.cluster}
+#' @param color Optional hex code to set color of borders around spots. Set to
+#'   \code{NA} to remove borders.
+#' @param ... Additional arguments for \code{geom_polygon()}. \code{size}, to
+#'   specify the linewidth of these borders, is likely the most useful.
 #' @param platform Spatial sequencing platform. If "Visium", the hex spot layout
-#'   will be used, otherwise square spots will be plotted.
-#' @param fill Name of a column in \code{colData(sce)} or a vector of values to
-#'   use as fill for each spot
-#' @param palette Optional vector of hex codes to use for discrete spot values
+#'   will be used, otherwise square spots will be plotted.\cr
+#'   NOTE: specifying this argument is only necessary if \code{sce} was not
+#'   created by \code{spatialCluster()} or \code{spatialEnhance()}.
+#' @param is.enhanced True if \code{sce} contains subspot-level data instead of
+#'   spots. Spatial sequencing platform. If true, the respective subspot lattice
+#'   for each platform will be plotted.\cr
+#'   NOTE: specifying this argument is only necessary if \code{sce} was not
+#'   created by \code{spatialCluster()} or \code{spatialEnhance()}.
 #' 
-#' @return Both functions return a \code{ggplot} object.
-#' 
-#' @examples
-#' set.seed(149)
-#' sce <- exampleSCE()
-#' sce$spatial.cluster <- floor(runif(ncol(sce), 1, 4))
-#' clusterPlot(sce)
-#'
+#' @keywords internal
 #' @name spatialPlot
 NULL
 
 palette <- c("#0173b2", "#de8f05", "#029e73", "#d55e00", "#cc78bc",
              "#ca9161", "#fbafe4", "#949494", "#ece133", "#56b4e9")
 
-#' Plot spatial cluster assignments.
+#' Plot spatial cluster assignments. 
+#' 
+#' @param sce SingleCellExperiment. If \code{fill} is specified and is a string,
+#'   it must exist as a column in \code{colData(sce)}.
+#' @param label Labels used to color each spot. May be the name of a column in
+#'   \code{colData(sce)}, or a vector of discrete values.
+#' @param palette Optional vector of hex codes to use for discrete spot values.
+#' @inheritParams spatialPlot
+#' 
+#' @return Returns a ggplot object.
+#' 
+#' @examples
+#' sce <- exampleSCE()
+#' clusterPlot(sce)
+#'
+#' @family spatial plotting functions
 #'
 #' @importFrom ggplot2 ggplot aes_ geom_polygon scale_fill_manual coord_equal labs theme_void
-#'
 #' @export
-#' @rdname spatialPlot
-clusterPlot <- function(sce, platform=c("Visium", "ST"),
-                        fill="spatial.cluster", palette=NULL) {
-    # TODO: add user-specified palette
-    # TODO: add platform/lattice to sce metadata instead of passing
-    platform <- match.arg(platform)
-
-    cdata <- data.frame(colData(sce))
-    if (platform == "Visium") {
-        vertices <- .make_hex_spots(cdata, fill)
-    } else {
-        vertices <- .make_square_spots(cdata, fill)
+clusterPlot <- function(sce, label="spatial.cluster",
+                        palette=NULL, color=NULL,
+                        platform=NULL, is.enhanced=NULL,
+                        ...) {
+    
+    platform <- .get_default_platform(sce, platform)
+    is.enhanced <- .get_default_is.enhanced(sce, is.enhanced)
+    
+    vertices <- .make_vertices(sce, label, platform, is.enhanced)
+    
+    ## No borders around subspots by default
+    if (is.null(color)) {
+        color <- if (is.enhanced) NA else "#d8dcd6"
     }
 
     splot <- ggplot(data=vertices, 
                     aes_(x=~x.vertex, y=~y.vertex, group=~spot, fill=~factor(fill))) +
-        geom_polygon() +
+        geom_polygon(color=color, ...) +
         labs(fill="Cluster") +
         coord_equal() +
         theme_void()
@@ -58,35 +66,148 @@ clusterPlot <- function(sce, platform=c("Visium", "ST"),
     splot
 }
 
-#' Plot enhanced spatial cluster assignments.
+#' Plot spatial gene expression.
+#' 
+#' @param sce SingleCellExperiment. If \code{feature} is specified and is a 
+#'   string, it must exist as a row in the specified assay of \code{sce}.
+#' @param feature Feature vector used to color each spot. May be the name of a
+#'   gene/row in an assay of \code{sce}, or a vector of continuous values.
+#' @param assay.type String indicating which assay in \code{sce} the expression
+#'   vector should be taken from.
+#' @param low,mid,high Optional hex codes for low, mid, and high values of the
+#'   color gradient used for continuous spot values.
+#' @param diverging If true, use a diverging color gradient in
+#'   \code{featurePlot()} (e.g. when plotting a fold change) instead of a
+#'   sequential gradient (e.g. when plotting expression).
+#' @inheritParams spatialPlot
+#' 
+#' @return Returns a ggplot object.
+#' 
+#' @examples
+#' sce <- exampleSCE()
+#' featurePlot(sce, "gene_2")
+#' 
+#' @family spatial plotting functions
 #'
-#' @importFrom ggplot2 ggplot aes_ geom_polygon scale_fill_manual coord_equal labs theme_void
-#'
+#' @importFrom ggplot2 ggplot aes_ geom_polygon scale_fill_gradient scale_fill_gradient2 coord_equal labs theme_void
+#' @importFrom scales muted
 #' @export
-#' @rdname spatialPlot
-enhancePlot <- function(sce, platform=c("Visium", "ST")) {
-    # TODO: add user-specified palette
-    # TODO: add platform/lattice to sce metadata instead of passing
-    platform <- match.arg(platform)
-
-    cdata <- data.frame(colData(sce))
-    ## TODO: add "enhanced" to metadata and put this logic in clusterPlot()
-    if (platform == "Visium") {
-        vertices <- .make_triangle_subspots(cdata)
+featurePlot <- function(sce, feature,
+                        assay.type="logcounts", 
+                        diverging=FALSE,
+                        low=NULL, high=NULL, mid=NULL,
+                        color=NULL,
+                        platform=NULL, is.enhanced=NULL,
+                        ...) {
+    
+    platform <- .get_default_platform(sce, platform)
+    is.enhanced <- .get_default_is.enhanced(sce, is.enhanced)
+    
+    ## extract expression from logcounts if a gene name is passed.
+    ## otherwise, assume a vector of counts was passed and let
+    ## .make_vertices helpers check validity
+    ## TODO: accommofeatureltiple genes as input (by aggregating or faceting)
+    if (is.character(feature)) {
+        fill <- assay(sce, assay.type)[feature, ]
+        fill.name <- feature
     } else {
-        vertices <- .make_square_spots(cdata, scale.factor=(1/3))
+        fill <- feature
+        
+        # TODO: make this an argument?
+        # easily overwritable with labs() though and want to encourage 
+        # composing ggplot functions instead of passing everything as arg
+        fill.name <- "Expression"
     }
-
-    ## TODO: add color (edge color) parameter
-    splot <- ggplot(data=vertices,
-                    aes_(x=~x.vertex, y=~y.vertex, group=~spot, fill=~factor(fill))) +
-        geom_polygon() +
-        # scale_fill_manual() +
-        labs(fill="Cluster") +
+    
+    vertices <- .make_vertices(sce, fill, platform, is.enhanced)
+    
+    ## No borders around subspots by default
+    if (is.null(color)) {
+        color <- if (is.enhanced) NA else "#d8dcd6"
+    }
+    
+    splot <- ggplot(data=vertices, 
+                    aes_(x=~x.vertex, y=~y.vertex, group=~spot, fill=~fill)) +
+        geom_polygon(color=color) +#, ...) +
+        labs(fill=fill.name) +
         coord_equal() +
         theme_void()
-
+    
+    if (diverging) {
+        low = if (is.null(low)) "#F0F0F0" else low
+        high = if (is.null(high)) muted("red") else high
+        splot <- splot + scale_fill_gradient(low=low, high=high)
+    } else {
+        low = if (is.null(low)) muted("blue") else low
+        mid = if (is.null(mid)) "#F0F0F0" else mid
+        high = if (is.null(high)) muted("red") else high
+        splot <- splot + scale_fill_gradient2(low=low, mid=mid, high=high)
+    }
+    
     splot
+}
+
+
+
+#' Make vertices outlining spots/subspots for geom_polygon()
+#' 
+#' @param sce SingleCellExperiment with row/col in colData
+#' @param fill Name of a column in \code{colData(sce)} or a vector of values to
+#'   use as fill for each spot
+#' @param platform "Visium" or "ST", used to determine spot layout
+#' @param is.enhanced If true, \code{sce} contains enhanced subspot data instead
+#'   of spot-level expression. Used to determine spot layout.
+#'   
+#' @return Table of (x.pos, y.pos, spot, fill); where \code{spot} groups the
+#'   vertices outlining the spot's border
+#' 
+#' @keywords internal
+.make_vertices <- function(sce, fill, platform, is.enhanced) {
+    cdata <- data.frame(colData(sce))
+    
+    if (platform == "Visium") {
+        if (is.enhanced) {
+            vertices <- .make_triangle_subspots(cdata, fill)
+        } else {
+            vertices <- .make_hex_spots(cdata, fill)
+        }
+    } else if (platform == "ST") {
+        if (is.enhanced) {
+            vertices <- .make_square_spots(cdata, fill, scale.factor=(1/3))
+        } else {
+            vertices <- .make_square_spots(cdata, fill)
+        }
+    } else {
+        stop(sprintf("Unsupported platform: %s. Cannot create spot layout.", platform))
+    }
+    
+    vertices
+}
+
+## Helpers to permit overriding default platform/is.enhanced
+## TODO: find the cleaner way to do this that definitely exists
+.get_default_platform <- function(sce, platform) {
+    if (is.null(platform)) {
+        if (exists("BayesSpace.platform", metadata(sce))) {
+            platform <- metadata(sce)$BayesSpace.platform
+        } else {
+            warning(c("Platform not defined in sce metadata.\n",
+                      "  Using default 'Visium' (use platform='ST' for ST)."))
+            platform <- "Visium"
+        }
+    }
+}
+
+.get_default_is.enhanced <- function(sce, is.enhanced) {
+    if (is.null(is.enhanced)) {
+        if (exists("BayesSpace.is_enhanced", metadata(sce))) {
+            is.enhanced <- metadata(sce)$BayesSpace.is_enhanced
+        } else {
+            warning(c("SCE does not indicate whether data are spots or subspots.\n",
+                      "  Using default spots (set is.enhanced=TRUE for subspots)."))
+            is.enhanced <- FALSE
+        }
+    }
 }
 
 #' Helper to extract x, y, fill ID from colData

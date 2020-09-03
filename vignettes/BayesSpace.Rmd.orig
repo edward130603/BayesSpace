@@ -21,82 +21,147 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
-suppressPackageStartupMessages({
-  library(SingleCellExperiment)
-  library(ggplot2)
-  library(BayesSpace)
-})
+library(SingleCellExperiment)
+library(BayesSpace)
 ```
 
-## Preprocessing
+## Preparing your experiment for BayesSpace
 
-We'll obtain one of the melanoma samples from the 2018 Spatial Transcriptomics
-paper for this example.
+### Loading data
+
+BayesSpace supports three ways of loading a `SingleCellExperiment` for analysis.
+
+Visium datasets processed with [Space
+Ranger](https://support.10xgenomics.com/spatial-gene-expression/software/pipelines/latest/what-is-space-ranger)
+can be loaded directly via the `readVisium()` function. This function takes only
+the path to the Space Ranger output directory (containing the `spatial/` and
+`filtered_feature_bc_matrix/` subdirectories) and returns a
+`SingleCellExperiment`.
+
+```{r readVisium, eval=FALSE}
+sce <- readVisium("path/to/spaceranger/outs/")
+```
+
+Second, all datasets analyzed for the BayesSpace manuscript are readily
+accessible via the `getRDS()` function. This function takes two arguments - the
+name of the dataset, and the name of the sample in the dataset.
 
 ```{r download}
-sce <- getRDS(dataset="2018_thrane_melanoma", sample="ST_mel1_rep2")
+melanoma <- getRDS(dataset="2018_thrane_melanoma", sample="ST_mel1_rep2")
 ```
 
-Our processed datasets already include PCs, but in general it's necessary to
-preprocess samples by running PCA. We recommend running PCA on only the top
-highly variable genes.
+<!-- TODO: add this metadata to the RDS on S3 -->
+```{r include=FALSE}
+metadata(melanoma)$BayesSpace.platform <- "ST"
+metadata(melanoma)$BayesSpace.is_enhanced <- FALSE
+```
+
+
+Finally, `SingleCellExperiment` objects can be constructed manually from a
+counts matrix and tables of row and column data. BayesSpace only requires that
+spot array coordinates be provided as columns named `row` and `col` in
+`colData`. (Note that enhancement of Visium datasets additionally requires the
+pixel coordinates of each spot in the tissue image, but in this case the dataset
+should be loaded with `readVisium()`.)
+<!-- TODO: migrate over the make_RDS() function from spatial-datasets -->
+```{r manual.sce, eval=FALSE}
+sce <- SingleCellExperiment(assays=list(counts=counts),
+                            rowData=rowData,
+                            colData=colData)
+```
+
+We'll continue with the melanoma sample from the 2018 Spatial Transcriptomics
+paper for the remaining examples in this vignette.
+
+### Pre-processing data
+
+BayesSpace requires minimal data pre-processing, but we provide a helper
+function to automate it.
+
+`spatialPreprocess()` log-normalizes the count matrix and performs PCA on the
+top `n.HVGs` highly variable genes, keeping the top `n.PCs` principal
+components. Additionally, the spatial sequencing platform is added as metadata
+in the `SingleCellExperiment` for downstream analyses. If you do not wish to
+rerun PCA, running `spatialPreprocess()` with the flag `skip.PCA=TRUE` will only
+add the metadata BayesSpace requires.
+
+Here, we omit log-normalization as all datasets available through `getRDS()`
+already include log-normalized counts.
 ```{r preprocess}
 set.seed(102)
-dec <- scran::modelGeneVar(sce)
-top <- scran::getTopHVGs(dec, n=2000)
-sce <- scater::runPCA(sce, subset_row=top)
-```
-
-We can use the `qTune()` and `qPlot()` functions to help choose the number of
-clusters to use in our analysis. 
-```{r tuning_q}
-sce <- qTune(sce, platform="ST", d=7, nrep=100)
-qPlot(sce)
+melanoma <- spatialPreprocess(melanoma, platform="ST", 
+                              n.PCs=7, n.HVGs=2000, log.normalize=FALSE)
 ```
 
 ## Clustering
-The `spatialCluster()` function will cluster the spots, and add the predicted
-cluster labels to `colData(sce)`. Typically, and for analyses in the paper, we
-suggest running with at least 10,000 iterations (`nrep=10000`), but we use 1,000
-iteration in this demonstration for the sake of runtime.
 
+### Selecting the number of clusters
+
+We can use the `qTune()` and `qPlot()` functions to help choose `q`, the number
+of clusters to use in our analysis.  
+
+* `qTune()` runs the BayesSpace clustering algorithm for multiple specified
+values of `q` (by default, 3 through 7) and computes their average
+pseudo-log-likelihood. It accepts any arguments to `spatialCluster()`.
+* `qPlot()` plots the pseudo-log-likelihood as a function of `q`; we suggest
+choosing a `q` around the elbow of this plot.
+
+```{r tuning_q}
+melanoma <- qTune(melanoma, qs=seq(3, 7), platform="ST", d=7)
+qPlot(melanoma)
+```
+
+### Clustering with BayesSpace
+
+The `spatialCluster()` function clusters the spots, and adds the predicted
+cluster labels to the `SingleCellExperiment`. Typically, as we did for the
+analyses in the paper, we suggest running with at least 10,000 iterations
+(`nrep=10000`), but we use 1,000 iteration in this demonstration for the sake of
+runtime. (Note that a random seed must be set in order for the results to be
+reproducible.)
+
+<!-- TODO: parse platform from metadta -->
 ```{r cluster}
 set.seed(149)
-sce <- spatialCluster(sce, q=4, platform="ST", d=7,
-                      init.method="mclust", model="t", nrep=1000, 
-                      save.chain=TRUE)
+melanoma <- spatialCluster(melanoma, q=4, platform="ST", d=7,
+                           init.method="mclust", model="t", nrep=1000, 
+                           save.chain=TRUE)
 ```
 
-Both the mclust initialization (`cluster.init`) and the BayesSpace cluster assignments (`spatial.cluster`) are now available in the SingleCellExperiment's `colData`.
+Both the mclust initialization (`cluster.init`) and the BayesSpace cluster
+assignments (`spatial.cluster`) are now available in the SingleCellExperiment's
+`colData`.
 ```{r cluster.results}
-head(colData(sce))
+head(colData(melanoma))
 ```
 
-
-We can plot the cluster assignments over the spatial locations of the spots.
+We can plot the cluster assignments over the spatial locations of the spots with
+`clusterPlot()`.
 ```{r cluster.plot, fig.width=7, fig.height=5}
-clusterPlot(sce, platform="ST")
+clusterPlot(melanoma)
 ```
 
 ## Enhanced resolution
 
 The `spatialEnhance()` function will enhance the resolution of the principal
 components, and add these PCs as well as predicted cluster labels at subspot
-resolution to a new SingleCellExperiment.
+resolution to a new `SingleCellExperiment`.
 ```{r enhance, eval=TRUE}
-enhanced <- spatialEnhance(sce, q=4, platform="ST", d=7,
-                           model="t", nrep=10000, save.chain=TRUE)
+melanoma.enhanced <- spatialEnhance(melanoma, q=4, platform="ST", d=7,
+                                    model="t", nrep=10000, save.chain=TRUE)
 ```
 
-The enhanced SingleCellExperiment includes an index to the parent spot in the original `sce` (`spot.idx`), along with an index to the subspot. It adds the offsets to the original spot coordinates, and provides the enhanced cluster label (`spatial.cluster`).
+The enhanced `SingleCellExperiment` includes an index to the parent spot in the
+original `sce` (`spot.idx`), along with an index to the subspot. It adds the
+offsets to the original spot coordinates, and provides the enhanced cluster
+label (`spatial.cluster`).
 ```{r enhance.results}
-head(colData(enhanced))
+head(colData(melanoma.enhanced))
 ```
-
 
 We can plot the enhanced cluster assignments as above.
 ```{r enhance.plot, eval=TRUE, fig.width=7, fig.height=5}
-enhancePlot(enhanced, platform="ST")
+clusterPlot(melanoma.enhanced)
 ```
 
 Note that the enhanced PCs are stored as a `reducedDim` and the enhanced
@@ -106,7 +171,7 @@ subspot resolution, we need to run `enhanceFeatures()` afterwards.
 By default, log-normalized expression (`logcounts(sce)`) is imputed, but other
 assays or arbitrary features can be specified.
 ```{r enhanceFeatures, eval=FALSE}
-enhanced <- enhanceFeatures(enhanced, sce) 
+melanoma.enhanced <- enhanceFeatures(melanoma.enhanced, melanoma) 
 ```
 
 TODO: add outputs/plot for enhanceFeatures
@@ -124,7 +189,7 @@ The chain is provided as a `coda::mcmc` object, which can be analyzed with
 one row per iteration, with the values of the parameters concatenated across the
 row. Columns are named with the parameter name and index (if any).
 ```{r mcmcChain, eval=TRUE}
-chain <- mcmcChain(sce)
+chain <- mcmcChain(melanoma)
 chain[1:5, 1:5]
 ```
 

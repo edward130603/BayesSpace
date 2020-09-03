@@ -1,5 +1,4 @@
-#' Predict log-normalized expression vectors from deconvolved PCs using linear 
-#' regression.
+#' Predict feature vectors from deconvolved PCs.
 #' 
 #' @param sce.enhanced SingleCellExperiment object with enhanced PCs.
 #' @param sce.ref SingleCellExperiment object with original PCs and expression..

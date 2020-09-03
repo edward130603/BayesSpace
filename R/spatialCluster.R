@@ -109,7 +109,9 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     Y <- Y[, seq_len(d)]
     
     ## Get indices of neighboring spots, and initialize cluster assignments
-    df_j <- .find_neighbors(sce, match.arg(platform))
+    ## TODO: parse platform from metadata
+    platform <- match.arg(platform)
+    df_j <- .find_neighbors(sce, platform)
     init <- .init_cluster(Y, q, init, init.method)
     
     ## TODO: pass these through with ...
