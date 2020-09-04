@@ -22,6 +22,7 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(SingleCellExperiment)
+library(ggplot2)
 library(BayesSpace)
 ```
 
@@ -136,11 +137,26 @@ assignments (`spatial.cluster`) are now available in the SingleCellExperiment's
 head(colData(melanoma))
 ```
 
+### Visualizing spatial clusters
+
 We can plot the cluster assignments over the spatial locations of the spots with
 `clusterPlot()`.
 ```{r cluster.plot, fig.width=7, fig.height=5}
 clusterPlot(melanoma)
 ```
+As `clusterPlot()` returns a `ggplot` object, it can be customized by composing
+with familiar `ggplot2` functions. Additionally, the argument `palette` sets the
+colors used for each cluster, and `clusterPlot()` takes additional arguments to
+`geom_polygon()` such as `size` or `color` to control the aesthetics of the spot
+borders.
+```{r cluster.plot.customize, fig.width=7, fig.height=5}
+clusterPlot(melanoma, palette=c("purple", "red", "blue", "yellow"), color="black") +
+  theme_bw() +
+  xlab("Column") +
+  ylab("Row") +
+  labs(fill="BayesSpace\ncluster", title="Spatial clustering of ST_mel1_rep2")
+```
+
 
 ## Enhanced resolution
 
@@ -197,6 +213,15 @@ other assays or arbitrary feature matrices can be specified.
 ```{r enhanced.logcount}
 logcounts(melanoma.enhanced)[markers, 1:5]
 ```
+
+Diagnostic measures from each predictive model, such as `rmse` when using
+`xgboost`, are added to the `rowData` of the enhanced dataset.
+```{r enhanced.rmse}
+rowData(melanoma.enhanced)[markers, ]
+```
+
+
+### Visualizing enhanced gene expression
 
 Spatial gene expression is visualized with `featurePlot()`.
 ```{r enhanced.featurePlot}
