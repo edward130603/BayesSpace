@@ -59,7 +59,10 @@ biocViews:
     Software,
     Clustering,
     Transcriptomics,
-    GeneExpression
+    GeneExpression,
+    SingleCell,
+    ImmunoOncology,
+    DataImport
 BugReports: https://github.com/edward130603/BayesSpace/issues
 URL: edward130603.github.io/BayesSpace
 
