@@ -159,6 +159,7 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
 #' @return \code{df_j} a list of neighbor indices (zero-indexed) for each spot
 #' 
 #' @keywords internal
+#' @importFrom purrr keep discard map
 .find_neighbors <- function(sce, platform) {
     if (platform == "Visium") {
         ## Spots to left and right, two above, two below
@@ -185,7 +186,8 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     neighbors <- merge(as.data.frame(neighbor.positions), 
                        as.data.frame(spot.positions), 
                        by.x=c("x.pos", "y.pos"), by.y=c("col", "row"),
-                       suffixes=c(".primary", ".neighbor"))
+                       suffixes=c(".primary", ".neighbor"),
+                       all.x=TRUE)
     
     ## Shift to zero-indexing for C++
     neighbors$spot.idx.neighbor <- neighbors$spot.idx.neighbor - 1
@@ -195,8 +197,21 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     neighbors <- neighbors[order(neighbors$spot.idx.primary, 
                                  neighbors$spot.idx.neighbor), ]
     df_j <- split(neighbors$spot.idx.neighbor, neighbors$spot.idx.primary)
+    df_j <- unname(df_j)
     
-    unname(df_j)
+    ## Discard neighboring spots without spot data
+    ## This can be implemented by eliminating `all.x=TRUE` above, but
+    ## this makes it easier to keep empty lists for spots with no neighbors
+    ## (as expected by C++ code)
+    df_j <- map(df_j, function(nbrs) discard(nbrs, function(x) is.na(x)))
+    
+    ## Log number of spots with neighbors
+    n_with_neighbors <- length(keep(df_j, function(nbrs) length(nbrs) > 0))
+    msg <- "Neighbors were identified for %d out of %d spots." 
+    msg <- sprintf(msg, n_with_neighbors, ncol(sce))
+    message(msg)
+    
+    df_j
 }
 
 #' Initialize cluster assignments
