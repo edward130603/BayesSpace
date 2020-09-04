@@ -86,7 +86,8 @@ NULL
         Y.enhanced[feature, ] <- predict(fit, newdata=X.enhanced)
     }
     
-    attr(Y.enhanced, "r.squared") <- r.squared
+    diagnostic <- list("r.squared"=r.squared)
+    attr(Y.enhanced, "diagnostic") <- diagnostic
     Y.enhanced
 }
 
@@ -100,6 +101,8 @@ NULL
     
     rownames(Y.enhanced) <- rownames(Y.ref)
     colnames(Y.enhanced) <- rownames(X.enhanced)
+    
+    attr(Y.enhanced, "diagnostic") <- list()
     Y.enhanced
 }
 
@@ -123,7 +126,9 @@ NULL
         rmse[feature] <- fit$evaluation_log$train_rmse[100]
     }
     
-    attr(Y.enhanced, "rmse") <- rmse
+    diagnostic <- list("rmse"=rmse)
+    attr(Y.enhanced, "diagnostic") <- diagnostic
+    
     Y.enhanced
 }
 
@@ -169,6 +174,8 @@ enhanceFeatures <- function(sce.enhanced, sce.ref, feature_names = NULL,
         Y.enhanced <- SummarizedExperiment(assays=list(altExp.type=Y.enhanced))
         altExp(sce.enhanced, altExp.type) <- Y.enhanced
     } else {
+        diagnostic <- attr(Y.enhanced, "diagnostic")
+        
         ## If we only enhanced a subset of features, need to add NA vectors for
         ## the remaining features so the number of rows within the SCE remains
         ## consistent
@@ -178,8 +185,21 @@ enhanceFeatures <- function(sce.enhanced, sce.ref, feature_names = NULL,
             colnames(Y.full) <- colnames(Y.enhanced)
             Y.full[feature_names, ] <- Y.enhanced
             assay(sce.enhanced, assay.type) <- Y.full
+            
+            ## Fill in the diagnostic/error values as above
+            for (name in names(diagnostic)) {
+                diagnostic.full <- rep(NA, nrow(sce.ref))
+                names(diagnostic.full) <- rownames(sce.ref)
+                diagnostic.full[feature_names] <- diagnostic[[name]]
+                col.name <- sprintf("enhanceFeatures.%s", name)
+                rowData(sce.enhanced)[[col.name]] <- diagnostic.full
+            }
         } else {
             assay(sce.enhanced, assay.type) <- Y.enhanced
+            for (name in names(diagnostic)) {
+                col.name <- sprintf("enhanceFeatures.%s", name)
+                rowData(sce.enhanced)[[col.name]] <- diagnostic[[name]]
+            }
         }
     }
     
