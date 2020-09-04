@@ -134,7 +134,7 @@ NULL
 
 #' @export
 #' @importFrom SingleCellExperiment reducedDim altExp altExp<-
-#' @importFrom SummarizedExperiment assay assay<- SummarizedExperiment
+#' @importFrom SummarizedExperiment assay assay<- SummarizedExperiment rowData<-
 #' @rdname enhanceFeatures
 enhanceFeatures <- function(sce.enhanced, sce.ref, feature_names = NULL,
     model=c("xgboost", "dirichlet", "lm"), use.dimred = "PCA",
