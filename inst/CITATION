@@ -12,11 +12,13 @@ citEntry(
                         as.person("Raphael Gottardo")),
   journal  = "bioRxiv",
   year     = "2020",
-  volume   = ,
-  number   = ,
-  pages    = ,
+  volume   = "",
+  number   = "",
+  pages    = "",
   url      = "TODO: after bioRxiv posting",
   textVersion = paste(
-
+    "Zhao, E. et al.",
+    "BayesSpace enables the robust characterization of spatial gene expression architecture in tissue sections at increased resolution.",
+    "bioRxiv. (2020)"
   )
 )
