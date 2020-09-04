@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Predict feature vectors from deconvolved PCs. — enhanceFeatures • BayesSpace</title>
+<title>Predict feature vectors from enhanced PCs. — enhanceFeatures • BayesSpace</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Predict feature vectors from deconvolved PCs. — enhanceFeatures" />
-<meta property="og:description" content="Predict feature vectors from deconvolved PCs." />
+<meta property="og:title" content="Predict feature vectors from enhanced PCs. — enhanceFeatures" />
+<meta property="og:description" content="Predict feature vectors from enhanced PCs." />
 
 
 
@@ -126,13 +126,13 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Predict feature vectors from deconvolved PCs.</h1>
+    <h1>Predict feature vectors from enhanced PCs.</h1>
     <small class="dont-index">Source: <a href='https://github.com/edward130603/BayesSpace/blob/master/R/enhanceFeatures.R'><code>R/enhanceFeatures.R</code></a></small>
     <div class="hidden name"><code>enhanceFeatures.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Predict feature vectors from deconvolved PCs.</p>
+    <p>Predict feature vectors from enhanced PCs.</p>
     </div>
 
     <pre class="usage"><span class='fu'>enhanceFeatures</span>(
@@ -200,9 +200,13 @@ specified.</p></td>
     <p>Enhanced features are computed by fitting a predictive model to a
 low-dimensional representation of the original expression vectors. By
 default, a linear model is fit for each gene using the top 15 principal
-compoenents from each spot, i.e. <code><a href='https://rdrr.io/r/stats/lm.html'>lm(gene ~ PCs)</a></code>, and the fitted model
+components from each spot, i.e. <code><a href='https://rdrr.io/r/stats/lm.html'>lm(gene ~ PCs)</a></code>, and the fitted model
 is used to predict the enhanced expression for each gene from the subspots'
 principal components.</p>
+<p>Diagnostic measures, such as RMSE for <code>xgboost</code> or R.squared for linear
+regression, are added to the `rowData` of the enhanced experiment if the
+features are an assay of the original experiment. Otherwise they are stored
+as an attribute of the returned matrix/altExp.</p>
 <p>Note that feature matrices will be returned and are expected to be input as
 \(p \times n\) matrices of \(p\)-dimensional feature vectors over the
 \(n\) spots.</p>
@@ -210,7 +214,7 @@ principal components.</p>
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/Random.html'>set.seed</a></span>(<span class='fl'>149</span>)
 <span class='no'>sce</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='exampleSCE.html'>exampleSCE</a></span>()
-<span class='no'>sce</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='spatialCluster.html'>spatialCluster</a></span>(<span class='no'>sce</span>, <span class='fl'>7</span>, <span class='kw'>nrep</span><span class='kw'>=</span><span class='fl'>200</span>)</div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='output co'>#&gt; <span class='message'>Calculating labels using iterations 2 through 200</span></div><div class='input'><span class='no'>enhanced</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='spatialEnhance.html'>spatialEnhance</a></span>(<span class='no'>sce</span>, <span class='fl'>7</span>, <span class='kw'>init</span><span class='kw'>=</span><span class='no'>sce</span>$<span class='no'>spatial.cluster</span>, <span class='kw'>nrep</span><span class='kw'>=</span><span class='fl'>200</span>)</div><div class='output co'>#&gt; <span class='message'>Calculating neighbors...</span></div><div class='output co'>#&gt; <span class='message'>Neighbors were identified for 576 out of 576 spots.</span></div><div class='output co'>#&gt; <span class='message'>Calculating labels using iterations 100 through 200</span></div><div class='input'><span class='no'>enhanced</span> <span class='kw'>&lt;-</span> <span class='fu'>enhanceFeatures</span>(<span class='no'>enhanced</span>, <span class='no'>sce</span>, <span class='kw'>assay.type</span><span class='kw'>=</span><span class='st'>"logcounts"</span>)</div></pre>
+<span class='no'>sce</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='spatialCluster.html'>spatialCluster</a></span>(<span class='no'>sce</span>, <span class='fl'>7</span>, <span class='kw'>nrep</span><span class='kw'>=</span><span class='fl'>200</span>)</div><div class='output co'>#&gt; <span class='message'>Neighbors were identified for 96 out of 96 spots.</span></div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='output co'>#&gt; <span class='message'>Calculating labels using iterations 2 through 200</span></div><div class='input'><span class='no'>enhanced</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='spatialEnhance.html'>spatialEnhance</a></span>(<span class='no'>sce</span>, <span class='fl'>7</span>, <span class='kw'>init</span><span class='kw'>=</span><span class='no'>sce</span>$<span class='no'>spatial.cluster</span>, <span class='kw'>nrep</span><span class='kw'>=</span><span class='fl'>200</span>)</div><div class='output co'>#&gt; <span class='message'>Calculating labels using iterations 100 through 200</span></div><div class='input'><span class='no'>enhanced</span> <span class='kw'>&lt;-</span> <span class='fu'>enhanceFeatures</span>(<span class='no'>enhanced</span>, <span class='no'>sce</span>, <span class='kw'>assay.type</span><span class='kw'>=</span><span class='st'>"logcounts"</span>)</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
