@@ -1,4 +1,4 @@
-#' Predict feature vectors from deconvolved PCs.
+#' Predict feature vectors from enhanced PCs.
 #' 
 #' @param sce.enhanced SingleCellExperiment object with enhanced PCs.
 #' @param sce.ref SingleCellExperiment object with original PCs and expression.
@@ -25,9 +25,14 @@
 #' Enhanced features are computed by fitting a predictive model to a
 #' low-dimensional representation of the original expression vectors. By
 #' default, a linear model is fit for each gene using the top 15 principal
-#' compoenents from each spot, i.e. \code{lm(gene ~ PCs)}, and the fitted model
+#' components from each spot, i.e. \code{lm(gene ~ PCs)}, and the fitted model
 #' is used to predict the enhanced expression for each gene from the subspots'
 #' principal components.
+#' 
+#' Diagnostic measures, such as RMSE for \code{xgboost} or R.squared for linear
+#' regression, are added to the `rowData` of the enhanced experiment if the
+#' features are an assay of the original experiment. Otherwise they are stored
+#' as an attribute of the returned matrix/altExp.
 #' 
 #' Note that feature matrices will be returned and are expected to be input as
 #' \eqn{p \times n} matrices of \eqn{p}-dimensional feature vectors over the
