@@ -198,7 +198,7 @@ family <- "alata"
 scale <- 2.19
 
 p.color <- "#E0FBFC"
-fname <- "BayesSpace_logo.png"
+fname <- "logo.png"
 
 # p.color <- enhanced.color
 # fname <- "BayesSpace_logo_alt.png"

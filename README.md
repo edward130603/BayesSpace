@@ -1,4 +1,4 @@
-# BayesSpace <img src="inst/logo/BayesSpace_logo.png" align="right" width="115" />
+# BayesSpace <img src="inst/logo/logo.png" align="right" width="115" />
 
   <!-- badges: start -->
   [![R build status](https://github.com/edward130603/BayesSpace/workflows/R-CMD-check-bioc/badge.svg)](https://github.com/edward130603/BayesSpace/actions)
@@ -6,7 +6,8 @@
 
 ## Overview 
 
-BayesSpace provides tools for clustering and enhancing the resolution of spatial gene expression experiments. 
+BayesSpace provides tools for clustering and enhancing the resolution of spatial
+gene expression experiments.
 
 BayesSpace clusters a low-dimensional representation of the gene expression
 matrix, incorporating a spatial prior to encourage neighboring spots to cluster
@@ -16,7 +17,8 @@ cell type composition can be imputed.
 
 ## Installation
 
-BayesSpace will be available on BioConductor soon. Until then, it can be installed with `devtools`:
+BayesSpace has been submitted to Bioconductor. Until its availability there, it
+can be installed with `devtools`:
 
 ```
 # Install devtools if necessary
