@@ -38,7 +38,8 @@ test_that("genes are predicted with xgboost", {
   Y.enhanced <- .xgboost_enhance(X.ref, X.enhanced, Y.ref, c(gene))
   
   expect_equal(new, Y.enhanced[gene, ], check.names=FALSE)
-  expect_true("rmse" %in% names(attributes(Y.enhanced)))
+  expect_true("diagnostic" %in% names(attributes(Y.enhanced)))
+  expect_true("rmse" %in% names(attr(Y.enhanced, "diagnostic")))
 })
 
 test_that("proportions are predicted with Dirichlet model", { 

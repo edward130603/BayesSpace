@@ -15,15 +15,10 @@ find_neighbors <- function(positions, radius,
     
     method <- match.arg(method)
     
-    message("Calculating neighbors...")
     pdist <- as.matrix(stats::dist(positions, method=method))
     neighbors <- (pdist <= radius & pdist > 0)
     df_j <- sapply(seq_len(nrow(positions)), 
         function(x) as.vector(which(neighbors[x, ])) - 1)
-    
-    msg <- "Neighbors were identified for %d out of %d spots." 
-    msg <- sprintf(msg, sum(rowSums(neighbors) > 0), nrow(positions))
-    message(msg)
     
     df_j
 }
