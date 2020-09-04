@@ -1,6 +1,6 @@
 Package: BayesSpace
-Version: 0.99.1
-Date: 2020-08-30
+Version: 0.99.0
+Date: 2020-09-04
 Title: Clustering and Resolution Enhancement of Spatial Transcriptomes
 Authors@R: c(
     person("Edward", "Zhao", role=c("aut"), email="ezhao@fredhutch.org"),
@@ -16,11 +16,11 @@ Description: Tools for clustering and enhancing the resolution of spatial gene
     of the low-dimensional representation into "sub-spots", for which features
     such as gene expression or cell type composition can be imputed.
 Depends:
-    R (>= 4.0.0)
+    R (>= 4.0.0),
+    SingleCellExperiment
 Imports:
     Rcpp (>= 1.0.4.6),
     stats,
-    SingleCellExperiment,
     BiocSingular,
     purrr,
     scater,
@@ -60,3 +60,7 @@ biocViews:
     Clustering,
     Transcriptomics,
     GeneExpression
+BugReports: https://github.com/edward130603/BayesSpace/issues
+URL: edward130603.github.io/BayesSpace
+
+
