@@ -70,7 +70,7 @@
 
       
 
-      </header><script src="BayesSpace_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
+      </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>BayesSpace</h1>
@@ -85,10 +85,9 @@
 
     
     
-<div class="sourceCode" id="cb1"><pre class="downlit">
-<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="kw">SingleCellExperiment</span>)
-<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="kw"><a href="http://ggplot2.tidyverse.org">ggplot2</a></span>)
-<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="kw">BayesSpace</span>)</pre></div>
+<div class="sourceCode" id="cb1"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">SingleCellExperiment</span>)
+<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">ggplot2</span>)
+<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">BayesSpace</span>)</pre></body></html></div>
 <div id="preparing-your-experiment-for-bayesspace" class="section level2">
 <h2 class="hasAnchor">
 <a href="#preparing-your-experiment-for-bayesspace" class="anchor"></a>Preparing your experiment for BayesSpace</h2>
@@ -97,17 +96,14 @@
 <a href="#loading-data" class="anchor"></a>Loading data</h3>
 <p>BayesSpace supports three ways of loading a <code>SingleCellExperiment</code> for analysis.</p>
 <p>Visium datasets processed with <a href="https://support.10xgenomics.com/spatial-gene-expression/software/pipelines/latest/what-is-space-ranger">Space Ranger</a> can be loaded directly via the <code><a href="../reference/readVisium.html">readVisium()</a></code> function. This function takes only the path to the Space Ranger output directory (containing the <code>spatial/</code> and <code>filtered_feature_bc_matrix/</code> subdirectories) and returns a <code>SingleCellExperiment</code>.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit">
-<span class="kw">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/readVisium.html">readVisium</a></span>(<span class="st">"path/to/spaceranger/outs/"</span>)</pre></div>
+<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="no">sce</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/readVisium.html">readVisium</a></span>(<span class="st">"path/to/spaceranger/outs/"</span>)</pre></body></html></div>
 <p>Second, all datasets analyzed for the BayesSpace manuscript are readily accessible via the <code><a href="../reference/getRDS.html">getRDS()</a></code> function. This function takes two arguments - the name of the dataset, and the name of the sample in the dataset.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit">
-<span class="kw">melanoma</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getRDS.html">getRDS</a></span>(dataset=<span class="st">"2018_thrane_melanoma"</span>, sample=<span class="st">"ST_mel1_rep2"</span>)</pre></div>
+<div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="no">melanoma</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/getRDS.html">getRDS</a></span>(<span class="kw">dataset</span><span class="kw">=</span><span class="st">"2018_thrane_melanoma"</span>, <span class="kw">sample</span><span class="kw">=</span><span class="st">"ST_mel1_rep2"</span>)</pre></body></html></div>
 <!-- TODO: add this metadata to the RDS on S3 -->
 <p>Finally, <code>SingleCellExperiment</code> objects can be constructed manually from a counts matrix and tables of row and column data. BayesSpace only requires that spot array coordinates be provided as columns named <code>row</code> and <code>col</code> in <code>colData</code>. (Note that enhancement of Visium datasets additionally requires the pixel coordinates of each spot in the tissue image, but in this case the dataset should be loaded with <code><a href="../reference/readVisium.html">readVisium()</a></code>.) <!-- TODO: migrate over the make_RDS() function from spatial-datasets --></p>
-<div class="sourceCode" id="cb4"><pre class="downlit">
-<span class="kw">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/SingleCellExperiment.html">SingleCellExperiment</a></span>(assays=<span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(counts=<span class="kw">counts</span>),
-                            rowData=<span class="kw">rowData</span>,
-                            colData=<span class="kw">colData</span>)</pre></div>
+<div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="no">sce</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/SingleCellExperiment.html">SingleCellExperiment</a></span>(<span class="kw">assays</span><span class="kw">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="kw">counts</span><span class="kw">=</span><span class="no">counts</span>),
+                            <span class="kw">rowData</span><span class="kw">=</span><span class="no">rowData</span>,
+                            <span class="kw">colData</span><span class="kw">=</span><span class="no">colData</span>)</pre></body></html></div>
 <p>We’ll continue with the melanoma sample from the 2018 Spatial Transcriptomics paper for the remaining examples in this vignette.</p>
 </div>
 <div id="pre-processing-data" class="section level3">
@@ -116,10 +112,9 @@
 <p>BayesSpace requires minimal data pre-processing, but we provide a helper function to automate it.</p>
 <p><code><a href="../reference/spatialPreprocess.html">spatialPreprocess()</a></code> log-normalizes the count matrix and performs PCA on the top <code>n.HVGs</code> highly variable genes, keeping the top <code>n.PCs</code> principal components. Additionally, the spatial sequencing platform is added as metadata in the <code>SingleCellExperiment</code> for downstream analyses. If you do not wish to rerun PCA, running <code><a href="../reference/spatialPreprocess.html">spatialPreprocess()</a></code> with the flag <code>skip.PCA=TRUE</code> will only add the metadata BayesSpace requires.</p>
 <p>Here, we omit log-normalization as all datasets available through <code><a href="../reference/getRDS.html">getRDS()</a></code> already include log-normalized counts.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit">
-<span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span>(<span class="fl">102</span>)
-<span class="kw">melanoma</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spatialPreprocess.html">spatialPreprocess</a></span>(<span class="kw">melanoma</span>, platform=<span class="st">"ST"</span>, 
-                              n.PCs=<span class="fl">7</span>, n.HVGs=<span class="fl">2000</span>, log.normalize=<span class="fl">FALSE</span>)</pre></div>
+<div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span>(<span class="fl">102</span>)
+<span class="no">melanoma</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/spatialPreprocess.html">spatialPreprocess</a></span>(<span class="no">melanoma</span>, <span class="kw">platform</span><span class="kw">=</span><span class="st">"ST"</span>,
+                              <span class="kw">n.PCs</span><span class="kw">=</span><span class="fl">7</span>, <span class="kw">n.HVGs</span><span class="kw">=</span><span class="fl">2000</span>, <span class="kw">log.normalize</span><span class="kw">=</span><span class="fl">FALSE</span>)</pre></body></html></div>
 </div>
 </div>
 <div id="clustering" class="section level2">
@@ -135,9 +130,8 @@
 <li>
 <code><a href="../reference/qTune.html">qPlot()</a></code> plots the pseudo-log-likelihood as a function of <code>q</code>; we suggest choosing a <code>q</code> around the elbow of this plot.</li>
 </ul>
-<div class="sourceCode" id="cb6"><pre class="downlit">
-<span class="kw">melanoma</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/qTune.html">qTune</a></span>(<span class="kw">melanoma</span>, qs=<span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span>(<span class="fl">2</span>, <span class="fl">10</span>), platform=<span class="st">"ST"</span>, d=<span class="fl">7</span>)
-<span class="fu"><a href="../reference/qTune.html">qPlot</a></span>(<span class="kw">melanoma</span>)</pre></div>
+<div class="sourceCode" id="cb6"><html><body><pre class="r"><span class="no">melanoma</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/qTune.html">qTune</a></span>(<span class="no">melanoma</span>, <span class="kw">qs</span><span class="kw">=</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span>(<span class="fl">2</span>, <span class="fl">10</span>), <span class="kw">platform</span><span class="kw">=</span><span class="st">"ST"</span>, <span class="kw">d</span><span class="kw">=</span><span class="fl">7</span>)
+<span class="fu"><a href="../reference/qTune.html">qPlot</a></span>(<span class="no">melanoma</span>)</pre></body></html></div>
 <p><img src="figures/BayesSpace-tuning_q-1.png" title="plot of chunk tuning_q" alt="plot of chunk tuning_q" width="100%"></p>
 </div>
 <div id="clustering-with-bayesspace" class="section level3">
@@ -145,14 +139,12 @@
 <a href="#clustering-with-bayesspace" class="anchor"></a>Clustering with BayesSpace</h3>
 <p>The <code><a href="../reference/spatialCluster.html">spatialCluster()</a></code> function clusters the spots, and adds the predicted cluster labels to the <code>SingleCellExperiment</code>. Typically, as we did for the analyses in the paper, we suggest running with at least 10,000 iterations (<code>nrep=10000</code>), but we use 1,000 iteration in this demonstration for the sake of runtime. (Note that a random seed must be set in order for the results to be reproducible.)</p>
 <!-- TODO: parse platform from metadta -->
-<div class="sourceCode" id="cb7"><pre class="downlit">
-<span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span>(<span class="fl">149</span>)
-<span class="kw">melanoma</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spatialCluster.html">spatialCluster</a></span>(<span class="kw">melanoma</span>, q=<span class="fl">4</span>, platform=<span class="st">"ST"</span>, d=<span class="fl">7</span>,
-                           init.method=<span class="st">"mclust"</span>, model=<span class="st">"t"</span>, nrep=<span class="fl">1000</span>, 
-                           save.chain=<span class="fl">TRUE</span>)</pre></div>
+<div class="sourceCode" id="cb7"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span>(<span class="fl">149</span>)
+<span class="no">melanoma</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/spatialCluster.html">spatialCluster</a></span>(<span class="no">melanoma</span>, <span class="kw">q</span><span class="kw">=</span><span class="fl">4</span>, <span class="kw">platform</span><span class="kw">=</span><span class="st">"ST"</span>, <span class="kw">d</span><span class="kw">=</span><span class="fl">7</span>,
+                           <span class="kw">init.method</span><span class="kw">=</span><span class="st">"mclust"</span>, <span class="kw">model</span><span class="kw">=</span><span class="st">"t"</span>, <span class="kw">nrep</span><span class="kw">=</span><span class="fl">1000</span>,
+                           <span class="kw">save.chain</span><span class="kw">=</span><span class="fl">TRUE</span>)</pre></body></html></div>
 <p>Both the mclust initialization (<code>cluster.init</code>) and the BayesSpace cluster assignments (<code>spatial.cluster</code>) are now available in the SingleCellExperiment’s <code>colData</code>.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit">
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="fu">colData</span>(<span class="kw">melanoma</span>))
+<div class="sourceCode" id="cb8"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="fu">colData</span>(<span class="no">melanoma</span>))
 <span class="co">#&gt; DataFrame with 6 rows and 5 columns</span>
 <span class="co">#&gt;            row       col sizeFactor cluster.init spatial.cluster</span>
 <span class="co">#&gt;      &lt;integer&gt; &lt;integer&gt;  &lt;numeric&gt;    &lt;numeric&gt;       &lt;numeric&gt;</span>
@@ -161,21 +153,19 @@
 <span class="co">#&gt; 7x17         7        17   0.331247            2               2</span>
 <span class="co">#&gt; 7x18         7        18   0.420747            3               2</span>
 <span class="co">#&gt; 8x13         8        13   0.255453            1               1</span>
-<span class="co">#&gt; 8x14         8        14   1.473439            1               1</span></pre></div>
+<span class="co">#&gt; 8x14         8        14   1.473439            1               1</span></pre></body></html></div>
 </div>
 <div id="visualizing-spatial-clusters" class="section level3">
 <h3 class="hasAnchor">
 <a href="#visualizing-spatial-clusters" class="anchor"></a>Visualizing spatial clusters</h3>
 <p>We can plot the cluster assignments over the spatial locations of the spots with <code><a href="../reference/clusterPlot.html">clusterPlot()</a></code>.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit">
-<span class="fu"><a href="../reference/clusterPlot.html">clusterPlot</a></span>(<span class="kw">melanoma</span>)</pre></div>
+<div class="sourceCode" id="cb9"><html><body><pre class="r"><span class="fu"><a href="../reference/clusterPlot.html">clusterPlot</a></span>(<span class="no">melanoma</span>)</pre></body></html></div>
 <p><img src="figures/BayesSpace-cluster.plot-1.png" title="plot of chunk cluster.plot" alt="plot of chunk cluster.plot" width="100%"> As <code><a href="../reference/clusterPlot.html">clusterPlot()</a></code> returns a <code>ggplot</code> object, it can be customized by composing with familiar <code>ggplot2</code> functions. Additionally, the argument <code>palette</code> sets the colors used for each cluster, and <code><a href="../reference/clusterPlot.html">clusterPlot()</a></code> takes additional arguments to <code><a href="https://ggplot2.tidyverse.org/reference/geom_polygon.html">geom_polygon()</a></code> such as <code>size</code> or <code>color</code> to control the aesthetics of the spot borders.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit">
-<span class="fu"><a href="../reference/clusterPlot.html">clusterPlot</a></span>(<span class="kw">melanoma</span>, palette=<span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"purple"</span>, <span class="st">"red"</span>, <span class="st">"blue"</span>, <span class="st">"yellow"</span>), color=<span class="st">"black"</span>) <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_bw</a></span>() <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">xlab</a></span>(<span class="st">"Column"</span>) <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">ylab</a></span>(<span class="st">"Row"</span>) <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(fill=<span class="st">"BayesSpace\ncluster"</span>, title=<span class="st">"Spatial clustering of ST_mel1_rep2"</span>)</pre></div>
+<div class="sourceCode" id="cb10"><html><body><pre class="r"><span class="fu"><a href="../reference/clusterPlot.html">clusterPlot</a></span>(<span class="no">melanoma</span>, <span class="kw">palette</span><span class="kw">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"purple"</span>, <span class="st">"red"</span>, <span class="st">"blue"</span>, <span class="st">"yellow"</span>), <span class="kw">color</span><span class="kw">=</span><span class="st">"black"</span>) +
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_bw</a></span>() +
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">xlab</a></span>(<span class="st">"Column"</span>) +
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">ylab</a></span>(<span class="st">"Row"</span>) +
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(<span class="kw">fill</span><span class="kw">=</span><span class="st">"BayesSpace\ncluster"</span>, <span class="kw">title</span><span class="kw">=</span><span class="st">"Spatial clustering of ST_mel1_rep2"</span>)</pre></body></html></div>
 <p><img src="figures/BayesSpace-cluster.plot.customize-1.png" title="plot of chunk cluster.plot.customize" alt="plot of chunk cluster.plot.customize" width="100%"></p>
 </div>
 </div>
@@ -186,12 +176,10 @@
 <h3 class="hasAnchor">
 <a href="#clustering-at-enhanced-resolution" class="anchor"></a>Clustering at enhanced resolution</h3>
 <p>The <code><a href="../reference/spatialEnhance.html">spatialEnhance()</a></code> function will enhance the resolution of the principal components, and add these PCs as well as predicted cluster labels at subspot resolution to a new <code>SingleCellExperiment</code>.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit">
-<span class="kw">melanoma.enhanced</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spatialEnhance.html">spatialEnhance</a></span>(<span class="kw">melanoma</span>, q=<span class="fl">4</span>, platform=<span class="st">"ST"</span>, d=<span class="fl">7</span>,
-                                    model=<span class="st">"t"</span>, nrep=<span class="fl">10000</span>, save.chain=<span class="fl">TRUE</span>)</pre></div>
+<div class="sourceCode" id="cb11"><html><body><pre class="r"><span class="no">melanoma.enhanced</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/spatialEnhance.html">spatialEnhance</a></span>(<span class="no">melanoma</span>, <span class="kw">q</span><span class="kw">=</span><span class="fl">4</span>, <span class="kw">platform</span><span class="kw">=</span><span class="st">"ST"</span>, <span class="kw">d</span><span class="kw">=</span><span class="fl">7</span>,
+                                    <span class="kw">model</span><span class="kw">=</span><span class="st">"t"</span>, <span class="kw">nrep</span><span class="kw">=</span><span class="fl">10000</span>, <span class="kw">save.chain</span><span class="kw">=</span><span class="fl">TRUE</span>)</pre></body></html></div>
 <p>The enhanced <code>SingleCellExperiment</code> includes an index to the parent spot in the original <code>sce</code> (<code>spot.idx</code>), along with an index to the subspot. It adds the offsets to the original spot coordinates, and provides the enhanced cluster label (<code>spatial.cluster</code>).</p>
-<div class="sourceCode" id="cb12"><pre class="downlit">
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="fu">colData</span>(<span class="kw">melanoma.enhanced</span>))
+<div class="sourceCode" id="cb12"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="fu">colData</span>(<span class="no">melanoma.enhanced</span>))
 <span class="co">#&gt; DataFrame with 6 rows and 9 columns</span>
 <span class="co">#&gt;              spot.idx subspot.idx  spot.row  spot.col       row       col</span>
 <span class="co">#&gt;             &lt;numeric&gt;   &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;numeric&gt; &lt;numeric&gt;</span>
@@ -208,10 +196,9 @@
 <span class="co">#&gt; subspot_3.1   7.33333   17.3333               2</span>
 <span class="co">#&gt; subspot_4.1   7.33333   18.3333               3</span>
 <span class="co">#&gt; subspot_5.1   8.33333   13.3333               1</span>
-<span class="co">#&gt; subspot_6.1   8.33333   14.3333               1</span></pre></div>
+<span class="co">#&gt; subspot_6.1   8.33333   14.3333               1</span></pre></body></html></div>
 <p>We can plot the enhanced cluster assignments as above.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit">
-<span class="fu"><a href="../reference/clusterPlot.html">clusterPlot</a></span>(<span class="kw">melanoma.enhanced</span>)</pre></div>
+<div class="sourceCode" id="cb13"><html><body><pre class="r"><span class="fu"><a href="../reference/clusterPlot.html">clusterPlot</a></span>(<span class="no">melanoma.enhanced</span>)</pre></body></html></div>
 <p><img src="figures/BayesSpace-enhance.plot-1.png" title="plot of chunk enhance.plot" alt="plot of chunk enhance.plot" width="100%"></p>
 </div>
 <div id="enhancing-the-resolution-of-gene-expression" class="section level3">
@@ -221,44 +208,38 @@
 <p>Gene expression enhancement is implemented in the <code><a href="../reference/enhanceFeatures.html">enhanceFeatures()</a></code> function. BayesSpace predicts expression with <a href="https://xgboost.readthedocs.io/en/latest/"><code>xgboost</code></a> by default, but linear and Dirichlet regression are also available via the <code>model</code> argument.</p>
 <p><code><a href="../reference/enhanceFeatures.html">enhanceFeatures()</a></code> can be used to impute subspot-level expression for all genes, or for a subset of genes of interest. Here, we’ll demonstrate by enhancing the expression of four marker genes: PMEL (melanoma), CD2 (T-cells), CD19 (B-cells), and COL1A1 (fibroblasts).</p>
 <!-- TODO: swap CD2 for CD7? -->
-<div class="sourceCode" id="cb14"><pre class="downlit">
-<span class="kw">markers</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"PMEL"</span>, <span class="st">"CD2"</span>, <span class="st">"CD19"</span>, <span class="st">"COL1A1"</span>)
-<span class="kw">melanoma.enhanced</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/enhanceFeatures.html">enhanceFeatures</a></span>(<span class="kw">melanoma.enhanced</span>, <span class="kw">melanoma</span>, feature_names=<span class="kw">markers</span>)</pre></div>
+<div class="sourceCode" id="cb14"><html><body><pre class="r"><span class="no">markers</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"PMEL"</span>, <span class="st">"CD2"</span>, <span class="st">"CD19"</span>, <span class="st">"COL1A1"</span>)
+<span class="no">melanoma.enhanced</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/enhanceFeatures.html">enhanceFeatures</a></span>(<span class="no">melanoma.enhanced</span>, <span class="no">melanoma</span>, <span class="kw">feature_names</span><span class="kw">=</span><span class="no">markers</span>)</pre></body></html></div>
 <p>By default, log-normalized expression (<code><a href="https://rdrr.io/pkg/SingleCellExperiment/man/assays.html">logcounts(sce)</a></code>) is imputed, although other assays or arbitrary feature matrices can be specified.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit">
-<span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/assays.html">logcounts</a></span>(<span class="kw">melanoma.enhanced</span>)[<span class="kw">markers</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">5</span>]
+<div class="sourceCode" id="cb15"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/assays.html">logcounts</a></span>(<span class="no">melanoma.enhanced</span>)[<span class="no">markers</span>, <span class="fl">1</span>:<span class="fl">5</span>]
 <span class="co">#&gt;        subspot_1.1 subspot_2.1 subspot_3.1 subspot_4.1 subspot_5.1</span>
 <span class="co">#&gt; PMEL     2.4870646   2.7509048   2.8261802   3.0204065   2.3573151</span>
 <span class="co">#&gt; CD2      0.2912743   0.2620982   0.1512688   0.1964293   0.2641788</span>
 <span class="co">#&gt; CD19     0.7622972   0.1347447   0.2185815   0.6592661   0.5862058</span>
-<span class="co">#&gt; COL1A1   1.0887744   1.0368935   0.5175448   0.2758219   1.6262674</span></pre></div>
+<span class="co">#&gt; COL1A1   1.0887744   1.0368935   0.5175448   0.2758219   1.6262674</span></pre></body></html></div>
 <p>Diagnostic measures from each predictive model, such as <code>rmse</code> when using <code>xgboost</code>, are added to the <code>rowData</code> of the enhanced dataset.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit">
-<span class="fu">rowData</span>(<span class="kw">melanoma.enhanced</span>)[<span class="kw">markers</span>, ]
+<div class="sourceCode" id="cb16"><html><body><pre class="r"><span class="fu">rowData</span>(<span class="no">melanoma.enhanced</span>)[<span class="no">markers</span>, ]
 <span class="co">#&gt; DataFrame with 4 rows and 3 columns</span>
 <span class="co">#&gt;                gene_id   gene_name enhanceFeatures.rmse</span>
 <span class="co">#&gt;            &lt;character&gt; &lt;character&gt;            &lt;numeric&gt;</span>
 <span class="co">#&gt; PMEL   ENSG00000185664        PMEL             0.810096</span>
 <span class="co">#&gt; CD2    ENSG00000116824         CD2             0.574478</span>
 <span class="co">#&gt; CD19   ENSG00000177455        CD19             0.629373</span>
-<span class="co">#&gt; COL1A1 ENSG00000108821      COL1A1             0.810443</span></pre></div>
+<span class="co">#&gt; COL1A1 ENSG00000108821      COL1A1             0.810443</span></pre></body></html></div>
 </div>
 <div id="visualizing-enhanced-gene-expression" class="section level3">
 <h3 class="hasAnchor">
 <a href="#visualizing-enhanced-gene-expression" class="anchor"></a>Visualizing enhanced gene expression</h3>
 <p>Spatial gene expression is visualized with <code><a href="../reference/featurePlot.html">featurePlot()</a></code>.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit">
-<span class="fu"><a href="../reference/featurePlot.html">featurePlot</a></span>(<span class="kw">melanoma.enhanced</span>, <span class="st">"PMEL"</span>)</pre></div>
+<div class="sourceCode" id="cb17"><html><body><pre class="r"><span class="fu"><a href="../reference/featurePlot.html">featurePlot</a></span>(<span class="no">melanoma.enhanced</span>, <span class="st">"PMEL"</span>)</pre></body></html></div>
 <p><img src="figures/BayesSpace-enhanced.featurePlot-1.png" title="plot of chunk enhanced.featurePlot" alt="plot of chunk enhanced.featurePlot" width="100%"></p>
 <p>Here, we compare the spatial expression of the imputed marker genes.</p>
-<div class="sourceCode" id="cb18"><pre class="downlit">
-<span class="kw">enhanced.plots</span> <span class="op">&lt;-</span> <span class="kw">purrr</span>::<span class="fu"><a href="https://purrr.tidyverse.org/reference/map.html">map</a></span>(<span class="kw">markers</span>, <span class="fu">function</span>(<span class="kw">x</span>) <span class="fu"><a href="../reference/featurePlot.html">featurePlot</a></span>(<span class="kw">melanoma.enhanced</span>, <span class="kw">x</span>))
-<span class="kw">patchwork</span>::<span class="fu"><a href="https://patchwork.data-imaginist.com/reference/wrap_plots.html">wrap_plots</a></span>(<span class="kw">enhanced.plots</span>, ncol=<span class="fl">2</span>)</pre></div>
+<div class="sourceCode" id="cb18"><html><body><pre class="r"><span class="no">enhanced.plots</span> <span class="kw">&lt;-</span> <span class="kw pkg">purrr</span><span class="kw ns">::</span><span class="fu"><a href="https://purrr.tidyverse.org/reference/map.html">map</a></span>(<span class="no">markers</span>, <span class="kw">function</span>(<span class="no">x</span>) <span class="fu"><a href="../reference/featurePlot.html">featurePlot</a></span>(<span class="no">melanoma.enhanced</span>, <span class="no">x</span>))
+<span class="kw pkg">patchwork</span><span class="kw ns">::</span><span class="fu"><a href="https://patchwork.data-imaginist.com/reference/wrap_plots.html">wrap_plots</a></span>(<span class="no">enhanced.plots</span>, <span class="kw">ncol</span><span class="kw">=</span><span class="fl">2</span>)</pre></body></html></div>
 <p><img src="figures/BayesSpace-enhanced.markers-1.png" title="plot of chunk enhanced.markers" alt="plot of chunk enhanced.markers" width="100%"></p>
 <p>And we can compare to the spot-level expression.</p>
-<div class="sourceCode" id="cb19"><pre class="downlit">
-<span class="kw">spot.plots</span> <span class="op">&lt;-</span> <span class="kw">purrr</span>::<span class="fu"><a href="https://purrr.tidyverse.org/reference/map.html">map</a></span>(<span class="kw">markers</span>, <span class="fu">function</span>(<span class="kw">x</span>) <span class="fu"><a href="../reference/featurePlot.html">featurePlot</a></span>(<span class="kw">melanoma</span>, <span class="kw">x</span>))
-<span class="kw">patchwork</span>::<span class="fu"><a href="https://patchwork.data-imaginist.com/reference/wrap_plots.html">wrap_plots</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="kw">enhanced.plots</span>, <span class="kw">spot.plots</span>), ncol=<span class="fl">4</span>)</pre></div>
+<div class="sourceCode" id="cb19"><html><body><pre class="r"><span class="no">spot.plots</span> <span class="kw">&lt;-</span> <span class="kw pkg">purrr</span><span class="kw ns">::</span><span class="fu"><a href="https://purrr.tidyverse.org/reference/map.html">map</a></span>(<span class="no">markers</span>, <span class="kw">function</span>(<span class="no">x</span>) <span class="fu"><a href="../reference/featurePlot.html">featurePlot</a></span>(<span class="no">melanoma</span>, <span class="no">x</span>))
+<span class="kw pkg">patchwork</span><span class="kw ns">::</span><span class="fu"><a href="https://patchwork.data-imaginist.com/reference/wrap_plots.html">wrap_plots</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="no">enhanced.plots</span>, <span class="no">spot.plots</span>), <span class="kw">ncol</span><span class="kw">=</span><span class="fl">4</span>)</pre></body></html></div>
 <p><img src="figures/BayesSpace-compare.resolution-1.png" title="plot of chunk compare.resolution" alt="plot of chunk compare.resolution" width="100%"></p>
 </div>
 </div>
@@ -267,15 +248,14 @@
 <a href="#accessing-markov-chains" class="anchor"></a>Accessing Markov chains</h2>
 <p>If <code>save.chain</code> is set to <code>TRUE</code> in either <code><a href="../reference/spatialCluster.html">spatialCluster()</a></code> or <code><a href="../reference/spatialEnhance.html">spatialEnhance()</a></code>, the chain associated with the respective MCMC run is preserved to disk as an HDF5 file. The path to this file is stored in the SingleCellExperiment’s metadata at <code>metadata(sce)$h5.chain</code>, and can be read directly using <code><a href="../reference/mcmcChain.html">mcmcChain()</a></code>.</p>
 <p>The chain is provided as a <code><a href="https://rdrr.io/pkg/coda/man/mcmc.html">coda::mcmc</a></code> object, which can be analyzed with <a href="https://mjskay.github.io/tidybayes/">TidyBayes</a> or as a matrix. The object has one row per iteration, with the values of the parameters concatenated across the row. Columns are named with the parameter name and index (if any).</p>
-<div class="sourceCode" id="cb20"><pre class="downlit">
-<span class="kw">chain</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mcmcChain.html">mcmcChain</a></span>(<span class="kw">melanoma</span>)
-<span class="kw">chain</span>[<span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">5</span>]
+<div class="sourceCode" id="cb20"><html><body><pre class="r"><span class="no">chain</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/mcmcChain.html">mcmcChain</a></span>(<span class="no">melanoma</span>)
+<span class="no">chain</span>[<span class="fl">1</span>:<span class="fl">5</span>, <span class="fl">1</span>:<span class="fl">5</span>]
 <span class="co">#&gt;      lambda[1,1]  lambda[1,2] lambda[1,3] lambda[1,4]   lambda[1,5]</span>
 <span class="co">#&gt; [1,]  0.01000000  0.000000000  0.00000000  0.00000000  0.000000e+00</span>
 <span class="co">#&gt; [2,]  0.09722481 -0.007032172 -0.04138590  0.06750923 -1.657124e-02</span>
 <span class="co">#&gt; [3,]  0.10005081 -0.011770303 -0.05441956  0.05277598 -5.511917e-05</span>
 <span class="co">#&gt; [4,]  0.13415146 -0.016241599 -0.06767107  0.02913552 -1.965898e-02</span>
-<span class="co">#&gt; [5,]  0.12653856 -0.003725852 -0.05992947  0.03122306 -2.359439e-02</span></pre></div>
+<span class="co">#&gt; [5,]  0.12653856 -0.003725852 -0.05992947  0.03122306 -2.359439e-02</span></pre></body></html></div>
 <p>To remove the HDF5 file from disk and remove its path from the metadata, use <code><a href="../reference/mcmcChain.html">removeChain()</a></code>.</p>
 </div>
   </div>
@@ -295,7 +275,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.9000.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
 </div>
 
       </footer>
