@@ -7,8 +7,6 @@ Authors@R: c(
     person("Matt", "Stone", role=c("aut", "cre"), email="mstone@fredhutch.org"),
     person("Xing", "Ren", role=c("ctb"), email="xren2@fredhutch.org"),
     person("Raphael", "Gottardo", role=c("ctb"), email="rgottard@fredhutch.org"))
-Maintainer:
-    Matt Stone <mstone@fredhutch.org>
 Description: Tools for clustering and enhancing the resolution of spatial gene
     expression experiments. BayesSpace clusters a low-dimensional representation
     of the gene expression matrix, incorporating a spatial prior to encourage
