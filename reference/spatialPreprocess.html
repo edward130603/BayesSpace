@@ -126,13 +126,13 @@ on log-normalized expression of top HVGs.</p>
     </div>
 
     <pre class="usage"><span class='fu'>spatialPreprocess</span>(
-  <span class='no'>sce</span>,
-  <span class='kw'>platform</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"Visium"</span>, <span class='st'>"ST"</span>),
-  <span class='kw'>n.PCs</span> <span class='kw'>=</span> <span class='fl'>15</span>,
-  <span class='kw'>n.HVGs</span> <span class='kw'>=</span> <span class='fl'>2000</span>,
-  <span class='kw'>skip.PCA</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>log.normalize</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>assay.type</span> <span class='kw'>=</span> <span class='st'>"logcounts"</span>
+  <span class='kw'>sce</span>,
+  platform = <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"Visium"</span>, <span class='st'>"ST"</span>),
+  n.PCs = <span class='fl'>15</span>,
+  n.HVGs = <span class='fl'>2000</span>,
+  skip.PCA = <span class='fl'>FALSE</span>,
+  log.normalize = <span class='fl'>TRUE</span>,
+  assay.type = <span class='st'>"logcounts"</span>
 )</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -180,8 +180,10 @@ do not recommend running BayesSpace on PCs computed from raw counts.</p></td>
     <p>SingleCellExperiment with PCA and BayesSpace metadata</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='no'>sce</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='exampleSCE.html'>exampleSCE</a></span>()
-<span class='no'>sce</span> <span class='kw'>&lt;-</span> <span class='fu'>spatialPreprocess</span>(<span class='no'>sce</span>)</div></pre>
+    <pre class="examples"><div class='input'><span class='kw'>sce</span> <span class='op'>&lt;-</span> <span class='fu'><a href='exampleSCE.html'>exampleSCE</a></span>()
+<span class='kw'>sce</span> <span class='op'>&lt;-</span> <span class='fu'>spatialPreprocess</span>(<span class='kw'>sce</span>)
+
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
@@ -197,7 +199,7 @@ do not recommend running BayesSpace on PCs computed from raw counts.</p></td>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.0.9000.</p>
 </div>
 
       </footer>

@@ -131,9 +131,9 @@ negative log likelihood for a range of q values over iterations 100:1000, and
 <code>qPlot()</code> displays the results.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>qPlot</span>(<span class='no'>sce</span>, <span class='kw'>qs</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span>(<span class='fl'>3</span>, <span class='fl'>7</span>), <span class='kw'>force.retune</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='no'>...</span>)
+    <pre class="usage"><span class='fu'>qPlot</span>(<span class='kw'>sce</span>, qs = <span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span>(<span class='fl'>3</span>, <span class='fl'>7</span>), force.retune = <span class='fl'>FALSE</span>, <span class='kw'>...</span>)
 
-<span class='fu'>qTune</span>(<span class='no'>sce</span>, <span class='kw'>qs</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span>(<span class='fl'>3</span>, <span class='fl'>7</span>), <span class='kw'>min_rep</span> <span class='kw'>=</span> <span class='fl'>100</span>, <span class='kw'>max_rep</span> <span class='kw'>=</span> <span class='fl'>1000</span>, <span class='no'>...</span>)</pre>
+<span class='fu'>qTune</span>(<span class='kw'>sce</span>, qs = <span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span>(<span class='fl'>3</span>, <span class='fl'>7</span>), min_rep = <span class='fl'>100</span>, max_rep = <span class='fl'>1000</span>, <span class='kw'>...</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -182,8 +182,10 @@ compute</p></td>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/Random.html'>set.seed</a></span>(<span class='fl'>149</span>)
-<span class='no'>sce</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='exampleSCE.html'>exampleSCE</a></span>()
-<span class='no'>sce</span> <span class='kw'>&lt;-</span> <span class='fu'>qTune</span>(<span class='no'>sce</span>, <span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span>(<span class='fl'>3</span>, <span class='fl'>7</span>))</div><div class='output co'>#&gt; <span class='message'>Neighbors were identified for 96 out of 96 spots.</span></div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='input'><span class='fu'>qPlot</span>(<span class='no'>sce</span>)</div><div class='img'><img src='qTune-1.png' alt='' width='700' height='433' /></div><div class='input'>
+<span class='kw'>sce</span> <span class='op'>&lt;-</span> <span class='fu'><a href='exampleSCE.html'>exampleSCE</a></span>()
+<span class='kw'>sce</span> <span class='op'>&lt;-</span> <span class='fu'>qTune</span>(<span class='kw'>sce</span>, <span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span>(<span class='fl'>3</span>, <span class='fl'>7</span>))
+</div><div class='output co'>#&gt; <span class='message'>Neighbors were identified for 96 out of 96 spots.</span></div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='input'><span class='fu'>qPlot</span>(<span class='kw'>sce</span>)
+</div><div class='img'><img src='qTune-1.png' alt='' width='700' height='433' /></div><div class='input'>
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -200,7 +202,7 @@ compute</p></td>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.0.9000.</p>
 </div>
 
       </footer>
