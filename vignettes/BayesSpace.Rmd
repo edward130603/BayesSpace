@@ -1,7 +1,7 @@
 ---
 title: "BayesSpace"
 author: "Edward Zhao, Matt Stone, Xing Ren, and Raphael Gottardo"
-date: "2020-09-04"
+date: "2020-09-09"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{BayesSpace}
@@ -122,7 +122,7 @@ reproducible.)
 ```r
 set.seed(149)
 melanoma <- spatialCluster(melanoma, q=4, platform="ST", d=7,
-                           init.method="mclust", model="t", nrep=1000, 
+                           init.method="mclust", model="t", nrep=1000, gamma=2,
                            save.chain=TRUE)
 ```
 
@@ -180,7 +180,9 @@ resolution to a new `SingleCellExperiment`.
 
 ```r
 melanoma.enhanced <- spatialEnhance(melanoma, q=4, platform="ST", d=7,
-                                    model="t", nrep=10000, save.chain=TRUE)
+                                    model="t", nrep=10000, gamma=2,
+                                    jitter_prior=0.3, jitter_scale=3.5, 
+                                    save.chain=TRUE)
 ```
 
 The enhanced `SingleCellExperiment` includes an index to the parent spot in the
@@ -202,9 +204,9 @@ head(colData(melanoma.enhanced))
 #>              imagerow  imagecol spatial.cluster
 #>             <numeric> <numeric>       <numeric>
 #> subspot_1.1   7.33333   15.3333               1
-#> subspot_2.1   7.33333   16.3333               1
-#> subspot_3.1   7.33333   17.3333               2
-#> subspot_4.1   7.33333   18.3333               3
+#> subspot_2.1   7.33333   16.3333               2
+#> subspot_3.1   7.33333   17.3333               3
+#> subspot_4.1   7.33333   18.3333               2
 #> subspot_5.1   8.33333   13.3333               1
 #> subspot_6.1   8.33333   14.3333               1
 ```
@@ -249,10 +251,10 @@ other assays or arbitrary feature matrices can be specified.
 ```r
 logcounts(melanoma.enhanced)[markers, 1:5]
 #>        subspot_1.1 subspot_2.1 subspot_3.1 subspot_4.1 subspot_5.1
-#> PMEL     2.4870646   2.7509048   2.8261802   3.0204065   2.3573151
-#> CD2      0.2912743   0.2620982   0.1512688   0.1964293   0.2641788
-#> CD19     0.7622972   0.1347447   0.2185815   0.6592661   0.5862058
-#> COL1A1   1.0887744   1.0368935   0.5175448   0.2758219   1.6262674
+#> PMEL     2.7727940   2.8091893   3.1765833   3.1450746   2.4701881
+#> CD2      0.4326385   0.2070705   0.1912275   0.1798051   0.4560042
+#> CD19     0.5310671   0.2184871   0.2037705   0.5512644   0.6314645
+#> COL1A1   0.4918716   0.4975878   0.5936551   0.5151930   1.1576576
 ```
 
 Diagnostic measures from each predictive model, such as `rmse` when using
@@ -315,12 +317,12 @@ row. Columns are named with the parameter name and index (if any).
 ```r
 chain <- mcmcChain(melanoma)
 chain[1:5, 1:5]
-#>      lambda[1,1]  lambda[1,2] lambda[1,3] lambda[1,4]   lambda[1,5]
-#> [1,]  0.01000000  0.000000000  0.00000000  0.00000000  0.000000e+00
-#> [2,]  0.09722481 -0.007032172 -0.04138590  0.06750923 -1.657124e-02
-#> [3,]  0.10005081 -0.011770303 -0.05441956  0.05277598 -5.511917e-05
-#> [4,]  0.13415146 -0.016241599 -0.06767107  0.02913552 -1.965898e-02
-#> [5,]  0.12653856 -0.003725852 -0.05992947  0.03122306 -2.359439e-02
+#>      lambda[1,1]   lambda[1,2] lambda[1,3] lambda[1,4]  lambda[1,5]
+#> [1,]  0.01000000  0.0000000000  0.00000000  0.00000000  0.000000000
+#> [2,]  0.09722481 -0.0070321724 -0.04138590  0.06750923 -0.016571238
+#> [3,]  0.10343843 -0.0089752921 -0.05442281  0.05637694 -0.002035676
+#> [4,]  0.13778018 -0.0111105221 -0.06975277  0.03503423 -0.024012108
+#> [5,]  0.12861416 -0.0009938442 -0.06240135  0.03770599 -0.026459410
 ```
 
 To remove the HDF5 file from disk and remove its path from the metadata, use

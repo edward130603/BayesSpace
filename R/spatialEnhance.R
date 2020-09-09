@@ -161,8 +161,8 @@ deconvolve <- function(Y, positions, nrep = 1000, gamma = 2, xdist, ydist, q,
     offsets <- .make_subspot_offsets(n_subspots_per)
     cdata$spot.row <- rep(sce$row, n_subspots_per)
     cdata$spot.col <- rep(sce$col, n_subspots_per)
-    cdata$row <- cdata$spot.row + rep(offsets[, 1], each=n_spots)
-    cdata$col <- cdata$spot.col + rep(offsets[, 2], each=n_spots)
+    cdata$col <- cdata$spot.col + rep(offsets[, 1], each=n_spots)
+    cdata$row <- cdata$spot.row + rep(offsets[, 2], each=n_spots)
 
     cols <- c("spot.idx", "subspot.idx", "spot.row", "spot.col", "row", "col", "imagerow", "imagecol")
     cdata[, cols]
