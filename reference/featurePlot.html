@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">BayesSpace</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.99.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.99.2</span>
       </span>
     </div>
 
@@ -124,17 +124,17 @@
     </div>
 
     <pre class="usage"><span class='fu'>featurePlot</span>(
-  <span class='no'>sce</span>,
-  <span class='no'>feature</span>,
-  <span class='kw'>assay.type</span> <span class='kw'>=</span> <span class='st'>"logcounts"</span>,
-  <span class='kw'>diverging</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>low</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>high</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>mid</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>color</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>platform</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>is.enhanced</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='no'>...</span>
+  <span class='kw'>sce</span>,
+  <span class='kw'>feature</span>,
+  assay.type = <span class='st'>"logcounts"</span>,
+  diverging = <span class='fl'>FALSE</span>,
+  low = <span class='kw'>NULL</span>,
+  high = <span class='kw'>NULL</span>,
+  mid = <span class='kw'>NULL</span>,
+  color = <span class='kw'>NULL</span>,
+  platform = <span class='kw'>NULL</span>,
+  is.enhanced = <span class='kw'>NULL</span>,
+  <span class='kw'>...</span>
 )</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -202,8 +202,9 @@ specify the linewidth of these borders, is likely the most useful.</p></td>
 <code><a href='clusterPlot.html'>clusterPlot</a>()</code></p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='no'>sce</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='exampleSCE.html'>exampleSCE</a></span>()
-<span class='fu'>featurePlot</span>(<span class='no'>sce</span>, <span class='st'>"gene_2"</span>)</div><div class='img'><img src='featurePlot-1.png' alt='' width='700' height='433' /></div><div class='input'>
+    <pre class="examples"><div class='input'><span class='kw'>sce</span> <span class='op'>&lt;-</span> <span class='fu'><a href='exampleSCE.html'>exampleSCE</a></span>()
+<span class='fu'>featurePlot</span>(<span class='kw'>sce</span>, <span class='st'>"gene_2"</span>)
+</div><div class='img'><img src='featurePlot-1.png' alt='' width='700' height='433' /></div><div class='input'>
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -220,7 +221,7 @@ specify the linewidth of these borders, is likely the most useful.</p></td>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.0.9000.</p>
 </div>
 
       </footer>
