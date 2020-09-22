@@ -28,9 +28,22 @@ if (!requireNamespace("devtools", quietly = TRUE))
 devtools::install_github("edward130603/BayesSpace")
 ```
 
-### Notes
+### Installing from source on macOS
 
-Under MacOS Catalina, it may be necessary to install gfortran
-[directly](https://github.com/fxcoudert/gfortran-for-macOS/releases) rather
-than through homebrew in order for libraries to be linkable. I used 8.2 for
-Mojave and it worked.
+Installing from source on macOS (such as when installing via
+`devtools::install_github()`) requires
+[Fortran](https://github.com/fxcoudert/gfortran-for-macOS) to compile the Rcpp
+code.
+
+Download links for the appropriate macOS versions can be found here:
+* Mojave (10.14) and Catalina (10.15) - [gfortran8.2](https://github.com/fxcoudert/gfortran-for-macOS/releases/download/8.2/gfortran-8.2-Mojave.dmg)
+* Sierra (10.12) and High Sierra (10.13) - [gfortran6.3](https://github.com/fxcoudert/gfortran-for-macOS/releases/download/6.3/gfortran-6.3-Sierra.dmg)
+
+Additional details on installing the R compiler tools for Rcpp on macOS can be
+found [in this blog
+post](https://thecoatlessprofessor.com/programming/cpp/r-compiler-tools-for-rcpp-on-macos/).
+
+Note about homebrew: While gfortran is available via homebrew, we've
+encountered issues linking to its libraries after installation. We recommend
+installing directly from the [GNU Fortran
+repo](https://github.com/fxcoudert/gfortran-for-macOS).
