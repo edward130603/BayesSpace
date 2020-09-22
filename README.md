@@ -44,6 +44,8 @@ if (!requireNamespace("devtools", quietly = TRUE))
 devtools::install_github("edward130603/BayesSpace")
 ```
 
+Installation, including compilation, should take no more than one minute.
+
 ### Installing from source on macOS
 
 Installing from source on macOS (such as when installing via
