@@ -15,6 +15,22 @@ together. The method can enhance the resolution of the low-dimensional
 representation into "sub-spots", for which features such as gene expression or
 cell type composition can be imputed.
 
+## System requirements
+
+### Operating system
+
+BayesSpace has been built and tested on the following operating systems:
+
+* Linux: Ubuntu 18.04.4 LTS (Bionic Beaver)
+* macOS: 10.14.6 (Mojave), 10.15.6 (Catalina)
+* Windows: 10, Server 2012 R2 Standard
+
+### Software dependencies
+
+BayesSpace requires R 4.0 and Bioconductor 3.11. Specific package dependencies
+are defined in the package DESCRIPTION and are managed by the Bioconductor and
+devtools installers.
+
 ## Installation
 
 BayesSpace has been submitted to Bioconductor. Until its availability there, it
