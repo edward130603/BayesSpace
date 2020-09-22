@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">BayesSpace</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.99.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.99.3</span>
       </span>
     </div>
 
@@ -88,7 +88,8 @@
 <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="kw">SingleCellExperiment</span>)
 <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="kw">BayesSpace</span>)
 <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="kw"><a href="http://ggplot2.tidyverse.org">ggplot2</a></span>)
-<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="kw"><a href="https://patchwork.data-imaginist.com">patchwork</a></span>)</pre></div>
+<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="kw"><a href="https://patchwork.data-imaginist.com">patchwork</a></span>)
+</pre></div>
 <div id="overview" class="section level2">
 <h2 class="hasAnchor">
 <a href="#overview" class="anchor"></a>Overview</h2>
@@ -99,7 +100,8 @@
 <a href="#processing-the-data" class="anchor"></a>Processing the data</h2>
 <p>A cleaned <code>SingleCellExperiment</code> object containing the dataset is available through BayesSpace.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit">
-<span class="kw">melanoma1.2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getRDS.html">getRDS</a></span>(<span class="st">"2018_thrane_melanoma"</span>, <span class="st">"ST_mel1_rep2"</span>)</pre></div>
+<span class="kw">melanoma1.2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getRDS.html">getRDS</a></span>(<span class="st">"2018_thrane_melanoma"</span>, <span class="st">"ST_mel1_rep2"</span>)
+</pre></div>
 <p>We preprocess the data by performing PCA on the top 2,000 HVGs.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit">
 <span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span>(<span class="fl">100</span>)
@@ -107,7 +109,8 @@
 <span class="kw">top</span> <span class="op">&lt;-</span> <span class="kw">scran</span>::<span class="fu"><a href="https://rdrr.io/pkg/scran/man/getTopHVGs.html">getTopHVGs</a></span>(<span class="kw">dec</span>, n = <span class="fl">2000</span>)
 
 <span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span>(<span class="fl">101</span>)
-<span class="kw">melanoma1.2</span> <span class="op">&lt;-</span> <span class="kw">scater</span>::<span class="fu"><a href="https://rdrr.io/pkg/scater/man/runPCA.html">runPCA</a></span>(<span class="kw">melanoma1.2</span>, subset_row = <span class="kw">top</span>)</pre></div>
+<span class="kw">melanoma1.2</span> <span class="op">&lt;-</span> <span class="kw">scater</span>::<span class="fu"><a href="https://rdrr.io/pkg/scater/man/runPCA.html">runPCA</a></span>(<span class="kw">melanoma1.2</span>, subset_row = <span class="kw">top</span>)
+</pre></div>
 </div>
 <div id="clustering-with-bayesspace" class="section level2">
 <h2 class="hasAnchor">
@@ -124,7 +127,8 @@
 <span class="co">## View results</span>
 <span class="kw">palette</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"purple"</span>, <span class="st">"red"</span>, <span class="st">"blue"</span>, <span class="st">"yellow"</span>, <span class="st">"darkblue"</span>)
 <span class="fu"><a href="../reference/clusterPlot.html">clusterPlot</a></span>(<span class="kw">melanoma1.2</span>, platform=<span class="st">"ST"</span>, palette=<span class="kw">palette</span>) <span class="op">+</span>
-    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(title=<span class="st">"BayesSpace"</span>)</pre></div>
+    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(title=<span class="st">"BayesSpace"</span>)
+</pre></div>
 <p><img src="figures/melanoma-spatialCluster-1.png" title="plot of chunk spatialCluster" alt="plot of chunk spatialCluster" width="100%"></p>
 </div>
 <div id="comparison-to-other-clustering-algorithms" class="section level2">
@@ -177,7 +181,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.0.9000.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.9000.</p>
 </div>
 
       </footer>

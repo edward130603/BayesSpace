@@ -36,7 +36,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">BayesSpace</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.99.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.99.3</span>
       </span>
     </div>
 
@@ -88,6 +88,25 @@
 <p>BayesSpace provides tools for clustering and enhancing the resolution of spatial gene expression experiments.</p>
 <p>BayesSpace clusters a low-dimensional representation of the gene expression matrix, incorporating a spatial prior to encourage neighboring spots to cluster together. The method can enhance the resolution of the low-dimensional representation into “sub-spots”, for which features such as gene expression or cell type composition can be imputed.</p>
 </div>
+<div id="system-requirements" class="section level2">
+<h2 class="hasAnchor">
+<a href="#system-requirements" class="anchor"></a>System requirements</h2>
+<div id="operating-system" class="section level3">
+<h3 class="hasAnchor">
+<a href="#operating-system" class="anchor"></a>Operating system</h3>
+<p>BayesSpace has been built and tested on the following operating systems:</p>
+<ul>
+<li>Linux: Ubuntu 18.04.4 LTS (Bionic Beaver)</li>
+<li>macOS: 10.14.6 (Mojave), 10.15.6 (Catalina)</li>
+<li>Windows: 10, Server 2012 R2 Standard</li>
+</ul>
+</div>
+<div id="software-dependencies" class="section level3">
+<h3 class="hasAnchor">
+<a href="#software-dependencies" class="anchor"></a>Software dependencies</h3>
+<p>BayesSpace requires R 4.0 and Bioconductor 3.11. Specific package dependencies are defined in the package DESCRIPTION and are managed by the Bioconductor and devtools installers.</p>
+</div>
+</div>
 <div id="installation" class="section level2">
 <h2 class="hasAnchor">
 <a href="#installation" class="anchor"></a>Installation</h2>
@@ -97,11 +116,27 @@ if (!requireNamespace("devtools", quietly = TRUE))
     install.packages("devtools")
 
 devtools::install_github("edward130603/BayesSpace")</code></pre>
-<div id="notes" class="section level3">
+<p>Installation, including compilation, should take no more than one minute.</p>
+<div id="installing-from-source-on-macos" class="section level3">
 <h3 class="hasAnchor">
-<a href="#notes" class="anchor"></a>Notes</h3>
-<p>Under MacOS Catalina, it may be necessary to install gfortran <a href="https://github.com/fxcoudert/gfortran-for-macOS/releases">directly</a> rather than through homebrew in order for libraries to be linkable. I used 8.2 for Mojave and it worked.</p>
+<a href="#installing-from-source-on-macos" class="anchor"></a>Installing from source on macOS</h3>
+<p>Installing from source on macOS (such as when installing via <code><a href="https://devtools.r-lib.org//reference/remote-reexports.html">devtools::install_github()</a></code>) requires <a href="https://github.com/fxcoudert/gfortran-for-macOS">Fortran</a> to compile the Rcpp code.</p>
+<p>Download links for the appropriate macOS versions can be found here:</p>
+<ul>
+<li>Mojave (10.14) and Catalina (10.15) - <a href="https://github.com/fxcoudert/gfortran-for-macOS/releases/download/8.2/gfortran-8.2-Mojave.dmg">gfortran8.2</a>
+</li>
+<li>Sierra (10.12) and High Sierra (10.13) - <a href="https://github.com/fxcoudert/gfortran-for-macOS/releases/download/6.3/gfortran-6.3-Sierra.dmg">gfortran6.3</a>
+</li>
+</ul>
+<p>Additional details on installing the R compiler tools for Rcpp on macOS can be found <a href="https://thecoatlessprofessor.com/programming/cpp/r-compiler-tools-for-rcpp-on-macos/">in this blog post</a>.</p>
+<p>Note about homebrew: While gfortran is available via homebrew, we’ve encountered issues linking to its libraries after installation. We recommend installing directly from the <a href="https://github.com/fxcoudert/gfortran-for-macOS">GNU Fortran repo</a>.</p>
 </div>
+</div>
+<div id="demonstration" class="section level2">
+<h2 class="hasAnchor">
+<a href="#demonstration" class="anchor"></a>Demonstration</h2>
+<p>For an example of typical BayesSpace usage, please see our <a href="https://edward130603.github.io/BayesSpace/articles/BayesSpace.html">package vignette</a> for a demonstration and overview of the functions included in BayesSpace.</p>
+<p>Running the entire vignette takes approximately 5m30s on a Macbook Pro with a 2.0 GHz quad-core processor and 16 GB of RAM.</p>
 </div>
 </div>
   </div>
@@ -147,7 +182,7 @@ devtools::install_github("edward130603/BayesSpace")</code></pre>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.0.9000.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.9000.</p>
 </div>
 
       </footer>
