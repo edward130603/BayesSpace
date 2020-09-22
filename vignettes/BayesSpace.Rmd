@@ -1,7 +1,7 @@
 ---
 title: "BayesSpace"
 author: "Edward Zhao, Matt Stone, Xing Ren, and Raphael Gottardo"
-date: "2020-09-09"
+date: "2020-09-22"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{BayesSpace}
@@ -181,7 +181,7 @@ resolution to a new `SingleCellExperiment`.
 ```r
 melanoma.enhanced <- spatialEnhance(melanoma, q=4, platform="ST", d=7,
                                     model="t", nrep=10000, gamma=2,
-                                    jitter_prior=0.3, jitter_scale=3.5, 
+                                    jitter_prior=0.3, jitter_scale=3.5,
                                     save.chain=TRUE)
 ```
 

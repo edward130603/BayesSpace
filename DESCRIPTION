@@ -35,6 +35,7 @@ Imports:
     xgboost,
     utils,
     ggplot2,
+    patchwork,
     scales
 License: MIT + file LICENSE
 RoxygenNote: 7.1.0
@@ -50,7 +51,6 @@ Suggests:
     testthat,
     knitr,
     rmarkdown,
-    patchwork,
     igraph
 VignetteBuilder: knitr
 biocViews:
