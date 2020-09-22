@@ -65,3 +65,12 @@ Note about homebrew: While gfortran is available via homebrew, we've
 encountered issues linking to its libraries after installation. We recommend
 installing directly from the [GNU Fortran
 repo](https://github.com/fxcoudert/gfortran-for-macOS).
+
+## Demonstration
+
+For an example of typical BayesSpace usage, please see our [package
+vignette](https://edward130603.github.io/BayesSpace/articles/BayesSpace.html)
+for a demonstration and overview of the functions included in BayesSpace.
+
+Running the entire vignette takes approximately 5m30s on a Macbook Pro with a
+2.0 GHz quad-core processor and 16 GB of RAM.
