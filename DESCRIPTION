@@ -51,7 +51,8 @@ Suggests:
     testthat,
     knitr,
     rmarkdown,
-    igraph
+    igraph,
+    spatialLIBD
 VignetteBuilder: knitr
 biocViews:
     Software,
