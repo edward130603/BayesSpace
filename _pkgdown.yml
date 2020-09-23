@@ -35,10 +35,10 @@ navbar:
     href: articles/BayesSpace.html
   - text: Reference
     href: reference/index.html
-  # - text: Examples
-    # menu:
-    # - text: Melanoma (Thrane et al., 2018)
-      # href: articles/thrane_melanoma.html
+  - text: Examples
+    menu:
+    - text: DLPFC (Maynard, Collado-Torres et al., 2020)
+      href: articles/maynard_DLPFC.html
   - text: Changelog
     href: news/index.html
   right:
