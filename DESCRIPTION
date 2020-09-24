@@ -37,7 +37,7 @@ Imports:
     ggplot2,
     scales
 License: MIT + file LICENSE
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 LinkingTo: 
     Rcpp,
     RcppArmadillo,
@@ -63,5 +63,3 @@ biocViews:
     DataImport
 BugReports: https://github.com/edward130603/BayesSpace/issues
 URL: edward130603.github.io/BayesSpace
-
-
