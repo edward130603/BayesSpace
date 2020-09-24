@@ -39,6 +39,8 @@ navbar:
     menu:
     - text: DLPFC (Maynard, Collado-Torres et al., 2020)
       href: articles/maynard_DLPFC.html
+    - text: SCC (Ji, Rubin et al., 2020)
+      href: articles/ji_SCC.html
   - text: Changelog
     href: news/index.html
   right:
