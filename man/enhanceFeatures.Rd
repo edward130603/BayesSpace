@@ -12,9 +12,7 @@ enhanceFeatures(
   use.dimred = "PCA",
   assay.type = "logcounts",
   altExp.type = NULL,
-  feature.matrix = NULL,
-  tune.nrounds = FALSE,
-  train.n = round(ncol(sce.ref) * 2/3)
+  feature.matrix = NULL
 )
 }
 \arguments{
