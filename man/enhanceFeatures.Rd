@@ -37,6 +37,10 @@ Overrides \code{assay.type} if specified.}
 attached to \code{sce.ref}. Must have columns corresponding to the spots in
 \code{sce.ref}. Overrides \code{assay.type} and \code{altExp.type} if
 specified.}
+
+\item{tune.nrounds}{logical. If \code{TRUE}, tune the nrounds parameter for xgboost.}
+
+\item{train.n}{Number of spots to use in training dataset for tuning nrounds.}
 }
 \value{
 If \code{assay.type} or \code{altExp.type} are specified, the

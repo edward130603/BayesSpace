@@ -12,6 +12,8 @@
 #'   attached to \code{sce.ref}. Must have columns corresponding to the spots in
 #'   \code{sce.ref}. Overrides \code{assay.type} and \code{altExp.type} if
 #'   specified.
+#' @param tune.nrounds logical. If \code{TRUE}, tune the nrounds parameter for xgboost.
+#' @param train.n Number of spots to use in training dataset for tuning nrounds.
 #' 
 #' @return If \code{assay.type} or \code{altExp.type} are specified, the
 #'   enhanced features are stored in the corresponding slot of
