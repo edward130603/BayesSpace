@@ -8,18 +8,10 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
   
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  out.width="100%",
-  fig.width=7, fig.height=5,
-  dpi=300, fig.path="figures/ji_SCC-",
-  message=FALSE, warning=FALSE, error=FALSE
-)
-```
 
-```{r setup}
+
+
+```r
 library(BayesSpace)
 library(ggplot2)
 library(patchwork)
@@ -40,7 +32,8 @@ the sample from patient 6.
 A cleaned `SingleCellExperiment` object containing the dataset is available through BayesSpace (details on data cleaning are available on [Github](https://github.com/msto/spatial-datasets/blob/master/snakefiles/2020_ji_squamous-cell-carcinoma.snake)). We
 preprocessed the data by performing PCA on the top 2,000 HVGs.
 
-```{r preprocess}
+
+```r
 scc <- getRDS("2020_ji_squamous-cell-carcinoma", "P4_rep1")
 
 set.seed(101)
@@ -63,10 +56,13 @@ After evaluating the average model pseudo-log-likelihood over the first 1000
 iterations (excluding a 100-iteration burn-in), we selected `q=12` as a
 reasonable elbow and choice of number of clusters.
 
-```{r qTune}
+
+```r
 scc <- qTune(scc, qs=seq(2, 20))
 qPlot(scc)
 ```
+
+<img src="figures/ji_SCC-qTune-1.png" title="plot of chunk qTune" alt="plot of chunk qTune" width="100%" />
 
 We clustered the first 15 principal components, specifying 12 clusters as
 described above, and ran the MCMC algorithm for 50,000 iterations. We set our
@@ -74,7 +70,8 @@ smoothing parameter `gamma` to 3, which we generally suggest for Visium
 datasets. We also computed an enhanced resolution clustering using the same
 parameters and 200,000 iterations.
 
-```{r spatialCluster}
+
+```r
 q <- 12  # Number of clusters
 d <- 15  # Number of PCs
 
@@ -92,7 +89,8 @@ scc.enhanced <- spatialEnhance(scc, q=q, d=d, platform="Visium",
 
 We compared the two clusterings using `clusterPlot()`.
 
-```{r clustering, fig.width=6, fig.height=3}
+
+```r
 palette <- RColorBrewer::brewer.pal(q, "Paired")
 
 spot.plot <- clusterPlot(scc, palette=palette, size=0.05) +
@@ -105,12 +103,15 @@ enhanced.plot <- clusterPlot(scc.enhanced, palette=palette, size=0.05) +
 spot.plot + enhanced.plot
 ```
 
+<img src="figures/ji_SCC-clustering-1.png" title="plot of chunk clustering" alt="plot of chunk clustering" width="100%" />
+
 ## Enhancing feature expression
 
 Next we examined the expression of cell-type-specific marker genes reported by
 Ji et al. at the spot level and after enhancement.
 
-```{r enhance.markers}
+
+```r
 markers <- list()
 markers[["Basal keratinocyte"]] <- c("KRT5", "KRT14")
 markers[["Suprabasal keratinocyte"]] <- c("KRT1", "KRT10")
@@ -126,7 +127,8 @@ scc.enhanced <- enhanceFeatures(scc.enhanced, scc, model="xgboost",
 We aggregated the expression of marker genes within each cell type by summing
 their log-normalized expression.
 
-```{r aggregate.markers}
+
+```r
 sum_counts <- function(sce, features) {
   if (length(features) > 1) {
     colSums(logcounts(sce)[features, ])
@@ -142,7 +144,8 @@ enhanced_expr <- purrr::map(markers, function(xs) sum_counts(scc.enhanced, xs))
 And we plotted the spatial expression of each cell type's markers using
 `featurePlot()`, at the spot-level:
 
-```{r spot.expression, fig.width=7, fig.height=4}
+
+```r
 plot_expression <- function(sce, expr, name) {
   featurePlot(sce, expr, color=NA) +
     viridis::scale_fill_viridis(option="A") +
@@ -153,12 +156,17 @@ spot_plots <- purrr::imap(spot_expr, function(x, y) plot_expression(scc, x, y))
 patchwork::wrap_plots(spot_plots, ncol=3)
 ```
 
+<img src="figures/ji_SCC-spot.expression-1.png" title="plot of chunk spot.expression" alt="plot of chunk spot.expression" width="100%" />
+
 And at enhanced subspot resolution:
 
-```{r enhanced.expression, fig.width=7, fig.height=4}
+
+```r
 enhanced_plots <- purrr::imap(enhanced_expr, function(x, y) plot_expression(scc.enhanced, x, y))
 patchwork::wrap_plots(enhanced_plots, ncol=3)
 ```
+
+<img src="figures/ji_SCC-enhanced.expression-1.png" title="plot of chunk enhanced.expression" alt="plot of chunk enhanced.expression" width="100%" />
 
 ## Differential expression analysis
 
@@ -166,14 +174,16 @@ Finally, we performed a differential expression analysis between clusters of
 interest. First, we imputed the expression of all genes, not only the markers,
 at enhanced resolution.
 
-```{r enhanceFeatures}
+
+```r
 scc.enhanced <- enhanceFeatures(scc.enhanced, scc, model="xgboost")
 ```
 
 Next, we applied a standard Seurat differential expression analysis workflow to
 the enhanced resolution.
 
-```{r seurat.DE}
+
+```r
 library(dplyr)
 seurat_cluster_DE <- function(sce, clusters=NULL, n_markers=6) {
   ## Convert SCE to seurat object and use BayesSpace cluster as identifier
@@ -211,13 +221,19 @@ We highlight the different expression between clusters 4 and 8, which both
 demonstrate enriched immune cell expression but display substantial differences
 in expression of immunoglobulin genes and genes regulated by interferons.
 
-```{r DE.myeloid, fig.width=7, fig.height=5, message=FALSE, warning=FALSE}
+
+```r
 seurat_cluster_DE(scc.enhanced, c(4, 8))
 ```
+
+<img src="figures/ji_SCC-DE.myeloid-1.png" title="plot of chunk DE.myeloid" alt="plot of chunk DE.myeloid" width="100%" />
 
 We additionally highlight the heterogeneity within the tumor revealed by
 differential expression of the tumor clusters.
 
-```{r DE.tumor, fig.width=7, fig.height=5, message=FALSE, warning=FALSE}
+
+```r
 seurat_cluster_DE(scc.enhanced, c(2, 3, 6))
 ```
+
+<img src="figures/ji_SCC-DE.tumor-1.png" title="plot of chunk DE.tumor" alt="plot of chunk DE.tumor" width="100%" />

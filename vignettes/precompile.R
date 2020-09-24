@@ -10,5 +10,8 @@
 # knitr::knit("vignettes/thrane_melanoma.Rmd.orig", output="vignettes/thrane_melanoma.Rmd")
 # system2("mv", c("figures/melanoma-*", "vignettes/figures/"))
 
-knitr::knit("vignettes/maynard_DLPFC.Rmd.orig", output="vignettes/maynard_DLPFC.Rmd")
-system2("mv", c("figures/maynard_DLPFC-*.png", "vignettes/figures/"))
+# knitr::knit("vignettes/maynard_DLPFC.Rmd.orig", output="vignettes/maynard_DLPFC.Rmd")
+# system2("mv", c("figures/maynard_DLPFC-*.png", "vignettes/figures/"))
+
+knitr::knit("vignettes/ji_SCC.Rmd.orig", output="vignettes/ji_SCC.Rmd")
+system2("mv", c("figures/ji_SCC-*.png", "vignettes/figures/"))

@@ -52,7 +52,9 @@ Suggests:
     knitr,
     rmarkdown,
     igraph,
-    spatialLIBD
+    spatialLIBD,
+    dplyr,
+    viridis
 VignetteBuilder: knitr
 biocViews:
     Software,
