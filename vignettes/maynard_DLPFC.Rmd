@@ -119,8 +119,6 @@ clusters[["Louvain"]] <- igraph::cluster_louvain(g.jaccard)$membership
 set.seed(104)
 library(mclust)
 clusters[["mclust"]] <- Mclust(Y, G = 7, modelNames = "EEE")$classification
-#> fitting ...
-#>   |                                                                               |                                                                       |   0%  |                                                                               |====================================                                   |  50%  |                                                                               |=======================================================================| 100%
 ```
 
 ### Spatial clustering algorithms

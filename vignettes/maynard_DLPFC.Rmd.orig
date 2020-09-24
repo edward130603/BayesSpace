@@ -105,7 +105,7 @@ clusters[["BayesSpace (normal error)"]] <- dlpfc.normal$spatial.cluster
 
 Next, we ran several popular non-spatial clustering algorithms that are typically used in scRNA-seq analysis - k-means, Louvain, and mclust. For each of these algorithms, we clustered the first 15 principal components of the log-normalized expression matrix, specifying 7 clusters when possible. The Louvain algorithm was run on the k=10 shared nearest neighbor graph (weighted using Jaccard similarity). The mclust algorithm was run using the EEE multivariate mixture model.
 
-```{r nonspatial.clustering, warning=FALSE, message=FALSE}
+```{r nonspatial.clustering, warning=FALSE, message=FALSE, results="hide"}
 Y <- reducedDim(dlpfc, "PCA")[, seq_len(d)]
 
 ## K-means
