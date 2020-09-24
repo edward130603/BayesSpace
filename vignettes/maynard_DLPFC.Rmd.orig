@@ -1,5 +1,5 @@
 ---
-title: "BayesSpace analysis of DLPFC dataset (Maynard et al., 2020)"
+title: "BayesSpace analysis of DLPFC dataset (Maynard, Collado-Torres et al., 2020)"
 author: "Edward Zhao, Matt Stone, Xing Ren, and Raphael Gottardo"
 output: rmarkdown::html_vignette
 vignette: >
@@ -22,7 +22,6 @@ knitr::opts_chunk$set(
 ```{r setup}
 library(BayesSpace)
 library(ggplot2)
-library(patchwork)
 ```
 
 ## Overview
@@ -62,7 +61,8 @@ dlpfc <- spatialPreprocess(dlpfc, platform="Visium", skip.PCA=TRUE)
 
 We clustered the first 15 principal components, specifying 7 clusters to match
 the six brain layers plus one white matter region, and ran the MCMC algorithm
-for 50,000 iterations. We set our smoothing parameter `gamma` to 3, which we generally suggest for Visium datasets.
+for 50,000 iterations. We set our smoothing parameter `gamma` to 3, which we
+generally suggest for Visium datasets.
 
 ```{r spatialCluster, fig.width=5, fig.height=3}
 q <- 7  # Number of clusters
@@ -71,12 +71,12 @@ d <- 15  # Number of PCs
 ## Run BayesSpace clustering
 set.seed(104)
 dlpfc <- spatialCluster(dlpfc, q=q, d=d, platform='Visium',
-                        nrep=1000, gamma=3)
+                        nrep=50000, gamma=3, save.chain=TRUE)
 
-## View results 
 ## We recoded the cluster labels to match the expected brain layers
 labels <- dplyr::recode(dlpfc$spatial.cluster, 3, 4, 5, 6, 2, 7, 1)
 
+## View results
 clusterPlot(dlpfc, label=labels, palette=NULL, size=0.05) +
   scale_fill_viridis_d(option = "A", labels = 1:7) +
   labs(title="BayesSpace")
@@ -97,13 +97,19 @@ clusters[["BayesSpace (t-distributed error)"]] <- dlpfc$spatial.cluster
 
 set.seed(104)
 dlpfc.normal <- spatialCluster(dlpfc, q=q, d=d, platform='Visium',
-                               nrep=1000, gamma=3, model="normal")
+                               nrep=50000, gamma=3, model="normal")
 clusters[["BayesSpace (normal error)"]] <- dlpfc.normal$spatial.cluster
 ```
 
 ### Non-spatial clustering algorithms
 
-Next, we ran several popular non-spatial clustering algorithms that are typically used in scRNA-seq analysis - k-means, Louvain, and mclust. For each of these algorithms, we clustered the first 15 principal components of the log-normalized expression matrix, specifying 7 clusters when possible. The Louvain algorithm was run on the k=10 shared nearest neighbor graph (weighted using Jaccard similarity). The mclust algorithm was run using the EEE multivariate mixture model.
+Next, we ran several popular non-spatial clustering algorithms that are
+typically used in scRNA-seq analysis - k-means, Louvain, and mclust. For each of
+these algorithms, we clustered the first 15 principal components of the
+log-normalized expression matrix, specifying 7 clusters when possible. The
+Louvain algorithm was run on the k=10 shared nearest neighbor graph (weighted
+using Jaccard similarity). The mclust algorithm was run using the EEE
+multivariate mixture model.
 
 ```{r nonspatial.clustering, warning=FALSE, message=FALSE, results="hide"}
 Y <- reducedDim(dlpfc, "PCA")[, seq_len(d)]
@@ -125,7 +131,12 @@ clusters[["mclust"]] <- Mclust(Y, G = 7, modelNames = "EEE")$classification
 
 ### Spatial clustering algorithms
 
-We also ran two recently published spatial clustering algorithms, stLearn and Giotto (HMRF). To analyze these samples we adapted the respective tutorials ([stLearn](https://stlearn.readthedocs.io/en/latest/stSME_clustering.html),  [Giotto](http://spatialgiotto.rc.fas.harvard.edu/giotto.visium.brain.html)) and provide this code separately. For ease of reproduction, we include the obtained cluster labels directly with this package.
+We also ran two recently published spatial clustering algorithms, stLearn and
+Giotto (HMRF). To analyze these samples we adapted the respective tutorials
+([stLearn](https://stlearn.readthedocs.io/en/latest/stSME_clustering.html),
+[Giotto](http://spatialgiotto.rc.fas.harvard.edu/giotto.visium.brain.html)) and
+provide this code separately. For ease of reproduction, we include the obtained
+cluster labels directly with this package.
 
 ```{r stlearn.giotto}
 clusters[["stLearn (HVGs)"]] <- read.csv(system.file("extdata", "2020_maynard_prefrontal-cortex", "151673.stLearn_HVGs.csv", package = "BayesSpace"))$pca_kmeans + 1
@@ -177,7 +188,7 @@ cluster.order[["stLearn (markers)"]] <- c(6, 7, 1, 5, 3, 2, 8, 4)
 ```
 
 
-```{r compare.clusters, fig.width=16, fig.height=9, echo=FALSE}
+```{r compare.clusters, fig.width=12, fig.height=8, echo=FALSE}
 plot_clusters <- function(clusters, method) {
   if (method == "Manual annotation") {
     clusters <- dplyr::recode(clusters, "Layer1"=1, "Layer2"=2, "Layer3"=3, 
@@ -206,19 +217,59 @@ patchwork::wrap_plots(plots, ncol=4, byrow=FALSE)
 ```
 
 Finally, we used the adjusted Rand index to evaluate the performance of each
-algorithm with respect to the ground truth labels. In the manuscript we present the range of ARIs obtained over all twelve samples.
+algorithm with respect to the ground truth labels. In the manuscript we present
+the range of ARIs obtained over all twelve samples.
 
 ```{r compute.ARI}
 ARI <- purrr::map(clusters, function(x) mclust::adjustedRandIndex(x, clusters[["Manual annotation"]]))
 ```
 
 ```{r plot.ARI, echo=FALSE}
-ARI <- data.frame(Algorithm=names(ARI), ARI=unlist(ARI))
+library(dplyr)
+ARI.df <- data.frame(Algorithm=names(ARI), ARI=unlist(ARI)) %>%
+  filter(Algorithm != "Manual annotation")
 
-ggplot(data=ARI, aes(x=reorder(Algorithm, -ARI), y=ARI)) + 
+ggplot(data=ARI.df, aes(x=reorder(Algorithm, ARI), y=ARI)) + 
   geom_bar(stat = "identity") +
   theme_bw() +
+  ylim(0, 0.6) +
   xlab("Algorithm") +
   theme(axis.text.x = element_text(angle = 60, vjust = 0.95, hjust=1))
 ```
+## Spot weights and principal components
+
+In Supplementary Figure S1, we also show the spatial distribution of the weights
+$w_i$, along with the spatial distribution of the first three principal
+components. We note that some of the visible outlier spots in the second and
+third principal components are downweighted by the BayesSpace clustering
+algorithm (low $w_i$).
+
+```{r weights.PCs, fig.width=5, fig.height=5}
+## Load the cached MCMC chain
+chain <- mcmcChain(dlpfc)
+
+## Average spot weights after excluding 1,000 burn-in iterations
+burn.in <- 100
+weights <- chain[, grep("weights", colnames(chain))]
+weights <- apply(weights[-(1:burn.in),], 2, mean)
+
+## Plot the weights
+weights.plot <- featurePlot(dlpfc, weights, color=NA) +
+  labs(fill=NULL, title=expression(Weights~(w[i]))) +
+  scale_fill_gradient2(midpoint=1, low=scales::muted("blue"), high=scales::muted("red"), 
+                       breaks=c(0, 0.5, 1, 1.5, 2), limits=c(0, 2))
+
+## Plot the principal components
+plot_PC <- function(comp) {
+  featurePlot(dlpfc, reducedDim(dlpfc, "PCA")[, comp], color=NA) +
+    viridis::scale_fill_viridis(option="A") +
+    labs(fill=NULL, title=sprintf("PC%d", comp))
+}
+components <- c(1, 2, 3)
+PC_plots <- purrr::map(components, plot_PC)
+
+patchwork::wrap_plots(c(list(weights.plot), PC_plots))
+```
+
+
 
