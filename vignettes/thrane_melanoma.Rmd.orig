@@ -20,69 +20,71 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
-library(SingleCellExperiment)
 library(BayesSpace)
 library(ggplot2)
 library(patchwork)
 ```
 
-Overview
---------
+## Overview
 
 TODO: add citation, description
 
-Processing the data
--------------------
+## Processing the data
 
 A cleaned `SingleCellExperiment` object containing the dataset is available
-through BayesSpace.
-```{r}
-melanoma1.2 <- getRDS("2018_thrane_melanoma", "ST_mel1_rep2")
-```
+through BayesSpace. We preprocessed the data by performing PCA on the top 2,000 
+HVGs.
 
-We preprocess the data by performing PCA on the top 2,000 HVGs.
-```{r}
+```{r preprocess}
+melanoma1.2 <- getRDS("2018_thrane_melanoma", "ST_mel1_rep2")
+
 set.seed(100)
 dec <- scran::modelGeneVar(melanoma1.2)
 top <- scran::getTopHVGs(dec, n = 2000)
 
 set.seed(101)
 melanoma1.2 <- scater::runPCA(melanoma1.2, subset_row = top)
+
+## Add BayesSpace metadata
+melanoma1.2 <- spatialPreprocess(melanoma1.2, platform="ST", skip.PCA=TRUE)
 ```
 
-Clustering with BayesSpace
---------------------------
+## Clustering with BayesSpace
 
-We cluster the first seven principal components, specifying 4 clusters.
+We clustered the first seven principal components, specifying 4 clusters, and
+ran the MCMC algorithm for 50,000 iterations. We generally suggest setting the
+smoothing parameter gamma to 2 for ST experiments and to 3 for Visium data.
 
-```{r spatialCluster}
+```{r spatialCluster, fig.width=5, fig.height=3}
 q <- 4  # Number of clusters
 d <- 7  # Number of PCs
 
 ## Run BayesSpace clustering
 set.seed(100)
-melanoma1.2 <- spatialCluster(melanoma1.2, q=q, d=d, platform="ST", gamma=2, nrep=1000)
+melanoma1.2 <- spatialCluster(melanoma1.2, q=q, d=d, platform='ST',
+                              nrep=1000, gamma=2)
 
 ## View results
 palette <- c("purple", "red", "blue", "yellow", "darkblue")
-clusterPlot(melanoma1.2, platform="ST", palette=palette) +
+clusterPlot(melanoma1.2, palette=palette, color="black") +
     labs(title="BayesSpace")
 ```
 
-Enhancing resolution with BayesSpace
-------------------------------------
+## Enhancing resolution with BayesSpace
+
 ```{r}
+set.seed(100)
 melanoma.enhanced <- spatialEnhance(melanoma1.2, q=q, d=d, platform="ST",
-                                    gamma=2, nrep=1000, 
+                                    nrep=10000, gamma=2,
                                     jitter_scale=3.5, jitter_prior=0.3)
 ```
 
-```{r}
-enhancePlot(melanoma.enhanced, platform="ST", palette=palette)
+```{r fig.width=5, fig.height=3}
+clusterPlot(melanoma.enhanced, palette=palette, color="black", size=0.1) +
+  labs(title="Enhanced clustering")
 ```
 
-Comparison to other clustering algorithms
------------------------------------------
+## Comparison to other clustering algorithms
 
 We cluster the first seven principal components, specifying 4 clusters when 
 necessary.
@@ -100,7 +102,7 @@ km.labels <- kmeans(Y1.2, centers = q)$cluster
 
 ## Louvain
 set.seed(100)
-g.jaccard <- scran::buildSNNGraph(melanoma1.2, use.dimred="PCA", type="jaccard", k = 25)
+g.jaccard <- scran::buildSNNGraph(melanoma1.2, use.dimred="PCA", type="jaccard")
 louvain.labels <- igraph::cluster_louvain(g.jaccard)$membership
 
 ## Giotto (pre-computed)
@@ -109,16 +111,16 @@ giotto.labels <- read.csv(giotto.fname)$HMRF_PCA_k4_b.2
 ```
 
 ```{r cluster.comparison, echo=FALSE, fig.width=7*1.3, fig.height=5*1.3}
-p.mclust <- clusterPlot(sce, platform="ST", fill=mclust.labels, palette=palette) + 
+p.mclust <- clusterPlot(melanoma1.2, label=mclust.labels, palette=palette, color="black") + 
     guides(fill=FALSE) +
     labs(title="mclust")
-p.km <- clusterPlot(sce, platform="ST", fill=km.labels, palette=palette[c(3, 1, 4, 2)]) + 
+p.km <- clusterPlot(melanoma1.2, label=km.labels, palette=palette[c(3, 1, 4, 2)], color="black") + 
     guides(fill=FALSE) +
-    labs(title="K-means")
-p.louvain <- clusterPlot(sce, platform="ST", fill=louvain.labels, palette=palette[c(3, 2, 1, 4)]) +
+    labs(title="k-means")
+p.louvain <- clusterPlot(melanoma1.2, label=louvain.labels, palette=palette[c(3, 5, 1, 4, 2)], color="black") +
     guides(fill=FALSE) +
     labs(title="Louvain")
-p.giotto <- clusterPlot(sce, platform="ST", fill=giotto.labels, palette=palette[c(4, 2, 1, 3)]) +
+p.giotto <- clusterPlot(melanoma1.2, label=giotto.labels, palette=palette[c(4, 2, 1, 3)], color="black") +
     guides(fill=FALSE) +
     labs(title="Giotto")
 
