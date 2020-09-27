@@ -48,7 +48,7 @@ dec <- scran::modelGeneVar(scc)
 top <- scran::getTopHVGs(dec, n = 2000)
 
 set.seed(102)
-scc <- scater::runPCA(scc, subset_row=top, ncomponents=15)
+scc <- scater::runPCA(scc, subset_row=top)
 
 ## Add BayesSpace metadata
 scc <- spatialPreprocess(scc, platform="Visium", skip.PCA=TRUE)
@@ -69,7 +69,7 @@ qPlot(scc)
 ```
 
 We clustered the first 15 principal components, specifying 12 clusters as
-described above, and ran the MCMC algorithm for 50,000 iterations. We set our
+described above, and ran the MCMC algorithm for 10,000 iterations. We set our
 smoothing parameter `gamma` to 3, which we generally suggest for Visium
 datasets. We also computed an enhanced resolution clustering using the same
 parameters and 200,000 iterations.
@@ -78,17 +78,36 @@ parameters and 200,000 iterations.
 q <- 12  # Number of clusters
 d <- 15  # Number of PCs
 
-## Run BayesSpace clustering
+## Here we run mclust externally so the random seeding is consistent with 
+## original analyses
+library(mclust)
+Y <- reducedDim(scc, "PCA")[, seq_len(d)]
 set.seed(101)
-scc <- spatialCluster(scc, q=q, d=d, platform='Visium',
-                      nrep=10000, gamma=3)
+init <- Mclust(Y, q, "EEE", verbose=FALSE)$classification
 
+## Run BayesSpace clustering
+set.seed(100)
+scc <- spatialCluster(scc, q=q, d=d, platform='Visium', init=init,
+                      nrep=10000, gamma=3)
+```
+
+```{r spatialEnhance}
 ## Run BayesSpace enhanced clustering
 set.seed(100)
 scc.enhanced <- spatialEnhance(scc, q=q, d=d, platform="Visium",
-                               nrep=50000, gamma=3, verbose=TRUE,
-                               jitter_scale=5.5, jitter_prior=0.3)
+                               nrep=200000, gamma=3, verbose=TRUE,
+                               jitter_scale=5.5, jitter_prior=0.3,
+                               save.chain=TRUE)
 ```
+
+```{r}
+saveRDS(scc, "scc.rds")
+```
+
+```{r}
+saveRDS(scc.enhanced, "scc.enhanced.rds")
+```
+
 
 We compared the two clusterings using `clusterPlot()`.
 
@@ -103,6 +122,8 @@ enhanced.plot <- clusterPlot(scc.enhanced, palette=palette, size=0.05) +
   labs(title="Enhanced clustering")
 
 spot.plot + enhanced.plot
+
+ggsave("scc_clustering.pdf")
 ```
 
 ## Enhancing feature expression
@@ -142,7 +163,7 @@ enhanced_expr <- purrr::map(markers, function(xs) sum_counts(scc.enhanced, xs))
 And we plotted the spatial expression of each cell type's markers using
 `featurePlot()`, at the spot-level:
 
-```{r spot.expression, fig.width=7, fig.height=4}
+```{r spot.expression, fig.width=14, fig.height=8}
 plot_expression <- function(sce, expr, name) {
   featurePlot(sce, expr, color=NA) +
     viridis::scale_fill_viridis(option="A") +
@@ -155,7 +176,7 @@ patchwork::wrap_plots(spot_plots, ncol=3)
 
 And at enhanced subspot resolution:
 
-```{r enhanced.expression, fig.width=7, fig.height=4}
+```{r enhanced.expression, fig.width=14, fig.height=8}
 enhanced_plots <- purrr::imap(enhanced_expr, function(x, y) plot_expression(scc.enhanced, x, y))
 patchwork::wrap_plots(enhanced_plots, ncol=3)
 ```
