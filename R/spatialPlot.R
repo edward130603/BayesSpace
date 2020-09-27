@@ -16,6 +16,7 @@
 #' @name spatialPlot
 NULL
 
+## Use Seaborn colorblind palette as default
 palette <- c("#0173b2", "#de8f05", "#029e73", "#d55e00", "#cc78bc",
              "#ca9161", "#fbafe4", "#949494", "#ece133", "#56b4e9")
 
@@ -370,13 +371,14 @@ featurePlot <- function(sce, feature,
     ## Make lists of triangle vertices (with respect to hex center)
     ## subspot.idx is same ordering as `shift` in spatialEnhance
     ## that is, beginning in top right and proceeding clockwise, (1, 5, 3, 4, 6, 2)
+    ## NOTE: however, we need to reflect over x-axis to match global negation of y-coordinate
     vertex_offsets <- do.call(rbind, list(
-        data.frame(x.offset=c(0, 0, r), y.offset=c(0, -R, -R/2), subspot.idx=1),
+        data.frame(x.offset=c(0, 0, r), y.offset=c(0, -R, -R/2), subspot.idx=3),
         data.frame(x.offset=c(0, r, r), y.offset=c(0, -R/2, R/2), subspot.idx=5),
-        data.frame(x.offset=c(0, r, 0), y.offset=c(0, R/2, R), subspot.idx=3),
-        data.frame(x.offset=c(0, 0, -r), y.offset=c(0, R, R/2), subspot.idx=4),
+        data.frame(x.offset=c(0, r, 0), y.offset=c(0, R/2, R), subspot.idx=1),
+        data.frame(x.offset=c(0, 0, -r), y.offset=c(0, R, R/2), subspot.idx=2),
         data.frame(x.offset=c(0, -r, -r), y.offset=c(0, R/2, -R/2), subspot.idx=6),
-        data.frame(x.offset=c(0, -r, 0), y.offset=c(0, -R/2, -R), subspot.idx=2)
+        data.frame(x.offset=c(0, -r, 0), y.offset=c(0, -R/2, -R), subspot.idx=4)
     ))
     
     ## note that instead of cartesian product, `merge()` does an outer join
