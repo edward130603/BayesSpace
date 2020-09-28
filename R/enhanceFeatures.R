@@ -144,9 +144,15 @@ NULL
 enhanceFeatures <- function(sce.enhanced, sce.ref, feature_names = NULL,
     model=c("xgboost", "dirichlet", "lm"), use.dimred = "PCA",
     assay.type="logcounts", altExp.type = NULL, feature.matrix = NULL) {
-    
+   
     X.enhanced <- reducedDim(sce.enhanced, use.dimred)
     X.ref <- reducedDim(sce.ref, use.dimred)
+    
+    ## If user specified clustering with fewer PCs than in the ref dataset,
+    ## there will be fewer PCs in the enhanced SCE. Only use these.
+    d <- min(ncol(X.enhanced), ncol(X.ref))
+    X.enhanced <- X.enhanced[, seq_len(d)]
+    X.ref <- X.ref[, seq_len(d)]
     
     if (!is.null(feature.matrix)) {
         Y.ref <- feature.matrix
