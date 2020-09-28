@@ -108,6 +108,10 @@ saveRDS(scc, "scc.rds")
 saveRDS(scc.enhanced, "scc.enhanced.rds")
 ```
 
+```{r}
+scc.enhanced <- readRDS("scc.enhanced.rds")
+```
+
 
 We compared the two clusterings using `clusterPlot()`.
 
