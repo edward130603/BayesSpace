@@ -13,7 +13,7 @@ enhanceFeatures(
   assay.type = "logcounts",
   altExp.type = NULL,
   feature.matrix = NULL,
-  tune.nrounds = FALSE,
+  nrounds = 0,
   train.n = round(ncol(sce.ref) * 2/3)
 )
 }
@@ -38,9 +38,13 @@ attached to \code{sce.ref}. Must have columns corresponding to the spots in
 \code{sce.ref}. Overrides \code{assay.type} and \code{altExp.type} if
 specified.}
 
-\item{tune.nrounds}{logical. If \code{TRUE}, tune the nrounds parameter for xgboost.}
+\item{nrounds}{Nonnegative integer to set the \code{nrounds} parameter
+(max number of boosting iterations) for xgboost. \code{nrounds = 100}
+works reasonably well in most cases. If \code{nrounds = 0}, tune \code{nrounds}
+using a train-test split (recommended). Note this will increase runtime.}
 
-\item{train.n}{Number of spots to use in training dataset for tuning nrounds.}
+\item{train.n}{Number of spots to use in training dataset for tuning nrounds.
+By default, 2/3 the total number of spots.}
 }
 \value{
 If \code{assay.type} or \code{altExp.type} are specified, the

@@ -12,8 +12,12 @@
 #'   attached to \code{sce.ref}. Must have columns corresponding to the spots in
 #'   \code{sce.ref}. Overrides \code{assay.type} and \code{altExp.type} if
 #'   specified.
-#' @param tune.nrounds logical. If \code{TRUE}, tune the nrounds parameter for xgboost.
+#' @param nrounds Nonnegative integer to set the \code{nrounds} parameter
+#'   (max number of boosting iterations) for xgboost. \code{nrounds = 100}
+#'   works reasonably well in most cases. If \code{nrounds = 0}, tune \code{nrounds}
+#'   using a train-test split (recommended). Note this will increase runtime.
 #' @param train.n Number of spots to use in training dataset for tuning nrounds.
+#'   By default, 2/3 the total number of spots.
 #' 
 #' @return If \code{assay.type} or \code{altExp.type} are specified, the
 #'   enhanced features are stored in the corresponding slot of
@@ -52,7 +56,8 @@ NULL
 
 #' @importFrom assertthat assert_that
 .enhance_features <- function(X.enhanced, X.ref, Y.ref, 
-    feature_names = rownames(Y.ref), model = c("xgboost", "dirichlet", "lm"), tune.nrounds, train.n) {
+    feature_names = rownames(Y.ref), model = c("xgboost", "dirichlet", "lm"), 
+    nrounds, train.n) {
 
     assert_that(ncol(X.enhanced) == ncol(X.ref))
     assert_that(ncol(Y.ref) == nrow(X.ref))
@@ -74,7 +79,7 @@ NULL
     } else if (model == "dirichlet") {
         .dirichlet_enhance(X.ref, X.enhanced, Y.ref)
     } else if (model == "xgboost") {
-        .xgboost_enhance(X.ref, X.enhanced, Y.ref, feature_names, tune.nrounds, train.n)
+        .xgboost_enhance(X.ref, X.enhanced, Y.ref, feature_names, nrounds, train.n)
     }
 }
 
@@ -114,7 +119,8 @@ NULL
 }
 
 #' @importFrom xgboost xgboost xgb.DMatrix xgb.train
-.xgboost_enhance <- function(X.ref, X.enhanced, Y.ref, feature_names, tune.nrounds, train.n) {
+.xgboost_enhance <- function(X.ref, X.enhanced, Y.ref, feature_names, 
+                             nrounds, train.n) {
     Y.enhanced <- matrix(nrow=length(feature_names), ncol=nrow(X.enhanced))
     rownames(Y.enhanced) <- feature_names
     colnames(Y.enhanced) <- rownames(X.enhanced)
@@ -124,13 +130,14 @@ NULL
     
     ## TODO: pass hyperparams through with ...
     ## TODO: add (optional) tuning of nrounds
-    if (tune.nrounds){
+    if (nrounds == 0){
         train.index <- sample(1:ncol(Y.ref), train.n)
     }
+    default.nrounds <- nrounds
     
     for (feature in feature_names) {
-        nrounds = 100
-        if (tune.nrounds){
+        nrounds <- default.nrounds
+        if (nrounds == 0){
             data.train <- xgb.DMatrix(data = X.ref[train.index, ],  label = Y.ref[feature, train.index])
             data.test  <- xgb.DMatrix(data = X.ref[-train.index, ], label = Y.ref[feature, -train.index])
             watchlist <- list(train = data.train, test = data.test)
@@ -160,7 +167,7 @@ NULL
 enhanceFeatures <- function(sce.enhanced, sce.ref, feature_names = NULL,
     model=c("xgboost", "dirichlet", "lm"), use.dimred = "PCA",
     assay.type="logcounts", altExp.type = NULL, feature.matrix = NULL,
-    tune.nrounds = FALSE, train.n = round(ncol(sce.ref)*2/3)) {
+    nrounds = 0, train.n = round(ncol(sce.ref)*2/3)) {
     
     X.enhanced <- reducedDim(sce.enhanced, use.dimred)
     X.ref <- reducedDim(sce.ref, use.dimred)
@@ -186,7 +193,7 @@ enhanceFeatures <- function(sce.enhanced, sce.ref, feature_names = NULL,
         }
     }
     
-    Y.enhanced <- .enhance_features(X.enhanced, X.ref, Y.ref, feature_names, model, tune.nrounds)
+    Y.enhanced <- .enhance_features(X.enhanced, X.ref, Y.ref, feature_names, model, nrounds, train.n)
     
     ## TODO: add option to specify destination of enhanced features.
     ## For now, return in same form as input
