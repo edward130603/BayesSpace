@@ -128,7 +128,7 @@ featurePlot <- function(sce, feature,
     
     splot <- ggplot(data=vertices, 
                     aes_(x=~x.vertex, y=~y.vertex, group=~spot, fill=~fill)) +
-        geom_polygon(color=color) +#, ...) +
+        geom_polygon(color=color, ...) +
         labs(fill=fill.name) +
         coord_equal() +
         theme_void()
