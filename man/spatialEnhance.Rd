@@ -69,10 +69,10 @@ jittering are more likely to be accepted but result in exploring the space
 more slowly. We suggest tuning \code{jitter_scale} so that Ychange is on 
 average around 30\%.}
 
-\item{jitter_prior}{(TODO: re-define) Prior precision (1/variance) of the
-actual spot-level expression value in PC space. We suggest making c larger
-if the jittered values are not expected to vary much from the overall mean
-of the spot.}
+\item{jitter_prior}{Scale factor for the prior variance, parameterized as the
+proportion (default = 0.3) of the mean variance of the PCs.
+We suggest making \code{jitter_prior} smaller if the jittered values are
+not expected to vary much from the overall mean of the spot.}
 
 \item{verbose}{Log progress to stderr.}
 }
