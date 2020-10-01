@@ -17,6 +17,21 @@ knitr::opts_chunk$set(
   dpi=300, fig.path="figures/ji_SCC-",
   message=FALSE, warning=FALSE, error=FALSE
 )
+
+knitr::knit_hooks$set(time_it = local({
+  now <- NULL
+  function(before, options) {
+    if (before) {
+      # record the current time before each chunk
+      now <<- Sys.time()
+    } else {
+      # calculate the time difference after a chunk
+      res <- difftime(Sys.time(), now)
+      # return a character string to show the time
+      paste("Time for this code chunk to run:", res)
+    }
+  }
+}))
 ```
 
 ```{r setup}
@@ -89,9 +104,7 @@ init <- Mclust(Y, q, "EEE", verbose=FALSE)$classification
 set.seed(100)
 scc <- spatialCluster(scc, q=q, d=d, platform='Visium', init=init,
                       nrep=10000, gamma=3)
-```
 
-```{r spatialEnhance}
 ## Run BayesSpace enhanced clustering
 set.seed(100)
 scc.enhanced <- spatialEnhance(scc, q=q, d=d, platform="Visium",
@@ -100,17 +113,10 @@ scc.enhanced <- spatialEnhance(scc, q=q, d=d, platform="Visium",
                                save.chain=TRUE)
 ```
 
-```{r}
+```{r eval=TRUE, include=FALSE}
 saveRDS(scc, "scc.rds")
-```
-
-```{r}
 saveRDS(scc.enhanced, "scc.enhanced.rds")
-```
-
-```{r}
-scc <- readRDS("~/onedrive/tmp/scc.rds")
-scc.enhanced <- readRDS("~/onedrive/tmp/scc.enhanced.rds")
+saveRDS(mcmcChain(scc.enhanced), "scc.enhanced.chain.rds")
 ```
 
 
@@ -127,8 +133,6 @@ enhanced.plot <- clusterPlot(scc.enhanced, palette=palette, size=0.05) +
   labs(title="Enhanced clustering")
 
 spot.plot + enhanced.plot
-
-# ggsave("scc_clustering.pdf")
 ```
 
 ## Enhancing feature expression
@@ -144,46 +148,12 @@ markers[["Myeloid"]] <- c("LYZ")
 markers[["T-cell"]] <- c("CD2", "CD3D", "CD3E", "CD3G", "CD7")
 markers[["Melanocyte"]] <- c("MLANA", "DCT", "PMEL")
 markers[["Endothelial"]] <- c("TFF3", "CLDN5", "VWF")
-```
 
-```{r}
-set.seed(1)
-system.time(scc.enhanced <- enhanceFeatures(scc.enhanced, scc, model="xgboost",
+scc.enhanced <- enhanceFeatures(scc.enhanced, scc,
+                                model="xgboost",
                                 feature_names=purrr::reduce(markers, c),
-                                nrounds=100))
+                                nrounds=0)
 ```
-
-```{r}
-set.seed(1)
-system.time(scc.tuned <- enhanceFeatures(scc.enhanced, scc, model="xgboost",
-                                feature_names=purrr::reduce(markers, c),
-                                nrounds=0))
-```
-
-```{r}
-# chain <- readRDS("~/onedrive/tmp/scc.enhanced.chain.rds")
-Y <- chain[, grep("Y\\[", colnames(chain))]
-Y.mean <- colMeans(Y[-seq_len(101), ])
-PCs <- matrix(Y.mean, ncol=15, byrow=TRUE)
-reducedDim(scc.enhanced, "PCA") <- PCs
-```
-
-```{r}
-marker.genes <- purrr:::reduce(markers, c)
-r.squared <- purrr::map(marker.genes, function(gene) cor(logcounts(scc.enhanced)[gene, ], logcounts(scc.tuned)[gene, ]))
-names(r.squared) <- marker.genes
-
-ggplot(data=NULL, aes(x=as.factor(marker.genes), y=as.numeric(r.squared))) + 
-  geom_bar(stat="identity") +
-  geom_text(aes(label=sprintf("%.4f", r.squared)), color="#FFFFFF", angle=90, hjust=1, nudge_y=-0.01) +
-  ylab("Pearson correlation") +
-  xlab("Marker gene") +
-  labs(title="Correlation between tuned and untuned predicted expression") +
-  theme_bw()
-
-ggsave("tuned_correlation.pdf")
-```
-
 
 We aggregated the expression of marker genes within each cell type by summing
 their log-normalized expression.
@@ -280,7 +250,6 @@ in expression of immunoglobulin genes and genes regulated by interferons.
 
 ```{r DE.myeloid, fig.width=7, fig.height=5, message=FALSE, warning=FALSE}
 seurat_cluster_DE(scc.enhanced, c(4, 8))
-ggsave("DE.4-8.pdf")
 ```
 
 We additionally highlight the heterogeneity within the tumor revealed by
@@ -288,5 +257,4 @@ differential expression of the tumor clusters.
 
 ```{r DE.tumor, fig.width=7, fig.height=5, message=FALSE, warning=FALSE}
 seurat_cluster_DE(scc.enhanced, c(2, 3, 6))
-ggsave("DE.2-3-6.pdf")
 ```
