@@ -40,11 +40,13 @@ specified.}
 
 \item{nrounds}{Nonnegative integer to set the \code{nrounds} parameter
 (max number of boosting iterations) for xgboost. \code{nrounds = 100}
-works reasonably well in most cases. If \code{nrounds = 0}, tune \code{nrounds}
-using a train-test split (recommended). Note this will increase runtime.}
+works reasonably well in most cases. If \code{nrounds} is set to 0, the
+parameter will be tuned using a train-test split. We recommend tuning
+\code{nrounds} for improved feature prediction, but note this will increase
+runtime.}
 
-\item{train.n}{Number of spots to use in training dataset for tuning nrounds.
-By default, 2/3 the total number of spots.}
+\item{train.n}{Number of spots to use in the training dataset for tuning
+nrounds. By default, 2/3 the total number of spots are used.}
 }
 \value{
 If \code{assay.type} or \code{altExp.type} are specified, the
