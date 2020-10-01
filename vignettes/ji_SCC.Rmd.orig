@@ -89,9 +89,7 @@ init <- Mclust(Y, q, "EEE", verbose=FALSE)$classification
 set.seed(100)
 scc <- spatialCluster(scc, q=q, d=d, platform='Visium', init=init,
                       nrep=10000, gamma=3)
-```
 
-```{r spatialEnhance}
 ## Run BayesSpace enhanced clustering
 set.seed(100)
 scc.enhanced <- spatialEnhance(scc, q=q, d=d, platform="Visium",
@@ -100,16 +98,13 @@ scc.enhanced <- spatialEnhance(scc, q=q, d=d, platform="Visium",
                                save.chain=TRUE)
 ```
 
-```{r}
+```{r save.clusters, include=FALSE}
 saveRDS(scc, "scc.rds")
-```
-
-```{r}
 saveRDS(scc.enhanced, "scc.enhanced.rds")
 ```
 
-```{r}
-scc.enhanced <- readRDS("scc.enhanced.rds")
+```{r include=FALSE, eval=FALSE}
+# scc.enhanced <- readRDS("scc.enhanced.rds")
 ```
 
 
@@ -126,14 +121,24 @@ enhanced.plot <- clusterPlot(scc.enhanced, palette=palette, size=0.05) +
   labs(title="Enhanced clustering")
 
 spot.plot + enhanced.plot
-
-ggsave("scc_clustering.pdf")
 ```
 
 ## Enhancing feature expression
 
 Next we examined the expression of cell-type-specific marker genes reported by
-Ji et al. at the spot level and after enhancement.
+Ji et al. at the spot level and after enhancement. We predicted the marker gene
+at enhanced subspot resolution using `xgboost`, tuning the selection of the
+`nrounds` parameter with two thirds of the spots. (See documentation of
+`enhanceFeatures()` for details.)
+
+```{r include=FALSE}
+chain <- readRDS("scc.enhanced.chain.rds")
+Y <- chain[, grep("Y\\[", colnames(chain))]
+Y.mean <- colMeans(Y[-seq_len(101), ])
+PCs <- matrix(Y.mean, ncol=15, byrow=TRUE)
+reducedDim(scc.enhanced, "PCA") <- PCs
+```
+
 
 ```{r enhance.markers}
 markers <- list()
@@ -144,8 +149,10 @@ markers[["T-cell"]] <- c("CD2", "CD3D", "CD3E", "CD3G", "CD7")
 markers[["Melanocyte"]] <- c("MLANA", "DCT", "PMEL")
 markers[["Endothelial"]] <- c("TFF3", "CLDN5", "VWF")
 
-scc.enhanced <- enhanceFeatures(scc.enhanced, scc, model="xgboost",
-                                feature_names=purrr::reduce(markers, c))
+scc.enhanced <- enhanceFeatures(scc.enhanced, scc, 
+                                model="xgboost",
+                                feature_names=purrr::reduce(markers, c),
+                                nrounds=0)
 ```
 
 We aggregated the expression of marker genes within each cell type by summing
@@ -188,11 +195,15 @@ patchwork::wrap_plots(enhanced_plots, ncol=3)
 ## Differential expression analysis
 
 Finally, we performed a differential expression analysis between clusters of
-interest. First, we imputed the expression of all genes, not only the markers,
-at enhanced resolution.
+interest. We limited our analysis to the top 2,000 highly variable genes, and we
+first imputed the expression of these HVGs at enhanced resolution.
 
 ```{r enhanceFeatures}
-scc.enhanced <- enhanceFeatures(scc.enhanced, scc, model="xgboost")
+## Using the same 2,000 HVGs previously computed for PCA
+scc.enhanced <- enhanceFeatures(scc.enhanced, scc, 
+                                model="xgboost",
+                                feature_names=top,
+                                nrounds=0)
 ```
 
 Next, we applied a standard Seurat differential expression analysis workflow to
