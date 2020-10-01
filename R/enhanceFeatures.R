@@ -12,6 +12,14 @@
 #'   attached to \code{sce.ref}. Must have columns corresponding to the spots in
 #'   \code{sce.ref}. Overrides \code{assay.type} and \code{altExp.type} if
 #'   specified.
+#' @param nrounds Nonnegative integer to set the \code{nrounds} parameter
+#'   (max number of boosting iterations) for xgboost. \code{nrounds = 100}
+#'   works reasonably well in most cases. If \code{nrounds} is set to 0, the
+#'   parameter will be tuned using a train-test split. We recommend tuning
+#'   \code{nrounds} for improved feature prediction, but note this will increase
+#'   runtime.
+#' @param train.n Number of spots to use in the training dataset for tuning
+#'   nrounds. By default, 2/3 the total number of spots are used.
 #' 
 #' @return If \code{assay.type} or \code{altExp.type} are specified, the
 #'   enhanced features are stored in the corresponding slot of
@@ -50,7 +58,8 @@ NULL
 
 #' @importFrom assertthat assert_that
 .enhance_features <- function(X.enhanced, X.ref, Y.ref, 
-    feature_names = rownames(Y.ref), model = c("xgboost", "dirichlet", "lm")) {
+    feature_names = rownames(Y.ref), model = c("xgboost", "dirichlet", "lm"), 
+    nrounds, train.n) {
 
     assert_that(ncol(X.enhanced) == ncol(X.ref))
     assert_that(ncol(Y.ref) == nrow(X.ref))
@@ -72,7 +81,7 @@ NULL
     } else if (model == "dirichlet") {
         .dirichlet_enhance(X.ref, X.enhanced, Y.ref)
     } else if (model == "xgboost") {
-        .xgboost_enhance(X.ref, X.enhanced, Y.ref, feature_names)
+        .xgboost_enhance(X.ref, X.enhanced, Y.ref, feature_names, nrounds, train.n)
     }
 }
 
@@ -111,8 +120,10 @@ NULL
     Y.enhanced
 }
 
-#' @importFrom xgboost xgboost
-.xgboost_enhance <- function(X.ref, X.enhanced, Y.ref, feature_names) {
+#' @importFrom xgboost xgboost xgb.DMatrix xgb.train
+.xgboost_enhance <- function(X.ref, X.enhanced, Y.ref, feature_names, 
+                             nrounds, train.n) {
+
     Y.enhanced <- matrix(nrow=length(feature_names), ncol=nrow(X.enhanced))
     rownames(Y.enhanced) <- feature_names
     colnames(Y.enhanced) <- rownames(X.enhanced)
@@ -120,15 +131,34 @@ NULL
     rmse <- numeric(length(feature_names))
     names(rmse) <- feature_names
     
-    ## TODO: pass hyperparams through with ...
-    ## TODO: add (optional) tuning of nrounds
+    if (nrounds == 0){
+        train.index <- sample(seq_len(ncol(Y.ref)), train.n)
+    }
+    default.nrounds <- nrounds
+    
+    ## TODO: think about extracting tuning function, using apply instead of loop
     for (feature in feature_names) {
+        nrounds <- default.nrounds
+        if (nrounds == 0){
+            data.train <- xgb.DMatrix(data=X.ref[train.index, ],  
+                                      label=Y.ref[feature, train.index])
+            data.test  <- xgb.DMatrix(data=X.ref[-train.index, ], 
+                                      label=Y.ref[feature, -train.index])
+            watchlist <- list(train=data.train, test=data.test)
+            
+            fit.train <- xgb.train(data=data.train, max_depth=2, 
+                                   watchlist=watchlist, eta=0.03, nrounds=500,
+                                   objective="reg:squarederror",
+                                   verbose=FALSE)
+            nrounds <- which.min(fit.train$evaluation_log$test_rmse)
+        }
+        
         fit <- xgboost(data=X.ref, label=Y.ref[feature, ], 
-            objective="reg:squarederror", max_depth=2, eta=0.03, nrounds=100,
-            nthread=1, verbose=FALSE)
+            objective="reg:squarederror", max_depth=2, eta=0.03,
+            nrounds=nrounds, nthread=1, verbose=FALSE)
         
         Y.enhanced[feature, ] <- predict(fit, X.enhanced)
-        rmse[feature] <- fit$evaluation_log$train_rmse[100]
+        rmse[feature] <- fit$evaluation_log$train_rmse[nrounds]
     }
     
     diagnostic <- list("rmse"=rmse)
@@ -143,7 +173,8 @@ NULL
 #' @rdname enhanceFeatures
 enhanceFeatures <- function(sce.enhanced, sce.ref, feature_names = NULL,
     model=c("xgboost", "dirichlet", "lm"), use.dimred = "PCA",
-    assay.type="logcounts", altExp.type = NULL, feature.matrix = NULL) {
+    assay.type="logcounts", altExp.type = NULL, feature.matrix = NULL,
+    nrounds = 0, train.n = round(ncol(sce.ref)*2/3)) {
     
     X.enhanced <- reducedDim(sce.enhanced, use.dimred)
     X.ref <- reducedDim(sce.ref, use.dimred)
@@ -169,7 +200,8 @@ enhanceFeatures <- function(sce.enhanced, sce.ref, feature_names = NULL,
         }
     }
     
-    Y.enhanced <- .enhance_features(X.enhanced, X.ref, Y.ref, feature_names, model)
+    Y.enhanced <- .enhance_features(X.enhanced, X.ref, Y.ref, feature_names, 
+                                    model, nrounds, train.n)
     
     ## TODO: add option to specify destination of enhanced features.
     ## For now, return in same form as input
