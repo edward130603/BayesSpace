@@ -131,7 +131,9 @@
   use.dimred = <span class='st'>"PCA"</span>,
   assay.type = <span class='st'>"logcounts"</span>,
   altExp.type = <span class='kw'>NULL</span>,
-  feature.matrix = <span class='kw'>NULL</span>
+  feature.matrix = <span class='kw'>NULL</span>,
+  nrounds = <span class='fl'>0</span>,
+  train.n = <span class='fu'><a href='https://rdrr.io/r/base/Round.html'>round</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/nrow.html'>ncol</a></span>(<span class='kw'>sce.ref</span>) <span class='op'>*</span> <span class='fl'>2</span><span class='op'>/</span><span class='fl'>3</span>)
 )</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -172,6 +174,20 @@ Overrides <code>assay.type</code> if specified.</p></td>
 attached to <code>sce.ref</code>. Must have columns corresponding to the spots in
 <code>sce.ref</code>. Overrides <code>assay.type</code> and <code>altExp.type</code> if
 specified.</p></td>
+    </tr>
+    <tr>
+      <th>nrounds</th>
+      <td><p>Nonnegative integer to set the <code>nrounds</code> parameter
+(max number of boosting iterations) for xgboost. <code>nrounds = 100</code>
+works reasonably well in most cases. If <code>nrounds</code> is set to 0, the
+parameter will be tuned using a train-test split. We recommend tuning
+<code>nrounds</code> for improved feature prediction, but note this will increase
+runtime.</p></td>
+    </tr>
+    <tr>
+      <th>train.n</th>
+      <td><p>Number of spots to use in the training dataset for tuning
+nrounds. By default, 2/3 the total number of spots are used.</p></td>
     </tr>
     </table>
 
