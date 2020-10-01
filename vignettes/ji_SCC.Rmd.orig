@@ -109,7 +109,8 @@ saveRDS(scc.enhanced, "scc.enhanced.rds")
 ```
 
 ```{r}
-scc.enhanced <- readRDS("scc.enhanced.rds")
+scc <- readRDS("~/onedrive/tmp/scc.rds")
+scc.enhanced <- readRDS("~/onedrive/tmp/scc.enhanced.rds")
 ```
 
 
@@ -127,7 +128,7 @@ enhanced.plot <- clusterPlot(scc.enhanced, palette=palette, size=0.05) +
 
 spot.plot + enhanced.plot
 
-ggsave("scc_clustering.pdf")
+# ggsave("scc_clustering.pdf")
 ```
 
 ## Enhancing feature expression
@@ -143,10 +144,46 @@ markers[["Myeloid"]] <- c("LYZ")
 markers[["T-cell"]] <- c("CD2", "CD3D", "CD3E", "CD3G", "CD7")
 markers[["Melanocyte"]] <- c("MLANA", "DCT", "PMEL")
 markers[["Endothelial"]] <- c("TFF3", "CLDN5", "VWF")
-
-scc.enhanced <- enhanceFeatures(scc.enhanced, scc, model="xgboost",
-                                feature_names=purrr::reduce(markers, c))
 ```
+
+```{r}
+set.seed(1)
+system.time(scc.enhanced <- enhanceFeatures(scc.enhanced, scc, model="xgboost",
+                                feature_names=purrr::reduce(markers, c),
+                                nrounds=100))
+```
+
+```{r}
+set.seed(1)
+system.time(scc.tuned <- enhanceFeatures(scc.enhanced, scc, model="xgboost",
+                                feature_names=purrr::reduce(markers, c),
+                                nrounds=0))
+```
+
+```{r}
+# chain <- readRDS("~/onedrive/tmp/scc.enhanced.chain.rds")
+Y <- chain[, grep("Y\\[", colnames(chain))]
+Y.mean <- colMeans(Y[-seq_len(101), ])
+PCs <- matrix(Y.mean, ncol=15, byrow=TRUE)
+reducedDim(scc.enhanced, "PCA") <- PCs
+```
+
+```{r}
+marker.genes <- purrr:::reduce(markers, c)
+r.squared <- purrr::map(marker.genes, function(gene) cor(logcounts(scc.enhanced)[gene, ], logcounts(scc.tuned)[gene, ]))
+names(r.squared) <- marker.genes
+
+ggplot(data=NULL, aes(x=as.factor(marker.genes), y=as.numeric(r.squared))) + 
+  geom_bar(stat="identity") +
+  geom_text(aes(label=sprintf("%.4f", r.squared)), color="#FFFFFF", angle=90, hjust=1, nudge_y=-0.01) +
+  ylab("Pearson correlation") +
+  xlab("Marker gene") +
+  labs(title="Correlation between tuned and untuned predicted expression") +
+  theme_bw()
+
+ggsave("tuned_correlation.pdf")
+```
+
 
 We aggregated the expression of marker genes within each cell type by summing
 their log-normalized expression.
@@ -183,6 +220,7 @@ And at enhanced subspot resolution:
 ```{r enhanced.expression, fig.width=14, fig.height=8}
 enhanced_plots <- purrr::imap(enhanced_expr, function(x, y) plot_expression(scc.enhanced, x, y))
 patchwork::wrap_plots(enhanced_plots, ncol=3)
+ggsave("scc.enhanced_expression.pdf")
 ```
 
 ## Differential expression analysis
@@ -192,8 +230,12 @@ interest. First, we imputed the expression of all genes, not only the markers,
 at enhanced resolution.
 
 ```{r enhanceFeatures}
-scc.enhanced <- enhanceFeatures(scc.enhanced, scc, model="xgboost")
+scc.enhanced <- enhanceFeatures(scc.enhanced, scc, 
+                                model="xgboost",
+                                feature_names=top,
+                                nrounds=0)
 ```
+
 
 Next, we applied a standard Seurat differential expression analysis workflow to
 the enhanced resolution.
@@ -220,15 +262,15 @@ seurat_cluster_DE <- function(sce, clusters=NULL, n_markers=6) {
   ## Select top n markers from each cluster (by log fold change)
   top_markers <- Seurat::FindAllMarkers(seurat, assay='Spatial', slot='data',
                                         group.by='spatial.cluster',
-                                        logfc.threshold=1, only.pos=T) %>% 
+                                        logfc.threshold=1, only.pos=TRUE) %>% 
     group_by(cluster) %>% 
     top_n(n_markers, avg_logFC)
   
   ## Plot expression of markers
   Seurat::DoHeatmap(seurat, features = top_markers$gene, slot='scale.data',
                     group.by = "spatial.cluster", group.colors=palette, 
-                    angle=0, size=4, label = F) + 
-    guides(col = F)
+                    angle=0, size=4, label = FALSE, raster=FALSE) + 
+    guides(col = FALSE)
 }
 ```
 
@@ -238,6 +280,7 @@ in expression of immunoglobulin genes and genes regulated by interferons.
 
 ```{r DE.myeloid, fig.width=7, fig.height=5, message=FALSE, warning=FALSE}
 seurat_cluster_DE(scc.enhanced, c(4, 8))
+ggsave("DE.4-8.pdf")
 ```
 
 We additionally highlight the heterogeneity within the tumor revealed by
@@ -245,4 +288,5 @@ differential expression of the tumor clusters.
 
 ```{r DE.tumor, fig.width=7, fig.height=5, message=FALSE, warning=FALSE}
 seurat_cluster_DE(scc.enhanced, c(2, 3, 6))
+ggsave("DE.2-3-6.pdf")
 ```
