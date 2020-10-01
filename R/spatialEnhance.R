@@ -223,14 +223,15 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
     enhanced <- SingleCellExperiment(assays=list(), 
         rowData=rowData(sce), colData=cdata)
     
-    deconv_PCs <- deconv$Y[[length(deconv$Y)]]
+    ## Average PCs, excluding burn-in
+    deconv_PCs <- Reduce(`+`, deconv$Y[-(1:101)]) / (length(deconv$Y) - 101)
     colnames(deconv_PCs) <- paste0("PC", seq_len(ncol(deconv_PCs)))
     reducedDim(enhanced, "PCA") <- deconv_PCs
     
     ## NOTE: swap below code for this to test against refactoring
     ## enhanced$spatial.cluster <- apply(deconv$z[900:1000, ], 2, Mode)
     
-    ## TODO: add thinning parameter
+    ## TODO: add thinning and burn-in parameters; add check that nrep > burn.in
     iter_from <- ifelse(nrep < 20000, max(100, nrep - 10000), 10000)
     msg <- "Calculating labels using iterations %d through %d"
     message(sprintf(msg, iter_from, nrep))

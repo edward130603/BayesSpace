@@ -208,6 +208,9 @@ enhanceFeatures <- function(sce.enhanced, sce.ref, feature_names = NULL,
     
     Y.enhanced <- .enhance_features(X.enhanced, X.ref, Y.ref, feature_names, 
                                     model, nrounds, train.n)
+
+    ## Clip negative predicted expression
+    Y.enhanced <- pmax(Y.enhanced, 0)
     
     ## TODO: add option to specify destination of enhanced features.
     ## For now, return in same form as input
