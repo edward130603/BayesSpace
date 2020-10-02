@@ -35,8 +35,6 @@ Imports:
     xgboost,
     utils,
     ggplot2,
-    patchwork,
-    RColorBrewer,
     scales
 License: MIT + file LICENSE
 RoxygenNote: 7.1.1
@@ -56,6 +54,8 @@ Suggests:
     spatialLIBD,
     dplyr,
     viridis,
+    patchwork,
+    RColorBrewer,
     Seurat
 VignetteBuilder: knitr
 biocViews:
