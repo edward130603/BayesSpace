@@ -15,6 +15,7 @@ spatialCluster(
   model = c("t", "normal"),
   precision = c("equal", "variable"),
   nrep = 50000,
+  burn.in = 1000,
   gamma = 3,
   mu0 = NULL,
   lambda0 = NULL,
@@ -48,6 +49,8 @@ PCs with this method to obtain initial cluster assignments.}
 VVV covariance models, respectively.)}
 
 \item{nrep}{The number of MCMC iterations.}
+
+\item{burn.in}{The number of MCMC iterations to exclude as burn-in period.}
 
 \item{gamma}{Smoothing parameter. (Values in range of 1-3 seem to work well.)}
 

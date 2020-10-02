@@ -21,6 +21,7 @@ spatialEnhance(
   beta = 0.01,
   save.chain = FALSE,
   chain.fname = NULL,
+  burn.in = 10000,
   jitter_scale = 5,
   jitter_prior = 0.3,
   verbose = FALSE
@@ -63,6 +64,10 @@ is set to a diagonal matrix \eqn{0.01 I}.}
 \item{save.chain}{If true, save the MCMC chain to an HDF5 file.}
 
 \item{chain.fname}{File path for saved chain. Tempfile used if not provided.}
+
+\item{burn.in}{Number of iterations to exclude as burn-in period. The MCMC
+iterations are currently thinned to every 100; accordingly \code{burn.in}
+is rounded down to the nearest multiple of 100.}
 
 \item{jitter_scale}{Controls the amount of jittering. Small amounts of 
 jittering are more likely to be accepted but result in exploring the space

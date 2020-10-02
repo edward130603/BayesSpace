@@ -26,6 +26,9 @@
 #' @param beta Hyperparameter for Wishart distributed precision lambda.
 #' @param save.chain If true, save the MCMC chain to an HDF5 file. 
 #' @param chain.fname File path for saved chain. Tempfile used if not provided.
+#' @param burn.in Number of iterations to exclude as burn-in period. The MCMC
+#'   iterations are currently thinned to every 100; accordingly \code{burn.in}
+#'   is rounded down to the nearest multiple of 100.
 #' @param jitter_scale Controls the amount of jittering. Small amounts of 
 #'   jittering are more likely to be accepted but result in exploring the space
 #'   more slowly. We suggest tuning \code{jitter_scale} so that Ychange is on 
@@ -177,8 +180,15 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
     init = NULL, init.method = c("spatialCluster", "mclust", "kmeans"),
     model = c("t", "normal"), nrep = 200000, gamma = 3, 
     mu0 = NULL, lambda0 = NULL, alpha = 1, beta = 0.01, 
-    save.chain = FALSE, chain.fname = NULL,
+    save.chain = FALSE, chain.fname = NULL, burn.in=10000,
     jitter_scale = 5, jitter_prior = 0.3, verbose = FALSE) {
+
+    if (burn.in > nrep)
+        stop("Please specify a burn-in period shorter than the total number of iterations.")
+    
+    ## Thinning interval; only every 100 iterations are kept to reduce memory
+    ## This is temporarily hard-coded into the C++ code
+    thin <- 100
 
     platform <- match.arg(platform)
     if (platform == "Visium") {
@@ -223,21 +233,19 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
     enhanced <- SingleCellExperiment(assays=list(), 
         rowData=rowData(sce), colData=cdata)
     
+    ## Scale burn.in period to thinned intervals, and
+    ## add one to skip initialization values stored before first iteration
+    burn.in <- (burn.in %/% thin) + 1
+    
     ## Average PCs, excluding burn-in
-    deconv_PCs <- Reduce(`+`, deconv$Y[-(1:101)]) / (length(deconv$Y) - 101)
+    deconv_PCs <- Reduce(`+`, deconv$Y[-seq_len(burn.in)]) / (length(deconv$Y) - burn.in)
     colnames(deconv_PCs) <- paste0("PC", seq_len(ncol(deconv_PCs)))
     reducedDim(enhanced, "PCA") <- deconv_PCs
     
-    ## NOTE: swap below code for this to test against refactoring
-    ## enhanced$spatial.cluster <- apply(deconv$z[900:1000, ], 2, Mode)
-    
-    ## TODO: add thinning and burn-in parameters; add check that nrep > burn.in
-    iter_from <- ifelse(nrep < 20000, max(100, nrep - 10000), 10000)
+    ## Choose modal cluster label, excluding burn-in
     msg <- "Calculating labels using iterations %d through %d"
-    message(sprintf(msg, iter_from, nrep))
-    
-    ## Add one to skip initial values stored before first iteration
-    labels <- apply(deconv$z[((iter_from %/% 100) + 1):((nrep %/% 100) + 1), ], 2, Mode)
+    message(sprintf(msg, (burn.in - 1) * thin, nrep))
+    labels <- apply(deconv$z[seq(burn.in, (nrep %/% thin) + 1), ], 2, Mode)
     enhanced$spatial.cluster <- unname(labels)
     
     if (save.chain) {
