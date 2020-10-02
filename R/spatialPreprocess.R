@@ -27,6 +27,7 @@
 #' @export
 #' @importFrom scater logNormCounts runPCA
 #' @importFrom scran modelGeneVar getTopHVGs
+#' @importFrom SummarizedExperiment rowData<-
 spatialPreprocess <- function(sce, platform=c("Visium", "ST"),
                               n.PCs=15, n.HVGs=2000, skip.PCA=FALSE,
                               log.normalize=TRUE, assay.type="logcounts") {
@@ -39,6 +40,7 @@ spatialPreprocess <- function(sce, platform=c("Visium", "ST"),
         dec <- modelGeneVar(sce, assay.type=assay.type)
         top <- getTopHVGs(dec, n=n.HVGs)
         sce <- runPCA(sce, subset_row=top, ncomponents=n.PCs, exprs_values=assay.type)
+        rowData(sce)[["is.HVG"]] <- (rownames(sce) %in% top)
     }
      
     ## Set BayesSpace metadata
