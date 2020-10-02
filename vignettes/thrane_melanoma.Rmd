@@ -19,7 +19,15 @@ library(patchwork)
 
 ## Overview
 
-TODO: add citation, description
+Here we present our re-analysis of one of the melanoma samples originally
+reported by [Thrane et al.
+(2018)](https://cancerres.aacrjournals.org/content/78/20/5970.long). These data
+were originally obtained through their
+[website](https://www.spatialresearch.org/wp-content/uploads/2019/03/ST-Melanoma-Datasets_1.zip).
+(NOTE: Since downloading this data, the Spatial Research website has gone
+offline. We will update this vignette with a working link to the original data
+when possible. Until then, the data remains available through our `getRDS()`
+funtion below.)
 
 ## Processing the data
 
@@ -65,13 +73,16 @@ melanoma <- spatialCluster(melanoma, q=q, d=d, platform='ST',
 ```r
 ## View results
 palette <- c("purple", "red", "blue", "yellow", "darkblue")
-clusterPlot(melanoma, palette=palette, color="black") +
+clusterPlot(melanoma, palette=palette, color="black", size=0.1) +
     labs(title="BayesSpace")
 ```
 
 <img src="figures/melanoma-plot.clusters-1.png" title="plot of chunk plot.clusters" alt="plot of chunk plot.clusters" width="100%" />
 
 ## Enhancing resolution with BayesSpace
+
+Next, we clustered the dataset at enhanced resolution, using the same parameters
+and running the algorithm for 200,000 iterations.
 
 
 ```r
@@ -94,6 +105,11 @@ clusterPlot(melanoma.enhanced, palette=palette, color="black", size=0.1) +
 
 ## Enhancement of marker gene expression
 
+We highlighted patterns of expression of cell type markers at both original spot
+and enhanced subspot resolution. First, we selected the below sets of marker
+genes for each of five cell types, and predicted their expression at subspot
+resolution using `xgboost`.
+
 
 ```r
 markers <- list()
@@ -112,8 +128,8 @@ melanoma.enhanced <- enhanceFeatures(melanoma.enhanced, melanoma,
                                      nrounds=0)
 ```
 
-We aggregated the expression of marker genes within each cell type by summing
-their log-normalized expression.
+Next, we aggregated the expression of marker genes within each cell type by
+summing their log-normalized expression.
 
 
 ```r
@@ -129,8 +145,8 @@ spot_expr <- purrr::map(markers, function(xs) sum_counts(melanoma, xs))
 enhanced_expr <- purrr::map(markers, function(xs) sum_counts(melanoma.enhanced, xs))
 ```
 
-And we plotted the spatial expression of each cell type's markers at spot-level and at enhanced subspot resolution using
-`featurePlot()`:
+And we plotted the spatial expression of each cell type's markers at spot-level
+and enhanced subspot resolution using `featurePlot()`:
 
 
 ```r
@@ -161,6 +177,7 @@ plot_expression_comparison("Tumor")
 
 <img src="figures/melanoma-plot.expression_tumor-1.png" title="plot of chunk plot.expression_tumor" alt="plot of chunk plot.expression_tumor" width="100%" />
 
+
 ```r
 plot_expression_comparison("Fibroblast")
 ```
@@ -190,25 +207,28 @@ plot_expression_comparison("T-cell")
 
 
 
-## Differential expression analysis
+## Differential expression analysis of spatial clusters
 
 We additionally performed a differential expression analysis between clusters of
-interest. We limited our analysis to the top 2,000 highly variable genes, and we
-first imputed the expression of these HVGs at enhanced resolution.
+interest. We limited our analysis to the top 2,000 highly variable genes, and
+again we imputed their expression at enhanced resolution using xgboost.
 
 
 ```r
-## Using the same 2,000 HVGs previously computed for PCA
+## Using the same 2,000 HVGs previously computed for PCA, excluding ribosomal
+hvgs <- top[grep("^RP[LS]", top, invert=TRUE)]
+
 melanoma.enhanced <- enhanceFeatures(melanoma.enhanced, melanoma, 
                                      model="xgboost",
-                                     feature_names=top,
+                                     feature_names=hvgs,
                                      nrounds=0)
 ```
 
 
 
 Next, we applied a standard Seurat differential expression analysis workflow to
-the enhanced resolution.
+the enhanced resolution, finding general concordance among the histological
+annotations, cluster assignments, and differential gene expression.
 
 
 ```r
@@ -240,11 +260,21 @@ Seurat::DoHeatmap(sobj, features = top_markers$gene, slot='scale.data',
 
 <img src="figures/melanoma-seurat.DE-1.png" title="plot of chunk seurat.DE" alt="plot of chunk seurat.DE" width="100%" />
 
-
 ## Comparison to other clustering algorithms
 
-We cluster the first seven principal components, specifying 4 clusters when 
-necessary.
+We compared the BayesSpace clustering algorithm to several other clustering
+algorithms, some spatially informed and some non-spatial algorithms popularly
+used in the analysis of single-cell data. Consistently with our earlier
+analyses, in all cases we cluster the first seven principal components,
+specifying 4 clusters when necessary.
+
+We provide the code necessary to replicate the cluster assignments obtained with
+mclust, k-means, and the Louvain method below. For brevity, we provide the code
+used to run Giotto separately (adapted from their [Visium
+tutorial](http://spatialgiotto.rc.fas.harvard.edu/giotto.visium.brain.html)). We
+could not run stLearn on this particular sample as it does not include an image
+aligned to the expression data.
+
 
 ```r
 Y1.2 <- reducedDim(melanoma, "PCA")[, seq_len(d)]
@@ -269,3 +299,61 @@ giotto.labels <- read.csv(giotto.fname)$HMRF_PCA_k4_b.2
 ```
 
 <img src="figures/melanoma-cluster.comparison-1.png" title="plot of chunk cluster.comparison" alt="plot of chunk cluster.comparison" width="100%" />
+
+
+## Differential expression of tumor border and tumor-proximal lymphoid tissue
+
+Finally, we performed differential expression analysis between spots in the
+tumor border (cluster 1, in purple, above) and the spots in the lymphoid cluster
+(cluster 4, in yellow, above) which appeared proximal to the tumor. We highlight
+the spots included in the analysis below.
+
+
+```r
+label_spot <- Vectorize(function(cluster, col) {
+  if (cluster == 1 && col < 19) {
+    "Tumor border"
+  } else if (cluster == 4 && col < 19) {
+    "Lymphoid"
+  } else {
+    "Other"
+  }
+})
+
+DE.labels <- label_spot(melanoma.enhanced$spatial.cluster, melanoma.enhanced$col)
+DE.labels <- factor(DE.labels, levels = c("Lymphoid", "Tumor border", "Other"))
+clusterPlot(melanoma.enhanced, label=DE.labels, color="black", size=0.1) + 
+  scale_fill_manual(values=c('#0173b2', '#de8f05', '#949494')) +
+  labs(fill="Region")
+```
+
+<img src="figures/melanoma-unnamed-chunk-2-1.png" title="plot of chunk unnamed-chunk-2" alt="plot of chunk unnamed-chunk-2" width="100%" />
+
+And perform the DE analysis as with the full set of clusters above.
+
+
+```r
+## Add tumor proximal/border labels
+sobj <- Seurat::AddMetaData(sobj, DE.labels, col.name="DE.label")
+sobj <- Seurat::SetIdent(sobj, value = "DE.label")
+
+## Subset to the two clusters of interest and re-scale
+sobj <- subset(sobj, DE.label %in% c("Lymphoid", "Tumor border"))
+sobj@assays$Spatial@scale.data <-
+  sobj@assays$Spatial@data %>% as.matrix %>% t %>% scale %>% t
+
+## Select top n markers from each cluster (by log fold change)
+top_markers <- Seurat::FindAllMarkers(sobj, assay='Spatial', slot='data',
+                                      group.by='DE.label',
+                                      only.pos=TRUE) %>% 
+  group_by(cluster) %>% 
+  top_n(5, avg_logFC)
+
+## Plot expression of markers
+Seurat::DoHeatmap(sobj, features = top_markers$gene, slot='scale.data',
+                  group.by = "DE.label", group.colors=c('#0173b2', '#de8f05'), 
+                  angle=0, size=4, label = FALSE, raster=FALSE) + 
+  guides(col = FALSE)
+```
+
+<img src="figures/melanoma-tumor.DE-1.png" title="plot of chunk tumor.DE" alt="plot of chunk tumor.DE" width="100%" />
