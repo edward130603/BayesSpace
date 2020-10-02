@@ -17,21 +17,6 @@ knitr::opts_chunk$set(
   dpi=300, fig.path="figures/ji_SCC-",
   message=FALSE, warning=FALSE, error=FALSE
 )
-
-knitr::knit_hooks$set(time_it = local({
-  now <- NULL
-  function(before, options) {
-    if (before) {
-      # record the current time before each chunk
-      now <<- Sys.time()
-    } else {
-      # calculate the time difference after a chunk
-      res <- difftime(Sys.time(), now)
-      # return a character string to show the time
-      paste("Time for this code chunk to run:", res)
-    }
-  }
-}))
 ```
 
 ```{r setup}
@@ -78,7 +63,7 @@ After evaluating the average model pseudo-log-likelihood over the first 1000
 iterations (excluding a 100-iteration burn-in), we selected `q=12` as a
 reasonable elbow and choice of number of clusters.
 
-```{r qTune}
+```{r qTune, fig.width=6, fig.height=4}
 scc <- qTune(scc, qs=seq(2, 20))
 qPlot(scc)
 ```
@@ -125,7 +110,7 @@ saveRDS(mcmcChain(scc.enhanced), "scc.enhanced.chain.rds")
 
 We compared the two clusterings using `clusterPlot()`.
 
-```{r clustering, fig.width=6, fig.height=3}
+```{r plot.clusters, fig.width=6, fig.height=3}
 palette <- RColorBrewer::brewer.pal(q, "Paired")
 
 spot.plot <- clusterPlot(scc, palette=palette, size=0.05) +
@@ -145,15 +130,6 @@ Ji et al. at the spot level and after enhancement. We predicted the marker gene
 at enhanced subspot resolution using `xgboost`, tuning the selection of the
 `nrounds` parameter with two thirds of the spots. (See documentation of
 `enhanceFeatures()` for details.)
-
-```{r include=FALSE}
-chain <- readRDS("scc.enhanced.chain.rds")
-Y <- chain[, grep("Y\\[", colnames(chain))]
-Y.mean <- colMeans(Y[-seq_len(101), ])
-PCs <- matrix(Y.mean, ncol=15, byrow=TRUE)
-reducedDim(scc.enhanced, "PCA") <- PCs
-```
-
 
 ```{r enhance.markers}
 markers <- list()
@@ -205,7 +181,6 @@ And at enhanced subspot resolution:
 ```{r enhanced.expression, fig.width=14, fig.height=8}
 enhanced_plots <- purrr::imap(enhanced_expr, function(x, y) plot_expression(scc.enhanced, x, y))
 patchwork::wrap_plots(enhanced_plots, ncol=3)
-ggsave("scc.enhanced_expression.pdf")
 ```
 
 ## Differential expression analysis
@@ -222,6 +197,9 @@ scc.enhanced <- enhanceFeatures(scc.enhanced, scc,
                                 nrounds=0)
 ```
 
+```{r save.enhanced, eval=TRUE, include=FALSE}
+saveRDS(scc.enhanced, "scc.enhanced_features.rds")
+```
 
 Next, we applied a standard Seurat differential expression analysis workflow to
 the enhanced resolution.
