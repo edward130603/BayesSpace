@@ -281,7 +281,7 @@ g.jaccard <- scran::buildSNNGraph(melanoma, use.dimred="PCA", type="jaccard")
 louvain.labels <- igraph::cluster_louvain(g.jaccard)$membership
 
 ## Giotto (pre-computed)
-giotto.fname <- system.file("extdata", "thrane_HMRF_domains.csv", package = "BayesSpace")
+giotto.fname <- system.file("extdata", "2018_thrane_melanoma", "ST_mel1_rep2.Giotto_HMRF.csv", package = "BayesSpace")
 giotto.labels <- read.csv(giotto.fname)$HMRF_PCA_k4_b.2
 ```
 
