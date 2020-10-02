@@ -60,25 +60,18 @@ q <- 4  # Number of clusters
 d <- 7  # Number of PCs
 ```
 
-```{r load.clusters, eval=TRUE, include=FALSE}
-melanoma <- readRDS("melanoma.rds")
-melanoma.enhanced <- readRDS("melanoma.enhanced_features.rds")
-```
-
 ## Clustering with BayesSpace
 
 We clustered the first seven principal components, specifying 4 clusters, and
 ran the MCMC algorithm for 50,000 iterations. We generally suggest setting the
 smoothing parameter gamma to 2 for ST experiments and to 3 for Visium data.
 
-```{r spatialCluster, eval=FALSE}
+```{r spatialCluster, fig.width=5, fig.height=3}
 ## Run BayesSpace clustering
 set.seed(100)
 melanoma <- spatialCluster(melanoma, q=q, d=d, platform='ST',
                            nrep=50000, gamma=2)
-```
 
-```{r plot.clusters, fig.width=5, fig.height=3}
 ## View results
 palette <- c("purple", "red", "blue", "yellow", "darkblue")
 clusterPlot(melanoma, palette=palette, color="black", size=0.1) +
@@ -90,20 +83,18 @@ clusterPlot(melanoma, palette=palette, color="black", size=0.1) +
 Next, we clustered the dataset at enhanced resolution, using the same parameters
 and running the algorithm for 200,000 iterations.
 
-```{r spatialEnhance, eval=FALSE}
+```{r spatialEnhance, fig.width=5, fig.height=3}
 set.seed(100)
 melanoma.enhanced <- spatialEnhance(melanoma, q=q, d=d, platform="ST",
                                     nrep=200000, gamma=2, 
                                     verbose=TRUE, save.chain=TRUE,
                                     jitter_scale=3.5, jitter_prior=0.3)
-```
 
-```{r plot.enhanced, fig.width=5, fig.height=3}
 clusterPlot(melanoma.enhanced, palette=palette, color="black", size=0.1) +
   labs(title="Enhanced clustering")
 ```
 
-```{r save.clusters, eval=FALSE, include=FALSE}
+```{r save.clusters, eval=TRUE, include=FALSE}
 saveRDS(melanoma, "melanoma.rds")
 saveRDS(melanoma.enhanced, "melanoma.enhanced.rds")
 saveRDS(mcmcChain(melanoma.enhanced), "melanoma.enhanced.chain.rds")
@@ -124,9 +115,6 @@ markers[["Macrophage"]] <- c("CD14", "FCGR1A", "FCGR1B")
 markers[["B-cell"]] <- c("CD19", "MS4A1")
 markers[["T-cell"]] <- c("CD2", "CD3D", "CD3E", "CD3G", "CD7")
 
-```
-
-```{r enh2, eval=FALSE}
 melanoma.enhanced <- enhanceFeatures(melanoma.enhanced, melanoma,
                                      model="xgboost",
                                      feature_names=purrr::reduce(markers, c),
@@ -193,15 +181,13 @@ plot_expression_comparison("B-cell")
 plot_expression_comparison("T-cell")
 ```
 
-
-
 ## Differential expression analysis of spatial clusters
 
 We additionally performed a differential expression analysis between clusters of
 interest. We limited our analysis to the top 2,000 highly variable genes, and
 again we imputed their expression at enhanced resolution using xgboost.
 
-```{r enhanceFeatures, eval=FALSE}
+```{r enhanceFeatures}
 ## Using the same 2,000 HVGs previously computed for PCA, excluding ribosomal
 hvgs <- top[grep("^RP[LS]", top, invert=TRUE)]
 
@@ -211,7 +197,7 @@ melanoma.enhanced <- enhanceFeatures(melanoma.enhanced, melanoma,
                                      nrounds=0)
 ```
 
-```{r save.enhanced, eval=FALSE, include=FALSE}
+```{r save.enhanced, eval=TRUE, include=FALSE}
 saveRDS(melanoma.enhanced, "melanoma.enhanced_features.rds")
 ```
 
@@ -308,7 +294,7 @@ tumor border (cluster 1, in purple, above) and the spots in the lymphoid cluster
 (cluster 4, in yellow, above) which appeared proximal to the tumor. We highlight
 the spots included in the analysis below.
 
-```{r}
+```{r label.tumor_border}
 label_spot <- Vectorize(function(cluster, col) {
   if (cluster == 1 && col < 19) {
     "Tumor border"

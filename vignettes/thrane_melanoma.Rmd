@@ -53,8 +53,6 @@ q <- 4  # Number of clusters
 d <- 7  # Number of PCs
 ```
 
-
-
 ## Clustering with BayesSpace
 
 We clustered the first seven principal components, specifying 4 clusters, and
@@ -67,17 +65,14 @@ smoothing parameter gamma to 2 for ST experiments and to 3 for Visium data.
 set.seed(100)
 melanoma <- spatialCluster(melanoma, q=q, d=d, platform='ST',
                            nrep=50000, gamma=2)
-```
 
-
-```r
 ## View results
 palette <- c("purple", "red", "blue", "yellow", "darkblue")
 clusterPlot(melanoma, palette=palette, color="black", size=0.1) +
     labs(title="BayesSpace")
 ```
 
-<img src="figures/melanoma-plot.clusters-1.png" title="plot of chunk plot.clusters" alt="plot of chunk plot.clusters" width="100%" />
+<img src="figures/melanoma-spatialCluster-1.png" title="plot of chunk spatialCluster" alt="plot of chunk spatialCluster" width="100%" />
 
 ## Enhancing resolution with BayesSpace
 
@@ -91,15 +86,12 @@ melanoma.enhanced <- spatialEnhance(melanoma, q=q, d=d, platform="ST",
                                     nrep=200000, gamma=2, 
                                     verbose=TRUE, save.chain=TRUE,
                                     jitter_scale=3.5, jitter_prior=0.3)
-```
 
-
-```r
 clusterPlot(melanoma.enhanced, palette=palette, color="black", size=0.1) +
   labs(title="Enhanced clustering")
 ```
 
-<img src="figures/melanoma-plot.enhanced-1.png" title="plot of chunk plot.enhanced" alt="plot of chunk plot.enhanced" width="100%" />
+<img src="figures/melanoma-spatialEnhance-1.png" title="plot of chunk spatialEnhance" alt="plot of chunk spatialEnhance" width="100%" />
 
 
 
@@ -118,10 +110,7 @@ markers[["Fibroblast"]] <- c("COL1A1")
 markers[["Macrophage"]] <- c("CD14", "FCGR1A", "FCGR1B")
 markers[["B-cell"]] <- c("CD19", "MS4A1")
 markers[["T-cell"]] <- c("CD2", "CD3D", "CD3E", "CD3G", "CD7")
-```
 
-
-```r
 melanoma.enhanced <- enhanceFeatures(melanoma.enhanced, melanoma,
                                      model="xgboost",
                                      feature_names=purrr::reduce(markers, c),
@@ -204,8 +193,6 @@ plot_expression_comparison("T-cell")
 ```
 
 <img src="figures/melanoma-plot.expression_t-1.png" title="plot of chunk plot.expression_t" alt="plot of chunk plot.expression_t" width="100%" />
-
-
 
 ## Differential expression analysis of spatial clusters
 
@@ -327,7 +314,7 @@ clusterPlot(melanoma.enhanced, label=DE.labels, color="black", size=0.1) +
   labs(fill="Region")
 ```
 
-<img src="figures/melanoma-unnamed-chunk-2-1.png" title="plot of chunk unnamed-chunk-2" alt="plot of chunk unnamed-chunk-2" width="100%" />
+<img src="figures/melanoma-label.tumor_border-1.png" title="plot of chunk label.tumor_border" alt="plot of chunk label.tumor_border" width="100%" />
 
 And perform the DE analysis as with the full set of clusters above.
 
