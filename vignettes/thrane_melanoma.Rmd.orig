@@ -185,10 +185,12 @@ interest. We limited our analysis to the top 2,000 highly variable genes, and we
 first imputed the expression of these HVGs at enhanced resolution.
 
 ```{r enhanceFeatures, eval=FALSE}
-## Using the same 2,000 HVGs previously computed for PCA
+## Using the same 2,000 HVGs previously computed for PCA, excluding ribosomal
+hvgs <- top[grep("^RP[LS]", top, invert=TRUE)]
+
 melanoma.enhanced <- enhanceFeatures(melanoma.enhanced, melanoma, 
                                      model="xgboost",
-                                     feature_names=top,
+                                     feature_names=hvgs,
                                      nrounds=0)
 ```
 

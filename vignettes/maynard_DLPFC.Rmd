@@ -1,5 +1,5 @@
 ---
-title: "BayesSpace analysis of DLPFC dataset (Maynard, Collado-Torres et al., 2020)"
+title: "BayesSpace analysis of DLPFC dataset (Maynard et al., 2020)"
 author: "Edward Zhao, Matt Stone, Xing Ren, and Raphael Gottardo"
 output: rmarkdown::html_vignette
 vignette: >
@@ -19,14 +19,14 @@ library(ggplot2)
 ## Overview
 
 Here we present our re-analysis of one of the dorsolateral prefrontal cortex
-(DLPFC) samples originally reported by [Maynard, Collado-Torres, et al.
+(DLPFC) samples originally reported by [Maynard et al.
 (2020)](https://www.biorxiv.org/content/10.1101/2020.02.28.969931v1.full.pdf).
 These data were obtained through the publicly accessible [spatialLIBD
 package](http://www.bioconductor.org/packages/release/data/experiment/html/spatialLIBD.html)
 on Bioconductor.
 
 In the BayesSpace manuscript, we analyzed all twelve Visium samples provided by
-Maynard, Collado-Torres, et al. Here, we share the results for a single sample,
+Maynard et al. Here, we share the results for a single sample,
 151673; we used the same code to analyze the other 11.
 
 ## Processing the data
@@ -146,7 +146,7 @@ clusters[["Giotto"]] <- read.csv(system.file("extdata", "2020_maynard_prefrontal
 ### spatialLIBD cluster assignments
 
 Finally, to evaluate each algorithm's cluster assignments, we use the manual
-annotations provided with the original data by Maynard, Collado-Torres et al. We
+annotations provided with the original data by Maynard et al. We
 also compare the cluster assignments reported in this paper using the Walktrap
 clustering algorithm (a non-spatial hierarchical clustering algorithm.)
 
