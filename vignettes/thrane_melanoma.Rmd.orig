@@ -36,17 +36,25 @@ through BayesSpace. We preprocessed the data by performing PCA on the top 2,000
 HVGs.
 
 ```{r preprocess}
-melanoma1.2 <- getRDS("2018_thrane_melanoma", "ST_mel1_rep2")
+melanoma <- getRDS("2018_thrane_melanoma", "ST_mel1_rep2")
 
 set.seed(100)
-dec <- scran::modelGeneVar(melanoma1.2)
+dec <- scran::modelGeneVar(melanoma)
 top <- scran::getTopHVGs(dec, n = 2000)
 
 set.seed(101)
-melanoma1.2 <- scater::runPCA(melanoma1.2, subset_row = top)
+melanoma <- scater::runPCA(melanoma, subset_row = top)
 
 ## Add BayesSpace metadata
-melanoma1.2 <- spatialPreprocess(melanoma1.2, platform="ST", skip.PCA=TRUE)
+melanoma <- spatialPreprocess(melanoma, platform="ST", skip.PCA=TRUE)
+
+q <- 4  # Number of clusters
+d <- 7  # Number of PCs
+```
+
+```{r load.clusters, eval=TRUE, include=FALSE}
+melanoma <- readRDS("melanoma.rds")
+melanoma.enhanced <- readRDS("melanoma.enhanced_features.rds")
 ```
 
 ## Clustering with BayesSpace
@@ -55,41 +63,176 @@ We clustered the first seven principal components, specifying 4 clusters, and
 ran the MCMC algorithm for 50,000 iterations. We generally suggest setting the
 smoothing parameter gamma to 2 for ST experiments and to 3 for Visium data.
 
-```{r spatialCluster, fig.width=5, fig.height=3}
-q <- 4  # Number of clusters
-d <- 7  # Number of PCs
-
+```{r spatialCluster, eval=FALSE}
 ## Run BayesSpace clustering
 set.seed(100)
-melanoma1.2 <- spatialCluster(melanoma1.2, q=q, d=d, platform='ST',
-                              nrep=1000, gamma=2)
+melanoma <- spatialCluster(melanoma, q=q, d=d, platform='ST',
+                           nrep=50000, gamma=2)
+```
 
+```{r plot.clusters, fig.width=5, fig.height=3}
 ## View results
 palette <- c("purple", "red", "blue", "yellow", "darkblue")
-clusterPlot(melanoma1.2, palette=palette, color="black") +
+clusterPlot(melanoma, palette=palette, color="black") +
     labs(title="BayesSpace")
 ```
 
 ## Enhancing resolution with BayesSpace
 
-```{r}
+```{r spatialEnhance, eval=FALSE}
 set.seed(100)
-melanoma.enhanced <- spatialEnhance(melanoma1.2, q=q, d=d, platform="ST",
-                                    nrep=10000, gamma=2,
+melanoma.enhanced <- spatialEnhance(melanoma, q=q, d=d, platform="ST",
+                                    nrep=200000, gamma=2, 
+                                    verbose=TRUE, save.chain=TRUE,
                                     jitter_scale=3.5, jitter_prior=0.3)
 ```
 
-```{r fig.width=5, fig.height=3}
+```{r plot.enhanced, fig.width=5, fig.height=3}
 clusterPlot(melanoma.enhanced, palette=palette, color="black", size=0.1) +
   labs(title="Enhanced clustering")
 ```
+
+```{r save.clusters, eval=FALSE, include=FALSE}
+saveRDS(melanoma, "melanoma.rds")
+saveRDS(melanoma.enhanced, "melanoma.enhanced.rds")
+saveRDS(mcmcChain(melanoma.enhanced), "melanoma.enhanced.chain.rds")
+```
+
+## Enhancement of marker gene expression
+
+```{r enhance.markers}
+markers <- list()
+markers[["Tumor"]] <- c("PMEL")
+markers[["Fibroblast"]] <- c("COL1A1")
+markers[["Macrophage"]] <- c("CD14", "FCGR1A", "FCGR1B")
+markers[["B-cell"]] <- c("CD19", "MS4A1")
+markers[["T-cell"]] <- c("CD2", "CD3D", "CD3E", "CD3G", "CD7")
+
+```
+
+```{r enh2, eval=FALSE}
+melanoma.enhanced <- enhanceFeatures(melanoma.enhanced, melanoma,
+                                     model="xgboost",
+                                     feature_names=purrr::reduce(markers, c),
+                                     nrounds=0)
+```
+
+We aggregated the expression of marker genes within each cell type by summing
+their log-normalized expression.
+
+```{r aggregate.markers}
+sum_counts <- function(sce, features) {
+  if (length(features) > 1) {
+    colSums(logcounts(sce)[features, ])
+  } else {
+    logcounts(sce)[features, ]
+  }
+}
+
+spot_expr <- purrr::map(markers, function(xs) sum_counts(melanoma, xs))
+enhanced_expr <- purrr::map(markers, function(xs) sum_counts(melanoma.enhanced, xs))
+```
+
+And we plotted the spatial expression of each cell type's markers at spot-level and at enhanced subspot resolution using
+`featurePlot()`:
+
+```{r spot.expression, fig.width=15, fig.height=6}
+plot_expression <- function(sce, expr, title) {
+  featurePlot(sce, expr, color=NA) +
+    viridis::scale_fill_viridis(option="A") +
+    labs(title=title, fill="Log-normalized\nexpression")
+}
+
+plot_expression_comparison <- function(cell_type) {
+  spot.plot <- plot_expression(melanoma, 
+                               spot_expr[[cell_type]], 
+                               "Spot")
+  enhanced.plot <- plot_expression(melanoma.enhanced,
+                                   enhanced_expr[[cell_type]], 
+                                   "Enhanced")
+  
+  (spot.plot + enhanced.plot) + 
+    plot_annotation(title=cell_type,
+                    theme=theme(plot.title=element_text(size=18)))
+}
+```
+
+```{r plot.expression_tumor, fig.width=6, fig.height=3}
+plot_expression_comparison("Tumor")
+```
+```{r plot.expression_fibro, fig.width=6, fig.height=3}
+plot_expression_comparison("Fibroblast")
+```
+
+```{r plot.expression_macro, fig.width=6, fig.height=3}
+plot_expression_comparison("Macrophage")
+```
+
+```{r plot.expression_b, fig.width=6, fig.height=3}
+plot_expression_comparison("B-cell")
+```
+
+```{r plot.expression_t, fig.width=6, fig.height=3}
+plot_expression_comparison("T-cell")
+```
+
+
+
+## Differential expression analysis
+
+We additionally performed a differential expression analysis between clusters of
+interest. We limited our analysis to the top 2,000 highly variable genes, and we
+first imputed the expression of these HVGs at enhanced resolution.
+
+```{r enhanceFeatures, eval=FALSE}
+## Using the same 2,000 HVGs previously computed for PCA
+melanoma.enhanced <- enhanceFeatures(melanoma.enhanced, melanoma, 
+                                     model="xgboost",
+                                     feature_names=top,
+                                     nrounds=0)
+```
+
+```{r save.enhanced, eval=FALSE, include=FALSE}
+saveRDS(melanoma.enhanced, "melanoma.enhanced_features.rds")
+```
+
+Next, we applied a standard Seurat differential expression analysis workflow to
+the enhanced resolution.
+
+```{r seurat.DE, fig.width=7, fig.height=5}
+library(dplyr)
+
+## Convert SCE to Seurat object and use BayesSpace cluster as identifier
+sobj <- Seurat::CreateSeuratObject(counts=logcounts(melanoma.enhanced),
+                                   assay='Spatial',
+                                   meta.data=as.data.frame(colData(melanoma.enhanced)))
+sobj <- Seurat::SetIdent(sobj, value = "spatial.cluster")
+
+## Scale data
+sobj@assays$Spatial@scale.data <-
+  sobj@assays$Spatial@data %>% as.matrix %>% t %>% scale %>% t
+
+## Select top n markers from each cluster (by log fold change)
+top_markers <- Seurat::FindAllMarkers(sobj, assay='Spatial', slot='data',
+                                      group.by='spatial.cluster',
+                                      only.pos=TRUE) %>% 
+  group_by(cluster) %>% 
+  top_n(5, avg_logFC)
+
+## Plot expression of markers
+Seurat::DoHeatmap(sobj, features = top_markers$gene, slot='scale.data',
+                  group.by = "spatial.cluster", group.colors=palette, 
+                  angle=0, size=4, label = FALSE, raster=FALSE) + 
+  guides(col = FALSE)
+```
+
 
 ## Comparison to other clustering algorithms
 
 We cluster the first seven principal components, specifying 4 clusters when 
 necessary.
 ```{r compare.clusters, warning=FALSE, message=FALSE}
-Y1.2 <- reducedDim(melanoma1.2, "PCA")[, seq_len(d)]
+Y1.2 <- reducedDim(melanoma, "PCA")[, seq_len(d)]
 
 ## mclust (BayesSpace initialization)
 library(mclust)
@@ -102,7 +245,7 @@ km.labels <- kmeans(Y1.2, centers = q)$cluster
 
 ## Louvain
 set.seed(100)
-g.jaccard <- scran::buildSNNGraph(melanoma1.2, use.dimred="PCA", type="jaccard")
+g.jaccard <- scran::buildSNNGraph(melanoma, use.dimred="PCA", type="jaccard")
 louvain.labels <- igraph::cluster_louvain(g.jaccard)$membership
 
 ## Giotto (pre-computed)
@@ -111,16 +254,16 @@ giotto.labels <- read.csv(giotto.fname)$HMRF_PCA_k4_b.2
 ```
 
 ```{r cluster.comparison, echo=FALSE, fig.width=7*1.3, fig.height=5*1.3}
-p.mclust <- clusterPlot(melanoma1.2, label=mclust.labels, palette=palette, color="black") + 
+p.mclust <- clusterPlot(melanoma, label=mclust.labels, palette=palette, color="black") + 
     guides(fill=FALSE) +
     labs(title="mclust")
-p.km <- clusterPlot(melanoma1.2, label=km.labels, palette=palette[c(3, 1, 4, 2)], color="black") + 
+p.km <- clusterPlot(melanoma, label=km.labels, palette=palette[c(3, 1, 4, 2)], color="black") + 
     guides(fill=FALSE) +
     labs(title="k-means")
-p.louvain <- clusterPlot(melanoma1.2, label=louvain.labels, palette=palette[c(3, 5, 1, 4, 2)], color="black") +
+p.louvain <- clusterPlot(melanoma, label=louvain.labels, palette=palette[c(3, 5, 1, 4, 2)], color="black") +
     guides(fill=FALSE) +
     labs(title="Louvain")
-p.giotto <- clusterPlot(melanoma1.2, label=giotto.labels, palette=palette[c(4, 2, 1, 3)], color="black") +
+p.giotto <- clusterPlot(melanoma, label=giotto.labels, palette=palette[c(4, 2, 1, 3)], color="black") +
     guides(fill=FALSE) +
     labs(title="Giotto")
 
