@@ -1,4 +1,4 @@
-#' Pre-compile vignette to avoid recomputing cluster/enhancement
+#' Pre-compile vignettes to avoid recomputing cluster/enhancement on install
 #' 
 #' Adapted from examples given in
 #' https://ropensci.org/technotes/2019/12/08/precompute-vignettes/
@@ -15,3 +15,5 @@ system2("mv", c("figures/maynard_DLPFC-*.png", "vignettes/figures/"))
 
 knitr::knit("vignettes/ji_SCC.Rmd.orig", output="vignettes/ji_SCC.Rmd")
 system2("mv", c("figures/ji_SCC-*.png", "vignettes/figures/"))
+
+system2("rmdir", "figures/")
