@@ -1,52 +1,57 @@
-# CHANGELOG - BayesSpace
+# BayesSpace (development version)
 
-All notable changes to this project will be documented in this file.
+## New features
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [Unreleased]
-
-### Added
-
-- The `nrounds` parameter in xgboost can now be tuned automatically within
-  `enhanceFeatures()` for improved feature prediction.
+- `enhanceFeatures()` now takes an `nrounds` parameter that corresponds to the
+  same parameter in xgboost. If `nrounds` is set to 0, we automatically tune
+  the parameter using a train/test split for improved feature prediction.
+- `spatialCluster()` and `spatialEnhance()` both gain a `burn.in` parameter
+  specifying the number of MCMC iterations to exclude when aggregating cluster
+  labels and enhanced PCs.
+- In `clusterPlot()`, `label` now accepts factors and vectors of strings, in
+  addition to numeric vectors or a column name in `colData`.
 - Additional vignettes provided for reproducing the analyses of the melanoma,
   dorsolateral prefrontal cortex, and squamous cell carcinoma datasets presented
   in the bioRxiv manuscript.
 
-### Fixed
+## Minor improvements and fixes
 
-- When using the spatial plot functions on enhanced Visium data, the internal
-  layout of the subspots was incorrectly flipped vertically. This has been
-  fixed.
+- The internal layout of subspots is now correctly oriented (accounting for
+  vertical flip of spot coordinates) when using spatial plot functions on
+  enhanced Visium data.
+- In `spatialEnhance()`, PCs are now averaged over the MCMC iterations
+  (excluding the burn-in period).
+- In `enhanceFeatures()`, negative expression is now clipped to 0.
+- `spatialPreprocess()` now adds a boolean `is.HVG` column to `rowData`.
+- In `featurePlot()`, additional arguments to `geom_polygon()` are correctly
+  passed through.
 
-## [0.99.3] - 2020-09-21
+# BayesSpace 0.99.3
 
-### Changed
+## Minor improvements and fixes
 
-- Updated README to include system requirements, additional installation
+- Updated `README.md` to include system requirements, additional installation
   details, and link to vignette with demonstration of package functions, per
   journal guidelines.
 
-## [0.99.2] - 2020-09-09
+# BayesSpace 0.99.2
 
-### Fixed
+## Minor improvements and fixes
 
 - `spatialEnhance()` incorrectly added row offset to spot column coordinate
   when generating subspot colData, and vice versa. This resulted in subspots
   being reflected over y=x in spatial plots, and has been fixed.
 - Figures in the demonstration vignette have been updated with this fix.
 
-## [0.99.1] - 2020-09-08
+# BayesSpace 0.99.1
 
-### Changed
+## Minor improvements and fixes
 
 - Removed Maintainer field from DESCRIPTION to adhere to Bioconductor
   guidelines.
 
-## [0.99.0] - 2020-09-06
+# BayesSpace 0.99.0
 
-### Added
+## New features
 
 - Initial Bioconductor submission
