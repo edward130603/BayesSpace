@@ -1,5 +1,7 @@
 # BayesSpace (development version)
 
+# BayesSpace 0.99.4
+
 ## New features
 
 - `enhanceFeatures()` now takes an `nrounds` parameter that corresponds to the
