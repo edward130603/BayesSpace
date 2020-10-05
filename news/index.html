@@ -89,6 +89,24 @@
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Examples
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/maynard_DLPFC.html">DLPFC (Maynard et al., 2020)</a>
+    </li>
+    <li>
+      <a href="../articles/ji_SCC.html">SCC (Ji et al., 2020)</a>
+    </li>
+    <li>
+      <a href="../articles/thrane_melanoma.html">Melanoma (Thrane et al., 2018)</a>
+    </li>
+  </ul>
+</li>
 <li>
   <a href="../news/index.html">Changelog</a>
 </li>
@@ -117,12 +135,79 @@
       <small>Source: <a href='https://github.com/edward130603/BayesSpace/blob/master/NEWS.md'><code>NEWS.md</code></a></small>
     </div>
 
+    <div id="bayesspace-development-version" class="section level1">
+<h1 class="page-header" data-toc-text="development version">
+<a href="#bayesspace-development-version" class="anchor"></a>BayesSpace (development version)</h1>
+<div id="new-features" class="section level2">
+<h2 class="hasAnchor">
+<a href="#new-features" class="anchor"></a>New features</h2>
+<ul>
+<li>
+<code><a href="../reference/enhanceFeatures.html">enhanceFeatures()</a></code> now takes an <code>nrounds</code> parameter that corresponds to the same parameter in xgboost. If <code>nrounds</code> is set to 0, we automatically tune the parameter using a train/test split for improved feature prediction.</li>
+<li>
+<code><a href="../reference/spatialCluster.html">spatialCluster()</a></code> and <code><a href="../reference/spatialEnhance.html">spatialEnhance()</a></code> both gain a <code>burn.in</code> parameter specifying the number of MCMC iterations to exclude when aggregating cluster labels and enhanced PCs.</li>
+<li>In <code><a href="../reference/clusterPlot.html">clusterPlot()</a></code>, <code>label</code> now accepts factors and vectors of strings, in addition to numeric vectors or a column name in <code>colData</code>.</li>
+<li>Additional vignettes provided for reproducing the analyses of the melanoma, dorsolateral prefrontal cortex, and squamous cell carcinoma datasets presented in the bioRxiv manuscript.</li>
+</ul>
+</div>
+<div id="minor-improvements-and-fixes" class="section level2">
+<h2 class="hasAnchor">
+<a href="#minor-improvements-and-fixes" class="anchor"></a>Minor improvements and fixes</h2>
+<ul>
+<li>The internal layout of subspots is now correctly oriented (accounting for vertical flip of spot coordinates) when using spatial plot functions on enhanced Visium data.</li>
+<li>In <code><a href="../reference/spatialEnhance.html">spatialEnhance()</a></code>, PCs are now averaged over the MCMC iterations (excluding the burn-in period).</li>
+<li>In <code><a href="../reference/enhanceFeatures.html">enhanceFeatures()</a></code>, negative expression is now clipped to 0.</li>
+<li>
+<code><a href="../reference/spatialPreprocess.html">spatialPreprocess()</a></code> now adds a boolean <code>is.HVG</code> column to <code>rowData</code>.</li>
+<li>In <code><a href="../reference/featurePlot.html">featurePlot()</a></code>, additional arguments to <code><a href="https://ggplot2.tidyverse.org/reference/geom_polygon.html">geom_polygon()</a></code> are correctly passed through.</li>
+</ul>
+</div>
+</div>
+    <div id="bayesspace-0993" class="section level1">
+<h1 class="page-header" data-toc-text="0.99.3">
+<a href="#bayesspace-0993" class="anchor"></a>BayesSpace 0.99.3</h1>
+<div id="minor-improvements-and-fixes-1" class="section level2">
+<h2 class="hasAnchor">
+<a href="#minor-improvements-and-fixes-1" class="anchor"></a>Minor improvements and fixes</h2>
+<ul>
+<li>Updated <code>README.md</code> to include system requirements, additional installation details, and link to vignette with demonstration of package functions, per journal guidelines.</li>
+</ul>
+</div>
+</div>
+    <div id="bayesspace-0992" class="section level1">
+<h1 class="page-header" data-toc-text="0.99.2">
+<a href="#bayesspace-0992" class="anchor"></a>BayesSpace 0.99.2</h1>
+<div id="minor-improvements-and-fixes-2" class="section level2">
+<h2 class="hasAnchor">
+<a href="#minor-improvements-and-fixes-2" class="anchor"></a>Minor improvements and fixes</h2>
+<ul>
+<li>
+<code><a href="../reference/spatialEnhance.html">spatialEnhance()</a></code> incorrectly added row offset to spot column coordinate when generating subspot colData, and vice versa. This resulted in subspots being reflected over y=x in spatial plots, and has been fixed.</li>
+<li>Figures in the demonstration vignette have been updated with this fix.</li>
+</ul>
+</div>
+</div>
+    <div id="bayesspace-0991" class="section level1">
+<h1 class="page-header" data-toc-text="0.99.1">
+<a href="#bayesspace-0991" class="anchor"></a>BayesSpace 0.99.1</h1>
+<div id="minor-improvements-and-fixes-3" class="section level2">
+<h2 class="hasAnchor">
+<a href="#minor-improvements-and-fixes-3" class="anchor"></a>Minor improvements and fixes</h2>
+<ul>
+<li>Removed Maintainer field from DESCRIPTION to adhere to Bioconductor guidelines.</li>
+</ul>
+</div>
+</div>
     <div id="bayesspace-0990" class="section level1">
 <h1 class="page-header" data-toc-text="0.99.0">
 <a href="#bayesspace-0990" class="anchor"></a>BayesSpace 0.99.0</h1>
+<div id="new-features-1" class="section level2">
+<h2 class="hasAnchor">
+<a href="#new-features-1" class="anchor"></a>New features</h2>
 <ul>
-<li>Submitted to Bioconductor</li>
+<li>Initial Bioconductor submission</li>
 </ul>
+</div>
 </div>
   </div>
 
@@ -141,7 +226,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.9000.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

@@ -49,6 +49,24 @@
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Examples
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+<li>
+      <a href="../articles/maynard_DLPFC.html">DLPFC (Maynard et al., 2020)</a>
+    </li>
+    <li>
+      <a href="../articles/ji_SCC.html">SCC (Ji et al., 2020)</a>
+    </li>
+    <li>
+      <a href="../articles/thrane_melanoma.html">Melanoma (Thrane et al., 2018)</a>
+    </li>
+  </ul>
+</li>
 <li>
   <a href="../news/index.html">Changelog</a>
 </li>
@@ -70,13 +88,13 @@
 
       
 
-      </header><script src="BayesSpace_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
+      </header><script src="BayesSpace_files/header-attrs-2.3/header-attrs.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>BayesSpace</h1>
                         <h4 class="author">Edward Zhao, Matt Stone, Xing Ren, and Raphael Gottardo</h4>
             
-            <h4 class="date">2020-09-09</h4>
+            <h4 class="date">2020-09-22</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/edward130603/BayesSpace/blob/master/vignettes/BayesSpace.Rmd"><code>vignettes/BayesSpace.Rmd</code></a></small>
       <div class="hidden name"><code>BayesSpace.Rmd</code></div>
@@ -199,7 +217,7 @@
 <div class="sourceCode" id="cb11"><pre class="downlit">
 <span class="kw">melanoma.enhanced</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spatialEnhance.html">spatialEnhance</a></span>(<span class="kw">melanoma</span>, q=<span class="fl">4</span>, platform=<span class="st">"ST"</span>, d=<span class="fl">7</span>,
                                     model=<span class="st">"t"</span>, nrep=<span class="fl">10000</span>, gamma=<span class="fl">2</span>,
-                                    jitter_prior=<span class="fl">0.3</span>, jitter_scale=<span class="fl">3.5</span>, 
+                                    jitter_prior=<span class="fl">0.3</span>, jitter_scale=<span class="fl">3.5</span>,
                                     save.chain=<span class="fl">TRUE</span>)
 </pre></div>
 <p>The enhanced <code>SingleCellExperiment</code> includes an index to the parent spot in the original <code>sce</code> (<code>spot.idx</code>), along with an index to the subspot. It adds the offsets to the original spot coordinates, and provides the enhanced cluster label (<code>spatial.cluster</code>).</p>
@@ -317,7 +335,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.9000.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>
