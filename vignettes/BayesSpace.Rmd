@@ -51,13 +51,6 @@ name of the dataset, and the name of the sample in the dataset.
 melanoma <- getRDS(dataset="2018_thrane_melanoma", sample="ST_mel1_rep2")
 ```
 
-<!-- TODO: add this metadata to the RDS on S3 -->
-```{r include=FALSE}
-metadata(melanoma)$BayesSpace.data <- list()
-metadata(melanoma)$BayesSpace.data$platform <- "ST"
-metadata(melanoma)$BayesSpace.data$is_enhanced <- FALSE
-```
-
 
 Finally, `SingleCellExperiment` objects can be constructed manually from a
 counts matrix and tables of row and column data. BayesSpace only requires that
@@ -126,7 +119,8 @@ reproducible.)
 ```{r cluster}
 set.seed(149)
 melanoma <- spatialCluster(melanoma, q=4, platform="ST", d=7,
-                           init.method="mclust", model="t", nrep=1000, gamma=2,
+                           init.method="mclust", model="t", gamma=2,
+                           nrep=1000, burn.in=100,
                            save.chain=TRUE)
 ```
 
@@ -144,11 +138,13 @@ We can plot the cluster assignments over the spatial locations of the spots with
 ```{r cluster.plot, fig.width=7, fig.height=5}
 clusterPlot(melanoma)
 ```
+
 As `clusterPlot()` returns a `ggplot` object, it can be customized by composing
 with familiar `ggplot2` functions. Additionally, the argument `palette` sets the
 colors used for each cluster, and `clusterPlot()` takes additional arguments to
 `geom_polygon()` such as `size` or `color` to control the aesthetics of the spot
 borders.
+
 ```{r cluster.plot.customize, fig.width=7, fig.height=5}
 clusterPlot(melanoma, palette=c("purple", "red", "blue", "yellow"), color="black") +
   theme_bw() +
@@ -164,11 +160,15 @@ clusterPlot(melanoma, palette=c("purple", "red", "blue", "yellow"), color="black
 
 The `spatialEnhance()` function will enhance the resolution of the principal
 components, and add these PCs as well as predicted cluster labels at subspot
-resolution to a new `SingleCellExperiment`.
+resolution to a new `SingleCellExperiment`. As with our demonstration of
+`spatialCluster()` above, we are using fewer iterations for the purpose of this
+example (`nrep=1000`) than we recommend in practice (`nrep=100000` or greater).
+
 ```{r enhance, eval=TRUE}
 melanoma.enhanced <- spatialEnhance(melanoma, q=4, platform="ST", d=7,
-                                    model="t", nrep=10000, gamma=2,
+                                    model="t", gamma=2,
                                     jitter_prior=0.3, jitter_scale=3.5,
+                                    nrep=1000, burn.in=100,
                                     save.chain=TRUE)
 ```
 
@@ -197,17 +197,22 @@ used to predict subspot expression from the subspot PCs.
 Gene expression enhancement is implemented in the `enhanceFeatures()` function.
 BayesSpace predicts expression with
 [`xgboost`](https://xgboost.readthedocs.io/en/latest/) by default, but linear
-and Dirichlet regression are also available via the `model` argument.
+and Dirichlet regression are also available via the `model` argument. When using
+`xgboost`, we suggest automatically tuning the `nrounds` parameter by setting it
+to 0, although this comes at the cost of increased runtime (~4x slower than a
+pre-specified `nrounds` in practice).
 
 `enhanceFeatures()` can be used to impute subspot-level expression for all
 genes, or for a subset of genes of interest. Here, we'll demonstrate by
 enhancing the expression of four marker genes: PMEL (melanoma), CD2 (T-cells),
-CD19 (B-cells), and COL1A1 (fibroblasts).
+CD19 (B-cells), and COL1A1 (fibroblasts). 
 
 <!-- TODO: swap CD2 for CD7? -->
 ```{r enhanceFeatures}
 markers <- c("PMEL", "CD2", "CD19", "COL1A1")
-melanoma.enhanced <- enhanceFeatures(melanoma.enhanced, melanoma, feature_names=markers)
+melanoma.enhanced <- enhanceFeatures(melanoma.enhanced, melanoma,
+                                     feature_names=markers,
+                                     nrounds=0)
 ```
 
 By default, log-normalized expression (`logcounts(sce)`) is imputed, although
