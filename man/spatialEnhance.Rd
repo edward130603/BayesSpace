@@ -99,7 +99,7 @@ TODO: add details on subspot coordinates and linking to parent spots
 \examples{
 set.seed(149)
 sce <- exampleSCE()
-sce <- spatialCluster(sce, 7, nrep=200)
-enhanced <- spatialEnhance(sce, 7, init=sce$spatial.cluster, nrep=200)
+sce <- spatialCluster(sce, 7, nrep=200, burn.in=20)
+enhanced <- spatialEnhance(sce, 7, init=sce$spatial.cluster, nrep=200, burn.in=20)
 
 }
