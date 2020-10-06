@@ -248,8 +248,8 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
     reducedDim(enhanced, "PCA") <- deconv_PCs
     
     ## Choose modal cluster label, excluding burn-in
-    msg <- "Calculating labels using iterations %d through %d"
-    message(sprintf(msg, (burn.in - 1) * thin, nrep))
+    message("Calculating labels using iterations ", (burn.in - 1) * thin,
+            " through ", nrep, ".")
     labels <- apply(deconv$z[seq(burn.in, (nrep %/% thin) + 1), ], 2, Mode)
     enhanced$spatial.cluster <- unname(labels)
     

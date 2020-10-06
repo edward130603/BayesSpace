@@ -202,7 +202,7 @@ enhanceFeatures <- function(sce.enhanced, sce.ref, feature_names = NULL,
         feature_names <- intersect(feature_names, rownames(Y.ref))
         skipped_features <- setdiff(feature_names, rownames(Y.ref))
         if (length(skipped_features) > 0) {
-            message(sprintf("Skipping %d features not in sce.ref", length(skipped_features)))
+            message("Skipping ", length(skipped_features), " features not in sce.ref.")
         }
     }
     

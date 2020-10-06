@@ -148,8 +148,7 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     metadata(sce)$BayesSpace.data$is.enhanced <- FALSE
     
     ## Save modal cluster assignments, excluding burn-in
-    msg <- "Calculating labels using iterations %d through %d"
-    message(sprintf(msg, burn.in, nrep))
+    message("Calculating labels using iterations ", burn.in, " through ", nrep, ".")
     labels <- apply(results$z[seq(burn.in, nrep), ], 2, Mode)
     colData(sce)$spatial.cluster <- unname(labels)
     
