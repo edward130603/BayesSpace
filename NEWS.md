@@ -1,5 +1,18 @@
 # BayesSpace (development version)
 
+## New features
+
+- `getRDS()` gains a `cache` parameter. When `TRUE`, the RDS is cached locally
+  using `BiocFileCache`.
+
+## Minor improvements and fixes
+
+- Addressed reviewer concerns (https://github.com/Bioconductor/Contributions/issues/1624)
+    * Updated stop/warning/message statements to remove redundancies and
+      unnecessary use of `paste()`.
+    * Removed inline conditional statements.
+    * Cache downloaded RDS in `getRDS()` (see above).
+
 # BayesSpace 0.99.4
 
 ## New features
