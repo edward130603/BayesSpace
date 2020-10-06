@@ -123,8 +123,10 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     ## TODO: pass these through with ...
     model <- match.arg(model)
     precision <- match.arg(precision)
-    mu0 <- if (is.null(mu0)) colMeans(Y) else mu0
-    lambda0 <- if (is.null(lambda0)) diag(0.01, ncol(Y)) else lambda0
+    if (is.null(mu0))
+        mu0 <- colMeans(Y)
+    if (is.null(lambda0))
+        lambda0 <- diag(0.01, ncol(Y))
     
     ## Run clustering
     ## TODO: set default gamma to 2 if platform=ST and not specified
@@ -210,9 +212,8 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     
     ## Log number of spots with neighbors
     n_with_neighbors <- length(keep(df_j, function(nbrs) length(nbrs) > 0))
-    msg <- "Neighbors were identified for %d out of %d spots." 
-    msg <- sprintf(msg, n_with_neighbors, ncol(sce))
-    message(msg)
+    message("Neighbors were identified for ", n_with_neighbors, " out of ",
+            ncol(sce), " spots.")
     
     df_j
 }

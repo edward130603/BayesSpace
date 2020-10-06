@@ -51,7 +51,7 @@ clusterPlot <- function(sce, label="spatial.cluster",
     
     ## No borders around subspots by default
     if (is.null(color)) {
-        color <- if (is.enhanced) NA else "#d8dcd6"
+        color <- ifelse(is.enhanced, NA, "#d8dcd6")
     }
 
     splot <- ggplot(data=vertices, 
@@ -124,7 +124,7 @@ featurePlot <- function(sce, feature,
     
     ## No borders around subspots by default
     if (is.null(color)) {
-        color <- if (is.enhanced) NA else "#d8dcd6"
+        color <- ifelse(is.enhanced, NA, "#d8dcd6")
     }
     
     splot <- ggplot(data=vertices, 
@@ -135,13 +135,13 @@ featurePlot <- function(sce, feature,
         theme_void()
     
     if (diverging) {
-        low = if (is.null(low)) "#F0F0F0" else low
-        high = if (is.null(high)) muted("red") else high
+        low <- ifelse(is.null(low), "#F0F0F0", low)
+        high <- ifelse(is.null(high), muted("red"), high)
         splot <- splot + scale_fill_gradient(low=low, high=high)
     } else {
-        low = if (is.null(low)) muted("blue") else low
-        mid = if (is.null(mid)) "#F0F0F0" else mid
-        high = if (is.null(high)) muted("red") else high
+        low <- ifelse(is.null(low), muted("blue"), low)
+        mid <- ifelse(is.null(mid), "#F0F0F0", mid)
+        high <- ifelse(is.null(high), muted("red"), high)
         splot <- splot + scale_fill_gradient2(low=low, mid=mid, high=high)
     }
     

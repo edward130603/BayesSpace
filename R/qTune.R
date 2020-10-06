@@ -72,14 +72,14 @@ qTune <- function(sce, qs=seq(3, 7), min_rep=100, max_rep=1000, ...) {
     args <- list(...)
     
     ## Get PCs
-    use.dimred <- if (is.null(args$use.dimred)) "PCA" else args$use.dimred
-    d <- if (is.null(args$d)) 15 else as.integer(args$d)
+    use.dimred <- ifelse(is.null(args$use.dimred), "PCA", args$use.dimred)
+    d <- ifelse(is.null(args$d), 15, as.integer(args$d))
     Y <- reducedDim(sce, use.dimred)
     d <- min(ncol(Y), d)
     Y <- Y[, seq_len(d)]
     
     ## Get neighbors
-    platform <- if (is.null(args$platform)) "Visium" else args$platform
+    platform <- ifelse(is.null(args$platform), "Visium", args$platform)
     df_j <- .find_neighbors(sce, platform)
     
     ## Parse args from ... for cluster initialization

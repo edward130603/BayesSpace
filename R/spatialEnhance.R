@@ -98,11 +98,13 @@ deconvolve <- function(Y, positions, nrep = 1000, gamma = 2, xdist, ydist, q,
     positions2[, "y"] <- positions2[, "y"] + shift_long[, "Var2"]
     n <- nrow(Y2)
     
-    if (verbose) message("Calculating neighbors...")
+    if (verbose)
+        message("Calculating neighbors...")
     df_j <- find_neighbors(positions2, dist, "manhattan")
     
-    if (verbose) message("Fitting model...")
-    tdist <- ifelse(model == "t", TRUE, FALSE)
+    if (verbose)
+        message("Fitting model...")
+    tdist <- (model == "t")
     out <- iterate_deconv(Y=Y2, df_j=df_j, tdist=tdist, nrep=nrep, n=n, n0=n0,
         d=d, gamma=gamma, q=q, init=init1, subspots=subspots, verbose=verbose, 
         jitter_scale=jitter_scale, c=c, mu0=mu0, lambda0=lambda0, alpha=alpha, 
@@ -208,8 +210,8 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
     if (is.null(init)) {
         init.method <- match.arg(init.method)
         if (init.method == "spatialCluster") {
-            msg <- "Must run spatialCluster on sce before enhancement "
-            msg <- paste0(msg, "if using spatialCluster to initialize.")
+            msg <- paste0("Must run spatialCluster on sce before enhancement ",
+                          "if using spatialCluster to initialize.")
             assert_that("spatial.cluster" %in% colnames(colData(sce)), msg=msg)
             init <- sce$spatial.cluster
         } else {
@@ -219,8 +221,10 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
     
     ## TODO: pass these through with ...
     model <- match.arg(model)
-    mu0 <- if (is.null(mu0)) colMeans(inputs$PCs) else mu0
-    lambda0 <- if (is.null(lambda0)) diag(0.01, ncol(inputs$PCs)) else lambda0
+    if (is.null(mu0))
+        mu0 <- colMeans(inputs$PCs)
+    if (is.null(lambda0))
+        lambda0 <- diag(0.01, ncol(inputs$PCs))
     
     deconv <- deconvolve(inputs$PCs, inputs$positions, nrep=nrep, gamma=gamma, 
         xdist=inputs$xdist, ydist=inputs$ydist, q=q, init=init, model=model, 
