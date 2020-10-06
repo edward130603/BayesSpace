@@ -32,6 +32,13 @@ spatialPreprocess <- function(sce, platform=c("Visium", "ST"),
                               n.PCs=15, n.HVGs=2000, skip.PCA=FALSE,
                               log.normalize=TRUE, assay.type="logcounts") {
     
+    ## Set BayesSpace metadata
+    metadata(sce)$BayesSpace.data <- list()
+    metadata(sce)$BayesSpace.data$platform <- match.arg(platform)
+    metadata(sce)$BayesSpace.data$is.enhanced <- FALSE
+    # metadata(sce)$BayesSpace.data$use_dimred <- use.dimred
+    # metadata(sce)$BayesSpace.data$d <- n.PCs
+
     ## Run PCA on HVGs, log-normalizing if necessary
     if (!skip.PCA) {
         if (log.normalize)
@@ -42,15 +49,6 @@ spatialPreprocess <- function(sce, platform=c("Visium", "ST"),
         sce <- runPCA(sce, subset_row=top, ncomponents=n.PCs, exprs_values=assay.type)
         rowData(sce)[["is.HVG"]] <- (rownames(sce) %in% top)
     }
-     
-    ## Set BayesSpace metadata
-    metadata(sce)$BayesSpace.data <- list()
-    metadata(sce)$BayesSpace.data$platform <- match.arg(platform)
-    metadata(sce)$BayesSpace.data$is.enhanced <- FALSE
-   
-    ## TODO: allow specification of arbitrary dimension reduction 
-    # metadata(sce)$BayesSpace.data$use_dimred <- use.dimred
-    # metadata(sce)$BayesSpace.data$d <- n.PCs
-    
+
     sce
 }

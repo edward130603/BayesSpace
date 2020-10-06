@@ -44,7 +44,7 @@ readVisium <- function(dirname) {
     
     colData <- read.csv(file.path(spatial_dir, "tissue_positions_list.csv"), header=FALSE)
     
-    ## TODO: using spatialLIBD conventions here (legacy), but should eventually
+    ## We're using spatialLIBD conventions here (legacy), but should eventually
     ##   update to canonical spaceRanger names:
     ##   c("barcode", "in_tissue", "array_row", "array_col", "pxl_row_in_fullres", "pxl_col_in_fullres")
     ##   https://support.10xgenomics.com/spatial-gene-expression/software/pipelines/latest/output/images

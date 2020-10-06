@@ -86,7 +86,6 @@
 #' @name spatialEnhance
 NULL
 
-## TODO: re-order arguments so all keyword arguments come after positionals
 ## TODO: update offset code to be based on array coordinates, as in cluster,
 ##   instead of image coordinates
 #' Wrapper around C++ \code{iterate_deconv()} function
@@ -95,12 +94,10 @@ NULL
 #' 
 #' @keywords internal
 #' @importFrom stats cov
-deconvolve <- function(Y, positions, nrep = 1000, gamma = 2, xdist, ydist, q, 
-    init, model = "normal", platform = c("Visium", "ST"), verbose = TRUE, 
-    jitter_scale = 5, jitter_prior = 0.01, mu0 = colMeans(Y), 
+deconvolve <- function(Y, positions, xdist, ydist, q, init, nrep = 1000,
+    model = "normal", platform = c("Visium", "ST"), verbose = TRUE,
+    jitter_scale = 5, jitter_prior = 0.01, mu0 = colMeans(Y), gamma = 2,
     lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01) {
-    
-    ## TODO: turn progress bar off when verbose=FALSE
     
     d <- ncol(Y)
     n0 <- nrow(Y)
@@ -111,7 +108,7 @@ deconvolve <- function(Y, positions, nrep = 1000, gamma = 2, xdist, ydist, q,
     colnames(positions) <- c("x", "y")
     
     platform <- match.arg(platform)
-    subspots <- ifelse(platform == "Visium", 6, 9)  ## TODO: parameterize?
+    subspots <- ifelse(platform == "Visium", 6, 9)
     
     init1 <- rep(init, subspots)
     Y2 <- Y[rep(seq_len(n0), subspots), ]  # rbind 6 or 9 times
@@ -249,7 +246,7 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
         }
     }
     
-    ## TODO: pass these through with ...
+    ## Set model parameters
     model <- match.arg(model)
     if (is.null(mu0))
         mu0 <- colMeans(inputs$PCs)

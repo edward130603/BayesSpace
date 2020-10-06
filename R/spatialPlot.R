@@ -107,16 +107,14 @@ featurePlot <- function(sce, feature,
     ## extract expression from logcounts if a gene name is passed.
     ## otherwise, assume a vector of counts was passed and let
     ## .make_vertices helpers check validity
-    ## TODO: accommofeatureltiple genes as input (by aggregating or faceting)
     if (is.character(feature)) {
         fill <- assay(sce, assay.type)[feature, ]
         fill.name <- feature
     } else {
         fill <- feature
         
-        # TODO: make this an argument?
-        # easily overwritable with labs() though and want to encourage 
-        # composing ggplot functions instead of passing everything as arg
+        ## this could be an argument, but it's easily overwritten with labs()
+        ## and we should encourage composing ggplot functions instead
         fill.name <- "Expression"
     }
     
