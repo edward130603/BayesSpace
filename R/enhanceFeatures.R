@@ -71,8 +71,8 @@ NULL
     }
     
     if (!all(colnames(X.enhanced) == colnames(X.ref))) {
-        warning("colnames of reducedDim and X.enhanced do not match.")
-        warning("Setting X.enhanced colnames to match reducedDim.")
+        warning("colnames of reducedDim and X.enhanced do not match.\n",
+                "  Setting X.enhanced colnames to match reducedDim.")
         colnames(X.enhanced) <- colnames(X.ref)
     }
 

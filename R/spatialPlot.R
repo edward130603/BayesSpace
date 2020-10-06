@@ -192,8 +192,8 @@ featurePlot <- function(sce, feature,
         if (exists("BayesSpace.data", metadata(sce))) {
             platform <- metadata(sce)$BayesSpace.data$platform
         } else {
-            warning(c("Platform not defined in sce metadata.\n",
-                      "  Using default 'Visium' (use platform='ST' for ST)."))
+            warning("Platform not defined in sce metadata.\n",
+                    "  Using default 'Visium' (use platform='ST' for ST).")
             platform <- "Visium"
         }
     }
@@ -204,8 +204,8 @@ featurePlot <- function(sce, feature,
         if (exists("BayesSpace.data", metadata(sce))) {
             is.enhanced <- metadata(sce)$BayesSpace.data$is.enhanced
         } else {
-            warning(c("SCE does not indicate whether data are spots or subspots.\n",
-                      "  Using default spots (set is.enhanced=TRUE for subspots)."))
+            warning("SCE does not indicate whether data are spots or subspots.\n",
+                    "  Using default spots (set is.enhanced=TRUE for subspots).")
             is.enhanced <- FALSE
         }
     }
