@@ -1,10 +1,7 @@
-pandoc: 2.10.1
-pkgdown: 1.6.1
-pkgdown_sha: ~
+pandoc: 2.7.3
+pkgdown: 1.6.1.9000
+pkgdown_sha: e1e46f2e13c7efdb17bc4eae40bc3779c2b0b517
 articles:
   BayesSpace: BayesSpace.html
-  ji_SCC: ji_SCC.html
-  maynard_DLPFC: maynard_DLPFC.html
-  thrane_melanoma: thrane_melanoma.html
-last_built: 2020-10-05T21:44Z
+last_built: 2020-10-06T00:31Z
 

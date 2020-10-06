@@ -12,8 +12,8 @@
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous" />
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script>
 
@@ -72,41 +72,17 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">BayesSpace</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.99.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.99.4</span>
       </span>
     </div>
 
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
-  <a href="../index.html">
-    <span class="fa fa-home"></span>
-     
-  </a>
-</li>
-<li>
   <a href="../articles/BayesSpace.html">Get started</a>
 </li>
 <li>
   <a href="../reference/index.html">Reference</a>
-</li>
-<li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-    Examples
-     
-    <span class="caret"></span>
-  </a>
-  <ul class="dropdown-menu" role="menu">
-    <li>
-      <a href="../articles/maynard_DLPFC.html">DLPFC (Maynard et al., 2020)</a>
-    </li>
-    <li>
-      <a href="../articles/ji_SCC.html">SCC (Ji et al., 2020)</a>
-    </li>
-    <li>
-      <a href="../articles/thrane_melanoma.html">Melanoma (Thrane et al., 2018)</a>
-    </li>
-  </ul>
 </li>
 <li>
   <a href="../news/index.html">Changelog</a>
@@ -114,8 +90,8 @@
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://github.com/edward130603/BayesSpace">
-    <span class="fa fa-github fa-lg"></span>
+  <a href="https://github.com/edward130603/BayesSpace/">
+    <span class="fab fa fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -236,10 +212,10 @@ as an attribute of the returned matrix/altExp.</p>
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/Random.html'>set.seed</a></span>(<span class='fl'>149</span>)
 <span class='kw'>sce</span> <span class='op'>&lt;-</span> <span class='fu'><a href='exampleSCE.html'>exampleSCE</a></span>()
-<span class='kw'>sce</span> <span class='op'>&lt;-</span> <span class='fu'><a href='spatialCluster.html'>spatialCluster</a></span>(<span class='kw'>sce</span>, <span class='fl'>7</span>, nrep=<span class='fl'>200</span>)
-</div><div class='output co'>#&gt; <span class='error'>Error in spatialCluster(sce, 7, nrep = 200): Please specify a burn-in period shorter than the total number of iterations.</span></div><div class='input'><span class='kw'>enhanced</span> <span class='op'>&lt;-</span> <span class='fu'><a href='spatialEnhance.html'>spatialEnhance</a></span>(<span class='kw'>sce</span>, <span class='fl'>7</span>, init=<span class='kw'>sce</span><span class='op'>$</span><span class='kw'>spatial.cluster</span>, nrep=<span class='fl'>200</span>)
-</div><div class='output co'>#&gt; <span class='error'>Error in spatialEnhance(sce, 7, init = sce$spatial.cluster, nrep = 200): Please specify a burn-in period shorter than the total number of iterations.</span></div><div class='input'><span class='kw'>enhanced</span> <span class='op'>&lt;-</span> <span class='fu'>enhanceFeatures</span>(<span class='kw'>enhanced</span>, <span class='kw'>sce</span>, assay.type=<span class='st'>"logcounts"</span>)
-</div><div class='output co'>#&gt; <span class='error'>Error in h(simpleError(msg, call)): error in evaluating the argument 'x' in selecting a method for function 'reducedDim': object 'enhanced' not found</span></div><div class='input'>
+<span class='kw'>sce</span> <span class='op'>&lt;-</span> <span class='fu'><a href='spatialCluster.html'>spatialCluster</a></span>(<span class='kw'>sce</span>, <span class='fl'>7</span>, nrep=<span class='fl'>200</span>, burn.in=<span class='fl'>20</span>)
+</div><div class='output co'>#&gt; <span class='message'>Neighbors were identified for 96 out of 96 spots.</span></div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='output co'>#&gt; <span class='message'>Calculating labels using iterations 20 through 200</span></div><div class='input'><span class='kw'>enhanced</span> <span class='op'>&lt;-</span> <span class='fu'><a href='spatialEnhance.html'>spatialEnhance</a></span>(<span class='kw'>sce</span>, <span class='fl'>7</span>, init=<span class='kw'>sce</span><span class='op'>$</span><span class='kw'>spatial.cluster</span>, nrep=<span class='fl'>200</span>, burn.in=<span class='fl'>20</span>)
+</div><div class='output co'>#&gt; <span class='message'>Calculating labels using iterations 0 through 200</span></div><div class='input'><span class='kw'>enhanced</span> <span class='op'>&lt;-</span> <span class='fu'>enhanceFeatures</span>(<span class='kw'>enhanced</span>, <span class='kw'>sce</span>, assay.type=<span class='st'>"logcounts"</span>)
+
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -256,7 +232,7 @@ as an attribute of the returned matrix/altExp.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.9000.</p>
 </div>
 
       </footer>
