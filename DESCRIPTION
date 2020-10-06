@@ -35,7 +35,8 @@ Imports:
     xgboost,
     utils,
     ggplot2,
-    scales
+    scales,
+    BiocFileCache
 License: MIT + file LICENSE
 RoxygenNote: 7.1.1
 LinkingTo: 
