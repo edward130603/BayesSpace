@@ -145,10 +145,10 @@ addPCA <- function(sce, assay.type, pca.method, d = 15) {
             assay.type=assay.type)
         
     } else if (pca.method == "geneset") {
-        stop("geneset PCA not yet supported")
+        stop("geneset PCA not yet supported.")
         
     } else {
-        stop("Unsupported PCA method: %s", pca.method)
+        stop("Unsupported PCA method: \"", pca.method, "\".")
     }
     
     sce
@@ -170,7 +170,7 @@ addPCA <- function(sce, assay.type, pca.method, d = 15) {
     inputs <- list()
     
     if (!(use.dimred %in% reducedDimNames(sce))) 
-        stop(sprintf("reducedDim %s not found in input SCE", use.dimred))
+        stop("reducedDim \"", use.dimred, "\" not found in input SCE.")
     
     PCs <- reducedDim(sce, use.dimred)
     d <- min(d, ncol(PCs))

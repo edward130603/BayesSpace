@@ -57,9 +57,10 @@ cluster <- function(Y, q, df_j, init = rep(1, nrow(Y)),
     d <- ncol(Y)
     n <- nrow(Y)
     
-    if ((length(mu0) != d) | (ncol(lambda0) != d)) {
-        stop("Dimensions of mu0 or lambda0 do not match input data Y")
-    }
+    if (length(mu0) != d)
+        stop("Dimensions of mu0 do not match input data Y.")
+    if (ncol(lambda0) != d)
+        stop("Dimensions of lambda0 do not match input data Y.")
     
     model <- match.arg(model)
     precision <- match.arg(precision)
@@ -102,10 +103,11 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     alpha = 1, beta = 0.01, save.chain = FALSE, chain.fname = NULL) {
     
     if (!(use.dimred %in% reducedDimNames(sce))) 
-        stop(sprintf("reducedDim %s not found in input SCE", use.dimred))
+        stop("reducedDim \"", use.dimred, "\" not found in input SCE.")
 
     if (burn.in > nrep)
-        stop("Please specify a burn-in period shorter than the total number of iterations.")
+        stop("Please specify a burn-in period shorter than the total number ",
+             "of iterations.")
 
     ## Get PCs
     Y <- reducedDim(sce, use.dimred)
@@ -171,7 +173,7 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
         offsets <- data.frame(x.offset=c( 0, 1, 0, -1),
                               y.offset=c(-1, 0, 1,  0))
     } else {
-        stop(sprintf(".find_neighbors: Unsupported platform %s", platform))
+        stop(".find_neighbors: Unsupported platform \"", platform, "\".")
     }
     
     ## Get array coordinates (and label by index of spot in SCE)

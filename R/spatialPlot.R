@@ -179,7 +179,7 @@ featurePlot <- function(sce, feature,
             vertices <- .make_square_spots(cdata, fill)
         }
     } else {
-        stop(sprintf("Unsupported platform: %s. Cannot create spot layout.", platform))
+        stop("Unsupported platform: \"", platform, "\". Cannot create spot layout.")
     }
     
     vertices

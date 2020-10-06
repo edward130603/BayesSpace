@@ -37,8 +37,10 @@ readVisium <- function(dirname) {
     spatial_dir <- file.path(dirname, "spatial")
     matrix_dir <- file.path(dirname, "filtered_feature_bc_matrix")
     
-    if (!dir.exists(matrix_dir)) stop(paste0("Matrix directory does not exist: ", matrix_dir))
-    if (!dir.exists(spatial_dir)) stop(paste0("Spatial directory does not exist: ", spatial_dir))
+    if (!dir.exists(matrix_dir))
+        stop("Matrix directory does not exist:\n  ", matrix_dir)
+    if (!dir.exists(spatial_dir))
+        stop("Spatial directory does not exist:\n  ", spatial_dir)
     
     colData <- read.csv(file.path(spatial_dir, "tissue_positions_list.csv"), header=FALSE)
     

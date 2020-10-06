@@ -128,7 +128,7 @@ deconvolve <- function(Y, positions, nrep = 1000, gamma = 2, xdist, ydist, q,
     } else if (n_subspots_per == 9) {
         rbind(expand.grid(c(1/3, -1/3, 0), c(1/3, -1/3, 0)))
     } else {
-        stop("Only 6 and 9 subspots currently supported")
+        stop("Only 6 and 9 subspots currently supported.")
     }
 }
 
@@ -184,7 +184,8 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
     jitter_scale = 5, jitter_prior = 0.3, verbose = FALSE) {
 
     if (burn.in > nrep)
-        stop("Please specify a burn-in period shorter than the total number of iterations.")
+        stop("Please specify a burn-in period shorter than the total number ",
+             "of iterations.")
     
     ## Thinning interval; only every 100 iterations are kept to reduce memory
     ## This is temporarily hard-coded into the C++ code
