@@ -15,6 +15,7 @@ spatialCluster(
   model = c("t", "normal"),
   precision = c("equal", "variable"),
   nrep = 50000,
+  burn.in = 1000,
   gamma = 3,
   mu0 = NULL,
   lambda0 = NULL,
@@ -49,6 +50,8 @@ VVV covariance models, respectively.)}
 
 \item{nrep}{The number of MCMC iterations.}
 
+\item{burn.in}{The number of MCMC iterations to exclude as burn-in period.}
+
 \item{gamma}{Smoothing parameter. (Values in range of 1-3 seem to work well.)}
 
 \item{mu0}{Prior mean hyperparameter for mu. If not provided, mu0 is set to
@@ -79,6 +82,6 @@ TODO add details or link to mcmcChain
 \examples{
 set.seed(149)
 sce <- exampleSCE()
-sce <- spatialCluster(sce, 7, nrep=200)
+sce <- spatialCluster(sce, 7, nrep=200, burn.in=20)
 
 }

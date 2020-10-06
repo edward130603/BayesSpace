@@ -16,6 +16,7 @@
 #' @param precision Covariance structure. ('equal' or 'variable' for EEE and 
 #'   VVV covariance models, respectively.)
 #' @param nrep The number of MCMC iterations.
+#' @param burn.in The number of MCMC iterations to exclude as burn-in period.
 #' @param gamma Smoothing parameter. (Values in range of 1-3 seem to work well.)
 #' @param mu0 Prior mean hyperparameter for mu. If not provided, mu0 is set to
 #'   the mean of PCs over all spots.
@@ -36,7 +37,7 @@
 #' @examples
 #' set.seed(149)
 #' sce <- exampleSCE()
-#' sce <- spatialCluster(sce, 7, nrep=200)
+#' sce <- spatialCluster(sce, 7, nrep=200, burn.in=20)
 #'
 #' @name spatialCluster
 NULL
@@ -97,11 +98,14 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     platform=c("Visium", "ST"),
     init = NULL, init.method = c("mclust", "kmeans"),
     model = c("t", "normal"), precision = c("equal", "variable"), 
-    nrep = 50000, gamma = 3, mu0 = NULL, lambda0 = NULL, alpha = 1, 
-    beta = 0.01, save.chain = FALSE, chain.fname = NULL) {
+    nrep = 50000, burn.in=1000, gamma = 3, mu0 = NULL, lambda0 = NULL,
+    alpha = 1, beta = 0.01, save.chain = FALSE, chain.fname = NULL) {
     
     if (!(use.dimred %in% reducedDimNames(sce))) 
         stop(sprintf("reducedDim %s not found in input SCE", use.dimred))
+
+    if (burn.in > nrep)
+        stop("Please specify a burn-in period shorter than the total number of iterations.")
 
     ## Get PCs
     Y <- reducedDim(sce, use.dimred)
@@ -139,13 +143,10 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     metadata(sce)$BayesSpace.data$platform <- platform
     metadata(sce)$BayesSpace.data$is.enhanced <- FALSE
     
-    ## Save modal cluster assignments
-    ## NOTE: swap below code for this to test against refactoring
-    ## colData(sce)$spatial.cluster <- apply(results$z[900:1000, ], 2, Mode)
-    iter_from <- ifelse(nrep < 2000, max(2, nrep - 1000), 1000)
+    ## Save modal cluster assignments, excluding burn-in
     msg <- "Calculating labels using iterations %d through %d"
-    message(sprintf(msg, iter_from, nrep))
-    labels <- apply(results$z[iter_from:nrep, ], 2, Mode)
+    message(sprintf(msg, burn.in, nrep))
+    labels <- apply(results$z[seq(burn.in, nrep), ], 2, Mode)
     colData(sce)$spatial.cluster <- unname(labels)
     
     sce

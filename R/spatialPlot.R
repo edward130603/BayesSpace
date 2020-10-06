@@ -129,7 +129,7 @@ featurePlot <- function(sce, feature,
     
     splot <- ggplot(data=vertices, 
                     aes_(x=~x.vertex, y=~y.vertex, group=~spot, fill=~fill)) +
-        geom_polygon(color=color) +#, ...) +
+        geom_polygon(color=color, ...) +
         labs(fill=fill.name) +
         coord_equal() +
         theme_void()
@@ -219,12 +219,13 @@ featurePlot <- function(sce, feature,
 #' @importFrom assertthat assert_that
 .select_spot_positions <- function(cdata, x="col", y="row", fill="spatial.cluster") {
     ## Provide either a column name or vector of labels/values
-    assert_that(is.vector(fill) | is.character(fill))
+    assert_that(is.vector(fill) || is.character(fill) || is.factor(fill))
     
-    if (is.character(fill)) {
+    ## I think this is the best way to check if something is a string
+    if (is.character(fill) && length(fill) == 1) {
         spot_positions <- cdata[, c(x, y, fill)]
         colnames(spot_positions) <- c("x.pos", "y.pos", "fill")    
-    } else if (is.vector(fill)) {
+    } else if (is.vector(fill) || is.factor(fill)) {
         assert_that(nrow(cdata) == length(fill))
         spot_positions <- cdata[, c(x, y)]
         colnames(spot_positions) <- c("x.pos", "y.pos")    

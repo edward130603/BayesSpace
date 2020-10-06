@@ -49,8 +49,8 @@
 #' @examples
 #' set.seed(149)
 #' sce <- exampleSCE()
-#' sce <- spatialCluster(sce, 7, nrep=200)
-#' enhanced <- spatialEnhance(sce, 7, init=sce$spatial.cluster, nrep=200)
+#' sce <- spatialCluster(sce, 7, nrep=200, burn.in=20)
+#' enhanced <- spatialEnhance(sce, 7, init=sce$spatial.cluster, nrep=200, burn.in=20)
 #' enhanced <- enhanceFeatures(enhanced, sce, assay.type="logcounts")
 #'
 #' @name enhanceFeatures
@@ -179,6 +179,12 @@ enhanceFeatures <- function(sce.enhanced, sce.ref, feature_names = NULL,
     X.enhanced <- reducedDim(sce.enhanced, use.dimred)
     X.ref <- reducedDim(sce.ref, use.dimred)
     
+    ## If user specified clustering with fewer PCs than in the ref dataset,
+    ## there will be fewer PCs in the enhanced SCE. Only use these.
+    d <- min(ncol(X.enhanced), ncol(X.ref))
+    X.enhanced <- X.enhanced[, seq_len(d)]
+    X.ref <- X.ref[, seq_len(d)]
+    
     if (!is.null(feature.matrix)) {
         Y.ref <- feature.matrix
     } else if (!is.null(altExp.type)) {
@@ -202,6 +208,9 @@ enhanceFeatures <- function(sce.enhanced, sce.ref, feature_names = NULL,
     
     Y.enhanced <- .enhance_features(X.enhanced, X.ref, Y.ref, feature_names, 
                                     model, nrounds, train.n)
+
+    ## Clip negative predicted expression
+    Y.enhanced <- pmax(Y.enhanced, 0)
     
     ## TODO: add option to specify destination of enhanced features.
     ## For now, return in same form as input
