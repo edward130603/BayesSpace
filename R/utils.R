@@ -260,30 +260,40 @@ exampleSCE <- function(nrow=8, ncol=12, n_genes=100, n_PCs=10)
 
 #' Download a processed sample from our S3 bucket
 #' 
+#' Datasets are cached locally using \code{BiocFileCache}. The first time using
+#' this function, you may need to consent to creating a BiocFileCache directory
+#' if one does not already exist.
+#'
 #' @param dataset Dataset identifier (TODO: add function to list datasets/samples)
 #' @param sample Sample identifier
+#' @param cache If true, cache the dataset locally with \code{BiocFileCache}.
+#'   Otherwise, download directly from our S3 bucket. Caching saves time on
+#'   subsequent loads, but consumes disk space.
 #' 
 #' @return sce A SingleCellExperiment with positional information in colData and
 #'   PCs based on the top 2000 HVGs
 #'   
 #' @examples
-#' sce <- getRDS("2018_thrane_melanoma", "ST_mel1_rep2")
+#' sce <- getRDS("2018_thrane_melanoma", "ST_mel1_rep2", cache=FALSE)
 #'
 #' @export 
 #' @importFrom RCurl url.exists
 #' @importFrom utils download.file
 #' @importFrom assertthat assert_that
-getRDS <- function(dataset, sample) {
+#' @importFrom BiocFileCache BiocFileCache bfcrpath
+getRDS <- function(dataset, sample, cache=TRUE) {
     
     url <- "https://fh-pi-gottardo-r.s3.amazonaws.com/SpatialTranscriptomes/%s/%s.rds"
     url <- sprintf(url, dataset, sample)
     assert_that(url.exists(url), msg="Dataset/sample not available")
-    
-    ## TODO add caching (but probably through experimenthub)
-    dest <- tempfile(fileext=".rds")
-    
-    ## TODO switch to curl or httr (avoid writing to disk when not caching; 
-    ## one package for both downloading and checking url exists)
-    download.file(url, dest, quiet=TRUE, mode="wb")
-    readRDS(dest)
+
+    if (cache) {
+        bfc <- BiocFileCache()
+        local.path <- bfcrpath(bfc, url)
+    } else {
+        local.path <- tempfile(fileext=".rds")
+        download.file(url, local.path, quiet=TRUE, mode="wb")
+    }
+
+    readRDS(local.path)
 }
