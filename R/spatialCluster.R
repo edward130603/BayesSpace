@@ -31,14 +31,26 @@
 #'   \code{colData} under the name \code{spatial.cluster}.
 #'         
 #' @details 
-#' TODO describe method in detail
-#' TODO add details or link to mcmcChain
+#' The input SCE must have \code{row} and \code{col} columns in its
+#' \code{colData}, corresponding to the array row and column coordinates of each
+#' spot. These are automatically parsed by \code{\link{readVisium()}} or can be
+#' added manually when creating the SCE.
+#' 
+#' Cluster labels are stored in the \code{spatial.cluster} column of the SCE,
+#' and the cluster initialization is stored in \code{cluster.init}.
 #' 
 #' @examples
 #' set.seed(149)
 #' sce <- exampleSCE()
 #' sce <- spatialCluster(sce, 7, nrep=200, burn.in=20)
-#'
+#' 
+#' @seealso \code{\link{spatialPreprocess}} for preparing the SCE for
+#'   clustering, \code{\link{spatialEnhance()}} for enhancing the clustering
+#'   resolution, \code{\link{clusterPlot()}} for visualizing the cluster
+#'   assignments, \code{\link{featurePlot()}} for visualizing expression levels
+#'   in spatial context, and \code{\link{mcmcChain()}} for examining the full
+#'   MCMC chain associated with the clustering.
+#'   
 #' @name spatialCluster
 NULL
 
@@ -88,7 +100,6 @@ cluster <- function(Y, q, df_j, init = rep(1, nrow(Y)),
         q=q, init=init, mu0=mu0, lambda0=lambda0, alpha=alpha, beta=beta)
 }
 
-## TODO make generic for SCE/matrix instead of wrapping cluster() ?
 #' @importFrom SingleCellExperiment reducedDim
 #' @importFrom SummarizedExperiment colData colData<-
 #' @importFrom S4Vectors metadata metadata<-
@@ -120,7 +131,7 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     df_j <- .find_neighbors(sce, platform)
     init <- .init_cluster(Y, q, init, init.method)
     
-    ## TODO: pass these through with ...
+    ## Set model parameters
     model <- match.arg(model)
     precision <- match.arg(precision)
     if (is.null(mu0))
@@ -140,7 +151,7 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
         metadata(sce)$chain.h5 <- .write_chain(results, chain.fname)
     }
     
-    ## Save metadata (TODO: add neighbors?)
+    ## Save metadata
     sce$cluster.init <- init
     if (!exists("BayesSpace.data", metadata(sce)))
         metadata(sce)$BayesSpace.data <- list()
@@ -221,12 +232,11 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
 #' 
 #' @param sce SingleCellExperiment
 #' @param q Number of clusters
-#' @param inputs Results from .prepare_inputs() (TODO: store this in sce)
+#' @param inputs Results from \code{.prepare_inputs()}
 #' @param init Vector of initial cluster assignments
 #' @param init.method Initialization clustering algorithm
 #' 
-#' @return Modified sce with initial cluster assignments stored in
-#'   colData$cluster.init (TODO: return vector instead)
+#' @return Vector of cluster assignments.
 #' 
 #' @keywords internal
 #' 

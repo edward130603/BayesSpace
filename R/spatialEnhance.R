@@ -48,7 +48,7 @@
 #' The enhanced \code{SingleCellExperiment} has most of the properties of the
 #'   input SCE - \code{rowData}, \code{colData}, \code{reducedDims} - but does
 #'   not include expression data in \code{counts} or \code{logcounts}. To impute
-#'   enhanced expression vectors, please use \link{enhanceFeatures} after
+#'   enhanced expression vectors, please use [enhanceFeatures()] after
 #'   running \code{spatialEnhance}.
 #'   
 #' The \code{colData} of the enhanced \code{SingleCellExperiment} includes the
@@ -75,6 +75,13 @@
 #' sce <- exampleSCE()
 #' sce <- spatialCluster(sce, 7, nrep=200, burn.in=20)
 #' enhanced <- spatialEnhance(sce, 7, init=sce$spatial.cluster, nrep=200, burn.in=20)
+#' 
+#' @seealso \code{\link{spatialCluster()}} for clustering at the spot level
+#'   before enhancing, \code{\link{clusterPlot()}} for visualizing the cluster
+#'   assignments, \code{\link{enhanceFeatures()}} for imputing enhanced
+#'   expression, and \code{\link{mcmcChain()}} for examining the full MCMC chain
+#'   associated with the enhanced clustering.
+#'   .
 #' 
 #' @name spatialEnhance
 NULL

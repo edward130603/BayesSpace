@@ -76,12 +76,25 @@ Returns a modified \code{sce} with cluster assignments stored in
 Cluster a spatial expression dataset.
 }
 \details{
-TODO describe method in detail
-TODO add details or link to mcmcChain
+The input SCE must have \code{row} and \code{col} columns in its
+\code{colData}, corresponding to the array row and column coordinates of each
+spot. These are automatically parsed by \code{\link{readVisium()}} or can be
+added manually when creating the SCE.
+
+Cluster labels are stored in the \code{spatial.cluster} column of the SCE,
+and the cluster initialization is stored in \code{cluster.init}.
 }
 \examples{
 set.seed(149)
 sce <- exampleSCE()
 sce <- spatialCluster(sce, 7, nrep=200, burn.in=20)
 
+}
+\seealso{
+\code{\link{spatialPreprocess}} for preparing the SCE for
+  clustering, \code{\link{spatialEnhance()}} for enhancing the clustering
+  resolution, \code{\link{clusterPlot()}} for visualizing the cluster
+  assignments, \code{\link{featurePlot()}} for visualizing expression levels
+  in spatial context, and \code{\link{mcmcChain()}} for examining the full
+  MCMC chain associated with the clustering.
 }
