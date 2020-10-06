@@ -94,7 +94,30 @@ xdist and ydist instead of total dist...(maybe would be better to change
 \code{spatialCluster} to match this)
 }
 \details{
-TODO: add details on subspot coordinates and linking to parent spots
+The enhanced \code{SingleCellExperiment} has most of the properties of the
+  input SCE - \code{rowData}, \code{colData}, \code{reducedDims} - but does
+  not include expression data in \code{counts} or \code{logcounts}. To impute
+  enhanced expression vectors, please use \link{enhanceFeatures} after
+  running \code{spatialEnhance}.
+  
+The \code{colData} of the enhanced \code{SingleCellExperiment} includes the
+  following columns to permit referencing the subspots in spatial context and
+  linking back to the original spots:
+  \itemize{
+  \item \code{spot.idx}: Index of the spot this subspot belongs to (with respect
+    to the input SCE).
+  \item \code{subspot.idx}: Index of the subspot within its parent spot.
+  \item \code{spot.row}: Array row of the subspot's parent spot.
+  \item \code{spot.col}: Array col of the subspot's parent spot.
+  \item \code{row}: Array row of the subspot. This is the parent spot's row plus
+    an offset based on the subspot's position within the spot.
+  \item \code{col}: Array col of the subspot. This is the parent spot's col plus
+    an offset based on the subspot's position within the spot.
+  \item \code{imagerow}: Pixel row of the subspot. This is the parent spot's row
+    plus an offset based on the subspot's position within the spot.
+  \item \code{imagecol}: Pixel col of the subspot. This is the parent spot's col
+    plus an offset based on the subspot's position within the spot.
+    }
 }
 \examples{
 set.seed(149)
