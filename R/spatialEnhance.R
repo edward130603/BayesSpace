@@ -183,7 +183,7 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
     save.chain = FALSE, chain.fname = NULL, burn.in=10000,
     jitter_scale = 5, jitter_prior = 0.3, verbose = FALSE) {
 
-    if (burn.in > nrep)
+    if (burn.in >= nrep)
         stop("Please specify a burn-in period shorter than the total number of iterations.")
     
     ## Thinning interval; only every 100 iterations are kept to reduce memory
