@@ -236,6 +236,7 @@ ggplot(data=ARI.df, aes(x=reorder(Algorithm, ARI), y=ARI)) +
   xlab("Algorithm") +
   theme(axis.text.x = element_text(angle = 60, vjust = 0.95, hjust=1))
 ```
+
 ## Spot weights and principal components
 
 In Supplementary Figure S1, we also show the spatial distribution of the weights

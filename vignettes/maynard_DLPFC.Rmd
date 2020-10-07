@@ -189,6 +189,7 @@ ARI <- purrr::map(clusters, function(x) mclust::adjustedRandIndex(x, clusters[["
 ```
 
 <img src="figures/maynard_DLPFC-plot.ARI-1.png" title="plot of chunk plot.ARI" alt="plot of chunk plot.ARI" width="100%" />
+
 ## Spot weights and principal components
 
 In Supplementary Figure S1, we also show the spatial distribution of the weights
