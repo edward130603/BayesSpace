@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">BayesSpace</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.99.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.99.4</span>
       </span>
     </div>
 
@@ -229,7 +229,11 @@
 <div class="sourceCode" id="cb8"><pre class="downlit">
 <span class="kw">ARI</span> <span class="op">&lt;-</span> <span class="kw">purrr</span>::<span class="fu"><a href="https://purrr.tidyverse.org/reference/map.html">map</a></span>(<span class="kw">clusters</span>, <span class="fu">function</span>(<span class="kw">x</span>) <span class="kw">mclust</span>::<span class="fu"><a href="https://mclust-org.github.io/mclust/reference/adjustedRandIndex.html">adjustedRandIndex</a></span>(<span class="kw">x</span>, <span class="kw">clusters</span>[[<span class="st">"Manual annotation"</span>]]))
 </pre></div>
-<p><img src="figures/maynard_DLPFC-plot.ARI-1.png" title="plot of chunk plot.ARI" alt="plot of chunk plot.ARI" width="100%"> ## Spot weights and principal components</p>
+<p><img src="figures/maynard_DLPFC-plot.ARI-1.png" title="plot of chunk plot.ARI" alt="plot of chunk plot.ARI" width="100%"></p>
+</div>
+<div id="spot-weights-and-principal-components" class="section level2">
+<h2 class="hasAnchor">
+<a href="#spot-weights-and-principal-components" class="anchor"></a>Spot weights and principal components</h2>
 <p>In Supplementary Figure S1, we also show the spatial distribution of the weights <span class="math inline">\(w_i\)</span>, along with the spatial distribution of the first three principal components. We note that some of the visible outlier spots in the second and third principal components are downweighted by the BayesSpace clustering algorithm (low <span class="math inline">\(w_i\)</span>).</p>
 <div class="sourceCode" id="cb9"><pre class="downlit">
 <span class="co">## Load the cached MCMC chain</span>
