@@ -51,16 +51,22 @@ name of the dataset, and the name of the sample in the dataset.
 melanoma <- getRDS(dataset="2018_thrane_melanoma", sample="ST_mel1_rep2")
 ```
 
-
 Finally, `SingleCellExperiment` objects can be constructed manually from a
 counts matrix and tables of row and column data. BayesSpace only requires that
 spot array coordinates be provided as columns named `row` and `col` in
 `colData`. (Note that enhancement of Visium datasets additionally requires the
 pixel coordinates of each spot in the tissue image, but in this case the dataset
-should be loaded with `readVisium()`.)
-<!-- TODO: migrate over the make_RDS() function from spatial-datasets -->
+should be loaded with `readVisium()`, which loads these data automatically.)
+
 ```{r manual.sce, eval=FALSE}
-sce <- SingleCellExperiment(assays=list(counts=counts),
+library(Matrix)
+
+rowData <- read.csv("path/to/rowData.csv", stringsAsFactors=FALSE)
+colData <- read.csv("path/to/colData.csv", stringsAsFactors=FALSE, row.names=1)
+counts <- read.csv("path/to/counts.csv.gz",
+                   row.names=1, check.names=F, stringsAsFactors=FALSE))
+
+sce <- SingleCellExperiment(assays=list(counts=as(counts, "dgCMatrix")),
                             rowData=rowData,
                             colData=colData)
 ```
@@ -115,7 +121,6 @@ analyses in the paper, we suggest running with at least 10,000 iterations
 runtime. (Note that a random seed must be set in order for the results to be
 reproducible.)
 
-<!-- TODO: parse platform from metadta -->
 ```{r cluster}
 set.seed(149)
 melanoma <- spatialCluster(melanoma, q=4, platform="ST", d=7,
@@ -207,7 +212,6 @@ genes, or for a subset of genes of interest. Here, we'll demonstrate by
 enhancing the expression of four marker genes: PMEL (melanoma), CD2 (T-cells),
 CD19 (B-cells), and COL1A1 (fibroblasts). 
 
-<!-- TODO: swap CD2 for CD7? -->
 ```{r enhanceFeatures}
 markers <- c("PMEL", "CD2", "CD19", "COL1A1")
 melanoma.enhanced <- enhanceFeatures(melanoma.enhanced, melanoma,
