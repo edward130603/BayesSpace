@@ -104,7 +104,7 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     if (!(use.dimred %in% reducedDimNames(sce))) 
         stop(sprintf("reducedDim %s not found in input SCE", use.dimred))
 
-    if (burn.in > nrep)
+    if (burn.in >= nrep)
         stop("Please specify a burn-in period shorter than the total number of iterations.")
 
     ## Get PCs
