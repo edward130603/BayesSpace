@@ -48,9 +48,7 @@ NULL
         h5createDataset(h5.fname, par.name, dims, chunk=chunk)
         
         attr(param, "dims") <- .infer_param_dims(colnames(param))
-        
-        ## TODO: write colnames manually to avoid warnings about dimnames
-        ## when writing all attributes
+
         suppressWarnings(h5write(param, h5.fname, par.name, write.attributes=TRUE))
     }
     
@@ -95,8 +93,6 @@ NULL
 #' @importFrom coda mcmc
 #' @importFrom purrr map
 .read_chain <- function(h5.fname, params = NULL) {
-    ## TODO: add option to subset last n rows/iterations
-    
     if (is.null(params)) {
         params <- h5ls(h5.fname)$name
     }
@@ -187,7 +183,6 @@ NULL
         colnames(out$Ychange) <- c("Ychange")
     }
     
-    ## TODO: optionally thin cluster output too
     if (method == "enhance") {
         ## manually thin mu until updated in c++; 
         ## keep init values for consistency with others

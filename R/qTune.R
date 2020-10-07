@@ -68,7 +68,6 @@ qPlot <- function(sce, qs=seq(3, 7), force.retune=FALSE, ...) {
 #' @export
 #' @rdname qTune
 qTune <- function(sce, qs=seq(3, 7), min_rep=100, max_rep=1000, ...) {
-    ## TODO: refactor args into a ClusterConfig object and store as sce attribute
     args <- list(...)
     
     ## Get PCs

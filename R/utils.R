@@ -92,8 +92,9 @@ Mode <- function(x) {
     colnames(positions) <- c("x", "y")
     inputs$positions <- positions
     
-    ## TODO: add better check here against missing image coords
-    ## (necessary for thrane data)
+    ## Compute inter-spot distances (for neighbor finding)
+    ## This should only be necessary for Visium enhancement since switching to
+    ## array-coordinate-based neighbor finding
     if (is.null(radius) && is.null(xdist) && is.null(ydist)) {
         dists <- .compute_interspot_distances(sce)
         dists <- imap(dists, function(d, n) ifelse(is.null(get(n)), d, get(n)))
@@ -174,7 +175,7 @@ exampleSCE <- function(nrow=8, ncol=12, n_genes=100, n_PCs=10)
 #' this function, you may need to consent to creating a BiocFileCache directory
 #' if one does not already exist.
 #'
-#' @param dataset Dataset identifier (TODO: add function to list datasets/samples)
+#' @param dataset Dataset identifier
 #' @param sample Sample identifier
 #' @param cache If true, cache the dataset locally with \code{BiocFileCache}.
 #'   Otherwise, download directly from our S3 bucket. Caching saves time on

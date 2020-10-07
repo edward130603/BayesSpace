@@ -184,7 +184,6 @@ featurePlot <- function(sce, feature,
 }
 
 ## Helpers to permit overriding default platform/is.enhanced
-## TODO: find the cleaner way to do this that definitely exists
 .get_default_platform <- function(sce, platform) {
     if (is.null(platform)) {
         if (exists("BayesSpace.data", metadata(sce))) {
