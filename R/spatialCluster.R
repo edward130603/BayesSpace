@@ -103,6 +103,7 @@ cluster <- function(Y, q, df_j, init = rep(1, nrow(Y)),
 #' @importFrom SingleCellExperiment reducedDim
 #' @importFrom SummarizedExperiment colData colData<-
 #' @importFrom S4Vectors metadata metadata<-
+#' @importFrom assertthat assert_that
 #' 
 #' @export
 #' @rdname spatialCluster
@@ -116,6 +117,9 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     if (!(use.dimred %in% reducedDimNames(sce))) 
         stop("reducedDim \"", use.dimred, "\" not found in input SCE.")
 
+    ## Require at least one iteration and non-negative burn-in
+    assert_that(nrep >= 1)
+    assert_that(burn.in >= 0)
     if (burn.in >= nrep)
         stop("Please specify a burn-in period shorter than the total number of iterations.")
 
@@ -159,7 +163,11 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     
     ## Save modal cluster assignments, excluding burn-in
     message("Calculating labels using iterations ", burn.in, " through ", nrep, ".")
-    labels <- apply(results$z[seq(burn.in, nrep), ], 2, Mode)
+    zs <- results$z[seq(burn.in + 1, nrep), ]
+    if (burn.in + 1 == nrep)
+        labels <- matrix(zs, nrow=1)  # if only one iteration kept, return it
+    else
+        labels <- apply(zs, 2, Mode)  # else take modal assignment
     colData(sce)$spatial.cluster <- unname(labels)
     
     sce

@@ -12,6 +12,10 @@
       unnecessary use of `paste()`.
     * Removed inline conditional statements.
     * Cache downloaded RDS in `getRDS()` (see above).
+- `spatialCluster()` and `spatialEnhance()` handle the edge case where only one
+  iteration is kept after excluding burn-in.
+- The `coda::mcmc` object returned by `mcmcChain()` now specifies the thinning
+  interval used in enhanced objects.
 
 # BayesSpace 0.99.5
 

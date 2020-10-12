@@ -204,6 +204,7 @@ deconvolve <- function(Y, positions, xdist, ydist, q, init, nrep = 1000,
 #' @rdname spatialEnhance
 #' @importFrom SingleCellExperiment SingleCellExperiment reducedDim<-
 #' @importFrom SummarizedExperiment rowData 
+#' @importFrom assertthat assert_that
 spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
     use.dimred = "PCA", d = 15,
     init = NULL, init.method = c("spatialCluster", "mclust", "kmeans"),
@@ -212,6 +213,8 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
     save.chain = FALSE, chain.fname = NULL, burn.in=10000,
     jitter_scale = 5, jitter_prior = 0.3, verbose = FALSE) {
 
+    assert_that(nrep >= 100)  # require at least one iteration after thinning
+    assert_that(burn.in >= 0)
     if (burn.in >= nrep)
         stop("Please specify a burn-in period shorter than the total number of iterations.")
     
@@ -276,7 +279,12 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
     ## Choose modal cluster label, excluding burn-in
     message("Calculating labels using iterations ", (burn.in - 1) * thin,
             " through ", nrep, ".")
-    labels <- apply(deconv$z[seq(burn.in, (nrep %/% thin) + 1), ], 2, Mode)
+    zs <- deconv$z[seq(burn.in, (nrep %/% thin) + 1), ]
+    if (burn.in == (nrep %/% thin) + 1)
+        labels <- matrix(zs, nrow=1)
+    else
+        labels <- apply(zs, 2, Mode)
+
     enhanced$spatial.cluster <- unname(labels)
     
     if (save.chain) {

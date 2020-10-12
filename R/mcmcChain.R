@@ -163,6 +163,15 @@ NULL
     method <- match.arg(method)
     n_iter <- nrow(out$z)  # this is technically n_iters / 100 for enhance
 
+    ## Only one iteration included; need to cast vectors back to matrices
+    if (is.null(n_iter)) {
+        out$z <- matrix(out$z, nrow=1)
+        out$mu <- matrix(out$mu, nrow=1)
+        if ("weights" %in% names(out)) {
+            out$weights <- matrix(out$mu, nrow=1)
+        }
+    }
+
     n <- ncol(out$z)
     d <- ncol(out$lambda[[1]])
     q <- ncol(out$mu)/d
