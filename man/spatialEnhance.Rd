@@ -14,7 +14,7 @@ spatialEnhance(
   init.method = c("spatialCluster", "mclust", "kmeans"),
   model = c("t", "normal"),
   nrep = 2e+05,
-  gamma = 3,
+  gamma = NULL,
   mu0 = NULL,
   lambda0 = NULL,
   alpha = 1,

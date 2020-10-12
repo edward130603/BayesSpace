@@ -108,15 +108,8 @@ deconvolve <- function(Y, positions, xdist, ydist, q, init, nrep = 1000,
     
     positions <- as.matrix(positions)
     colnames(positions) <- c("x", "y")
-    
-    ## If user didn't specify a platform, attempt to parse from SCE metadata
-    ## otherwise check against valid options
-    if (length(platform) > 1) {
-        platform <- .bsData(sce, "platform", match.arg(platform))
-    } else {
-        platform <- match.arg(platform)
-    }
 
+    platform <- match.arg(platform)
     subspots <- ifelse(platform == "Visium", 6, 9)
     
     init1 <- rep(init, subspots)
@@ -217,7 +210,7 @@ deconvolve <- function(Y, positions, xdist, ydist, q, init, nrep = 1000,
 spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
     use.dimred = "PCA", d = 15,
     init = NULL, init.method = c("spatialCluster", "mclust", "kmeans"),
-    model = c("t", "normal"), nrep = 200000, gamma = 3, 
+    model = c("t", "normal"), nrep = 200000, gamma = NULL, 
     mu0 = NULL, lambda0 = NULL, alpha = 1, beta = 0.01, 
     save.chain = FALSE, chain.fname = NULL, burn.in=10000,
     jitter_scale = 5, jitter_prior = 0.3, verbose = FALSE) {
@@ -231,7 +224,14 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
     ## This is temporarily hard-coded into the C++ code
     thin <- 100
 
-    platform <- match.arg(platform)
+    ## If user didn't specify a platform, attempt to parse from SCE metadata
+    ## otherwise check against valid options
+    if (length(platform) > 1) {
+        platform <- .bsData(sce, "platform", match.arg(platform))
+    } else {
+        platform <- match.arg(platform)
+    }
+    
     if (platform == "Visium") {
         position.cols <- c("imagecol", "imagerow")
         xdist <- ydist <- NULL  # Compute with .prepare_inputs
@@ -263,7 +263,14 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
         mu0 <- colMeans(inputs$PCs)
     if (is.null(lambda0))
         lambda0 <- diag(0.01, ncol(inputs$PCs))
-    
+    if (is.null(gamma)) {
+        if (platform == "Visium") {
+            gamma <- 3
+        } else if (platform == "ST") {
+            gamma <- 2
+        }
+    }
+
     deconv <- deconvolve(inputs$PCs, inputs$positions, nrep=nrep, gamma=gamma, 
         xdist=inputs$xdist, ydist=inputs$ydist, q=q, init=init, model=model, 
         platform=platform, verbose=verbose, jitter_scale=jitter_scale,

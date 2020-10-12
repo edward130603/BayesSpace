@@ -20,7 +20,8 @@
 #'   VVV covariance models, respectively.)
 #' @param nrep The number of MCMC iterations.
 #' @param burn.in The number of MCMC iterations to exclude as burn-in period.
-#' @param gamma Smoothing parameter. (Values in range of 1-3 seem to work well.)
+#' @param gamma Smoothing parameter. Defaults to 2 for \code{platform="ST"} and
+#'   3 for \code{platform="Visium"}. (Values in range of 1-3 seem to work well.)
 #' @param mu0 Prior mean hyperparameter for mu. If not provided, mu0 is set to
 #'   the mean of PCs over all spots.
 #' @param lambda0 Prior precision hyperparam for mu. If not provided, lambda0
@@ -114,7 +115,7 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     platform=c("Visium", "ST"),
     init = NULL, init.method = c("mclust", "kmeans"),
     model = c("t", "normal"), precision = c("equal", "variable"), 
-    nrep = 50000, burn.in=1000, gamma = 3, mu0 = NULL, lambda0 = NULL,
+    nrep = 50000, burn.in=1000, gamma = NULL, mu0 = NULL, lambda0 = NULL,
     alpha = 1, beta = 0.01, save.chain = FALSE, chain.fname = NULL) {
     
     if (!(use.dimred %in% reducedDimNames(sce))) 
@@ -150,9 +151,15 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
         mu0 <- colMeans(Y)
     if (is.null(lambda0))
         lambda0 <- diag(0.01, ncol(Y))
-    
+    if (is.null(gamma)) {
+        if (platform == "Visium") {
+            gamma <- 3
+        } else if (platform == "ST") {
+            gamma <- 2
+        }
+    }
+
     ## Run clustering
-    ## TODO: set default gamma to 2 if platform=ST and not specified
     results <- cluster(Y, q, df_j, init=init, 
         model=model, precision=precision, mu0=mu0, 
         lambda0=lambda0, gamma=gamma, alpha=alpha, beta=beta, nrep=nrep)

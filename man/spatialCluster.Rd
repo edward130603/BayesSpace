@@ -16,7 +16,7 @@ spatialCluster(
   precision = c("equal", "variable"),
   nrep = 50000,
   burn.in = 1000,
-  gamma = 3,
+  gamma = NULL,
   mu0 = NULL,
   lambda0 = NULL,
   alpha = 1,
@@ -55,7 +55,8 @@ VVV covariance models, respectively.)}
 
 \item{burn.in}{The number of MCMC iterations to exclude as burn-in period.}
 
-\item{gamma}{Smoothing parameter. (Values in range of 1-3 seem to work well.)}
+\item{gamma}{Smoothing parameter. Defaults to 2 for \code{platform="ST"} and
+3 for \code{platform="Visium"}. (Values in range of 1-3 seem to work well.)}
 
 \item{mu0}{Prior mean hyperparameter for mu. If not provided, mu0 is set to
 the mean of PCs over all spots.}
