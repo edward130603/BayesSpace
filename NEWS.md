@@ -13,6 +13,13 @@
     * Removed inline conditional statements.
     * Cache downloaded RDS in `getRDS()` (see above).
 
+# BayesSpace 0.99.5
+
+## Minor improvements and fixes
+
+- In `spatialCluster()` and `spatialEnhance()`, setting `burn.in` equal to
+  `nrep` now raises an error.
+
 # BayesSpace 0.99.4
 
 ## New features
