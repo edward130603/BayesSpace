@@ -76,10 +76,10 @@
 #' sce <- spatialCluster(sce, 7, nrep=200, burn.in=20)
 #' enhanced <- spatialEnhance(sce, 7, init=sce$spatial.cluster, nrep=200, burn.in=20)
 #' 
-#' @seealso \code{\link{spatialCluster()}} for clustering at the spot level
-#'   before enhancing, \code{\link{clusterPlot()}} for visualizing the cluster
-#'   assignments, \code{\link{enhanceFeatures()}} for imputing enhanced
-#'   expression, and \code{\link{mcmcChain()}} for examining the full MCMC chain
+#' @seealso \code{\link{spatialCluster}} for clustering at the spot level
+#'   before enhancing, \code{\link{clusterPlot}} for visualizing the cluster
+#'   assignments, \code{\link{enhanceFeatures}} for imputing enhanced
+#'   expression, and \code{\link{mcmcChain}} for examining the full MCMC chain
 #'   associated with the enhanced clustering.
 #'   .
 #' 

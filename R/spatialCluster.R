@@ -33,7 +33,7 @@
 #' @details 
 #' The input SCE must have \code{row} and \code{col} columns in its
 #' \code{colData}, corresponding to the array row and column coordinates of each
-#' spot. These are automatically parsed by \code{\link{readVisium()}} or can be
+#' spot. These are automatically parsed by \code{\link{readVisium}} or can be
 #' added manually when creating the SCE.
 #' 
 #' Cluster labels are stored in the \code{spatial.cluster} column of the SCE,
@@ -45,10 +45,10 @@
 #' sce <- spatialCluster(sce, 7, nrep=200, burn.in=20)
 #' 
 #' @seealso \code{\link{spatialPreprocess}} for preparing the SCE for
-#'   clustering, \code{\link{spatialEnhance()}} for enhancing the clustering
-#'   resolution, \code{\link{clusterPlot()}} for visualizing the cluster
-#'   assignments, \code{\link{featurePlot()}} for visualizing expression levels
-#'   in spatial context, and \code{\link{mcmcChain()}} for examining the full
+#'   clustering, \code{\link{spatialEnhance}} for enhancing the clustering
+#'   resolution, \code{\link{clusterPlot}} for visualizing the cluster
+#'   assignments, \code{\link{featurePlot}} for visualizing expression levels
+#'   in spatial context, and \code{\link{mcmcChain}} for examining the full
 #'   MCMC chain associated with the clustering.
 #'   
 #' @name spatialCluster

@@ -1,3 +1,5 @@
+#' Spatial plotting functions
+#'
 #' @param color Optional hex code to set color of borders around spots. Set to
 #'   \code{NA} to remove borders.
 #' @param ... Additional arguments for \code{geom_polygon()}. \code{size}, to
@@ -11,7 +13,7 @@
 #'   for each platform will be plotted.\cr
 #'   NOTE: specifying this argument is only necessary if \code{sce} was not
 #'   created by \code{spatialCluster()} or \code{spatialEnhance()}.
-#' 
+#'
 #' @keywords internal
 #' @name spatialPlot
 NULL

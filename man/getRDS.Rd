@@ -7,7 +7,7 @@
 getRDS(dataset, sample, cache = TRUE)
 }
 \arguments{
-\item{dataset}{Dataset identifier (TODO: add function to list datasets/samples)}
+\item{dataset}{Dataset identifier}
 
 \item{sample}{Sample identifier}
 

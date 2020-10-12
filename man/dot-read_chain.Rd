@@ -4,7 +4,7 @@
 \alias{.read_chain}
 \title{Load saved chain from disk.}
 \usage{
-.read_chain(h5.fname, params = NULL)
+.read_chain(h5.fname, params = NULL, is.enhanced = FALSE)
 }
 \arguments{
 \item{h5.fname}{Path to hdf5 file containing chain}
