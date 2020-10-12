@@ -16,6 +16,9 @@
   iteration is kept after excluding burn-in.
 - The `coda::mcmc` object returned by `mcmcChain()` now specifies the thinning
   interval used in enhanced objects.
+- `spatialCluster()` and `spatialEnhance()` now include platform-specific
+  defaults for the `gamma` parameter.
+- Minor internal refactoring.
 
 # BayesSpace 0.99.5
 
