@@ -1,4 +1,4 @@
-# BayesSpace (development version)
+# BayesSpace 0.99.6
 
 ## New features
 
