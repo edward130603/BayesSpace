@@ -19,7 +19,6 @@ Depends:
 Imports:
     Rcpp (>= 1.0.4.6),
     stats,
-    BiocSingular,
     purrr,
     scater,
     scran,
