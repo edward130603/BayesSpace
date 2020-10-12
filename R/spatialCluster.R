@@ -5,7 +5,10 @@
 #' @param sce A SingleCellExperiment object containing the spatial data.
 #' @param q The number of clusters.
 #' @param platform Spatial transcriptomic platform. Specify 'Visium' for hex 
-#'   lattice geometry or 'ST' for square lattice geometry.
+#'   lattice geometry or 'ST' for square lattice geometry. Specifying this
+#'   parameter is optional when analyzing SingleCellExperiments processed using
+#'   \code{\link{readVisium}} or \code{\link{spatialPreprocess}}, as this
+#'   information is included in their metadata.
 #' @param use.dimred Name of a reduced dimensionality result in 
 #'   \code{reducedDims(sce)}. If provided, cluster on these features directly. 
 #' @param d Number of top principal components to use when clustering.
@@ -128,9 +131,15 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     d <- min(ncol(Y), d)
     Y <- Y[, seq_len(d)]
     
+    ## If user didn't specify a platform, attempt to parse from SCE metadata
+    ## otherwise check against valid options
+    if (length(platform) > 1) {
+        platform <- .bsData(sce, "platform", match.arg(platform))
+    } else {
+        platform <- match.arg(platform)
+    }
+
     ## Get indices of neighboring spots, and initialize cluster assignments
-    ## TODO: parse platform from metadata
-    platform <- match.arg(platform)
     df_j <- .find_neighbors(sce, platform)
     init <- .init_cluster(Y, q, init, init.method)
     

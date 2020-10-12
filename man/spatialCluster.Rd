@@ -36,7 +36,10 @@ spatialCluster(
 \item{d}{Number of top principal components to use when clustering.}
 
 \item{platform}{Spatial transcriptomic platform. Specify 'Visium' for hex 
-lattice geometry or 'ST' for square lattice geometry.}
+lattice geometry or 'ST' for square lattice geometry. Specifying this
+parameter is optional when analyzing SingleCellExperiments processed using
+\code{\link{readVisium}} or \code{\link{spatialPreprocess}}, as this
+information is included in their metadata.}
 
 \item{init}{Initial cluster assignments for spots.}
 

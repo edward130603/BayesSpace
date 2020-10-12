@@ -8,7 +8,11 @@
 #' @param sce A SingleCellExperiment object containing the spatial data.
 #' @param q The number of clusters.
 #' @param platform Spatial transcriptomic platform. Specify 'Visium' for hex 
-#'   lattice geometry or 'ST' for square lattice geometry.
+#'   lattice geometry or 'ST' for square lattice geometry. Specifying this
+#'   parameter is optional when analyzing SingleCellExperiments processed using
+#'   \code{\link{readVisium}}, \code{\link{spatialPreprocess}}, or
+#'   \code{\link{spatialCluster}}, as this information is included in their
+#'   metadata.
 #' @param use.dimred Name of a reduced dimensionality result in 
 #'   \code{reducedDims(sce)}. If provided, cluster on these features directly. 
 #' @param d Number of top principal components to use when clustering.
@@ -99,13 +103,20 @@ deconvolve <- function(Y, positions, xdist, ydist, q, init, nrep = 1000,
     
     d <- ncol(Y)
     n0 <- nrow(Y)
-    positions <- as.matrix(positions)
     Y <- as.matrix(Y)
     c <- jitter_prior * 1 / (2 * mean(diag(cov(Y))))
     
+    positions <- as.matrix(positions)
     colnames(positions) <- c("x", "y")
     
-    platform <- match.arg(platform)
+    ## If user didn't specify a platform, attempt to parse from SCE metadata
+    ## otherwise check against valid options
+    if (length(platform) > 1) {
+        platform <- .bsData(sce, "platform", match.arg(platform))
+    } else {
+        platform <- match.arg(platform)
+    }
+
     subspots <- ifelse(platform == "Visium", 6, 9)
     
     init1 <- rep(init, subspots)

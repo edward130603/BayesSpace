@@ -33,7 +33,11 @@ spatialEnhance(
 \item{q}{The number of clusters.}
 
 \item{platform}{Spatial transcriptomic platform. Specify 'Visium' for hex 
-lattice geometry or 'ST' for square lattice geometry.}
+lattice geometry or 'ST' for square lattice geometry. Specifying this
+parameter is optional when analyzing SingleCellExperiments processed using
+\code{\link{readVisium}}, \code{\link{spatialPreprocess}}, or
+\code{\link{spatialCluster}}, as this information is included in their
+metadata.}
 
 \item{use.dimred}{Name of a reduced dimensionality result in 
 \code{reducedDims(sce)}. If provided, cluster on these features directly.}
