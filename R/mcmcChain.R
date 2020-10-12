@@ -92,7 +92,7 @@ NULL
 #' @importFrom rhdf5 h5ls h5read
 #' @importFrom coda mcmc
 #' @importFrom purrr map
-.read_chain <- function(h5.fname, params = NULL) {
+.read_chain <- function(h5.fname, params = NULL, is.enhanced = FALSE) {
     if (is.null(params)) {
         params <- h5ls(h5.fname)$name
     }
@@ -108,9 +108,12 @@ NULL
     xs <- map(params, .read_param)
     x <- do.call(cbind, xs)
     
-    ## TODO: specify thinning interval + start/end based on burn-in
-    ## may need to save iter_from in chain file
-    mcmc(x)
+    ## Enhanced chain includes initialization and is thinned to every 100 iters
+    ## Cluster chain does not include init and is not thinned
+    if (is.enhanced)
+        mcmc(x, start=0, end=(nrow(x) - 1) * 100, thin=100)
+    else
+        mcmc(x)
 }
 
 #' Make colnames for parameter indices.
@@ -159,6 +162,7 @@ NULL
 {
     method <- match.arg(method)
     n_iter <- nrow(out$z)  # this is technically n_iters / 100 for enhance
+
     n <- ncol(out$z)
     d <- ncol(out$lambda[[1]])
     q <- ncol(out$mu)/d
@@ -218,8 +222,9 @@ mcmcChain <- function(sce, params = NULL) {
     if (!("chain.h5" %in% names(metadata(sce)))) {
         stop("Path to chain file not available in object metadata.")
     }
-    
-    .read_chain(metadata(sce)$chain.h5, params)
+
+    is.enhanced <- metadata(sce)$BayesSpace.data$is.enhanced
+    .read_chain(metadata(sce)$chain.h5, params, is.enhanced)
 }
 
 #' @export
