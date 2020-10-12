@@ -46,8 +46,10 @@ clusterPlot <- function(sce, label="spatial.cluster",
                         platform=NULL, is.enhanced=NULL,
                         ...) {
     
-    platform <- .get_default_platform(sce, platform)
-    is.enhanced <- .get_default_is.enhanced(sce, is.enhanced)
+    if (is.null(platform))
+        platform <- .bsData(sce, "platform", "Visium")
+    if (is.null(is.enhanced))
+        is.enhanced <- .bsData(sce, "is.enhanced", FALSE)
     
     vertices <- .make_vertices(sce, label, platform, is.enhanced)
     
@@ -94,6 +96,7 @@ clusterPlot <- function(sce, label="spatial.cluster",
 #'
 #' @importFrom ggplot2 ggplot aes_ geom_polygon scale_fill_gradient scale_fill_gradient2 coord_equal labs theme_void
 #' @importFrom scales muted
+#' @importFrom assertthat assert_that
 #' @export
 featurePlot <- function(sce, feature,
                         assay.type="logcounts", 
@@ -103,13 +106,17 @@ featurePlot <- function(sce, feature,
                         platform=NULL, is.enhanced=NULL,
                         ...) {
     
-    platform <- .get_default_platform(sce, platform)
-    is.enhanced <- .get_default_is.enhanced(sce, is.enhanced)
+    if (is.null(platform))
+        platform <- .bsData(sce, "platform", "Visium")
+    if (is.null(is.enhanced))
+        is.enhanced <- .bsData(sce, "is.enhanced", FALSE)
     
     ## extract expression from logcounts if a gene name is passed.
     ## otherwise, assume a vector of counts was passed and let
     ## .make_vertices helpers check validity
     if (is.character(feature)) {
+        assert_that(feature %in% rownames(sce),
+                    msg=sprintf("Feature %s not in SCE.", feature))
         fill <- assay(sce, assay.type)[feature, ]
         fill.name <- feature
     } else {
@@ -183,31 +190,6 @@ featurePlot <- function(sce, feature,
     }
     
     vertices
-}
-
-## Helpers to permit overriding default platform/is.enhanced
-.get_default_platform <- function(sce, platform) {
-    if (is.null(platform)) {
-        if (exists("BayesSpace.data", metadata(sce))) {
-            platform <- metadata(sce)$BayesSpace.data$platform
-        } else {
-            warning("Platform not defined in sce metadata.\n",
-                    "  Using default 'Visium' (use platform='ST' for ST).")
-            platform <- "Visium"
-        }
-    }
-}
-
-.get_default_is.enhanced <- function(sce, is.enhanced) {
-    if (is.null(is.enhanced)) {
-        if (exists("BayesSpace.data", metadata(sce))) {
-            is.enhanced <- metadata(sce)$BayesSpace.data$is.enhanced
-        } else {
-            warning("SCE does not indicate whether data are spots or subspots.\n",
-                    "  Using default spots (set is.enhanced=TRUE for subspots).")
-            is.enhanced <- FALSE
-        }
-    }
 }
 
 #' Helper to extract x, y, fill ID from colData

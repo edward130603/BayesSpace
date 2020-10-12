@@ -86,8 +86,6 @@
 #' @name spatialEnhance
 NULL
 
-## TODO: update offset code to be based on array coordinates, as in cluster,
-##   instead of image coordinates
 #' Wrapper around C++ \code{iterate_deconv()} function
 #' 
 #' @return List of enhancement parameter values at each iteration

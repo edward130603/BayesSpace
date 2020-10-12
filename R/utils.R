@@ -130,6 +130,8 @@ Mode <- function(x) {
 #' @importFrom SingleCellExperiment SingleCellExperiment logcounts
 #' @importFrom scater logNormCounts
 #' @importFrom stats prcomp rnbinom runif
+#' @importFrom S4Vectors metadata<-
+#'
 #' @export
 exampleSCE <- function(nrow=8, ncol=12, n_genes=100, n_PCs=10)
 {
@@ -207,4 +209,28 @@ getRDS <- function(dataset, sample, cache=TRUE) {
     }
 
     readRDS(local.path)
+}
+
+#' Access BayesSpace metadata
+#'
+#' @param sce SingleCellExperiment
+#' @param name Metadata name
+#'
+#' @return Requested metadata
+#'
+#' @keywords internal
+.bsData <- function(sce, name, default=NULL, warn=FALSE) {
+    if (!exists("BayesSpace.data", metadata(sce)))
+        stop("BayesSpace metadata not present in this object.")
+
+    bsData <- metadata(sce)[["BayesSpace.data"]]
+    if (exists(name, bsData)) {
+        bsData[[name]]
+    } else {
+        if (warn) {
+            default.name <- ifelse(is.null(default), "NULL", default)
+            warning(name, " not found in BayesSpace metadata. Using default: ", default.name)
+        }
+        default
+    }
 }
