@@ -5,7 +5,10 @@
 #' @param sce A SingleCellExperiment object containing the spatial data.
 #' @param q The number of clusters.
 #' @param platform Spatial transcriptomic platform. Specify 'Visium' for hex 
-#'   lattice geometry or 'ST' for square lattice geometry.
+#'   lattice geometry or 'ST' for square lattice geometry. Specifying this
+#'   parameter is optional when analyzing SingleCellExperiments processed using
+#'   \code{\link{readVisium}} or \code{\link{spatialPreprocess}}, as this
+#'   information is included in their metadata.
 #' @param use.dimred Name of a reduced dimensionality result in 
 #'   \code{reducedDims(sce)}. If provided, cluster on these features directly. 
 #' @param d Number of top principal components to use when clustering.
@@ -17,7 +20,8 @@
 #'   VVV covariance models, respectively.)
 #' @param nrep The number of MCMC iterations.
 #' @param burn.in The number of MCMC iterations to exclude as burn-in period.
-#' @param gamma Smoothing parameter. (Values in range of 1-3 seem to work well.)
+#' @param gamma Smoothing parameter. Defaults to 2 for \code{platform="ST"} and
+#'   3 for \code{platform="Visium"}. (Values in range of 1-3 seem to work well.)
 #' @param mu0 Prior mean hyperparameter for mu. If not provided, mu0 is set to
 #'   the mean of PCs over all spots.
 #' @param lambda0 Prior precision hyperparam for mu. If not provided, lambda0
@@ -31,14 +35,26 @@
 #'   \code{colData} under the name \code{spatial.cluster}.
 #'         
 #' @details 
-#' TODO describe method in detail
-#' TODO add details or link to mcmcChain
+#' The input SCE must have \code{row} and \code{col} columns in its
+#' \code{colData}, corresponding to the array row and column coordinates of each
+#' spot. These are automatically parsed by \code{\link{readVisium}} or can be
+#' added manually when creating the SCE.
+#' 
+#' Cluster labels are stored in the \code{spatial.cluster} column of the SCE,
+#' and the cluster initialization is stored in \code{cluster.init}.
 #' 
 #' @examples
 #' set.seed(149)
 #' sce <- exampleSCE()
 #' sce <- spatialCluster(sce, 7, nrep=200, burn.in=20)
-#'
+#' 
+#' @seealso \code{\link{spatialPreprocess}} for preparing the SCE for
+#'   clustering, \code{\link{spatialEnhance}} for enhancing the clustering
+#'   resolution, \code{\link{clusterPlot}} for visualizing the cluster
+#'   assignments, \code{\link{featurePlot}} for visualizing expression levels
+#'   in spatial context, and \code{\link{mcmcChain}} for examining the full
+#'   MCMC chain associated with the clustering.
+#'   
 #' @name spatialCluster
 NULL
 
@@ -57,9 +73,10 @@ cluster <- function(Y, q, df_j, init = rep(1, nrow(Y)),
     d <- ncol(Y)
     n <- nrow(Y)
     
-    if ((length(mu0) != d) | (ncol(lambda0) != d)) {
-        stop("Dimensions of mu0 or lambda0 do not match input data Y")
-    }
+    if (length(mu0) != d)
+        stop("Dimensions of mu0 do not match input data Y.")
+    if (ncol(lambda0) != d)
+        stop("Dimensions of lambda0 do not match input data Y.")
     
     model <- match.arg(model)
     precision <- match.arg(precision)
@@ -87,10 +104,10 @@ cluster <- function(Y, q, df_j, init = rep(1, nrow(Y)),
         q=q, init=init, mu0=mu0, lambda0=lambda0, alpha=alpha, beta=beta)
 }
 
-## TODO make generic for SCE/matrix instead of wrapping cluster() ?
 #' @importFrom SingleCellExperiment reducedDim
 #' @importFrom SummarizedExperiment colData colData<-
 #' @importFrom S4Vectors metadata metadata<-
+#' @importFrom assertthat assert_that
 #' 
 #' @export
 #' @rdname spatialCluster
@@ -98,12 +115,15 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     platform=c("Visium", "ST"),
     init = NULL, init.method = c("mclust", "kmeans"),
     model = c("t", "normal"), precision = c("equal", "variable"), 
-    nrep = 50000, burn.in=1000, gamma = 3, mu0 = NULL, lambda0 = NULL,
+    nrep = 50000, burn.in=1000, gamma = NULL, mu0 = NULL, lambda0 = NULL,
     alpha = 1, beta = 0.01, save.chain = FALSE, chain.fname = NULL) {
     
     if (!(use.dimred %in% reducedDimNames(sce))) 
-        stop(sprintf("reducedDim %s not found in input SCE", use.dimred))
+        stop("reducedDim \"", use.dimred, "\" not found in input SCE.")
 
+    ## Require at least one iteration and non-negative burn-in
+    assert_that(nrep >= 1)
+    assert_that(burn.in >= 0)
     if (burn.in >= nrep)
         stop("Please specify a burn-in period shorter than the total number of iterations.")
 
@@ -112,20 +132,34 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     d <- min(ncol(Y), d)
     Y <- Y[, seq_len(d)]
     
+    ## If user didn't specify a platform, attempt to parse from SCE metadata
+    ## otherwise check against valid options
+    if (length(platform) > 1) {
+        platform <- .bsData(sce, "platform", match.arg(platform))
+    } else {
+        platform <- match.arg(platform)
+    }
+
     ## Get indices of neighboring spots, and initialize cluster assignments
-    ## TODO: parse platform from metadata
-    platform <- match.arg(platform)
     df_j <- .find_neighbors(sce, platform)
     init <- .init_cluster(Y, q, init, init.method)
     
-    ## TODO: pass these through with ...
+    ## Set model parameters
     model <- match.arg(model)
     precision <- match.arg(precision)
-    mu0 <- if (is.null(mu0)) colMeans(Y) else mu0
-    lambda0 <- if (is.null(lambda0)) diag(0.01, ncol(Y)) else lambda0
-    
+    if (is.null(mu0))
+        mu0 <- colMeans(Y)
+    if (is.null(lambda0))
+        lambda0 <- diag(0.01, ncol(Y))
+    if (is.null(gamma)) {
+        if (platform == "Visium") {
+            gamma <- 3
+        } else if (platform == "ST") {
+            gamma <- 2
+        }
+    }
+
     ## Run clustering
-    ## TODO: set default gamma to 2 if platform=ST and not specified
     results <- cluster(Y, q, df_j, init=init, 
         model=model, precision=precision, mu0=mu0, 
         lambda0=lambda0, gamma=gamma, alpha=alpha, beta=beta, nrep=nrep)
@@ -136,7 +170,7 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
         metadata(sce)$chain.h5 <- .write_chain(results, chain.fname)
     }
     
-    ## Save metadata (TODO: add neighbors?)
+    ## Save metadata
     sce$cluster.init <- init
     if (!exists("BayesSpace.data", metadata(sce)))
         metadata(sce)$BayesSpace.data <- list()
@@ -144,9 +178,12 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     metadata(sce)$BayesSpace.data$is.enhanced <- FALSE
     
     ## Save modal cluster assignments, excluding burn-in
-    msg <- "Calculating labels using iterations %d through %d"
-    message(sprintf(msg, burn.in, nrep))
-    labels <- apply(results$z[seq(burn.in, nrep), ], 2, Mode)
+    message("Calculating labels using iterations ", burn.in, " through ", nrep, ".")
+    zs <- results$z[seq(burn.in + 1, nrep), ]
+    if (burn.in + 1 == nrep)
+        labels <- matrix(zs, nrow=1)  # if only one iteration kept, return it
+    else
+        labels <- apply(zs, 2, Mode)  # else take modal assignment
     colData(sce)$spatial.cluster <- unname(labels)
     
     sce
@@ -171,7 +208,7 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
         offsets <- data.frame(x.offset=c( 0, 1, 0, -1),
                               y.offset=c(-1, 0, 1,  0))
     } else {
-        stop(sprintf(".find_neighbors: Unsupported platform %s", platform))
+        stop(".find_neighbors: Unsupported platform \"", platform, "\".")
     }
     
     ## Get array coordinates (and label by index of spot in SCE)
@@ -208,9 +245,8 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     
     ## Log number of spots with neighbors
     n_with_neighbors <- length(keep(df_j, function(nbrs) length(nbrs) > 0))
-    msg <- "Neighbors were identified for %d out of %d spots." 
-    msg <- sprintf(msg, n_with_neighbors, ncol(sce))
-    message(msg)
+    message("Neighbors were identified for ", n_with_neighbors, " out of ",
+            ncol(sce), " spots.")
     
     df_j
 }
@@ -219,12 +255,11 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
 #' 
 #' @param sce SingleCellExperiment
 #' @param q Number of clusters
-#' @param inputs Results from .prepare_inputs() (TODO: store this in sce)
+#' @param inputs Results from \code{.prepare_inputs()}
 #' @param init Vector of initial cluster assignments
 #' @param init.method Initialization clustering algorithm
 #' 
-#' @return Modified sce with initial cluster assignments stored in
-#'   colData$cluster.init (TODO: return vector instead)
+#' @return Vector of cluster assignments.
 #' 
 #' @keywords internal
 #' 

@@ -71,8 +71,8 @@ NULL
     }
     
     if (!all(colnames(X.enhanced) == colnames(X.ref))) {
-        warning("colnames of reducedDim and X.enhanced do not match.")
-        warning("Setting X.enhanced colnames to match reducedDim.")
+        warning("colnames of reducedDim and X.enhanced do not match.\n",
+                "  Setting X.enhanced colnames to match reducedDim.")
         colnames(X.enhanced) <- colnames(X.ref)
     }
 
@@ -136,7 +136,7 @@ NULL
     }
     default.nrounds <- nrounds
     
-    ## TODO: think about extracting tuning function, using apply instead of loop
+    ## Predict expression of each feature
     for (feature in feature_names) {
         nrounds <- default.nrounds
         if (nrounds == 0){
@@ -202,7 +202,7 @@ enhanceFeatures <- function(sce.enhanced, sce.ref, feature_names = NULL,
         feature_names <- intersect(feature_names, rownames(Y.ref))
         skipped_features <- setdiff(feature_names, rownames(Y.ref))
         if (length(skipped_features) > 0) {
-            message(sprintf("Skipping %d features not in sce.ref", length(skipped_features)))
+            message("Skipping ", length(skipped_features), " features not in sce.ref.")
         }
     }
     
@@ -212,8 +212,7 @@ enhanceFeatures <- function(sce.enhanced, sce.ref, feature_names = NULL,
     ## Clip negative predicted expression
     Y.enhanced <- pmax(Y.enhanced, 0)
     
-    ## TODO: add option to specify destination of enhanced features.
-    ## For now, return in same form as input
+    ## Return enhanced features in same form as input
     if (!is.null(feature.matrix)) {
         return(Y.enhanced)
     } else if (!is.null(altExp.type)) {

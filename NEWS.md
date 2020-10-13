@@ -1,4 +1,24 @@
-# BayesSpace (development version)
+# BayesSpace 0.99.6
+
+## New features
+
+- `getRDS()` gains a `cache` parameter. When `TRUE`, the RDS is cached locally
+  using `BiocFileCache`.
+
+## Minor improvements and fixes
+
+- Addressed reviewer concerns (https://github.com/Bioconductor/Contributions/issues/1624)
+    * Updated stop/warning/message statements to remove redundancies and
+      unnecessary use of `paste()`.
+    * Removed inline conditional statements.
+    * Cache downloaded RDS in `getRDS()` (see above).
+- `spatialCluster()` and `spatialEnhance()` handle the edge case where only one
+  iteration is kept after excluding burn-in.
+- The `coda::mcmc` object returned by `mcmcChain()` now specifies the thinning
+  interval used in enhanced objects.
+- `spatialCluster()` and `spatialEnhance()` now include platform-specific
+  defaults for the `gamma` parameter.
+- Minor internal refactoring.
 
 # BayesSpace 0.99.5
 

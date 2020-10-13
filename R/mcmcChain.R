@@ -48,9 +48,7 @@ NULL
         h5createDataset(h5.fname, par.name, dims, chunk=chunk)
         
         attr(param, "dims") <- .infer_param_dims(colnames(param))
-        
-        ## TODO: write colnames manually to avoid warnings about dimnames
-        ## when writing all attributes
+
         suppressWarnings(h5write(param, h5.fname, par.name, write.attributes=TRUE))
     }
     
@@ -94,9 +92,7 @@ NULL
 #' @importFrom rhdf5 h5ls h5read
 #' @importFrom coda mcmc
 #' @importFrom purrr map
-.read_chain <- function(h5.fname, params = NULL) {
-    ## TODO: add option to subset last n rows/iterations
-    
+.read_chain <- function(h5.fname, params = NULL, is.enhanced = FALSE) {
     if (is.null(params)) {
         params <- h5ls(h5.fname)$name
     }
@@ -112,9 +108,12 @@ NULL
     xs <- map(params, .read_param)
     x <- do.call(cbind, xs)
     
-    ## TODO: specify thinning interval + start/end based on burn-in
-    ## may need to save iter_from in chain file
-    mcmc(x)
+    ## Enhanced chain includes initialization and is thinned to every 100 iters
+    ## Cluster chain does not include init and is not thinned
+    if (is.enhanced)
+        mcmc(x, start=0, end=(nrow(x) - 1) * 100, thin=100)
+    else
+        mcmc(x)
 }
 
 #' Make colnames for parameter indices.
@@ -163,12 +162,20 @@ NULL
 {
     method <- match.arg(method)
     n_iter <- nrow(out$z)  # this is technically n_iters / 100 for enhance
+
+    ## Only one iteration included; need to cast vectors back to matrices
+    if (is.null(n_iter)) {
+        out$z <- matrix(out$z, nrow=1)
+        out$mu <- matrix(out$mu, nrow=1)
+        if ("weights" %in% names(out)) {
+            out$weights <- matrix(out$mu, nrow=1)
+        }
+    }
+
     n <- ncol(out$z)
     d <- ncol(out$lambda[[1]])
     q <- ncol(out$mu)/d
-    
-    ## TODO: this is bugged if only one iteration saved. 
-    ## Add as.matrix to fix, but check for transposition
+
     colnames(out$z) <- .make_index_names("z", n)
     colnames(out$mu) <- .make_index_names("mu", q, d)
     out$lambda <- .flatten_matrix_list(out$lambda, "lambda", d, d)
@@ -187,7 +194,6 @@ NULL
         colnames(out$Ychange) <- c("Ychange")
     }
     
-    ## TODO: optionally thin cluster output too
     if (method == "enhance") {
         ## manually thin mu until updated in c++; 
         ## keep init values for consistency with others
@@ -223,8 +229,9 @@ mcmcChain <- function(sce, params = NULL) {
     if (!("chain.h5" %in% names(metadata(sce)))) {
         stop("Path to chain file not available in object metadata.")
     }
-    
-    .read_chain(metadata(sce)$chain.h5, params)
+
+    is.enhanced <- metadata(sce)$BayesSpace.data$is.enhanced
+    .read_chain(metadata(sce)$chain.h5, params, is.enhanced)
 }
 
 #' @export

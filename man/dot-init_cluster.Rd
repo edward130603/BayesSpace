@@ -15,11 +15,10 @@
 
 \item{sce}{SingleCellExperiment}
 
-\item{inputs}{Results from .prepare_inputs() (TODO: store this in sce)}
+\item{inputs}{Results from \code{.prepare_inputs()}}
 }
 \value{
-Modified sce with initial cluster assignments stored in
-  colData$cluster.init (TODO: return vector instead)
+Vector of cluster assignments.
 }
 \description{
 Initialize cluster assignments
