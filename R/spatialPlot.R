@@ -1,3 +1,5 @@
+#' Spatial plotting functions
+#'
 #' @param color Optional hex code to set color of borders around spots. Set to
 #'   \code{NA} to remove borders.
 #' @param ... Additional arguments for \code{geom_polygon()}. \code{size}, to
@@ -11,7 +13,7 @@
 #'   for each platform will be plotted.\cr
 #'   NOTE: specifying this argument is only necessary if \code{sce} was not
 #'   created by \code{spatialCluster()} or \code{spatialEnhance()}.
-#' 
+#'
 #' @keywords internal
 #' @name spatialPlot
 NULL
@@ -44,14 +46,16 @@ clusterPlot <- function(sce, label="spatial.cluster",
                         platform=NULL, is.enhanced=NULL,
                         ...) {
     
-    platform <- .get_default_platform(sce, platform)
-    is.enhanced <- .get_default_is.enhanced(sce, is.enhanced)
+    if (is.null(platform))
+        platform <- .bsData(sce, "platform", "Visium")
+    if (is.null(is.enhanced))
+        is.enhanced <- .bsData(sce, "is.enhanced", FALSE)
     
     vertices <- .make_vertices(sce, label, platform, is.enhanced)
     
     ## No borders around subspots by default
     if (is.null(color)) {
-        color <- if (is.enhanced) NA else "#d8dcd6"
+        color <- ifelse(is.enhanced, NA, "#d8dcd6")
     }
 
     splot <- ggplot(data=vertices, 
@@ -92,6 +96,7 @@ clusterPlot <- function(sce, label="spatial.cluster",
 #'
 #' @importFrom ggplot2 ggplot aes_ geom_polygon scale_fill_gradient scale_fill_gradient2 coord_equal labs theme_void
 #' @importFrom scales muted
+#' @importFrom assertthat assert_that
 #' @export
 featurePlot <- function(sce, feature,
                         assay.type="logcounts", 
@@ -101,22 +106,24 @@ featurePlot <- function(sce, feature,
                         platform=NULL, is.enhanced=NULL,
                         ...) {
     
-    platform <- .get_default_platform(sce, platform)
-    is.enhanced <- .get_default_is.enhanced(sce, is.enhanced)
+    if (is.null(platform))
+        platform <- .bsData(sce, "platform", "Visium")
+    if (is.null(is.enhanced))
+        is.enhanced <- .bsData(sce, "is.enhanced", FALSE)
     
     ## extract expression from logcounts if a gene name is passed.
     ## otherwise, assume a vector of counts was passed and let
     ## .make_vertices helpers check validity
-    ## TODO: accommofeatureltiple genes as input (by aggregating or faceting)
     if (is.character(feature)) {
+        assert_that(feature %in% rownames(sce),
+                    msg=sprintf("Feature %s not in SCE.", feature))
         fill <- assay(sce, assay.type)[feature, ]
         fill.name <- feature
     } else {
         fill <- feature
         
-        # TODO: make this an argument?
-        # easily overwritable with labs() though and want to encourage 
-        # composing ggplot functions instead of passing everything as arg
+        ## this could be an argument, but it's easily overwritten with labs()
+        ## and we should encourage composing ggplot functions instead
         fill.name <- "Expression"
     }
     
@@ -124,7 +131,7 @@ featurePlot <- function(sce, feature,
     
     ## No borders around subspots by default
     if (is.null(color)) {
-        color <- if (is.enhanced) NA else "#d8dcd6"
+        color <- ifelse(is.enhanced, NA, "#d8dcd6")
     }
     
     splot <- ggplot(data=vertices, 
@@ -135,13 +142,13 @@ featurePlot <- function(sce, feature,
         theme_void()
     
     if (diverging) {
-        low = if (is.null(low)) "#F0F0F0" else low
-        high = if (is.null(high)) muted("red") else high
+        low <- ifelse(is.null(low), "#F0F0F0", low)
+        high <- ifelse(is.null(high), muted("red"), high)
         splot <- splot + scale_fill_gradient(low=low, high=high)
     } else {
-        low = if (is.null(low)) muted("blue") else low
-        mid = if (is.null(mid)) "#F0F0F0" else mid
-        high = if (is.null(high)) muted("red") else high
+        low <- ifelse(is.null(low), muted("blue"), low)
+        mid <- ifelse(is.null(mid), "#F0F0F0", mid)
+        high <- ifelse(is.null(high), muted("red"), high)
         splot <- splot + scale_fill_gradient2(low=low, mid=mid, high=high)
     }
     
@@ -179,36 +186,10 @@ featurePlot <- function(sce, feature,
             vertices <- .make_square_spots(cdata, fill)
         }
     } else {
-        stop(sprintf("Unsupported platform: %s. Cannot create spot layout.", platform))
+        stop("Unsupported platform: \"", platform, "\". Cannot create spot layout.")
     }
     
     vertices
-}
-
-## Helpers to permit overriding default platform/is.enhanced
-## TODO: find the cleaner way to do this that definitely exists
-.get_default_platform <- function(sce, platform) {
-    if (is.null(platform)) {
-        if (exists("BayesSpace.data", metadata(sce))) {
-            platform <- metadata(sce)$BayesSpace.data$platform
-        } else {
-            warning(c("Platform not defined in sce metadata.\n",
-                      "  Using default 'Visium' (use platform='ST' for ST)."))
-            platform <- "Visium"
-        }
-    }
-}
-
-.get_default_is.enhanced <- function(sce, is.enhanced) {
-    if (is.null(is.enhanced)) {
-        if (exists("BayesSpace.data", metadata(sce))) {
-            is.enhanced <- metadata(sce)$BayesSpace.data$is.enhanced
-        } else {
-            warning(c("SCE does not indicate whether data are spots or subspots.\n",
-                      "  Using default spots (set is.enhanced=TRUE for subspots)."))
-            is.enhanced <- FALSE
-        }
-    }
 }
 
 #' Helper to extract x, y, fill ID from colData

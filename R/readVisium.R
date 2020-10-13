@@ -37,12 +37,14 @@ readVisium <- function(dirname) {
     spatial_dir <- file.path(dirname, "spatial")
     matrix_dir <- file.path(dirname, "filtered_feature_bc_matrix")
     
-    if (!dir.exists(matrix_dir)) stop(paste0("Matrix directory does not exist: ", matrix_dir))
-    if (!dir.exists(spatial_dir)) stop(paste0("Spatial directory does not exist: ", spatial_dir))
+    if (!dir.exists(matrix_dir))
+        stop("Matrix directory does not exist:\n  ", matrix_dir)
+    if (!dir.exists(spatial_dir))
+        stop("Spatial directory does not exist:\n  ", spatial_dir)
     
     colData <- read.csv(file.path(spatial_dir, "tissue_positions_list.csv"), header=FALSE)
     
-    ## TODO: using spatialLIBD conventions here (legacy), but should eventually
+    ## We're using spatialLIBD conventions here (legacy), but should eventually
     ##   update to canonical spaceRanger names:
     ##   c("barcode", "in_tissue", "array_row", "array_col", "pxl_row_in_fullres", "pxl_col_in_fullres")
     ##   https://support.10xgenomics.com/spatial-gene-expression/software/pipelines/latest/output/images

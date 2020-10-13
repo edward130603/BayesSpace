@@ -64,96 +64,6 @@ Mode <- function(x) {
     ux[which.max(tabulate(match(x, ux)))]
 }
 
-#' Run 'blocked' PCA on HVGs and gene sets of interest
-#' 
-#' PCA is computed for each specified gene set. The PCs from each gene set are 
-#' concatenated into a single matrix, and their rotation matrices are combined
-#' into a block diagonal rotation matrix.
-#' 
-#' If a set of highly variable genes (HVGs) is not included in the list of 
-#' gene sets (using the name \code{hvgs}), the top \code{n_hvgs} will be
-#' computed using scran and added to the list of gene sets.
-#' 
-#' @param expr Expression/counts (matrix or SingleCellExperiment)
-#' @param n_pcs Number of PCs per gene set (TODO: optionally specify list, n 
-#' per gene set)
-#' @param n_hvgs Number of HVGs to use in HVG set
-#' @param genesets List of other gene sets to include
-#' 
-#' @return Returns list with names:
-#'   * \code{x} Concatenated principal components from each gene set
-#'   * \code{rotation} Rotation matrix (block diagonal for each set of PCs)
-#'   * \code{genesets} List of gene sets in each block
-#'   
-#' @keywords internal
-#' 
-#' @importFrom Matrix bdiag
-runGenesetPCA <- function(expr, n_pcs = 20, n_hvgs = 2000, genesets = list()) {
-    ## Compute top HVGs, excluding any that appear in user-specified gene sets
-    if (n_hvgs >= 1 && !("hvgs" %in% names(genesets))) {
-        dec <- scran::modelGeneVar(expr)
-        hvgs <- scran::getTopHVGs(dec, n=n_hvgs)
-        others <- purrr::reduce(genesets, union)
-        genesets[["hvgs"]] <- setdiff(hvgs, others)
-    }
-    
-    ## Run PCA on each set of genes
-    .runSubsetPCA <- function(geneset, name) {
-        subset <- expr[geneset, ]
-        pca <- BiocSingular::runPCA(t(subset), rank=n_pcs)
-        
-        colnames(pca$x) <- paste0(name, "_", colnames(pca$x))
-        colnames(pca$rotation) <- paste0(name, "_", colnames(pca$rotation))
-        
-        pca
-    }
-    pcs <- purrr::imap(genesets, .runSubsetPCA)
-    
-    ## Concatenate PCs and assemble rotation matrices
-    out <- list()
-    out$x <- purrr::reduce(purrr::map(pcs, "x"), cbind)
-    out$rotation <- purrr::reduce(purrr::map(pcs, "rotation"), bdiag)
-    out$genesets <- genesets
-    
-    ## TODO: add PCs to reducedDims of SCE
-    ## (for compatibility with other methods in addPCA)
-    
-    return(out)
-}
-
-#' Add PCA output to a SingleCellExperiment
-#' 
-#' Supports 'basic' PCA via scater, denoised PCA via scran, and blocked geneset
-#' PCA. Results will be stored in \code{reducedDim(sce, 'PCA')}.
-#' 
-#' @param sce SingleCellExperiment
-#' @param assay.type Assay in \code{sce} to compute PCA on
-#' @param pca.method PCA method to apply
-#' @param d Number of principal components to keep
-#' 
-#' @return Returns \code{sce} with PCs added to its \code{reducedDims}
-#' 
-#' @keywords internal
-addPCA <- function(sce, assay.type, pca.method, d = 15) {
-    if (pca.method == "PCA") {
-        sce <- scater::runPCA(sce, exprs_values=assay.type, ncomponents=d)
-        
-    } else if (pca.method == "denoised") {
-        dec <- scran::modelGeneVar(sce, assay.type=assay.type)
-        top <- scran::getTopHVGs(dec, prop=0.1)  # TODO: parameterize
-        sce <- scran::denoisePCA(sce, technical=dec, subset.row=top, 
-            assay.type=assay.type)
-        
-    } else if (pca.method == "geneset") {
-        stop("geneset PCA not yet supported")
-        
-    } else {
-        stop("Unsupported PCA method: %s", pca.method)
-    }
-    
-    sce
-}
-
 #' Prepare cluster/deconvolve inputs from SingleCellExperiment object
 #'
 #' @return List of PCs, names of columns with x/y positions, and inter-spot
@@ -170,7 +80,7 @@ addPCA <- function(sce, assay.type, pca.method, d = 15) {
     inputs <- list()
     
     if (!(use.dimred %in% reducedDimNames(sce))) 
-        stop(sprintf("reducedDim %s not found in input SCE", use.dimred))
+        stop("reducedDim \"", use.dimred, "\" not found in input SCE.")
     
     PCs <- reducedDim(sce, use.dimred)
     d <- min(d, ncol(PCs))
@@ -182,8 +92,9 @@ addPCA <- function(sce, assay.type, pca.method, d = 15) {
     colnames(positions) <- c("x", "y")
     inputs$positions <- positions
     
-    ## TODO: add better check here against missing image coords
-    ## (necessary for thrane data)
+    ## Compute inter-spot distances (for neighbor finding)
+    ## This should only be necessary for Visium enhancement since switching to
+    ## array-coordinate-based neighbor finding
     if (is.null(radius) && is.null(xdist) && is.null(ydist)) {
         dists <- .compute_interspot_distances(sce)
         dists <- imap(dists, function(d, n) ifelse(is.null(get(n)), d, get(n)))
@@ -219,6 +130,8 @@ addPCA <- function(sce, assay.type, pca.method, d = 15) {
 #' @importFrom SingleCellExperiment SingleCellExperiment logcounts
 #' @importFrom scater logNormCounts
 #' @importFrom stats prcomp rnbinom runif
+#' @importFrom S4Vectors metadata<-
+#'
 #' @export
 exampleSCE <- function(nrow=8, ncol=12, n_genes=100, n_PCs=10)
 {
@@ -260,30 +173,64 @@ exampleSCE <- function(nrow=8, ncol=12, n_genes=100, n_PCs=10)
 
 #' Download a processed sample from our S3 bucket
 #' 
-#' @param dataset Dataset identifier (TODO: add function to list datasets/samples)
+#' Datasets are cached locally using \code{BiocFileCache}. The first time using
+#' this function, you may need to consent to creating a BiocFileCache directory
+#' if one does not already exist.
+#'
+#' @param dataset Dataset identifier
 #' @param sample Sample identifier
+#' @param cache If true, cache the dataset locally with \code{BiocFileCache}.
+#'   Otherwise, download directly from our S3 bucket. Caching saves time on
+#'   subsequent loads, but consumes disk space.
 #' 
 #' @return sce A SingleCellExperiment with positional information in colData and
 #'   PCs based on the top 2000 HVGs
 #'   
 #' @examples
-#' sce <- getRDS("2018_thrane_melanoma", "ST_mel1_rep2")
+#' sce <- getRDS("2018_thrane_melanoma", "ST_mel1_rep2", cache=FALSE)
 #'
 #' @export 
 #' @importFrom RCurl url.exists
 #' @importFrom utils download.file
 #' @importFrom assertthat assert_that
-getRDS <- function(dataset, sample) {
+#' @importFrom BiocFileCache BiocFileCache bfcrpath
+getRDS <- function(dataset, sample, cache=TRUE) {
     
     url <- "https://fh-pi-gottardo-r.s3.amazonaws.com/SpatialTranscriptomes/%s/%s.rds"
     url <- sprintf(url, dataset, sample)
     assert_that(url.exists(url), msg="Dataset/sample not available")
-    
-    ## TODO add caching (but probably through experimenthub)
-    dest <- tempfile(fileext=".rds")
-    
-    ## TODO switch to curl or httr (avoid writing to disk when not caching; 
-    ## one package for both downloading and checking url exists)
-    download.file(url, dest, quiet=TRUE, mode="wb")
-    readRDS(dest)
+
+    if (cache) {
+        bfc <- BiocFileCache()
+        local.path <- bfcrpath(bfc, url)
+    } else {
+        local.path <- tempfile(fileext=".rds")
+        download.file(url, local.path, quiet=TRUE, mode="wb")
+    }
+
+    readRDS(local.path)
+}
+
+#' Access BayesSpace metadata
+#'
+#' @param sce SingleCellExperiment
+#' @param name Metadata name
+#'
+#' @return Requested metadata
+#'
+#' @keywords internal
+.bsData <- function(sce, name, default=NULL, warn=FALSE) {
+    if (!exists("BayesSpace.data", metadata(sce)))
+        stop("BayesSpace metadata not present in this object.")
+
+    bsData <- metadata(sce)[["BayesSpace.data"]]
+    if (exists(name, bsData)) {
+        bsData[[name]]
+    } else {
+        if (warn) {
+            default.name <- ifelse(is.null(default), "NULL", default)
+            warning(name, " not found in BayesSpace metadata. Using default: ", default.name)
+        }
+        default
+    }
 }
