@@ -91,7 +91,7 @@ and the cluster initialization is stored in \code{cluster.init}.
 \examples{
 set.seed(149)
 sce <- exampleSCE()
-sce <- spatialCluster(sce, 7, nrep=200, burn.in=20)
+sce <- spatialCluster(sce, 7, nrep=100, burn.in=10)
 
 }
 \seealso{

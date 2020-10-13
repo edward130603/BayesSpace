@@ -46,7 +46,7 @@
 #' @examples
 #' set.seed(149)
 #' sce <- exampleSCE()
-#' sce <- spatialCluster(sce, 7, nrep=200, burn.in=20)
+#' sce <- spatialCluster(sce, 7, nrep=100, burn.in=10)
 #' 
 #' @seealso \code{\link{spatialPreprocess}} for preparing the SCE for
 #'   clustering, \code{\link{spatialEnhance}} for enhancing the clustering

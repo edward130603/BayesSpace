@@ -77,8 +77,8 @@
 #' @examples
 #' set.seed(149)
 #' sce <- exampleSCE()
-#' sce <- spatialCluster(sce, 7, nrep=200, burn.in=20)
-#' enhanced <- spatialEnhance(sce, 7, init=sce$spatial.cluster, nrep=200, burn.in=20)
+#' sce <- spatialCluster(sce, 7, nrep=100, burn.in=10)
+#' enhanced <- spatialEnhance(sce, 7, nrep=100, burn.in=10)
 #' 
 #' @seealso \code{\link{spatialCluster}} for clustering at the spot level
 #'   before enhancing, \code{\link{clusterPlot}} for visualizing the cluster

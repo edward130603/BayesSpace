@@ -1,3 +1,12 @@
+# BayesSpace 0.99.7
+
+## Minor improvements and fixes
+
+- Documentation examples now use fewer iterations in order to reduce the
+  runtime of R CMD check.
+- In `qTune()`, the `min_rep` and `max_rep` parameters have been replaced with
+  `burn.in` and `nrep`, respectively, to be consistent with `spatialCluster()`.
+
 # BayesSpace 0.99.6
 
 ## New features
