@@ -3,8 +3,5 @@ pkgdown: 1.6.1
 pkgdown_sha: ~
 articles:
   BayesSpace: BayesSpace.html
-  ji_SCC: ji_SCC.html
-  maynard_DLPFC: maynard_DLPFC.html
-  thrane_melanoma: thrane_melanoma.html
-last_built: 2020-10-08T21:33Z
+last_built: 2020-10-13T00:24Z
 

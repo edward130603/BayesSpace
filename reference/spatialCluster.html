@@ -12,8 +12,8 @@
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous" />
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script>
 
@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">BayesSpace</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.99.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.99.6</span>
       </span>
     </div>
 
@@ -80,7 +80,7 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fa fa-home"></span>
+    <span class="fas fa fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -90,32 +90,14 @@
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
-<li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-    Examples
-     
-    <span class="caret"></span>
-  </a>
-  <ul class="dropdown-menu" role="menu">
-    <li>
-      <a href="../articles/maynard_DLPFC.html">DLPFC (Maynard et al., 2020)</a>
-    </li>
-    <li>
-      <a href="../articles/ji_SCC.html">SCC (Ji et al., 2020)</a>
-    </li>
-    <li>
-      <a href="../articles/thrane_melanoma.html">Melanoma (Thrane et al., 2018)</a>
-    </li>
-  </ul>
-</li>
 <li>
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://github.com/edward130603/BayesSpace">
-    <span class="fa fa-github fa-lg"></span>
+  <a href="https://github.com/edward130603/BayesSpace/">
+    <span class="fab fa fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -153,7 +135,7 @@
   precision = <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"equal"</span>, <span class='st'>"variable"</span>),
   nrep = <span class='fl'>50000</span>,
   burn.in = <span class='fl'>1000</span>,
-  gamma = <span class='fl'>3</span>,
+  gamma = <span class='kw'>NULL</span>,
   mu0 = <span class='kw'>NULL</span>,
   lambda0 = <span class='kw'>NULL</span>,
   alpha = <span class='fl'>1</span>,
@@ -185,7 +167,10 @@
     <tr>
       <th>platform</th>
       <td><p>Spatial transcriptomic platform. Specify 'Visium' for hex 
-lattice geometry or 'ST' for square lattice geometry.</p></td>
+lattice geometry or 'ST' for square lattice geometry. Specifying this
+parameter is optional when analyzing SingleCellExperiments processed using
+<code><a href='readVisium.html'>readVisium</a></code> or <code><a href='spatialPreprocess.html'>spatialPreprocess</a></code>, as this
+information is included in their metadata.</p></td>
     </tr>
     <tr>
       <th>init</th>
@@ -215,7 +200,8 @@ VVV covariance models, respectively.)</p></td>
     </tr>
     <tr>
       <th>gamma</th>
-      <td><p>Smoothing parameter. (Values in range of 1-3 seem to work well.)</p></td>
+      <td><p>Smoothing parameter. Defaults to 2 for <code>platform="ST"</code> and
+3 for <code>platform="Visium"</code>. (Values in range of 1-3 seem to work well.)</p></td>
     </tr>
     <tr>
       <th>mu0</th>
@@ -251,14 +237,26 @@ is set to a diagonal matrix \(0.01 I\).</p></td>
   <code>colData</code> under the name <code>spatial.cluster</code>.</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>TODO describe method in detail
-TODO add details or link to mcmcChain</p>
+    <p>The input SCE must have <code>row</code> and <code>col</code> columns in its
+<code>colData</code>, corresponding to the array row and column coordinates of each
+spot. These are automatically parsed by <code><a href='readVisium.html'>readVisium</a></code> or can be
+added manually when creating the SCE.</p>
+<p>Cluster labels are stored in the <code>spatial.cluster</code> column of the SCE,
+and the cluster initialization is stored in <code>cluster.init</code>.</p>
+    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
+
+    <div class='dont-index'><p><code><a href='spatialPreprocess.html'>spatialPreprocess</a></code> for preparing the SCE for
+  clustering, <code><a href='spatialEnhance.html'>spatialEnhance</a></code> for enhancing the clustering
+  resolution, <code><a href='clusterPlot.html'>clusterPlot</a></code> for visualizing the cluster
+  assignments, <code><a href='featurePlot.html'>featurePlot</a></code> for visualizing expression levels
+  in spatial context, and <code><a href='mcmcChain.html'>mcmcChain</a></code> for examining the full
+  MCMC chain associated with the clustering.</p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/Random.html'>set.seed</a></span>(<span class='fl'>149</span>)
 <span class='kw'>sce</span> <span class='op'>&lt;-</span> <span class='fu'><a href='exampleSCE.html'>exampleSCE</a></span>()
 <span class='kw'>sce</span> <span class='op'>&lt;-</span> <span class='fu'>spatialCluster</span>(<span class='kw'>sce</span>, <span class='fl'>7</span>, nrep=<span class='fl'>200</span>, burn.in=<span class='fl'>20</span>)
-</div><div class='output co'>#&gt; <span class='message'>Neighbors were identified for 96 out of 96 spots.</span></div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='output co'>#&gt; <span class='message'>Calculating labels using iterations 20 through 200</span></div><div class='input'>
+</div><div class='output co'>#&gt; <span class='message'>Neighbors were identified for 96 out of 96 spots.</span></div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='output co'>#&gt; <span class='message'>Calculating labels using iterations 20 through 200.</span></div><div class='input'>
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

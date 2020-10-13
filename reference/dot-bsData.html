@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Make vertices outlining spots/subspots for geom_polygon() — .make_vertices • BayesSpace</title>
+<title>Access BayesSpace metadata — .bsData • BayesSpace</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Make vertices outlining spots/subspots for geom_polygon() — .make_vertices" />
-<meta property="og:description" content="Make vertices outlining spots/subspots for geom_polygon()" />
+<meta property="og:title" content="Access BayesSpace metadata — .bsData" />
+<meta property="og:description" content="Access BayesSpace metadata" />
 
 
 
@@ -114,44 +114,33 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Make vertices outlining spots/subspots for geom_polygon()</h1>
-    <small class="dont-index">Source: <a href='https://github.com/edward130603/BayesSpace/blob/master/R/spatialPlot.R'><code>R/spatialPlot.R</code></a></small>
-    <div class="hidden name"><code>dot-make_vertices.Rd</code></div>
+    <h1>Access BayesSpace metadata</h1>
+    <small class="dont-index">Source: <a href='https://github.com/edward130603/BayesSpace/blob/master/R/utils.R'><code>R/utils.R</code></a></small>
+    <div class="hidden name"><code>dot-bsData.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Make vertices outlining spots/subspots for geom_polygon()</p>
+    <p>Access BayesSpace metadata</p>
     </div>
 
-    <pre class="usage"><span class='fu'>.make_vertices</span>(<span class='kw'>sce</span>, <span class='kw'>fill</span>, <span class='kw'>platform</span>, <span class='kw'>is.enhanced</span>)</pre>
+    <pre class="usage"><span class='fu'>.bsData</span>(<span class='kw'>sce</span>, <span class='kw'>name</span>, default = <span class='kw'>NULL</span>, warn = <span class='fl'>FALSE</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>sce</th>
-      <td><p>SingleCellExperiment with row/col in colData</p></td>
+      <td><p>SingleCellExperiment</p></td>
     </tr>
     <tr>
-      <th>fill</th>
-      <td><p>Name of a column in <code>colData(sce)</code> or a vector of values to
-use as fill for each spot</p></td>
-    </tr>
-    <tr>
-      <th>platform</th>
-      <td><p>"Visium" or "ST", used to determine spot layout</p></td>
-    </tr>
-    <tr>
-      <th>is.enhanced</th>
-      <td><p>If true, <code>sce</code> contains enhanced subspot data instead
-of spot-level expression. Used to determine spot layout.</p></td>
+      <th>name</th>
+      <td><p>Metadata name</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>Table of (x.pos, y.pos, spot, fill); where <code>spot</code> groups the
-  vertices outlining the spot's border</p>
+    <p>Requested metadata</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

@@ -12,8 +12,8 @@
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous" />
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script>
 
@@ -71,7 +71,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">BayesSpace</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.99.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.99.6</span>
       </span>
     </div>
 
@@ -79,7 +79,7 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fa fa-home"></span>
+    <span class="fas fa fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -89,32 +89,14 @@
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
-<li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-    Examples
-     
-    <span class="caret"></span>
-  </a>
-  <ul class="dropdown-menu" role="menu">
-    <li>
-      <a href="../articles/maynard_DLPFC.html">DLPFC (Maynard et al., 2020)</a>
-    </li>
-    <li>
-      <a href="../articles/ji_SCC.html">SCC (Ji et al., 2020)</a>
-    </li>
-    <li>
-      <a href="../articles/thrane_melanoma.html">Melanoma (Thrane et al., 2018)</a>
-    </li>
-  </ul>
-</li>
 <li>
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://github.com/edward130603/BayesSpace">
-    <span class="fa fa-github fa-lg"></span>
+  <a href="https://github.com/edward130603/BayesSpace/">
+    <span class="fab fa fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -135,16 +117,43 @@
       <small>Source: <a href='https://github.com/edward130603/BayesSpace/blob/master/NEWS.md'><code>NEWS.md</code></a></small>
     </div>
 
-    <div id="bayesspace-development-version" class="section level1">
-<h1 class="page-header" data-toc-text="development version">
-<a href="#bayesspace-development-version" class="anchor"></a>BayesSpace (development version)</h1>
+    <div id="bayesspace-0996" class="section level1">
+<h1 class="page-header" data-toc-text="0.99.6">
+<a href="#bayesspace-0996" class="anchor"></a>BayesSpace 0.99.6</h1>
+<div id="new-features" class="section level2">
+<h2 class="hasAnchor">
+<a href="#new-features" class="anchor"></a>New features</h2>
+<ul>
+<li>
+<code><a href="../reference/getRDS.html">getRDS()</a></code> gains a <code>cache</code> parameter. When <code>TRUE</code>, the RDS is cached locally using <code>BiocFileCache</code>.</li>
+</ul>
+</div>
+<div id="minor-improvements-and-fixes" class="section level2">
+<h2 class="hasAnchor">
+<a href="#minor-improvements-and-fixes" class="anchor"></a>Minor improvements and fixes</h2>
+<ul>
+<li>Addressed reviewer concerns (<a href="https://github.com/Bioconductor/Contributions/issues/1624" class="uri">https://github.com/Bioconductor/Contributions/issues/1624</a>)
+<ul>
+<li>Updated stop/warning/message statements to remove redundancies and unnecessary use of <code><a href="https://rdrr.io/r/base/paste.html">paste()</a></code>.</li>
+<li>Removed inline conditional statements.</li>
+<li>Cache downloaded RDS in <code><a href="../reference/getRDS.html">getRDS()</a></code> (see above).</li>
+</ul>
+</li>
+<li>
+<code><a href="../reference/spatialCluster.html">spatialCluster()</a></code> and <code><a href="../reference/spatialEnhance.html">spatialEnhance()</a></code> handle the edge case where only one iteration is kept after excluding burn-in.</li>
+<li>The <code><a href="https://rdrr.io/pkg/coda/man/mcmc.html">coda::mcmc</a></code> object returned by <code><a href="../reference/mcmcChain.html">mcmcChain()</a></code> now specifies the thinning interval used in enhanced objects.</li>
+<li>
+<code><a href="../reference/spatialCluster.html">spatialCluster()</a></code> and <code><a href="../reference/spatialEnhance.html">spatialEnhance()</a></code> now include platform-specific defaults for the <code>gamma</code> parameter.</li>
+<li>Minor internal refactoring.</li>
+</ul>
+</div>
 </div>
     <div id="bayesspace-0995" class="section level1">
 <h1 class="page-header" data-toc-text="0.99.5">
 <a href="#bayesspace-0995" class="anchor"></a>BayesSpace 0.99.5</h1>
-<div id="minor-improvements-and-fixes" class="section level2">
+<div id="minor-improvements-and-fixes-1" class="section level2">
 <h2 class="hasAnchor">
-<a href="#minor-improvements-and-fixes" class="anchor"></a>Minor improvements and fixes</h2>
+<a href="#minor-improvements-and-fixes-1" class="anchor"></a>Minor improvements and fixes</h2>
 <ul>
 <li>In <code><a href="../reference/spatialCluster.html">spatialCluster()</a></code> and <code><a href="../reference/spatialEnhance.html">spatialEnhance()</a></code>, setting <code>burn.in</code> equal to <code>nrep</code> now raises an error.</li>
 </ul>
@@ -153,9 +162,9 @@
     <div id="bayesspace-0994" class="section level1">
 <h1 class="page-header" data-toc-text="0.99.4">
 <a href="#bayesspace-0994" class="anchor"></a>BayesSpace 0.99.4</h1>
-<div id="new-features" class="section level2">
+<div id="new-features-1" class="section level2">
 <h2 class="hasAnchor">
-<a href="#new-features" class="anchor"></a>New features</h2>
+<a href="#new-features-1" class="anchor"></a>New features</h2>
 <ul>
 <li>
 <code><a href="../reference/enhanceFeatures.html">enhanceFeatures()</a></code> now takes an <code>nrounds</code> parameter that corresponds to the same parameter in xgboost. If <code>nrounds</code> is set to 0, we automatically tune the parameter using a train/test split for improved feature prediction.</li>
@@ -165,9 +174,9 @@
 <li>Additional vignettes provided for reproducing the analyses of the melanoma, dorsolateral prefrontal cortex, and squamous cell carcinoma datasets presented in the bioRxiv manuscript.</li>
 </ul>
 </div>
-<div id="minor-improvements-and-fixes-1" class="section level2">
+<div id="minor-improvements-and-fixes-2" class="section level2">
 <h2 class="hasAnchor">
-<a href="#minor-improvements-and-fixes-1" class="anchor"></a>Minor improvements and fixes</h2>
+<a href="#minor-improvements-and-fixes-2" class="anchor"></a>Minor improvements and fixes</h2>
 <ul>
 <li>The internal layout of subspots is now correctly oriented (accounting for vertical flip of spot coordinates) when using spatial plot functions on enhanced Visium data.</li>
 <li>In <code><a href="../reference/spatialEnhance.html">spatialEnhance()</a></code>, PCs are now averaged over the MCMC iterations (excluding the burn-in period).</li>
@@ -181,9 +190,9 @@
     <div id="bayesspace-0993" class="section level1">
 <h1 class="page-header" data-toc-text="0.99.3">
 <a href="#bayesspace-0993" class="anchor"></a>BayesSpace 0.99.3</h1>
-<div id="minor-improvements-and-fixes-2" class="section level2">
+<div id="minor-improvements-and-fixes-3" class="section level2">
 <h2 class="hasAnchor">
-<a href="#minor-improvements-and-fixes-2" class="anchor"></a>Minor improvements and fixes</h2>
+<a href="#minor-improvements-and-fixes-3" class="anchor"></a>Minor improvements and fixes</h2>
 <ul>
 <li>Updated <code>README.md</code> to include system requirements, additional installation details, and link to vignette with demonstration of package functions, per journal guidelines.</li>
 </ul>
@@ -192,9 +201,9 @@
     <div id="bayesspace-0992" class="section level1">
 <h1 class="page-header" data-toc-text="0.99.2">
 <a href="#bayesspace-0992" class="anchor"></a>BayesSpace 0.99.2</h1>
-<div id="minor-improvements-and-fixes-3" class="section level2">
+<div id="minor-improvements-and-fixes-4" class="section level2">
 <h2 class="hasAnchor">
-<a href="#minor-improvements-and-fixes-3" class="anchor"></a>Minor improvements and fixes</h2>
+<a href="#minor-improvements-and-fixes-4" class="anchor"></a>Minor improvements and fixes</h2>
 <ul>
 <li>
 <code><a href="../reference/spatialEnhance.html">spatialEnhance()</a></code> incorrectly added row offset to spot column coordinate when generating subspot colData, and vice versa. This resulted in subspots being reflected over y=x in spatial plots, and has been fixed.</li>
@@ -205,9 +214,9 @@
     <div id="bayesspace-0991" class="section level1">
 <h1 class="page-header" data-toc-text="0.99.1">
 <a href="#bayesspace-0991" class="anchor"></a>BayesSpace 0.99.1</h1>
-<div id="minor-improvements-and-fixes-4" class="section level2">
+<div id="minor-improvements-and-fixes-5" class="section level2">
 <h2 class="hasAnchor">
-<a href="#minor-improvements-and-fixes-4" class="anchor"></a>Minor improvements and fixes</h2>
+<a href="#minor-improvements-and-fixes-5" class="anchor"></a>Minor improvements and fixes</h2>
 <ul>
 <li>Removed Maintainer field from DESCRIPTION to adhere to Bioconductor guidelines.</li>
 </ul>
@@ -216,9 +225,9 @@
     <div id="bayesspace-0990" class="section level1">
 <h1 class="page-header" data-toc-text="0.99.0">
 <a href="#bayesspace-0990" class="anchor"></a>BayesSpace 0.99.0</h1>
-<div id="new-features-1" class="section level2">
+<div id="new-features-2" class="section level2">
 <h2 class="hasAnchor">
-<a href="#new-features-1" class="anchor"></a>New features</h2>
+<a href="#new-features-2" class="anchor"></a>New features</h2>
 <ul>
 <li>Initial Bioconductor submission</li>
 </ul>

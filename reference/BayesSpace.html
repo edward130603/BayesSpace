@@ -12,8 +12,8 @@
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous" />
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script>
 
@@ -40,7 +40,12 @@
 
 
 <meta property="og:title" content="BayesSpace: A package for processing spatial transcriptomes — BayesSpace" />
-<meta property="og:description" content="TODO: flesh out package description (or link to vignette)" />
+<meta property="og:description" content="Tools for clustering and enhancing the resolution of spatial gene expression
+experiments. BayesSpace clusters a low-dimensional representation of the gene
+expression matrix, incorporating a spatial prior to encourage neighboring
+spots to cluster together. The method can enhance the resolution of the
+low-dimensional representation into &quot;sub-spots&quot;, for which features such as
+gene expression or cell type composition can be imputed." />
 
 
 
@@ -72,7 +77,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">BayesSpace</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.99.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.99.6</span>
       </span>
     </div>
 
@@ -80,7 +85,7 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fa fa-home"></span>
+    <span class="fas fa fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -90,32 +95,14 @@
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
-<li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-    Examples
-     
-    <span class="caret"></span>
-  </a>
-  <ul class="dropdown-menu" role="menu">
-    <li>
-      <a href="../articles/maynard_DLPFC.html">DLPFC (Maynard et al., 2020)</a>
-    </li>
-    <li>
-      <a href="../articles/ji_SCC.html">SCC (Ji et al., 2020)</a>
-    </li>
-    <li>
-      <a href="../articles/thrane_melanoma.html">Melanoma (Thrane et al., 2018)</a>
-    </li>
-  </ul>
-</li>
 <li>
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://github.com/edward130603/BayesSpace">
-    <span class="fa fa-github fa-lg"></span>
+  <a href="https://github.com/edward130603/BayesSpace/">
+    <span class="fab fa fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -138,27 +125,21 @@
     </div>
 
     <div class="ref-description">
-    <p>TODO: flesh out package description (or link to vignette)</p>
+    <p>Tools for clustering and enhancing the resolution of spatial gene expression
+experiments. BayesSpace clusters a low-dimensional representation of the gene
+expression matrix, incorporating a spatial prior to encourage neighboring
+spots to cluster together. The method can enhance the resolution of the
+low-dimensional representation into "sub-spots", for which features such as
+gene expression or cell type composition can be imputed.</p>
     </div>
 
 
 
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>The BayesSpace package provides two primary functions:
-<code><a href='spatialCluster.html'>spatialCluster()</a></code> and <code><a href='spatialEnhance.html'>spatialEnhance()</a></code>.</p>
-    <h2 class="hasAnchor" id="clustering"><a class="anchor" href="#clustering"></a>Clustering</h2>
-
-    
-
-<p>The clustering algorithm groups neighboring spots together by expression
-profile.</p>
-    <h2 class="hasAnchor" id="enhancement"><a class="anchor" href="#enhancement"></a>Enhancement</h2>
-
-    
-
-<p>The enhancement algorithm deconvolves spot-level expression into imputed
-cell-level signals.</p>
+    <p>For an overview of the functionality provided by the package, please see the
+vignette:
+<code><a href='../articles/BayesSpace.html'>vignette("BayesSpace", package="BayesSpace")</a></code></p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

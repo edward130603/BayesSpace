@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BayesSpace • BayesSpace</title>
-<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
 <script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">BayesSpace</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.99.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.99.6</span>
       </span>
     </div>
 
@@ -39,7 +39,7 @@
       <ul class="nav navbar-nav">
 <li>
   <a href="../index.html">
-    <span class="fa fa-home"></span>
+    <span class="fas fa fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -49,32 +49,14 @@
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
-<li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-    Examples
-     
-    <span class="caret"></span>
-  </a>
-  <ul class="dropdown-menu" role="menu">
-<li>
-      <a href="../articles/maynard_DLPFC.html">DLPFC (Maynard et al., 2020)</a>
-    </li>
-    <li>
-      <a href="../articles/ji_SCC.html">SCC (Ji et al., 2020)</a>
-    </li>
-    <li>
-      <a href="../articles/thrane_melanoma.html">Melanoma (Thrane et al., 2018)</a>
-    </li>
-  </ul>
-</li>
 <li>
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://github.com/edward130603/BayesSpace">
-    <span class="fa fa-github fa-lg"></span>
+  <a href="https://github.com/edward130603/BayesSpace/">
+    <span class="fab fa fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -94,7 +76,7 @@
       <h1 data-toc-skip>BayesSpace</h1>
                         <h4 class="author">Edward Zhao, Matt Stone, Xing Ren, and Raphael Gottardo</h4>
             
-            <h4 class="date">2020-10-08</h4>
+            <h4 class="date">2020-10-12</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/edward130603/BayesSpace/blob/master/vignettes/BayesSpace.Rmd"><code>vignettes/BayesSpace.Rmd</code></a></small>
       <div class="hidden name"><code>BayesSpace.Rmd</code></div>
@@ -123,12 +105,17 @@
 <div class="sourceCode" id="cb3"><pre class="downlit">
 <span class="kw">melanoma</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getRDS.html">getRDS</a></span>(dataset=<span class="st">"2018_thrane_melanoma"</span>, sample=<span class="st">"ST_mel1_rep2"</span>)
 </pre></div>
-<p>Finally, <code>SingleCellExperiment</code> objects can be constructed manually from a counts matrix and tables of row and column data. BayesSpace only requires that spot array coordinates be provided as columns named <code>row</code> and <code>col</code> in <code>colData</code>. (Note that enhancement of Visium datasets additionally requires the pixel coordinates of each spot in the tissue image, but in this case the dataset should be loaded with <code><a href="../reference/readVisium.html">readVisium()</a></code>.) <!-- TODO: migrate over the make_RDS() function from spatial-datasets --></p>
-<div class="sourceCode" id="cb4"><pre class="downlit">
-<span class="kw">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/SingleCellExperiment.html">SingleCellExperiment</a></span>(assays=<span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(counts=<span class="kw">counts</span>),
-                            rowData=<span class="kw">rowData</span>,
-                            colData=<span class="kw">colData</span>)
-</pre></div>
+<p>Finally, <code>SingleCellExperiment</code> objects can be constructed manually from a counts matrix and tables of row and column data. BayesSpace only requires that spot array coordinates be provided as columns named <code>row</code> and <code>col</code> in <code>colData</code>. (Note that enhancement of Visium datasets additionally requires the pixel coordinates of each spot in the tissue image, but in this case the dataset should be loaded with <code><a href="../reference/readVisium.html">readVisium()</a></code>, which loads these data automatically.)</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true"></a><span class="kw">library</span>(Matrix)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true"></a>rowData &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="st">"path/to/rowData.csv"</span>, <span class="dt">stringsAsFactors=</span><span class="ot">FALSE</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true"></a>colData &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="st">"path/to/colData.csv"</span>, <span class="dt">stringsAsFactors=</span><span class="ot">FALSE</span>, <span class="dt">row.names=</span><span class="dv">1</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true"></a>counts &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="st">"path/to/counts.csv.gz"</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true"></a>                   <span class="dt">row.names=</span><span class="dv">1</span>, <span class="dt">check.names=</span>F, <span class="dt">stringsAsFactors=</span><span class="ot">FALSE</span>)<span class="er">)</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true"></a>sce &lt;-<span class="st"> </span><span class="kw">SingleCellExperiment</span>(<span class="dt">assays=</span><span class="kw">list</span>(<span class="dt">counts=</span><span class="kw">as</span>(counts, <span class="st">"dgCMatrix"</span>)),</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true"></a>                            <span class="dt">rowData=</span>rowData,</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true"></a>                            <span class="dt">colData=</span>colData)</span></code></pre></div>
 <p>We’ll continue with the melanoma sample from the 2018 Spatial Transcriptomics paper for the remaining examples in this vignette.</p>
 </div>
 <div id="pre-processing-data" class="section level3">
@@ -167,7 +154,6 @@
 <h3 class="hasAnchor">
 <a href="#clustering-with-bayesspace" class="anchor"></a>Clustering with BayesSpace</h3>
 <p>The <code><a href="../reference/spatialCluster.html">spatialCluster()</a></code> function clusters the spots, and adds the predicted cluster labels to the <code>SingleCellExperiment</code>. Typically, as we did for the analyses in the paper, we suggest running with at least 10,000 iterations (<code>nrep=10000</code>), but we use 1,000 iteration in this demonstration for the sake of runtime. (Note that a random seed must be set in order for the results to be reproducible.)</p>
-<!-- TODO: parse platform from metadta -->
 <div class="sourceCode" id="cb7"><pre class="downlit">
 <span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span>(<span class="fl">149</span>)
 <span class="kw">melanoma</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spatialCluster.html">spatialCluster</a></span>(<span class="kw">melanoma</span>, q=<span class="fl">4</span>, platform=<span class="st">"ST"</span>, d=<span class="fl">7</span>,
@@ -255,7 +241,6 @@
 <p>BayesSpace operates on the principal components of the gene expression matrix, and <code><a href="../reference/spatialEnhance.html">spatialEnhance()</a></code> therefore computes enhanced resolution PC vectors. Enhanced gene expression is not computed directly, and is instead imputed using a regression algorithm. For each gene, a model using the PC vectors of each spot is trained to predict the spot-level gene expression, and the fitted model is used to predict subspot expression from the subspot PCs.</p>
 <p>Gene expression enhancement is implemented in the <code><a href="../reference/enhanceFeatures.html">enhanceFeatures()</a></code> function. BayesSpace predicts expression with <a href="https://xgboost.readthedocs.io/en/latest/"><code>xgboost</code></a> by default, but linear and Dirichlet regression are also available via the <code>model</code> argument. When using <code>xgboost</code>, we suggest automatically tuning the <code>nrounds</code> parameter by setting it to 0, although this comes at the cost of increased runtime (~4x slower than a pre-specified <code>nrounds</code> in practice).</p>
 <p><code><a href="../reference/enhanceFeatures.html">enhanceFeatures()</a></code> can be used to impute subspot-level expression for all genes, or for a subset of genes of interest. Here, we’ll demonstrate by enhancing the expression of four marker genes: PMEL (melanoma), CD2 (T-cells), CD19 (B-cells), and COL1A1 (fibroblasts).</p>
-<!-- TODO: swap CD2 for CD7? -->
 <div class="sourceCode" id="cb14"><pre class="downlit">
 <span class="kw">markers</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"PMEL"</span>, <span class="st">"CD2"</span>, <span class="st">"CD19"</span>, <span class="st">"COL1A1"</span>)
 <span class="kw">melanoma.enhanced</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/enhanceFeatures.html">enhanceFeatures</a></span>(<span class="kw">melanoma.enhanced</span>, <span class="kw">melanoma</span>,
