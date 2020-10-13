@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">BayesSpace</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.99.6</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.99.7</span>
       </span>
     </div>
 
@@ -273,8 +273,8 @@ and the cluster initialization is stored in <code>cluster.init</code>.</p>
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/Random.html'>set.seed</a></span>(<span class='fl'>149</span>)
 <span class='kw'>sce</span> <span class='op'>&lt;-</span> <span class='fu'><a href='exampleSCE.html'>exampleSCE</a></span>()
-<span class='kw'>sce</span> <span class='op'>&lt;-</span> <span class='fu'>spatialCluster</span>(<span class='kw'>sce</span>, <span class='fl'>7</span>, nrep=<span class='fl'>200</span>, burn.in=<span class='fl'>20</span>)
-</div><div class='output co'>#&gt; <span class='message'>Neighbors were identified for 96 out of 96 spots.</span></div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='output co'>#&gt; <span class='message'>Calculating labels using iterations 20 through 200.</span></div><div class='input'>
+<span class='kw'>sce</span> <span class='op'>&lt;-</span> <span class='fu'>spatialCluster</span>(<span class='kw'>sce</span>, <span class='fl'>7</span>, nrep=<span class='fl'>100</span>, burn.in=<span class='fl'>10</span>)
+</div><div class='output co'>#&gt; <span class='message'>Neighbors were identified for 96 out of 96 spots.</span></div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='output co'>#&gt; <span class='message'>Calculating labels using iterations 10 through 100.</span></div><div class='input'>
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
