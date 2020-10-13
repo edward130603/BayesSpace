@@ -49,9 +49,9 @@
 #' @examples
 #' set.seed(149)
 #' sce <- exampleSCE()
-#' sce <- spatialCluster(sce, 7, nrep=200, burn.in=20)
-#' enhanced <- spatialEnhance(sce, 7, init=sce$spatial.cluster, nrep=200, burn.in=20)
-#' enhanced <- enhanceFeatures(enhanced, sce, assay.type="logcounts")
+#' sce <- spatialCluster(sce, 7, nrep=100, burn.in=10)
+#' enhanced <- spatialEnhance(sce, 7, init=sce$spatial.cluster, nrep=100, burn.in=10)
+#' enhanced <- enhanceFeatures(enhanced, sce, feature_names=c("gene_1", "gene_2"))
 #'
 #' @name enhanceFeatures
 NULL
