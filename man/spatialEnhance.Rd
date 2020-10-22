@@ -7,24 +7,21 @@
 spatialEnhance(
   sce,
   q,
+  platform = c("Visium", "ST"),
   use.dimred = "PCA",
   d = 15,
-  positions = NULL,
-  position.cols = c("imagecol", "imagerow"),
   init = NULL,
-  init.method = c("spatialCluster", "kmeans"),
-  xdist = NULL,
-  ydist = NULL,
+  init.method = c("spatialCluster", "mclust", "kmeans"),
   model = c("t", "normal"),
   nrep = 2e+05,
-  gamma = 3,
+  gamma = NULL,
   mu0 = NULL,
   lambda0 = NULL,
   alpha = 1,
   beta = 0.01,
   save.chain = FALSE,
   chain.fname = NULL,
-  platform = c("Visium", "ST"),
+  burn.in = 10000,
   jitter_scale = 5,
   jitter_prior = 0.3,
   verbose = FALSE
@@ -35,27 +32,22 @@ spatialEnhance(
 
 \item{q}{The number of clusters.}
 
+\item{platform}{Spatial transcriptomic platform. Specify 'Visium' for hex 
+lattice geometry or 'ST' for square lattice geometry. Specifying this
+parameter is optional when analyzing SingleCellExperiments processed using
+\code{\link{readVisium}}, \code{\link{spatialPreprocess}}, or
+\code{\link{spatialCluster}}, as this information is included in their
+metadata.}
+
 \item{use.dimred}{Name of a reduced dimensionality result in 
 \code{reducedDims(sce)}. If provided, cluster on these features directly.}
 
 \item{d}{Number of top principal components to use when clustering.}
 
-\item{positions}{A matrix or dataframe with two columns (x, y) that gives
-the spatial coordinates of each spot.}
-
-\item{position.cols}{If \code{positions} is not provided, use these columns 
-from \code{colData(sce)} as spatial coordinates (x, y).}
-
 \item{init}{Initial cluster assignments for spots.}
 
 \item{init.method}{If \code{init} is not provided, cluster the top \code{d} 
 PCs with this method to obtain initial cluster assignments.}
-
-\item{xdist}{The distance along x-axis between neighboring spots. If not 
-provided, the distance will be estimated using \code{lm(imagecol ~ col)}.}
-
-\item{ydist}{The distance along y-axis between neighboring spots. If not
-provided, the distance will be estimated using \code{lm(imagerow ~ row)}.}
 
 \item{model}{Error model. ('normal' or 't')}
 
@@ -77,18 +69,19 @@ is set to a diagonal matrix \eqn{0.01 I}.}
 
 \item{chain.fname}{File path for saved chain. Tempfile used if not provided.}
 
-\item{platform}{Spatial transcriptomic platform. Specify 'Visium' for hex 
-lattice geometry or 'ST' for square lattice geometry.}
+\item{burn.in}{Number of iterations to exclude as burn-in period. The MCMC
+iterations are currently thinned to every 100; accordingly \code{burn.in}
+is rounded down to the nearest multiple of 100.}
 
 \item{jitter_scale}{Controls the amount of jittering. Small amounts of 
 jittering are more likely to be accepted but result in exploring the space
 more slowly. We suggest tuning \code{jitter_scale} so that Ychange is on 
 average around 30\%.}
 
-\item{jitter_prior}{(TODO: re-define) Prior precision (1/variance) of the
-actual spot-level expression value in PC space. We suggest making c larger
-if the jittered values are not expected to vary much from the overall mean
-of the spot.}
+\item{jitter_prior}{Scale factor for the prior variance, parameterized as the
+proportion (default = 0.3) of the mean variance of the PCs.
+We suggest making \code{jitter_prior} smaller if the jittered values are
+not expected to vary much from the overall mean of the spot.}
 
 \item{verbose}{Log progress to stderr.}
 }
@@ -105,12 +98,43 @@ xdist and ydist instead of total dist...(maybe would be better to change
 \code{spatialCluster} to match this)
 }
 \details{
-TODO: add details on subspot coordinates and linking to parent spots
+The enhanced \code{SingleCellExperiment} has most of the properties of the
+  input SCE - \code{rowData}, \code{colData}, \code{reducedDims} - but does
+  not include expression data in \code{counts} or \code{logcounts}. To impute
+  enhanced expression vectors, please use [enhanceFeatures()] after
+  running \code{spatialEnhance}.
+  
+The \code{colData} of the enhanced \code{SingleCellExperiment} includes the
+  following columns to permit referencing the subspots in spatial context and
+  linking back to the original spots:
+  \itemize{
+  \item \code{spot.idx}: Index of the spot this subspot belongs to (with
+    respect to the input SCE).
+  \item \code{subspot.idx}: Index of the subspot within its parent spot.
+  \item \code{spot.row}: Array row of the subspot's parent spot.
+  \item \code{spot.col}: Array col of the subspot's parent spot.
+  \item \code{row}: Array row of the subspot. This is the parent spot's row
+    plus an offset based on the subspot's position within the spot.
+  \item \code{col}: Array col of the subspot. This is the parent spot's col
+    plus an offset based on the subspot's position within the spot.
+  \item \code{imagerow}: Pixel row of the subspot. This is the parent spot's
+    row plus an offset based on the subspot's position within the spot.
+  \item \code{imagecol}: Pixel col of the subspot. This is the parent spot's
+    col plus an offset based on the subspot's position within the spot.
+  }
 }
 \examples{
 set.seed(149)
 sce <- exampleSCE()
-sce <- spatialCluster(sce, 7, nrep=200)
-enhanced <- spatialEnhance(sce, 7, init=sce$spatial.cluster, nrep=200)
+sce <- spatialCluster(sce, 7, nrep=100, burn.in=10)
+enhanced <- spatialEnhance(sce, 7, nrep=100, burn.in=10)
 
+}
+\seealso{
+\code{\link{spatialCluster}} for clustering at the spot level
+  before enhancing, \code{\link{clusterPlot}} for visualizing the cluster
+  assignments, \code{\link{enhanceFeatures}} for imputing enhanced
+  expression, and \code{\link{mcmcChain}} for examining the full MCMC chain
+  associated with the enhanced clustering.
+  .
 }

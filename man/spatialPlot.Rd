@@ -2,33 +2,26 @@
 % Please edit documentation in R/spatialPlot.R
 \name{spatialPlot}
 \alias{spatialPlot}
-\alias{clusterPlot}
-\alias{enhancePlot}
-\title{Plot cluster labels in spatial context}
-\usage{
-clusterPlot(sce)
-
-enhancePlot(sce.enhanced, sce.ref)
-}
+\title{Spatial plotting functions}
 \arguments{
-\item{sce}{A SingleCellExperiment object containing the spatial data and
-cluster assignments in \code{sce$spatial.cluster}.}
+\item{color}{Optional hex code to set color of borders around spots. Set to
+\code{NA} to remove borders.}
 
-\item{sce.enhanced, sce.ref}{The enhanced subspots and original spots,
-respectively.}
-}
-\value{
-Both functions return a ggplot object.
+\item{...}{Additional arguments for \code{geom_polygon()}. \code{size}, to
+specify the linewidth of these borders, is likely the most useful.}
+
+\item{platform}{Spatial sequencing platform. If "Visium", the hex spot layout
+will be used, otherwise square spots will be plotted.\cr
+NOTE: specifying this argument is only necessary if \code{sce} was not
+created by \code{spatialCluster()} or \code{spatialEnhance()}.}
+
+\item{is.enhanced}{True if \code{sce} contains subspot-level data instead of
+spots. Spatial sequencing platform. If true, the respective subspot lattice
+for each platform will be plotted.\cr
+NOTE: specifying this argument is only necessary if \code{sce} was not
+created by \code{spatialCluster()} or \code{spatialEnhance()}.}
 }
 \description{
-After running \code{spatialCluster()} or \code{spatialEnhance()}, we can
-visualize the cluster assignments of each spot using \code{clusterPlot()} or
-\code{enhancePlot()}, respectively.
+Spatial plotting functions
 }
-\examples{
-set.seed(149)
-sce <- exampleSCE()
-sce$spatial.cluster <- floor(runif(ncol(sce), 1, 4))
-clusterPlot(sce)
-
-}
+\keyword{internal}

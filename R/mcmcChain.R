@@ -20,7 +20,7 @@
 #' @examples
 #' set.seed(149)
 #' sce <- exampleSCE()
-#' sce <- spatialCluster(sce, 7, nrep=200, save.chain=TRUE)
+#' sce <- spatialCluster(sce, 7, nrep=100, burn.in=10, save.chain=TRUE)
 #' chain <- mcmcChain(sce)
 #' removeChain(sce)
 #' 
@@ -48,19 +48,22 @@ NULL
         h5createDataset(h5.fname, par.name, dims, chunk=chunk)
         
         attr(param, "dims") <- .infer_param_dims(colnames(param))
-        
-        ## TODO: write colnames manually to avoid warnings about dimnames
-        ## when writing all attributes
+
         suppressWarnings(h5write(param, h5.fname, par.name, write.attributes=TRUE))
     }
     
     h5.fname
 }
 
-## Infer original dimensions of parameter (per iteration) from colnames
-##
-## Used to avoid writing colnames directly to HDF5 as attribute, which fails
-## for large parameters (e.g. Y)
+#' Infer original dimensions of parameter (per iteration) from colnames
+#'
+#' Used to avoid writing colnames directly to HDF5 as attribute, which fails
+#' for large parameters (e.g. Y)
+#' 
+#' @param cnames List of column names
+#' @return Numeric vector (nrow, ncol)
+#' 
+#' @keywords internal
 .infer_param_dims <- function(cnames) {
     n_idxs <- length(cnames)
     dims <- list()
@@ -77,12 +80,19 @@ NULL
     dims
 }
 
+#' Load saved chain from disk.
+#' 
+#' @param h5.fname Path to hdf5 file containing chain
+#' @param params List of parameters to read from file (will read all by default)
+#' 
+#' @return MCMC chain, represented as a \code{coda::mcmc} object
+#' 
+#' @keywords internal
+#' 
 #' @importFrom rhdf5 h5ls h5read
 #' @importFrom coda mcmc
 #' @importFrom purrr map
-.read_chain <- function(h5.fname, params = NULL) {
-    ## TODO: add option to subset last n rows/iterations
-    
+.read_chain <- function(h5.fname, params = NULL, is.enhanced = FALSE) {
     if (is.null(params)) {
         params <- h5ls(h5.fname)$name
     }
@@ -98,12 +108,27 @@ NULL
     xs <- map(params, .read_param)
     x <- do.call(cbind, xs)
     
-    ## TODO: specify thinning interval + start/end based on burn-in
-    ## may need to save iter_from in chain file
-    mcmc(x)
+    ## Enhanced chain includes initialization and is thinned to every 100 iters
+    ## Cluster chain does not include init and is not thinned
+    if (is.enhanced)
+        mcmc(x, start=0, end=(nrow(x) - 1) * 100, thin=100)
+    else
+        mcmc(x)
 }
 
-## Make colnames for parameter indices.
+#' Make colnames for parameter indices.
+#' 
+#' Scalar parameters are named \code{"name"}.
+#' Vector parameters are named \code{"name[i]"}.
+#' Matrix parameters are named \code{"name[i,j]"}.
+#' 
+#' @param name Parameter name
+#' @param m,n Dimensions of parameter (m=nrow, n=ncol)
+#' @param dim Dimensionality of parameter (0=scalar, 1=vector, 2=matrix)
+#' 
+#' @return List of names for parameter values
+#' 
+#' @keywords internal
 .make_index_names <- function(name, m = NULL, n = NULL, dim = 1) {
     if (is.null(m) || m == 1) {
         name
@@ -116,21 +141,41 @@ NULL
     }
 }
 
-## Tidy C++ outputs before writing to disk.
-##  1) Convert each parameter to matrix (n_iterations x n_indices) 
-##  2) Add appropriate colnames 
-##  3) Thin evenly (for enhance)
+#' Tidy C++ outputs before writing to disk.
+#' 
+#' 1) Convert each parameter to matrix (n_iterations x n_indices) 
+#' 2) Add appropriate colnames 
+#' 3) Thin evenly (for enhance)
+#'
+#' @param out List returned by \code{cluster()} or \code{deconvolve()}.
+#' @param method Whether the output came from clustering or enhancement.
+#'   (Different params are included in each.)
+#' @param thin Thinning rate. Some enhanced parameters are thinned within C++
+#'   loop, others (\code{mu} and \code{Ychange}) need to be thinned afterwards.
+#'   
+#' @return List with standardized parameters
+#'   
+#' @keywords internal
+#' 
 #' @importFrom purrr map
 .clean_chain <- function(out, method = c("cluster", "enhance"), thin=100) 
 {
     method <- match.arg(method)
     n_iter <- nrow(out$z)  # this is technically n_iters / 100 for enhance
+
+    ## Only one iteration included; need to cast vectors back to matrices
+    if (is.null(n_iter)) {
+        out$z <- matrix(out$z, nrow=1)
+        out$mu <- matrix(out$mu, nrow=1)
+        if ("weights" %in% names(out)) {
+            out$weights <- matrix(out$mu, nrow=1)
+        }
+    }
+
     n <- ncol(out$z)
     d <- ncol(out$lambda[[1]])
     q <- ncol(out$mu)/d
-    
-    ## TODO: this is bugged if only one iteration saved. 
-    ## Add as.matrix to fix, but check for transposition
+
     colnames(out$z) <- .make_index_names("z", n)
     colnames(out$mu) <- .make_index_names("mu", q, d)
     out$lambda <- .flatten_matrix_list(out$lambda, "lambda", d, d)
@@ -149,7 +194,6 @@ NULL
         colnames(out$Ychange) <- c("Ychange")
     }
     
-    ## TODO: optionally thin cluster output too
     if (method == "enhance") {
         ## manually thin mu until updated in c++; 
         ## keep init values for consistency with others
@@ -164,6 +208,13 @@ NULL
     out
 }
 
+#' Convert a list of matrices to a single matrix, where each row is a flattened
+#' matrix from the original list
+#' 
+#' @param xs List of matrices
+#' @return Matrix
+#' 
+#' @keywords internal
 .flatten_matrix_list <- function(xs, ...) {
     xs <- map(xs, function(x) as.vector(t(x)))
     x <- do.call(rbind, xs)
@@ -178,8 +229,9 @@ mcmcChain <- function(sce, params = NULL) {
     if (!("chain.h5" %in% names(metadata(sce)))) {
         stop("Path to chain file not available in object metadata.")
     }
-    
-    .read_chain(metadata(sce)$chain.h5, params)
+
+    is.enhanced <- metadata(sce)$BayesSpace.data$is.enhanced
+    .read_chain(metadata(sce)$chain.h5, params, is.enhanced)
 }
 
 #' @export

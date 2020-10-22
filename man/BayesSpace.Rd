@@ -5,21 +5,16 @@
 \alias{BayesSpace}
 \title{BayesSpace: A package for processing spatial transcriptomes}
 \description{
-TODO: flesh out package description (or link to vignette)
+Tools for clustering and enhancing the resolution of spatial gene expression
+experiments. BayesSpace clusters a low-dimensional representation of the gene
+expression matrix, incorporating a spatial prior to encourage neighboring
+spots to cluster together. The method can enhance the resolution of the
+low-dimensional representation into "sub-spots", for which features such as
+gene expression or cell type composition can be imputed.
 }
 \details{
-The BayesSpace package provides two primary functions:
-\code{spatialCluster()} and \code{spatialEnhance()}.
+For an overview of the functionality provided by the package, please see the
+vignette:
+\code{vignette("BayesSpace", package="BayesSpace")}
 }
-\section{Clustering}{
-
-The clustering algorithm groups neighboring spots together by expression
-profile.
-}
-
-\section{Enhancement}{
-
-The enhancement algorithm deconvolves spot-level expression into imputed
-cell-level signals.
-}
-
+\keyword{internal}

@@ -9,15 +9,14 @@ spatialCluster(
   q,
   use.dimred = "PCA",
   d = 15,
-  positions = NULL,
-  position.cols = c("imagecol", "imagerow"),
+  platform = c("Visium", "ST"),
   init = NULL,
   init.method = c("mclust", "kmeans"),
-  radius = NULL,
   model = c("t", "normal"),
   precision = c("equal", "variable"),
   nrep = 50000,
-  gamma = 3,
+  burn.in = 1000,
+  gamma = NULL,
   mu0 = NULL,
   lambda0 = NULL,
   alpha = 1,
@@ -36,20 +35,16 @@ spatialCluster(
 
 \item{d}{Number of top principal components to use when clustering.}
 
-\item{positions}{A matrix or dataframe with two columns (x, y) that gives
-the spatial coordinates of each spot.}
-
-\item{position.cols}{If \code{positions} is not provided, use these columns 
-from \code{colData(sce)} as spatial coordinates (x, y).}
+\item{platform}{Spatial transcriptomic platform. Specify 'Visium' for hex 
+lattice geometry or 'ST' for square lattice geometry. Specifying this
+parameter is optional when analyzing SingleCellExperiments processed using
+\code{\link{readVisium}} or \code{\link{spatialPreprocess}}, as this
+information is included in their metadata.}
 
 \item{init}{Initial cluster assignments for spots.}
 
 \item{init.method}{If \code{init} is not provided, cluster the top \code{d} 
 PCs with this method to obtain initial cluster assignments.}
-
-\item{radius}{The maximum (L1) distance for two spots to be considered
-neighbors. If not provided, the distance will be estimated using
-\code{lm(image.coord ~ array.coord)}.}
 
 \item{model}{Error model. ('normal' or 't')}
 
@@ -58,7 +53,10 @@ VVV covariance models, respectively.)}
 
 \item{nrep}{The number of MCMC iterations.}
 
-\item{gamma}{Smoothing parameter. (Values in range of 1-3 seem to work well.)}
+\item{burn.in}{The number of MCMC iterations to exclude as burn-in period.}
+
+\item{gamma}{Smoothing parameter. Defaults to 2 for \code{platform="ST"} and
+3 for \code{platform="Visium"}. (Values in range of 1-3 seem to work well.)}
 
 \item{mu0}{Prior mean hyperparameter for mu. If not provided, mu0 is set to
 the mean of PCs over all spots.}
@@ -82,12 +80,25 @@ Returns a modified \code{sce} with cluster assignments stored in
 Cluster a spatial expression dataset.
 }
 \details{
-TODO describe method in detail
-TODO add details or link to mcmcChain
+The input SCE must have \code{row} and \code{col} columns in its
+\code{colData}, corresponding to the array row and column coordinates of each
+spot. These are automatically parsed by \code{\link{readVisium}} or can be
+added manually when creating the SCE.
+
+Cluster labels are stored in the \code{spatial.cluster} column of the SCE,
+and the cluster initialization is stored in \code{cluster.init}.
 }
 \examples{
 set.seed(149)
 sce <- exampleSCE()
-sce <- spatialCluster(sce, 7, nrep=200)
+sce <- spatialCluster(sce, 7, nrep=100, burn.in=10)
 
+}
+\seealso{
+\code{\link{spatialPreprocess}} for preparing the SCE for
+  clustering, \code{\link{spatialEnhance}} for enhancing the clustering
+  resolution, \code{\link{clusterPlot}} for visualizing the cluster
+  assignments, \code{\link{featurePlot}} for visualizing expression levels
+  in spatial context, and \code{\link{mcmcChain}} for examining the full
+  MCMC chain associated with the clustering.
 }

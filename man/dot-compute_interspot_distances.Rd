@@ -21,3 +21,4 @@ array coordinate to estimate the pixel distance between two spots along
 each axis. Add these distances to estimate the L1 distance between two
 spots, then add a small buffer.
 }
+\keyword{internal}

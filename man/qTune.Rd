@@ -7,7 +7,7 @@
 \usage{
 qPlot(sce, qs = seq(3, 7), force.retune = FALSE, ...)
 
-qTune(sce, qs = seq(3, 7), min_rep = 100, max_rep = 1000, ...)
+qTune(sce, qs = seq(3, 7), burn.in = 100, nrep = 1000, ...)
 }
 \arguments{
 \item{sce}{A SingleCellExperiment object containing the spatial data.}
@@ -19,8 +19,8 @@ be overwritten.}
 
 \item{...}{Other parameters are passed to \code{spatialCluster()}.}
 
-\item{min_rep, max_rep}{Integers specifying the range of repetitions to
-compute}
+\item{burn.in, nrep}{Integers specifying the range of repetitions to
+compute.}
 }
 \value{
 \code{qTune()} returns a modified \code{sce} with tuning log 
@@ -37,8 +37,8 @@ negative log likelihood for a range of q values over iterations 100:1000, and
 }
 \details{
 \code{qTune()} takes the same parameters as \code{spatialCluster()} and will
-  run the MCMC clustering algorithm up to \code{max_rep} iterations for each
-  value of \code{q}. The first \code{min_rep} iterations are discarded as
+  run the MCMC clustering algorithm up to \code{nrep} iterations for each
+  value of \code{q}. The first \code{burn.in} iterations are discarded as
   burn-in and the log likelihood is averaged over the remaining iterations.
   
 \code{qPlot()} plots the computed negative log likelihoods as a function of
@@ -51,7 +51,7 @@ negative log likelihood for a range of q values over iterations 100:1000, and
 \examples{
 set.seed(149)
 sce <- exampleSCE()
-sce <- qTune(sce, seq(3, 7))
+sce <- qTune(sce, seq(3, 7), burn.in=10, nrep=100)
 qPlot(sce)
 
 }

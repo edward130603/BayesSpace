@@ -33,7 +33,7 @@ a matrix of size (n_iterations x n_parameter_indices).
 \examples{
 set.seed(149)
 sce <- exampleSCE()
-sce <- spatialCluster(sce, 7, nrep=200, save.chain=TRUE)
+sce <- spatialCluster(sce, 7, nrep=100, burn.in=10, save.chain=TRUE)
 chain <- mcmcChain(sce)
 removeChain(sce)
 

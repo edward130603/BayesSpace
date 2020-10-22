@@ -1,0 +1,8 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^inst/profiling$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^\.github$
+^LICENSE\.md$

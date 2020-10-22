@@ -35,10 +35,42 @@ test_that("genes are predicted with xgboost", {
                  max_depth=2, eta=0.03, nrounds=100, nthread=1, verbose=FALSE)
   new <- predict(fit, newdata=X.enhanced)
   
-  Y.enhanced <- .xgboost_enhance(X.ref, X.enhanced, Y.ref, c(gene))
+  Y.enhanced <- .xgboost_enhance(X.ref, X.enhanced, Y.ref, c(gene), nrounds = 100)
   
   expect_equal(new, Y.enhanced[gene, ], check.names=FALSE)
-  expect_true("rmse" %in% names(attributes(Y.enhanced)))
+  expect_true("diagnostic" %in% names(attributes(Y.enhanced)))
+  expect_true("rmse" %in% names(attr(Y.enhanced, "diagnostic")))
+})
+
+test_that("genes are predicted with tuned xgboost", {
+  gene <- "gene_4"
+  set.seed(100)
+  
+  train.index <- sample(1:ncol(Y.ref), 64)
+  data.train <- xgb.DMatrix(data=X.ref[train.index, ],
+                            label=Y.ref[gene, train.index])
+  data.test  <- xgb.DMatrix(data=X.ref[-train.index, ],
+                            label=Y.ref[gene, -train.index])
+  watchlist <- list(train=data.train, test=data.test)
+  
+  fit.train <- xgb.train(data=data.train, max_depth=2, watchlist=watchlist,
+                         eta=0.03, nrounds=500, objective="reg:squarederror",
+                         verbose=FALSE)
+  
+  nrounds <- which.min(fit.train$evaluation_log$test_rmse)
+  
+  fit <- xgboost(data=X.ref, label=Y.ref[gene, ], objective="reg:squarederror",
+                 max_depth=2, eta=0.03, nrounds=nrounds, nthread=1, 
+                 verbose=FALSE)
+  new <- predict(fit, newdata=X.enhanced)
+  
+  set.seed(100)
+  Y.enhanced <- .xgboost_enhance(X.ref, X.enhanced, Y.ref, c(gene),
+                                 nrounds=0, train.n=64)
+  
+  expect_equal(new, Y.enhanced[gene, ], check.names=FALSE)
+  expect_true("diagnostic" %in% names(attributes(Y.enhanced)))
+  expect_true("rmse" %in% names(attr(Y.enhanced, "diagnostic")))
 })
 
 test_that("proportions are predicted with Dirichlet model", { 

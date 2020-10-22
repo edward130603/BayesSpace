@@ -2,24 +2,29 @@
 % Please edit documentation in R/enhanceFeatures.R
 \name{enhanceFeatures}
 \alias{enhanceFeatures}
-\title{Predict log-normalized expression vectors from deconvolved PCs using linear 
-regression.}
+\title{Predict feature vectors from enhanced PCs.}
 \usage{
 enhanceFeatures(
   sce.enhanced,
   sce.ref,
+  feature_names = NULL,
+  model = c("xgboost", "dirichlet", "lm"),
   use.dimred = "PCA",
   assay.type = "logcounts",
   altExp.type = NULL,
   feature.matrix = NULL,
-  feature_names = NULL,
-  model = c("xgboost", "dirichlet", "lm")
+  nrounds = 0,
+  train.n = round(ncol(sce.ref) * 2/3)
 )
 }
 \arguments{
 \item{sce.enhanced}{SingleCellExperiment object with enhanced PCs.}
 
-\item{sce.ref}{SingleCellExperiment object with original PCs and expression..}
+\item{sce.ref}{SingleCellExperiment object with original PCs and expression.}
+
+\item{feature_names}{List of genes/features to predict expression/values for.}
+
+\item{model}{Model used to predict enhanced values.}
 
 \item{use.dimred}{Name of dimension reduction to use.}
 
@@ -33,9 +38,15 @@ attached to \code{sce.ref}. Must have columns corresponding to the spots in
 \code{sce.ref}. Overrides \code{assay.type} and \code{altExp.type} if
 specified.}
 
-\item{feature_names}{List of genes/features to predict expression/values for.}
+\item{nrounds}{Nonnegative integer to set the \code{nrounds} parameter
+(max number of boosting iterations) for xgboost. \code{nrounds = 100}
+works reasonably well in most cases. If \code{nrounds} is set to 0, the
+parameter will be tuned using a train-test split. We recommend tuning
+\code{nrounds} for improved feature prediction, but note this will increase
+runtime.}
 
-\item{model}{Model used to predict enhanced values.}
+\item{train.n}{Number of spots to use in the training dataset for tuning
+nrounds. By default, 2/3 the total number of spots are used.}
 }
 \value{
 If \code{assay.type} or \code{altExp.type} are specified, the
@@ -47,16 +58,20 @@ If \code{assay.type} or \code{altExp.type} are specified, the
   requested, the enhanced features are returned directly as a matrix.
 }
 \description{
-Predict log-normalized expression vectors from deconvolved PCs using linear 
-regression.
+Predict feature vectors from enhanced PCs.
 }
 \details{
 Enhanced features are computed by fitting a predictive model to a
 low-dimensional representation of the original expression vectors. By
 default, a linear model is fit for each gene using the top 15 principal
-compoenents from each spot, i.e. \code{lm(gene ~ PCs)}, and the fitted model
+components from each spot, i.e. \code{lm(gene ~ PCs)}, and the fitted model
 is used to predict the enhanced expression for each gene from the subspots'
 principal components.
+
+Diagnostic measures, such as RMSE for \code{xgboost} or R.squared for linear
+regression, are added to the `rowData` of the enhanced experiment if the
+features are an assay of the original experiment. Otherwise they are stored
+as an attribute of the returned matrix/altExp.
 
 Note that feature matrices will be returned and are expected to be input as
 \eqn{p \times n} matrices of \eqn{p}-dimensional feature vectors over the
@@ -65,8 +80,8 @@ Note that feature matrices will be returned and are expected to be input as
 \examples{
 set.seed(149)
 sce <- exampleSCE()
-sce <- spatialCluster(sce, 7, nrep=200)
-enhanced <- spatialEnhance(sce, 7, init=sce$spatial.cluster, nrep=200)
-enhanced <- enhanceFeatures(enhanced, sce, assay.type="logcounts")
+sce <- spatialCluster(sce, 7, nrep=100, burn.in=10)
+enhanced <- spatialEnhance(sce, 7, init=sce$spatial.cluster, nrep=100, burn.in=10)
+enhanced <- enhanceFeatures(enhanced, sce, feature_names=c("gene_1", "gene_2"))
 
 }

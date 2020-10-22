@@ -1,0 +1,24 @@
+citHeader("To cite BayesSpace in publications use:")
+
+citEntry(
+  entry    = "Article",
+  title    = "BayesSpace enables the robust characterization of spatial gene expression architecture in tissue sections at increased resolution",
+  author   = personList(as.person("Edward Zhao"),
+                        as.person("Matthew R. Stone"),
+                        as.person("Xing Ren"),
+                        as.person("Thomas Pulliam"),
+                        as.person("Paul Nghiem"),
+                        as.person("Jason H. Bielas"),
+                        as.person("Raphael Gottardo")),
+  journal  = "bioRxiv",
+  year     = "2020",
+  volume   = "",
+  number   = "",
+  pages    = "",
+  url      = "https://www.biorxiv.org/content/10.1101/2020.09.04.283812v1",
+  textVersion = paste(
+    "Zhao, E. et al.",
+    "BayesSpace enables the robust characterization of spatial gene expression architecture in tissue sections at increased resolution.",
+    "Preprint at bioRxiv https://doi.org/10.1101/2020.09.04.283812 (2020)."
+  )
+)

@@ -15,3 +15,4 @@ mode Numeric scalar, most frequent element in x
 \description{
 Used for finding the most frequent cluster for each z
 }
+\keyword{internal}
