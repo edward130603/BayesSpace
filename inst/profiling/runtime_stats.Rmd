@@ -14,7 +14,7 @@ This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute
 Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
 
 ```{r}
-times <- read.csv(here::here("inst/profiling/refactor_timing.mac.csv"))
+times <- read.csv(here::here("inst/profiling/refactor_timing.csv"))
 ```
 
 ```{r}
@@ -46,10 +46,10 @@ p2 <- ggplot(data=times, aes(x=factor(method), y=sec_per)) +
     theme_bw()
 ```
 
-```{r fig.width=14, fig.height=7}
+```{r fig.width=8, fig.height=4}
 library(patchwork)
 p1 + p2
-ggsave(here::here("inst/profiling/runtime_comparison.rhino.pdf"))
+# ggsave(here::here("inst/profiling/runtime_comparison.rhino.pdf"))
 ```
 
 

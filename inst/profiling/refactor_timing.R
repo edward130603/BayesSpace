@@ -26,7 +26,7 @@ for (nspots in c(100, 200, 1000)) {
         set.seed(151)
         tres <- system.time(c.refactor <- BayesSpace:::iterate_t_refactor(Y=Y, q=q, df_j=df_j, d=ncol(Y), n=nrow(Y),
                                                  init=init, mu0=colMeans(Y), lambda0=diag(0.01, nrow = ncol(Y)), 
-                                                 gamma=2, alpha=1, beta=0.01, nrep=nrep))
+                                                 gamma=2, alpha=1, beta=0.01, nrep=nrep, model="t"))
         stats.refactor <- data.frame(method="refactor", nspots=nspots, nrep=nrep, user=tres[[1]], system=tres[[2]], elapsed=tres[[3]])
         
         set.seed(151)
