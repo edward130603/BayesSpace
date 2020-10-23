@@ -1,3 +1,10 @@
+# BayesSpace 0.99.8
+
+## Minor improvements and fixes
+
+- `spatialCluster()` and `spatialEnhance()` now use a faster implementation of
+  the multivariate normal density that reduces runtime by approximately 40%.
+
 # BayesSpace 0.99.7
 
 ## Minor improvements and fixes
