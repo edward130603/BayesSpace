@@ -1,5 +1,5 @@
 Package: BayesSpace
-Version: 0.99.8
+Version: 1.0.0
 Date: 2020-10-23
 Title: Clustering and Resolution Enhancement of Spatial Transcriptomes
 Authors@R: c(
