@@ -35,7 +35,8 @@ Imports:
     utils,
     ggplot2,
     scales,
-    BiocFileCache
+    BiocFileCache,
+    BiocSingular
 License: MIT + file LICENSE
 RoxygenNote: 7.1.1
 LinkingTo: 

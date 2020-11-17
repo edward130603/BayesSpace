@@ -11,7 +11,8 @@ spatialPreprocess(
   n.HVGs = 2000,
   skip.PCA = FALSE,
   log.normalize = TRUE,
-  assay.type = "logcounts"
+  assay.type = "logcounts",
+  BSPARAM = ExactParam()
 )
 }
 \arguments{
@@ -35,6 +36,13 @@ be omitted if log-normalization previously computed.}
 Leave as "logcounts" unless you explicitly pre-computed a different
 normalization and added it to \code{sce} under another assay. Note that we
 do not recommend running BayesSpace on PCs computed from raw counts.}
+
+\item{BSPARAM}{A \linkS4class{BiocSingularParam} object specifying which
+algorithm should be used to perform the PCA. By default, an exact PCA is
+performed, as current spatial datasets are generally small (<10,000 spots).
+To perform a faster approximate PCA, please specify
+\code{FastAutoParam()} and set a random seed to ensure
+reproducibility.}
 }
 \value{
 SingleCellExperiment with PCA and BayesSpace metadata
