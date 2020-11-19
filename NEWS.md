@@ -1,3 +1,15 @@
+# BayesSpace 1.1.1
+
+## Minor improvements and fixes
+
+- `spatialCluster()` gains an `init.args` parameter. The user may now specify
+  additional arguments to the chosen cluster initialization in `init.method`,
+  or override the defaults. Additionally, the available initialization methods
+  are now documented in the function help.
+- `spatialPreprocess()` gains a `BSPARAM` parameter to specify which algorithm
+  is used to compute PCA, and now defaults to using exact PCA instead of
+  approximate.
+
 # BayesSpace 0.99.8
 
 ## Minor improvements and fixes

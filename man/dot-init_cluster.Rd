@@ -4,7 +4,13 @@
 \alias{.init_cluster}
 \title{Initialize cluster assignments}
 \usage{
-.init_cluster(Y, q, init = NULL, init.method = c("mclust", "kmeans"))
+.init_cluster(
+  Y,
+  q,
+  init = NULL,
+  init.method = c("mclust", "mclust-hc", "kmeans"),
+  init.args = NULL
+)
 }
 \arguments{
 \item{q}{Number of clusters}

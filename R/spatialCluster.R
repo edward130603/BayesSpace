@@ -14,7 +14,17 @@
 #' @param d Number of top principal components to use when clustering.
 #' @param init Initial cluster assignments for spots.
 #' @param init.method If \code{init} is not provided, cluster the top \code{d} 
-#'   PCs with this method to obtain initial cluster assignments.
+#'   PCs with this method to obtain initial cluster assignments. The following
+#'   methods and their corresponding functions are supported:
+#'   \itemize{
+#'     \item \code{"kmeans"}, \code{stats::kmeans()}. 
+#'     \item \code{"mclust"}, \code{mclust::Mclust()}. By default, the
+#'       \code{"EEE"} model is used.
+#'     \item \code{"mclust-hc"}, Convenience option to run
+#'       \code{mclust::Mclust()} with hierarchical clustering initialization.
+#'   }
+#' @param init.args List of additional arguments to supply to the initialization
+#'   method.
 #' @param model Error model. ('normal' or 't')
 #' @param precision Covariance structure. ('equal' or 'variable' for EEE and 
 #'   VVV covariance models, respectively.)
@@ -113,7 +123,7 @@ cluster <- function(Y, q, df_j, init = rep(1, nrow(Y)),
 #' @rdname spatialCluster
 spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     platform=c("Visium", "ST"),
-    init = NULL, init.method = c("mclust", "kmeans"),
+    init = NULL, init.method = c("mclust", "mclust-hc", "kmeans"), init.args = NULL,
     model = c("t", "normal"), precision = c("equal", "variable"), 
     nrep = 50000, burn.in=1000, gamma = NULL, mu0 = NULL, lambda0 = NULL,
     alpha = 1, beta = 0.01, save.chain = FALSE, chain.fname = NULL) {
@@ -142,7 +152,7 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
 
     ## Get indices of neighboring spots, and initialize cluster assignments
     df_j <- .find_neighbors(sce, platform)
-    init <- .init_cluster(Y, q, init, init.method)
+    init <- .init_cluster(Y, q, init, init.method, init.args)
     
     ## Set model parameters
     model <- match.arg(model)
@@ -264,16 +274,53 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
 #' @keywords internal
 #' 
 #' @importFrom stats kmeans
-#' @importFrom mclust Mclust mclustBIC
-.init_cluster <- function(Y, q, init = NULL, init.method = c("mclust", "kmeans")) {
-    if (is.null(init)) {
-        init.method <- match.arg(init.method)
-        if (init.method == "kmeans") {
-            init <- kmeans(Y, centers=q)$cluster
-        } else if (init.method == "mclust") {
-            init <- Mclust(Y, q, "EEE", verbose=FALSE)$classification
-        }
+#' @importFrom mclust Mclust mclustBIC hc
+.init_cluster <- function(Y, q, 
+                          init = NULL,
+                          init.method = c("mclust", "mclust-hc", "kmeans"),
+                          init.args = NULL) {
+    if (!is.null(init))
+        return(init)
+    
+    init.method <- match.arg(init.method)
+    if (init.method == "kmeans") {
+        defaults <- list(x=Y, centers=q)
+        args <- .merge_default_cluster_args(defaults, init.args)
+        init <- do.call(kmeans, args)$cluster
+    } else if (init.method == "mclust") {
+        defaults <- list(data=Y, G=q, modelNames="EEE", verbose=FALSE)
+        args <- .merge_default_cluster_args(defaults, init.args)
+        init <- do.call(Mclust, args)$classification
+    } else if (init.method == "mclust-hc") {
+        defaults <- list(data=Y, G=q, modelNames="EEE", verbose=FALSE,
+                         initialization=list(hcPairs=hc(Y, "EEE", "SVD")))
+        args <- .merge_default_cluster_args(defaults, init.args)
+        init <- do.call(Mclust, args)$classification
     }
     
     init
+}
+
+#' When the user specifies additional arguments to a cluster initialization,
+#' merge these with our default values, giving precedence to the user-specified
+#' value.
+#' 
+#' @param defaults List of default function arguments
+#' @param init.args List of user-specified function arguments
+#' 
+#' @return List of arguments. Any arguments with default values are added to
+#'   \code{init.args} if the user did not specify a value.
+#'
+#' @keywords internal
+.merge_default_cluster_args <- function(defaults, init.args = NULL) {
+    if (is.null(init.args))
+        return(defaults)
+    
+    for (argname in names(defaults)) {
+        if (!(argname %in% names(init.args))) {
+            init.args[[argname]] <- defaults[[argname]]
+        }
+    }
+    
+    init.args
 }

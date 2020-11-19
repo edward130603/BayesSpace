@@ -11,7 +11,8 @@ spatialCluster(
   d = 15,
   platform = c("Visium", "ST"),
   init = NULL,
-  init.method = c("mclust", "kmeans"),
+  init.method = c("mclust", "mclust-hc", "kmeans"),
+  init.args = NULL,
   model = c("t", "normal"),
   precision = c("equal", "variable"),
   nrep = 50000,
@@ -44,7 +45,18 @@ information is included in their metadata.}
 \item{init}{Initial cluster assignments for spots.}
 
 \item{init.method}{If \code{init} is not provided, cluster the top \code{d} 
-PCs with this method to obtain initial cluster assignments.}
+PCs with this method to obtain initial cluster assignments. The following
+methods and their corresponding functions are supported:
+\itemize{
+  \item \code{"kmeans"}, \code{stats::kmeans()}. 
+  \item \code{"mclust"}, \code{mclust::Mclust()}. By default, the
+    \code{"EEE"} model is used.
+  \item \code{"mclust-hc"}, Convenience option to run
+    \code{mclust::Mclust()} with hierarchical clustering initialization.
+}}
+
+\item{init.args}{List of additional arguments to supply to the initialization
+method.}
 
 \item{model}{Error model. ('normal' or 't')}
 
