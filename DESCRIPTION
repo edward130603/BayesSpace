@@ -36,7 +36,8 @@ Imports:
     ggplot2,
     scales,
     BiocFileCache,
-    BiocSingular
+    BiocSingular,
+    teigen
 License: MIT + file LICENSE
 RoxygenNote: 7.1.1
 LinkingTo: 

@@ -8,7 +8,7 @@
   Y,
   q,
   init = NULL,
-  init.method = c("mclust", "mclust-hc", "kmeans"),
+  init.method = c("mclust", "mclust-hc", "kmeans", "teigen"),
   init.args = NULL
 )
 }

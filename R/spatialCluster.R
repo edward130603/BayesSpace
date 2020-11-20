@@ -22,6 +22,8 @@
 #'       \code{"EEE"} model is used.
 #'     \item \code{"mclust-hc"}, Convenience option to run
 #'       \code{mclust::Mclust()} with hierarchical clustering initialization.
+#'     \item \code{"teigen"}, \code{teigen::teigen()}. By default, the
+#'       \code{"CCCC"} model is used.
 #'   }
 #' @param init.args List of additional arguments to supply to the initialization
 #'   method.
@@ -123,7 +125,7 @@ cluster <- function(Y, q, df_j, init = rep(1, nrow(Y)),
 #' @rdname spatialCluster
 spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     platform=c("Visium", "ST"),
-    init = NULL, init.method = c("mclust", "mclust-hc", "kmeans"), init.args = NULL,
+    init = NULL, init.method = c("mclust", "mclust-hc", "kmeans", "teigen"), init.args = NULL,
     model = c("t", "normal"), precision = c("equal", "variable"), 
     nrep = 50000, burn.in=1000, gamma = NULL, mu0 = NULL, lambda0 = NULL,
     alpha = 1, beta = 0.01, save.chain = FALSE, chain.fname = NULL) {
@@ -152,6 +154,7 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
 
     ## Get indices of neighboring spots, and initialize cluster assignments
     df_j <- .find_neighbors(sce, platform)
+    init.method <- match.arg(init.method)
     init <- .init_cluster(Y, q, init, init.method, init.args)
     
     ## Set model parameters
@@ -275,9 +278,10 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
 #' 
 #' @importFrom stats kmeans
 #' @importFrom mclust Mclust mclustBIC hc
+#' @importFrom teigen teigen
 .init_cluster <- function(Y, q, 
                           init = NULL,
-                          init.method = c("mclust", "mclust-hc", "kmeans"),
+                          init.method = c("mclust", "mclust-hc", "kmeans", "teigen"),
                           init.args = NULL) {
     if (!is.null(init))
         return(init)
@@ -296,6 +300,10 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
                          initialization=list(hcPairs=hc(Y, "EEE", "SVD")))
         args <- .merge_default_cluster_args(defaults, init.args)
         init <- do.call(Mclust, args)$classification
+    } else if (init.method == "teigen") {
+        defaults <- list(x=Y, Gs=q, models="CCCC")
+        args <- .merge_default_cluster_args(defaults, init.args)
+        init <- do.call(teigen, args)$classification
     }
     
     init
@@ -324,3 +332,4 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     
     init.args
 }
+

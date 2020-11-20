@@ -11,7 +11,7 @@ spatialCluster(
   d = 15,
   platform = c("Visium", "ST"),
   init = NULL,
-  init.method = c("mclust", "mclust-hc", "kmeans"),
+  init.method = c("mclust", "mclust-hc", "kmeans", "teigen"),
   init.args = NULL,
   model = c("t", "normal"),
   precision = c("equal", "variable"),
@@ -53,6 +53,8 @@ methods and their corresponding functions are supported:
     \code{"EEE"} model is used.
   \item \code{"mclust-hc"}, Convenience option to run
     \code{mclust::Mclust()} with hierarchical clustering initialization.
+  \item \code{"teigen"}, \code{teigen::teigen()}. By default, the
+    \code{"CCCC"} model is used.
 }}
 
 \item{init.args}{List of additional arguments to supply to the initialization
