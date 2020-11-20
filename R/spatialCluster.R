@@ -271,18 +271,22 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
 #' @param inputs Results from \code{.prepare_inputs()}
 #' @param init Vector of initial cluster assignments
 #' @param init.method Initialization clustering algorithm
+#' @param teigen.max.attempts teigen may fail to converge depending on seed.
+#'   Sometimes it will converge if rerun. This controls the maximum number of
+#'   attempts before giving up.
 #' 
 #' @return Vector of cluster assignments.
 #' 
 #' @keywords internal
 #' 
 #' @importFrom stats kmeans
-#' @importFrom mclust Mclust mclustBIC hc
+#' @importFrom mclust Mclust mclustBIC hc hcVVV hcEEE
 #' @importFrom teigen teigen
 .init_cluster <- function(Y, q, 
                           init = NULL,
                           init.method = c("mclust", "mclust-hc", "kmeans", "teigen"),
-                          init.args = NULL) {
+                          init.args = NULL,
+                          teigen.max.attempts = 10) {
     if (!is.null(init))
         return(init)
     
@@ -297,13 +301,30 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
         init <- do.call(Mclust, args)$classification
     } else if (init.method == "mclust-hc") {
         defaults <- list(data=Y, G=q, modelNames="EEE", verbose=FALSE,
-                         initialization=list(hcPairs=hc(Y, "EEE", "SVD")))
+                         initialization=list(hcPairs=hc(Y, modelName="EEE", use="SVD")))
         args <- .merge_default_cluster_args(defaults, init.args)
         init <- do.call(Mclust, args)$classification
     } else if (init.method == "teigen") {
-        defaults <- list(x=Y, Gs=q, models="CCCC")
+        defaults <- list(x=Y, Gs=q, models=c("CCCC"))
         args <- .merge_default_cluster_args(defaults, init.args)
-        init <- do.call(teigen, args)$classification
+
+        ## Repeatedly run teigen, up to max.attempts, until convergence
+        init <- NULL
+        for (i in seq_len(teigen.max.attempts)) {
+            res <- do.call(teigen, args)
+
+            ## Docs say `allbic` is -Inf when the model doesn't converge, but in
+            ## practice seems to be NULL. Checking for both.
+            if (!(is.null(res$allbic) || is.infinite(res$allbic))) {
+                init <- res$classification
+                break
+            }
+
+            if (is.null(init)) {
+                stop("Teigen would not converge. Please choose a different ",
+                     "initialization method.")
+            }
+        }
     }
     
     init

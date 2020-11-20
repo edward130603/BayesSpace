@@ -9,7 +9,8 @@
   q,
   init = NULL,
   init.method = c("mclust", "mclust-hc", "kmeans", "teigen"),
-  init.args = NULL
+  init.args = NULL,
+  teigen.max.attempts = 10
 )
 }
 \arguments{
@@ -18,6 +19,10 @@
 \item{init}{Vector of initial cluster assignments}
 
 \item{init.method}{Initialization clustering algorithm}
+
+\item{teigen.max.attempts}{teigen may fail to converge depending on seed.
+Sometimes it will converge if rerun. This controls the maximum number of
+attempts before giving up.}
 
 \item{sce}{SingleCellExperiment}
 
