@@ -1,33 +1,101 @@
 #' Add outlines to a cluster/feature plot
 #' TODO add `outline` and `outline_groups` (with default all) to c/fPlot
 #' 
-#' @param sce SingleCellExperiment
-#' @param base_plot Base cluster/feature plot to add outlines to
-#' @param outline Group to outline; i.e. a categorical column in
-#'   \code{colData(sce)}
-#' @param outline_values Optional subset of groups to outline; by default all
-#'   groups will be outlined
+#' @param sce SingleCellExperiment.
+#' @param base_plot Base cluster/feature plot to add outlines to.
+#' @param outline_group Group to outline; i.e. a categorical column in
+#'   \code{colData(sce)}.
+#' @param outline_values Subset of values in \code{outline_group} to outline; by
+#'   default all groups/clusters will be outlined.
+#' @param outline_title Title of outline groups in plot legend.
+#' @param outline_size Width of outline.
+#' @param outline_nudge Scale the distance each vertex in the outline is nudged
+#'   towards the interior of the cluster.
 #' 
 #' @return ggplot object
 #' 
-#'
+#' @importFrom SummarizedExperiment colData
+#' @importFrom dplyr filter
 outlinePlot <- function(sce, base_plot, 
-                        outline="spatial.cluster",
-                        outline_values=NULL) {
+                        outline_group="spatial.cluster",
+                        outline_values=NULL,
+                        outline_title="Cluster",
+                        outline_size=1.2,
+                        outline_nudge=0.5) {
     
-    cluster_components <- .find_connected_components(sce, outline)
-    vertices <- .make_vertices(sce, cluster_components,
+    ## Get vertices like in clusterPlot(), except fill by component
+    cluster_components <- .find_connected_components(sce, outline_group)
+    vertices <- .make_vertices(sce,
+                               cluster_components,
                                .bsData(sce, "platform"), 
                                .bsData(sce, "is.enhanced"))
     
-    ## TODO do for all clusters/components
-    ## TODO add nudge
-    boundary <- .make_outline(vertices %>% filter(fill == 1))
+    ## Clarify memberships
+    vertices$component_group <- vertices$fill
+    vertices$outline_group <- colData(sce)[vertices$spot, outline_group]
+   
+    ## Subset components to outline if necessary
+    if (is.null(outline_values)) {
+        components_to_outline <- unique(cluster_components)
+    } else {
+        components_to_outline <- vertices %>%
+            filter(outline_group %in% outline_values) %>%
+            pull(component_group) %>%
+            unique()
+    }
+   
+    ## Get the spot vertices associated with each component,
+    ## and obtain their outlines
+    .make_each_outline <- function(component_label) {
+        component <- vertices %>% filter(component_group == component_label)
+        boundary <- BayesSpace:::.make_outline(component)
+        boundary <- BayesSpace:::.nudge_outline(boundary, outline_nudge)
+        
+        ## Add grouping labels for plotting with geom_polygon()
+        boundary$component_group <- component_label
+        boundary$outline_group <- as.character(component$outline_group)[[1]]
+        
+        boundary
+    }
     
-    base_plot + 
-        geom_point(boundary, )
+    ## Get boundary around each component
+    outlines <- map(components_to_outline, make_each_outline)
+    outlines <- do.call(rbind, outlines)
+    
+    plot <- base_plot + 
+        geom_polygon(aes(x=x_nudge, y=y_nudge, group=component_group, color=outline_group),
+                     data=outlines,
+                     size=outline_size,
+                     fill=NA) +
+        labs(color=outline_title)
     
     
+    
+}
+
+#' Nudge outline into interior of component, to avoid overlaps between clusters
+#' 
+#' Moves each boundary vertex \code{nudge} of the distance towards the midpoint
+#' of its neighbors. Distance is negated if the midpoint is outside the boundary
+#' 
+#' @param boundary Table of (x, y) coordinates
+#' @return Table of nudged coordinates at \code{(x_nudge, y_nudge)}
+#' 
+#' @importFrom dplyr mutate
+#' @importFrom sp point.in.polygon
+.nudge_outline <- function(boundary, nudge=0.25) {
+    outline <- boundary %>%
+        mutate(x_prev=roll(x_rd, 1),
+               x_next=roll(x_rd, -1),
+               y_prev=roll(y_rd, 1),
+               y_next=roll(y_rd, -1),
+               x_mid=(x_prev + x_next) / 2,
+               y_mid=(y_prev + y_next) / 2,
+               x_nudge=x_rd + nudge * (x_mid - x_rd),
+               y_nudge=y_rd + nudge * (y_mid - y_rd),
+               in_boundary=point.in.polygon(x_nudge, y_nudge, x_rd, y_rd),
+               x_nudge=ifelse(in_boundary == 0, x_rd - nudge * (x_mid - x_rd), x_nudge),
+               y_nudge=ifelse(in_boundary == 0, y_rd - nudge * (y_mid - y_rd), y_nudge))
 }
 
 #' Find connected components of each cluster in spatial context
@@ -49,13 +117,20 @@ outlinePlot <- function(sce, base_plot,
         ## neighbors <- find_neighbors()
         stop("not yet implemented")
     } else {
-        neighbors <- .find_neighbors(sce, .bsData(sce, "platform"))
+        neighbors <- .find_neighbors(sce, .bsData(sce, "platform"), verbose=FALSE)
     }
     
     ## Convert list of lists of neighbors to dataframe of (spot, neighbor) pairs
-    edges <- keep(neighbors, ~ length(.x) > 0)
-    edges <- imap(edges, ~ data.frame(spot=.y, neighbor=.x))
-    edges <- do.call(rbind, edges)
+    ## Need to return empty dataframes for neighborless-spots to preserve
+    ## spot-indexing
+    to_frame <- function(nbrs, idx) {
+        if (length(nbrs) > 0) {
+            data.frame(spot=idx, neighbor=nbrs)
+        } else {
+            data.frame(spot=c(), neighbor=c())
+        }
+    } 
+    edges <- do.call(rbind, imap(neighbors, to_frame))
     
     ## Neighbor indices are zero-indexed for C++
     edges$neighbor <- edges$neighbor + 1
@@ -65,7 +140,7 @@ outlinePlot <- function(sce, base_plot,
                              neighbor=seq_len(ncol(sce)))
     edges <- rbind(edges, self_edges)
     
-    ## match groups
+    ## Filter to neighbors belonging to the same cluster
     edges$spot_group <- colData(sce)[edges$spot, group]
     edges$neighbor_group <- colData(sce)[edges$neighbor, group]
     edges <- edges %>% 
@@ -106,7 +181,7 @@ outlinePlot <- function(sce, base_plot,
 #' @keywords internal
 #' 
 #' @importFrom dplyr mutate group_by summarise filter select ungroup
-.get_boundary_vertices <- function(component, max_neighbors=2) {
+.get_boundary_vertices <- function(vertices, max_neighbors=2) {
     vertices %>% 
         mutate(x_rd=round(x.vertex, 3),
                y_rd=round(y.vertex, 3)) %>%
