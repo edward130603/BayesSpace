@@ -1,7 +1,7 @@
 # BayesSpace <img src="inst/logo/logo.png" align="right" width="115" />
 
   <!-- badges: start -->
-  [![R build status](https://github.com/edward130603/BayesSpace/workflows/R-CMD-check-bioc/badge.svg)](https://github.com/edward130603/BayesSpace/actions)
+  [![Bioconductor build status](http://bioconductor.org/shields/build/release/bioc/BayesSpace.svg)](https://bioconductor.org/checkResults/3.12/bioc-LATEST/BayesSpace/)
   <!-- badges: end -->
 
 ## Overview 
@@ -27,17 +27,30 @@ BayesSpace has been built and tested on the following operating systems:
 
 ### Software dependencies
 
-BayesSpace requires R 4.0 and Bioconductor 3.11. Specific package dependencies
+BayesSpace requires R 4.0 and Bioconductor 3.12. Specific package dependencies
 are defined in the package DESCRIPTION and are managed by the Bioconductor and
 devtools installers.
 
 ## Installation
 
-BayesSpace has been submitted to Bioconductor. Until its availability there, it
-can be installed with `devtools`:
+BayesSpace is available through
+[Bioconductor](https://bioconductor.org/packages/3.12/bioc/html/BayesSpace.html).
 
 ```
-# Install devtools if necessary
+# Install the Bioconductor package manager, if necessary
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("BayesSpace")
+```
+
+The development version can be installed via Bioconductor (see [instructions on
+using the devel
+branch](https://www.bioconductor.org/developers/how-to/useDevel/)) or from
+github with `devtools`.
+
+```
+# Install devtools, if necessary
 if (!requireNamespace("devtools", quietly = TRUE))
     install.packages("devtools")
 
