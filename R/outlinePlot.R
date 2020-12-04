@@ -14,6 +14,11 @@
 #' 
 #' @return ggplot object
 #' 
+#' @details
+#' The spatial neighborhood graph is filtered to remove edges between spots of
+#' different clusters (\code{outline_group}). The boundary of each connected
+#' components within this graph is outlined.
+#' 
 #' @importFrom SummarizedExperiment colData
 #' @importFrom magrittr %>%
 #' @importFrom dplyr filter pull
