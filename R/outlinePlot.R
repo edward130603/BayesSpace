@@ -15,7 +15,11 @@
 #' @return ggplot object
 #' 
 #' @importFrom SummarizedExperiment colData
-#' @importFrom dplyr filter
+#' @importFrom magrittr %>%
+#' @importFrom dplyr filter pull
+#' @importFrom purrr map
+#' @importFrom ggplot2 geom_polygon aes_ labs
+#' @export
 outlinePlot <- function(sce, base_plot, 
                         outline_group="spatial.cluster",
                         outline_values=NULL,
@@ -27,7 +31,7 @@ outlinePlot <- function(sce, base_plot,
     cluster_components <- .find_connected_components(sce, outline_group)
     vertices <- .make_vertices(sce,
                                cluster_components,
-                               .bsData(sce, "platform"), 
+                               .bsData(sce, "platform"),
                                .bsData(sce, "is.enhanced"))
     
     ## Clarify memberships
@@ -48,8 +52,8 @@ outlinePlot <- function(sce, base_plot,
     ## and obtain their outlines
     .make_each_outline <- function(component_label) {
         component <- vertices %>% filter(component_group == component_label)
-        boundary <- BayesSpace:::.make_outline(component)
-        boundary <- BayesSpace:::.nudge_outline(boundary, outline_nudge)
+        boundary <- .make_outline(component)
+        boundary <- .nudge_outline(boundary, outline_nudge)
         
         ## Add grouping labels for plotting with geom_polygon()
         boundary$component_group <- component_label
@@ -63,14 +67,13 @@ outlinePlot <- function(sce, base_plot,
     outlines <- do.call(rbind, outlines)
     
     plot <- base_plot + 
-        geom_polygon(aes(x=x_nudge, y=y_nudge, group=component_group, color=outline_group),
+        geom_polygon(aes_(x=~x_nudge, y=~y_nudge, group=~component_group, color=~outline_group),
                      data=outlines,
                      size=outline_size,
                      fill=NA) +
         labs(color=outline_title)
     
-    
-    
+    plot
 }
 
 #' Nudge outline into interior of component, to avoid overlaps between clusters
@@ -82,13 +85,14 @@ outlinePlot <- function(sce, base_plot,
 #' @return Table of nudged coordinates at \code{(x_nudge, y_nudge)}
 #' 
 #' @importFrom dplyr mutate
+#' @importFrom magrittr %>%
 #' @importFrom sp point.in.polygon
 .nudge_outline <- function(boundary, nudge=0.25) {
     outline <- boundary %>%
-        mutate(x_prev=roll(x_rd, 1),
-               x_next=roll(x_rd, -1),
-               y_prev=roll(y_rd, 1),
-               y_next=roll(y_rd, -1),
+        mutate(x_prev=.roll(x_rd, 1),
+               x_next=.roll(x_rd, -1),
+               y_prev=.roll(y_rd, 1),
+               y_next=.roll(y_rd, -1),
                x_mid=(x_prev + x_next) / 2,
                y_mid=(y_prev + y_next) / 2,
                x_nudge=x_rd + nudge * (x_mid - x_rd),
@@ -109,7 +113,10 @@ outlinePlot <- function(sce, base_plot,
 #' 
 #' @keywords internal
 #' 
-#' @importFrom purrr imap keep
+#' @importFrom purrr imap
+#' @importFrom SummarizedExperiment colData
+#' @importFrom magrittr %>%
+#' @importFrom dplyr filter select
 #' @importFrom igraph graph_from_edgelist components
 .find_connected_components <- function(sce, group="spatial.cluster") {
     if (.bsData(sce, "is.enhanced")) {
@@ -154,6 +161,13 @@ outlinePlot <- function(sce, base_plot,
     comps$membership
 }
 
+#' Obtain vertices outlining a connected component
+#' 
+#' @param component Table with \code{(x.vertex, y.vertex)} coordinates
+#' @return Vertices from boundary of \code{component}, ordered for plotting with
+#'   \code{geom_polygon()}
+#'
+#' @keywords internal
 .make_outline <- function(component) {
     boundary <- .get_boundary_vertices(component)
     path <- .trace_path(boundary)
@@ -179,8 +193,9 @@ outlinePlot <- function(sce, base_plot,
 #' @return A data.frame of x and y coordinates for each boundary vertex
 #' 
 #' @keywords internal
-#' 
-#' @importFrom dplyr mutate group_by summarise filter select ungroup
+#'
+#' @importFrom magrittr %>% 
+#' @importFrom dplyr mutate group_by summarise n filter select ungroup
 .get_boundary_vertices <- function(vertices, max_neighbors=2) {
     vertices %>% 
         mutate(x_rd=round(x.vertex, 3),
@@ -189,7 +204,7 @@ outlinePlot <- function(sce, base_plot,
         summarise(n=n()) %>%
         filter(n <= max_neighbors) %>% 
         select(x_rd, y_rd) %>%
-        ungroup()  ## necessary otherwise roll/lag misbehave
+        ungroup()  # necessary, otherwise roll/lag misbehave
 }
 
 
@@ -210,7 +225,7 @@ outlinePlot <- function(sce, base_plot,
 #' @keywords internal
 #' 
 #' @importFrom vctrs vec_size vec_slice vec_c
-roll <- function(x, n=1L) {
+.roll <- function(x, n=1L) {
     xlen <- vec_size(x)
     n <- n %% xlen
     
@@ -228,15 +243,18 @@ roll <- function(x, n=1L) {
 #' Used to arrange boundary vertices for \code{geom_path()}
 #' 
 #' @param X matrix of (x, y) coordinates for vertices
+#' @param max_dist Maximum distance for two vertices to be considered neighbors.
+#'   Defaults to 0.6 for Visium; TODO write for ST
 #' @keywords internal
 #' 
+#' @importFrom stats dist
 #' @importFrom igraph graph_from_adjacency_matrix neighbors
-.trace_path <- function(X) {
+.trace_path <- function(X, max_dist=0.6) {
     X <- as.matrix(X)
     
     ## TODO: add row-wise filter to choose neighbors closer then second nearest dist
     adj <- as.matrix((dist(X)))
-    adj <- (adj < 0.6)
+    adj <- (adj < max_dist)
     graph <- graph_from_adjacency_matrix(adj, mode="undirected", diag=FALSE)
     
     ## Initialize start with only two neighbors 
@@ -284,7 +302,7 @@ roll <- function(x, n=1L) {
         
         iters <- iters + 1
         if (iters > nrow(X)) {
-            message("Too many iterations")
+            warning("Too many iterations")
             return(path)
         }
     }

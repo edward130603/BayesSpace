@@ -37,7 +37,12 @@ Imports:
     scales,
     BiocFileCache,
     BiocSingular,
-    teigen
+    teigen,
+    dplyr,
+    igraph,
+    magrittr,
+    sp,
+    vctrs
 License: MIT + file LICENSE
 RoxygenNote: 7.1.1
 LinkingTo: 
@@ -52,9 +57,7 @@ Suggests:
     testthat,
     knitr,
     rmarkdown,
-    igraph,
     spatialLIBD,
-    dplyr,
     viridis,
     patchwork,
     RColorBrewer,
