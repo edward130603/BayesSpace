@@ -211,7 +211,7 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
 #' 
 #' @keywords internal
 #' @importFrom purrr keep discard map
-.find_neighbors <- function(sce, platform) {
+.find_neighbors <- function(sce, platform, verbose=TRUE) {
     if (platform == "Visium") {
         ## Spots to left and right, two above, two below
         offsets <- data.frame(x.offset=c(-2, 2, -1,  1, -1, 1),
@@ -257,9 +257,11 @@ spatialCluster <- function(sce, q, use.dimred = "PCA", d = 15,
     df_j <- map(df_j, function(nbrs) discard(nbrs, function(x) is.na(x)))
     
     ## Log number of spots with neighbors
-    n_with_neighbors <- length(keep(df_j, function(nbrs) length(nbrs) > 0))
-    message("Neighbors were identified for ", n_with_neighbors, " out of ",
-            ncol(sce), " spots.")
+    if (verbose) {
+        n_with_neighbors <- length(keep(df_j, function(nbrs) length(nbrs) > 0))
+        message("Neighbors were identified for ", n_with_neighbors, " out of ",
+                ncol(sce), " spots.")
+    }
     
     df_j
 }

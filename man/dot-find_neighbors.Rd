@@ -4,7 +4,7 @@
 \alias{.find_neighbors}
 \title{Find neighboring spots based on array coordinates}
 \usage{
-.find_neighbors(sce, platform)
+.find_neighbors(sce, platform, verbose = TRUE)
 }
 \arguments{
 \item{sce}{SingleCellExperiment}
