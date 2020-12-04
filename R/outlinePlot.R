@@ -1,4 +1,5 @@
 #' Add outlines to a cluster/feature plot
+#' 
 #' TODO add `outline` and `outline_groups` (with default all) to c/fPlot
 #' 
 #' @param sce SingleCellExperiment.
