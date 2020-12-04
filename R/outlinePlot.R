@@ -85,22 +85,34 @@ outlinePlot <- function(sce, base_plot,
 #' @param nudge Fraction of distance to midpoint of neighbors
 #' @return Table of nudged coordinates at \code{(x_nudge, y_nudge)}
 #' 
-#' @importFrom dplyr mutate
-#' @importFrom magrittr %>%
 #' @importFrom sp point.in.polygon
 .nudge_outline <- function(boundary, nudge=0.25) {
-    outline <- boundary %>%
-        mutate(x_prev=.roll(x_rd, 1),
-               x_next=.roll(x_rd, -1),
-               y_prev=.roll(y_rd, 1),
-               y_next=.roll(y_rd, -1),
-               x_mid=(x_prev + x_next) / 2,
-               y_mid=(y_prev + y_next) / 2,
-               x_nudge=x_rd + nudge * (x_mid - x_rd),
-               y_nudge=y_rd + nudge * (y_mid - y_rd),
-               in_boundary=point.in.polygon(x_nudge, y_nudge, x_rd, y_rd),
-               x_nudge=ifelse(in_boundary == 0, x_rd - nudge * (x_mid - x_rd), x_nudge),
-               y_nudge=ifelse(in_boundary == 0, y_rd - nudge * (y_mid - y_rd), y_nudge))
+
+    ## Get coordinates of neighboring spots and compute distance to move
+    ## towards midpoint between neighbors
+    .get_nudge_dist <- function(coord) {
+        c_prev <- .roll(coord, 1)
+        c_next <- .roll(coord, -1)
+        mid <- (c_prev + c_next) / 2
+        dist <- nudge * (mid - coord)
+    }
+    boundary$x_dist <- .get_nudge_dist(boundary$x_rd)
+    boundary$y_dist <- .get_nudge_dist(boundary$y_rd)
+
+    ## Check if nudged vertices are inside boundary,
+    ## and flip direction of nudge if they aren't
+    boundary$is_interior <- point.in.polygon(boundary$x_rd + boundary$x_dist,
+                                             boundary$y_rd + boundary$y_dist,
+                                             boundary$x_rd,
+                                             boundary$y_rd)
+
+    .flip_sign <- function(coord, dist, loc) {
+        ifelse(loc == 0, coord - dist, coord + dist)
+    }
+    boundary$x_nudge <- .flip_sign(boundary$x_rd, boundary$x_dist, boundary$is_interior)
+    boundary$y_nudge <- .flip_sign(boundary$y_rd, boundary$y_dist, boundary$is_interior)
+
+    boundary
 }
 
 #' Find connected components of each cluster in spatial context
@@ -219,11 +231,8 @@ outlinePlot <- function(sce, base_plot,
 #' @param n Number of elements to shift vector by. If positive, elements are
 #'   moved forwards; if negative, backwards.
 #'   
-#' @return A shifted vector \code{y}, where \code{y[i] = x[(i - n) % n]}.
-#' 
-#' @examples
-#' .roll(1:5)
-#' .roll(1:5, -1)
+#' @return
+#' A shifted vector \code{y}, where \code{y[i] = x[(i - n) \% n]}.
 #' 
 #' @keywords internal
 #' 

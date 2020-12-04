@@ -13,16 +13,11 @@
 moved forwards; if negative, backwards.}
 }
 \value{
-
+A shifted vector \code{y}, where \code{y[i] = x[(i - n) \% n]}.
 }
 \description{
 Like \code{dplyr::lag()} or \code{dplyr::lead()}, but values from the
 head/tail of the vector are rolled over to the end/start instead of being
 replaced with a default value.
-}
-\examples{
-.roll(1:5)
-.roll(1:5, -1)
-
 }
 \keyword{internal}
