@@ -82,6 +82,7 @@ outlinePlot <- function(sce, base_plot,
 #' of its neighbors. Distance is negated if the midpoint is outside the boundary
 #' 
 #' @param boundary Table of (x, y) coordinates
+#' @param nudge Fraction of distance to midpoint of neighbors
 #' @return Table of nudged coordinates at \code{(x_nudge, y_nudge)}
 #' 
 #' @importFrom dplyr mutate
@@ -186,7 +187,7 @@ outlinePlot <- function(sce, base_plot,
 #' component; any vertex that appears in fewer than the maximum is on the
 #' boundary.
 #' 
-#' @param component Subset of vertices from \link{\code{.make_vertices()}}
+#' @param component Subset of vertices from \code{.make_vertices()}
 #' @param max_neighbors Maximum number of neighboring spots for a spot to be
 #'   considered on the boundary.
 #'   
@@ -217,10 +218,12 @@ outlinePlot <- function(sce, base_plot,
 #' @param x Vector to roll.
 #' @param n Number of elements to shift vector by. If positive, elements are
 #'   moved forwards; if negative, backwards.
+#'   
+#' @return A shifted vector \code{y}, where \code{y[i] = x[(i - n) % n]}.
 #' 
 #' @examples
-#' roll(1:5)
-#' roll(1:5, -1)
+#' .roll(1:5)
+#' .roll(1:5, -1)
 #' 
 #' @keywords internal
 #' 
@@ -245,6 +248,10 @@ outlinePlot <- function(sce, base_plot,
 #' @param X matrix of (x, y) coordinates for vertices
 #' @param max_dist Maximum distance for two vertices to be considered neighbors.
 #'   Defaults to 0.6 for Visium; TODO write for ST
+#' 
+#' @return A vector of indices into the rows of \code{X}, ordered such that the
+#'   coordinates of \code{X} may be traced into a polygon.
+#'   
 #' @keywords internal
 #' 
 #' @importFrom stats dist
