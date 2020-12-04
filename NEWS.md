@@ -1,3 +1,11 @@
+# BayesSpace 1.1.2
+
+## New features
+
+- Added `outlinePlot()` which outlines a secondary categorical variable (e.g.
+  cluster assignment) over a primary plot generated with `clusterPlot()` or
+ `featurePlot()`
+
 # BayesSpace 1.1.1
 
 ## Minor improvements and fixes
