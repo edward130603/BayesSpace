@@ -43,15 +43,15 @@ outlinePlot <- function(sce, base_plot,
         components_to_outline <- unique(cluster_components)
     } else {
         components_to_outline <- vertices %>%
-            filter(outline_group %in% outline_values) %>%
-            pull(component_group) %>%
+            filter(.data$outline_group %in% outline_values) %>%
+            pull(.data$component_group) %>%
             unique()
     }
    
     ## Get the spot vertices associated with each component,
     ## and obtain their outlines
     .make_each_outline <- function(component_label) {
-        component <- vertices %>% filter(component_group == component_label)
+        component <- vertices %>% filter(.data$component_group == component_label)
         boundary <- .make_outline(component)
         boundary <- .nudge_outline(boundary, outline_nudge)
         
@@ -63,7 +63,7 @@ outlinePlot <- function(sce, base_plot,
     }
     
     ## Get boundary around each component
-    outlines <- map(components_to_outline, make_each_outline)
+    outlines <- map(components_to_outline, .make_each_outline)
     outlines <- do.call(rbind, outlines)
     
     plot <- base_plot + 
@@ -164,8 +164,8 @@ outlinePlot <- function(sce, base_plot,
     edges$spot_group <- colData(sce)[edges$spot, group]
     edges$neighbor_group <- colData(sce)[edges$neighbor, group]
     edges <- edges %>% 
-        filter(spot_group == neighbor_group) %>%
-        select(spot, neighbor)
+        filter(.data$spot_group == .data$neighbor_group) %>%
+        select(.data$spot, .data$neighbor)
 
     ## Find connected components 
     graph <- graph_from_edgelist(as.matrix(edges), directed=FALSE)
@@ -211,12 +211,12 @@ outlinePlot <- function(sce, base_plot,
 #' @importFrom dplyr mutate group_by summarise n filter select ungroup
 .get_boundary_vertices <- function(vertices, max_neighbors=2) {
     vertices %>% 
-        mutate(x_rd=round(x.vertex, 3),
-               y_rd=round(y.vertex, 3)) %>%
-        group_by(x_rd, y_rd) %>%
+        mutate(x_rd=round(.data$x.vertex, 3),
+               y_rd=round(.data$y.vertex, 3)) %>%
+        group_by(.data$x_rd, .data$y_rd) %>%
         summarise(n=n()) %>%
-        filter(n <= max_neighbors) %>% 
-        select(x_rd, y_rd) %>%
+        filter(.data$n <= max_neighbors) %>% 
+        select(.data$x_rd, .data$y_rd) %>%
         ungroup()  # necessary, otherwise roll/lag misbehave
 }
 
