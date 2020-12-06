@@ -24,7 +24,8 @@ spatialEnhance(
   burn.in = 10000,
   jitter_scale = 5,
   jitter_prior = 0.3,
-  verbose = FALSE
+  verbose = FALSE,
+  jitter_var = FALSE
 )
 }
 \arguments{
@@ -84,6 +85,9 @@ We suggest making \code{jitter_prior} smaller if the jittered values are
 not expected to vary much from the overall mean of the spot.}
 
 \item{verbose}{Log progress to stderr.}
+
+\item{jitter_var}{Bool to use variance of PCs for variance of the jittering 
+error. \code{FALSE} to use the identity matrix.}
 }
 \value{
 Returns a new SingleCellExperiment object. By default, the 

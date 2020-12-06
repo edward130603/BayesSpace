@@ -95,8 +95,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // iterate_deconv
-List iterate_deconv(arma::mat Y, List df_j, bool tdist, int nrep, int n, int n0, int d, double gamma, int q, arma::vec init, int subspots, bool verbose, double jitter_scale, double c, NumericVector mu0, arma::mat lambda0, double alpha, double beta);
-RcppExport SEXP _BayesSpace_iterate_deconv(SEXP YSEXP, SEXP df_jSEXP, SEXP tdistSEXP, SEXP nrepSEXP, SEXP nSEXP, SEXP n0SEXP, SEXP dSEXP, SEXP gammaSEXP, SEXP qSEXP, SEXP initSEXP, SEXP subspotsSEXP, SEXP verboseSEXP, SEXP jitter_scaleSEXP, SEXP cSEXP, SEXP mu0SEXP, SEXP lambda0SEXP, SEXP alphaSEXP, SEXP betaSEXP) {
+List iterate_deconv(arma::mat Y, List df_j, bool tdist, int nrep, int n, int n0, int d, double gamma, int q, arma::vec init, int subspots, bool verbose, double jitter_scale, double c, NumericVector mu0, arma::mat lambda0, double alpha, double beta, bool jitter_var);
+RcppExport SEXP _BayesSpace_iterate_deconv(SEXP YSEXP, SEXP df_jSEXP, SEXP tdistSEXP, SEXP nrepSEXP, SEXP nSEXP, SEXP n0SEXP, SEXP dSEXP, SEXP gammaSEXP, SEXP qSEXP, SEXP initSEXP, SEXP subspotsSEXP, SEXP verboseSEXP, SEXP jitter_scaleSEXP, SEXP cSEXP, SEXP mu0SEXP, SEXP lambda0SEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP jitter_varSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -118,7 +118,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::mat >::type lambda0(lambda0SEXP);
     Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
     Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
-    rcpp_result_gen = Rcpp::wrap(iterate_deconv(Y, df_j, tdist, nrep, n, n0, d, gamma, q, init, subspots, verbose, jitter_scale, c, mu0, lambda0, alpha, beta));
+    Rcpp::traits::input_parameter< bool >::type jitter_var(jitter_varSEXP);
+    rcpp_result_gen = Rcpp::wrap(iterate_deconv(Y, df_j, tdist, nrep, n, n0, d, gamma, q, init, subspots, verbose, jitter_scale, c, mu0, lambda0, alpha, beta, jitter_var));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -128,7 +129,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BayesSpace_iterate_vvv", (DL_FUNC) &_BayesSpace_iterate_vvv, 12},
     {"_BayesSpace_iterate_t", (DL_FUNC) &_BayesSpace_iterate_t, 12},
     {"_BayesSpace_iterate_t_vvv", (DL_FUNC) &_BayesSpace_iterate_t_vvv, 12},
-    {"_BayesSpace_iterate_deconv", (DL_FUNC) &_BayesSpace_iterate_deconv, 18},
+    {"_BayesSpace_iterate_deconv", (DL_FUNC) &_BayesSpace_iterate_deconv, 19},
     {NULL, NULL, 0}
 };
 

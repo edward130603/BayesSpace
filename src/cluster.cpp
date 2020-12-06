@@ -27,25 +27,25 @@ arma::vec dmvnrm_arma_fast(arma::mat const &x,
                            arma::rowvec const &mean,  
                            arma::mat const &sigma, 
                            bool const logd=false) { 
-    using arma::uword;
-    uword const n = x.n_rows, 
-             xdim = x.n_cols;
-    arma::vec out(n);
-    arma::mat const rooti = arma::inv(trimatu(arma::chol(sigma)));
-    double const rootisum = arma::sum(log(rooti.diag())), 
-                constants = -(double)xdim/2.0 * log2pi, 
-              other_terms = rootisum + constants;
-    
-    arma::rowvec z;
-    for (uword i = 0; i < n; i++) {
-        z = (x.row(i) - mean);
-        inplace_tri_mat_mult(z, rooti);
-        out(i) = other_terms - 0.5 * arma::dot(z, z);     
-    }  
-      
-    if (logd)
-      return out;
-    return exp(out);
+  using arma::uword;
+  uword const n = x.n_rows, 
+    xdim = x.n_cols;
+  arma::vec out(n);
+  arma::mat const rooti = arma::inv(trimatu(arma::chol(sigma)));
+  double const rootisum = arma::sum(log(rooti.diag())), 
+    constants = -(double)xdim/2.0 * log2pi, 
+    other_terms = rootisum + constants;
+  
+  arma::rowvec z;
+  for (uword i = 0; i < n; i++) {
+    z = (x.row(i) - mean);
+    inplace_tri_mat_mult(z, rooti);
+    out(i) = other_terms - 0.5 * arma::dot(z, z);     
+  }  
+  
+  if (logd)
+    return out;
+  return exp(out);
 }
 
 // [[Rcpp::export]]
@@ -433,9 +433,9 @@ List iterate_t_vvv(arma::mat Y, List df_j, int nrep, int n, int d, double gamma,
 
 // [[Rcpp::export]]
 List iterate_deconv(arma::mat Y, List df_j, bool tdist, int nrep, int n, int n0, 
-  int d, double gamma, int q, arma::vec init, int subspots, bool verbose, 
-  double jitter_scale, double c, NumericVector mu0, arma::mat lambda0, 
-  double alpha, double beta) {
+                    int d, double gamma, int q, arma::vec init, int subspots, bool verbose, 
+                    double jitter_scale, double c, NumericVector mu0, arma::mat lambda0, 
+                    double alpha, double beta, bool jitter_var) {
   
   //Initalize matrices storing iterations
   mat Y0 = Y.rows(0, n0-1);
@@ -471,8 +471,14 @@ List iterate_deconv(arma::mat Y, List df_j, bool tdist, int nrep, int n, int n0,
   mat Y_j_new(subspots,d);
   mat error(subspots,d);
   vec zero_vec = zeros<vec>(d);
-  vec one_vec = ones<vec>(d);
-  mat error_var = diagmat(one_vec)/d*jitter_scale; 
+  mat error_var;
+  if (jitter_var){
+    error_var = diagmat(var(Y0))/d*jitter_scale; 
+  } else {
+    vec one_vec = ones<vec>(d);
+    error_var = diagmat(one_vec)/d*jitter_scale; 
+  }
+  
   Progress p(nrep - 1, verbose);
   for (int i = 1; i < nrep; i++) {
     // Check for interrupt every ~1-2 seconds (0.24s/iter based on 6k subspots)
