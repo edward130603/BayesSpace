@@ -102,9 +102,14 @@ deconvolve <- function(Y, positions, xdist, ydist, q, init, nrep = 1000,
     model = "normal", platform = c("Visium", "ST"), verbose = TRUE,
     jitter_scale = 5, jitter_prior = 0.01, mu0 = colMeans(Y), gamma = 2,
     lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01,
-    jitter_var = FALSE) {
+    jitter_var = FALSE, image.features = NULL) {
     
     d <- ncol(Y)
+    if (!is.null(image.features)){
+        d0 <- ncol(image.features)
+    } else{
+        d0 <- 0
+    }
     n0 <- nrow(Y)
     Y <- as.matrix(Y)
     c <- jitter_prior * 1 / (2 * mean(diag(cov(Y))))
@@ -117,6 +122,9 @@ deconvolve <- function(Y, positions, xdist, ydist, q, init, nrep = 1000,
     
     init1 <- rep(init, subspots)
     Y2 <- Y[rep(seq_len(n0), subspots), ]  # rbind 6 or 9 times
+    if (!is.null(image.features)){
+        Y2[(d-d0+1):d] = image.features
+    }
     positions2 <- positions[rep(seq_len(n0), subspots), ]  # rbind 7 times
     
     shift <- .make_subspot_offsets(subspots)
@@ -140,7 +148,7 @@ deconvolve <- function(Y, positions, xdist, ydist, q, init, nrep = 1000,
     out <- iterate_deconv(Y=Y2, df_j=df_j, tdist=tdist, nrep=nrep, n=n, n0=n0,
         d=d, gamma=gamma, q=q, init=init1, subspots=subspots, verbose=verbose, 
         jitter_scale=jitter_scale, c=c, mu0=mu0, lambda0=lambda0, alpha=alpha, 
-        beta=beta, jitter_var = jitter_var)
+        beta=beta, jitter_var = jitter_var, d0 = d0)
     out$positions <- positions2
     out
 }
@@ -217,7 +225,7 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
     mu0 = NULL, lambda0 = NULL, alpha = 1, beta = 0.01, 
     save.chain = FALSE, chain.fname = NULL, burn.in=10000,
     jitter_scale = 5, jitter_prior = 0.3, verbose = FALSE,
-    jitter_var = FALSE) {
+    jitter_var = FALSE, image.features = NULL) {
 
     assert_that(nrep >= 100)  # require at least one iteration after thinning
     assert_that(burn.in >= 0)
@@ -247,6 +255,10 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
     inputs <- .prepare_inputs(sce, use.dimred=use.dimred, d=d,
         positions=NULL, position.cols=position.cols,
         xdist=xdist, ydist=ydist)
+    if (!is.null(image.features)){
+        image.features = as.matrix(image.features)
+        inputs$PCs = cbind(inputs$PCs, image.features[1:nrow(inputs$PCs),])
+    }
 
     ## Initialize cluster assignments (use spatialCluster by default)
     if (is.null(init)) {
@@ -279,7 +291,7 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
         xdist=inputs$xdist, ydist=inputs$ydist, q=q, init=init, model=model, 
         platform=platform, verbose=verbose, jitter_scale=jitter_scale,
         jitter_prior=jitter_prior, mu0=mu0, lambda0=lambda0, alpha=alpha,
-        beta=beta, jitter_var = jitter_var)
+        beta=beta, jitter_var = jitter_var, image.features = image.features)
     
     ## Create enhanced SCE
     n_subspots_per <- ifelse(platform == "Visium", 6, 9)

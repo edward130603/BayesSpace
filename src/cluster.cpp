@@ -9,6 +9,20 @@ using namespace arma;
 
 static double const log2pi = std::log(2.0 * M_PI);
 
+// [[Rcpp::export]]
+void test(int d, int d0){
+  //matrix of zeros
+  //fill in first d-d0 rows
+  mat error(6,d, fill::zeros);
+  vec zero_vec = zeros<vec>(d-d0);
+  mat error_var;
+  vec one_vec = ones<vec>(d-d0);
+  //one_vec.tail(d0) = zeros<vec>(d0);
+  error_var = diagmat(one_vec)/d; 
+  error.cols(0, d-d0-1) = rmvnorm(6, zero_vec, error_var); 
+  Rcout << d0 << std::endl << error;
+}
+
 /* C++ version of the dtrmv BLAS function */
 void inplace_tri_mat_mult(arma::rowvec &x, arma::mat const &trimat){
   arma::uword const n = trimat.n_cols;
@@ -435,7 +449,7 @@ List iterate_t_vvv(arma::mat Y, List df_j, int nrep, int n, int d, double gamma,
 List iterate_deconv(arma::mat Y, List df_j, bool tdist, int nrep, int n, int n0, 
                     int d, double gamma, int q, arma::vec init, int subspots, bool verbose, 
                     double jitter_scale, double c, NumericVector mu0, arma::mat lambda0, 
-                    double alpha, double beta, bool jitter_var) {
+                    double alpha, double beta, bool jitter_var, int d0) {
   
   //Initalize matrices storing iterations
   mat Y0 = Y.rows(0, n0-1);
