@@ -1,3 +1,21 @@
+# BayesSpace 1.1.2
+
+## Minor improvements and fixes
+
+- `clusterPlot()` accepts character vectors and factors as arguments to `label`.
+
+# BayesSpace 1.1.1
+
+## Minor improvements and fixes
+
+- `spatialPreprocess()` uses exact rather than approximate PCA by default.
+
+# BayesSpace 1.1.0
+
+## New Bioconductor devel (3.13)
+
+- Version numbering change with Bioconductor version bump
+
 # BayesSpace 0.99.8
 
 ## Minor improvements and fixes
