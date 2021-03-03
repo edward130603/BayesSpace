@@ -13,6 +13,7 @@ static double const log2pi = std::log(2.0 * M_PI);
 void test(int d, int d0){
   //matrix of zeros
   //fill in first d-d0 rows
+  //mat error(6,d);
   mat error(6,d, fill::zeros);
   vec zero_vec = zeros<vec>(d-d0);
   mat error_var;
@@ -483,13 +484,13 @@ List iterate_deconv(arma::mat Y, List df_j, bool tdist, int nrep, int n, int n0,
   }
   mat Y_j_prev(subspots,d);
   mat Y_j_new(subspots,d);
-  mat error(subspots,d);
-  vec zero_vec = zeros<vec>(d);
+  mat error(subspots,d, fill::zeros);
+  vec zero_vec = zeros<vec>(d-d0);
   mat error_var;
   if (jitter_var){
     error_var = diagmat(var(Y0))/d*jitter_scale; 
   } else {
-    vec one_vec = ones<vec>(d);
+    vec one_vec = ones<vec>(d-d0);
     error_var = diagmat(one_vec)/d*jitter_scale; 
   }
   
@@ -534,7 +535,7 @@ List iterate_deconv(arma::mat Y, List df_j, bool tdist, int nrep, int n, int n0,
     int updateCounter = 0;
     for (int j0 = 0; j0 < n0; j0++){
       Y_j_prev = Y.rows(j0_vector*n0+j0);
-      error = rmvnorm(subspots, zero_vec, error_var); 
+      error.cols(0,d-d0-1) = rmvnorm(subspots, zero_vec, error_var); 
       rowvec error_mean = sum(error, 0)/subspots;
       for (int r = 0; r < subspots; r++){
         error.row(r) = error.row(r) - error_mean;

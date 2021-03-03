@@ -25,7 +25,8 @@ spatialEnhance(
   jitter_scale = 5,
   jitter_prior = 0.3,
   verbose = FALSE,
-  jitter_var = FALSE
+  jitter_var = FALSE,
+  image.features = NULL
 )
 }
 \arguments{

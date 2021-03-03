@@ -22,7 +22,8 @@ deconvolve(
   lambda0 = diag(0.01, nrow = ncol(Y)),
   alpha = 1,
   beta = 0.01,
-  jitter_var = FALSE
+  jitter_var = FALSE,
+  image.features = NULL
 )
 }
 \value{
