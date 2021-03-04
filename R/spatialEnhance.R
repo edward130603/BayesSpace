@@ -123,7 +123,7 @@ deconvolve <- function(Y, positions, xdist, ydist, q, init, nrep = 1000,
     init1 <- rep(init, subspots)
     Y2 <- Y[rep(seq_len(n0), subspots), ]  # rbind 6 or 9 times
     if (!is.null(image.features)){
-        Y2[(d-d0+1):d] = image.features
+        Y2[,(d-d0+1):d] = image.features
     }
     positions2 <- positions[rep(seq_len(n0), subspots), ]  # rbind 7 times
     
