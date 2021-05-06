@@ -1,3 +1,10 @@
+# BayesSpace 1.1.3
+
+## Minor improvements and fixes
+
+- Added information to documentation.
+- `getRDS()` updated with new URL.
+
 # BayesSpace 1.1.2
 
 ## Minor improvements and fixes
