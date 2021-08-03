@@ -3,6 +3,25 @@
 #' Adapted from examples given in
 #' https://ropensci.org/technotes/2019/12/08/precompute-vignettes/
 #' https://github.com/ropensci/eia/blob/master/vignettes/precompile.R
+#'
+#' Vignettes must be pre-compiled for the package build time to meet
+#' Bioconductor requirements. Use the following to add or update a vignette:
+#' 
+#' 1) Save the vignette (in Rmarkdown) to vignettes/${vignette}.Rmd.orig.
+#'    Make sure to include `fig.path=figures/${vignette}-"` in the knitr
+#'    options to make migrating the figures easier.
+#'
+#' 2) Following the below examples, knit the vignette to Rmarkdown. This will
+#'    convert the code blocks to plaintext and save the figures to disk. Make
+#'    sure to copy the figures over afterwards.
+#'
+#' 3) Rebuild the website by running `pkgdown::build_site()`. This will render
+#'    the knitted vignettes to HTML.
+#'
+#' 4) Optionally, preview the website with `pkgdown::preview_site()`
+#'
+#' 5) Finally, push the updated site with `pkgdown::deploy_to_branch()`
+
 
 # knitr::knit("vignettes/BayesSpace.Rmd.orig", output="vignettes/BayesSpace.Rmd")
 # system2("mv", c("figures/BayesSpace-*.png", "vignettes/figures/"))
