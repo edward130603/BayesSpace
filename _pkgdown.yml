@@ -43,6 +43,8 @@ navbar:
       href: articles/ji_SCC.html
     - text: Melanoma (Thrane et al., 2018)
       href: articles/thrane_melanoma.html
+    - text: Joint clustering
+      href: articles/joint_clustering.html
   - text: Changelog
     href: news/index.html
   right:
