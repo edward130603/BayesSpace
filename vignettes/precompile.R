@@ -15,12 +15,15 @@
 #'    convert the code blocks to plaintext and save the figures to disk. Make
 #'    sure to copy the figures over afterwards.
 #'
-#' 3) Rebuild the website by running `pkgdown::build_site()`. This will render
+#' 3) Add the new vignette to the list of "Examples" in _pkgdown.yml, so it
+#'    will show up in the website's menu bar.
+#'
+#' 4) Rebuild the website by running `pkgdown::build_site()`. This will render
 #'    the knitted vignettes to HTML.
 #'
-#' 4) Optionally, preview the website with `pkgdown::preview_site()`
+#' 5) Optionally, preview the website with `pkgdown::preview_site()`.
 #'
-#' 5) Finally, push the updated site with `pkgdown::deploy_to_branch()`
+#' 6) Finally, push the updated site with `pkgdown::deploy_to_branch()`.
 
 
 # knitr::knit("vignettes/BayesSpace.Rmd.orig", output="vignettes/BayesSpace.Rmd")
