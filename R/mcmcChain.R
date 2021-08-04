@@ -9,7 +9,21 @@
 #' To interact with the HDF5 file directly, obtain the filename from the
 #' SingleCellExperiment's metadata: \code{metadata(sce)$chain.h5}. Each
 #' parameter is stored as a separate dataset in the file, and is represented as
-#' a matrix of size (n_iterations x n_parameter_indices).
+#' a matrix of size (n_iterations x n_parameter_indices). Parameter choices
+#' for the spot-level clustering include:
+#' * \code{z} (cluster assignments)
+#' * \code{weights} (\eqn{w_i})
+#' * \code{mu} (mean vectors) 
+#' * \code{lambda} (precision matrix) 
+#' * \code{plogLik} (pseudo-log-likelihood) 
+#' 
+#' Parameter choices for the subspot-level enhanced clustering include: 
+#' * \code{z} (cluster assignments)
+#' * \code{weights} (\eqn{w_i})
+#' * \code{Y} (enhanced PCs)
+#' * \code{mu} (mean vectors)
+#' * \code{lambda} (precision matrix) 
+#' * \code{Ychange} (acceptance rate for the jittering of PCs)
 #' 
 #' @param sce SingleCellExperiment with a file path stored in its metadata.
 #' @param params List of model parameters to read
@@ -25,6 +39,7 @@
 #' removeChain(sce)
 #' 
 #' @name mcmcChain
+#' @md
 NULL
 
 #' @importFrom rhdf5 h5createFile h5createDataset h5write

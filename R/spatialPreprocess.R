@@ -17,6 +17,12 @@
 #'   Leave as "logcounts" unless you explicitly pre-computed a different
 #'   normalization and added it to \code{sce} under another assay. Note that we
 #'   do not recommend running BayesSpace on PCs computed from raw counts.
+#' @param BSPARAM A \linkS4class{BiocSingularParam} object specifying which
+#'   algorithm should be used to perform the PCA. By default, an exact PCA is
+#'   performed, as current spatial datasets are generally small (<10,000 spots).
+#'   To perform a faster approximate PCA, please specify
+#'   \code{FastAutoParam()} and set a random seed to ensure
+#'   reproducibility.
 #' 
 #' @return SingleCellExperiment with PCA and BayesSpace metadata
 #' 
@@ -28,9 +34,11 @@
 #' @importFrom scater logNormCounts runPCA
 #' @importFrom scran modelGeneVar getTopHVGs
 #' @importFrom SummarizedExperiment rowData<-
+#' @importFrom BiocSingular ExactParam
 spatialPreprocess <- function(sce, platform=c("Visium", "ST"),
                               n.PCs=15, n.HVGs=2000, skip.PCA=FALSE,
-                              log.normalize=TRUE, assay.type="logcounts") {
+                              log.normalize=TRUE, assay.type="logcounts",
+                              BSPARAM=ExactParam()) {
     
     ## Set BayesSpace metadata
     metadata(sce)$BayesSpace.data <- list()
@@ -46,7 +54,8 @@ spatialPreprocess <- function(sce, platform=c("Visium", "ST"),
    
         dec <- modelGeneVar(sce, assay.type=assay.type)
         top <- getTopHVGs(dec, n=n.HVGs)
-        sce <- runPCA(sce, subset_row=top, ncomponents=n.PCs, exprs_values=assay.type)
+        sce <- runPCA(sce, subset_row=top, ncomponents=n.PCs, 
+                      exprs_values=assay.type, BSPARAM=BSPARAM)
         rowData(sce)[["is.HVG"]] <- (rownames(sce) %in% top)
     }
 

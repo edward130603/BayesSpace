@@ -318,12 +318,12 @@ featurePlot <- function(sce, feature,
 #' @keywords internal
 .select_subspot_positions <- function(cdata, x="spot.col", y="spot.row", fill="spatial.cluster") {
     ## Provide either a column name or vector of labels/values
-    assert_that(is.vector(fill) | is.character(fill))
+    assert_that(is.vector(fill) || is.character(fill) || is.factor(fill))
     
-    if (is.character(fill)) {
+    if (is.character(fill) && length(fill) == 1) {
         spot_positions <- cdata[, c(x, y, "subspot.idx", fill)]
         colnames(spot_positions) <- c("x.pos", "y.pos", "subspot.idx", "fill")
-    } else if (is.vector(fill)) {
+    } else if (is.vector(fill) || is.factor(fill)) {
         assert_that(nrow(cdata) == length(fill))
         spot_positions <- cdata[, c(x, y, "subspot.idx")]
         colnames(spot_positions) <- c("x.pos", "y.pos", "subspot.idx")    

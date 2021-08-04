@@ -1,6 +1,6 @@
 Package: BayesSpace
-Version: 0.99.7
-Date: 2020-10-07
+Version: 1.1.4
+Date: 2021-05-12
 Title: Clustering and Resolution Enhancement of Spatial Transcriptomes
 Authors@R: c(
     person("Edward", "Zhao", role=c("aut"), email="ezhao@fredhutch.org"),
@@ -35,7 +35,8 @@ Imports:
     utils,
     ggplot2,
     scales,
-    BiocFileCache
+    BiocFileCache,
+    BiocSingular
 License: MIT + file LICENSE
 RoxygenNote: 7.1.1
 LinkingTo: 

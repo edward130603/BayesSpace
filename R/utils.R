@@ -196,7 +196,7 @@ exampleSCE <- function(nrow=8, ncol=12, n_genes=100, n_PCs=10)
 #' @importFrom BiocFileCache BiocFileCache bfcrpath
 getRDS <- function(dataset, sample, cache=TRUE) {
     
-    url <- "https://fh-pi-gottardo-r.s3.amazonaws.com/SpatialTranscriptomes/%s/%s.rds"
+    url <- "https://fh-pi-gottardo-r-eco-public.s3.amazonaws.com/SpatialTranscriptomes/%s/%s.rds"
     url <- sprintf(url, dataset, sample)
     assert_that(url.exists(url), msg="Dataset/sample not available")
 

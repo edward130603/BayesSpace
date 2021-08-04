@@ -16,7 +16,7 @@ removeChain(sce)
 }
 \value{
 Returns an \code{mcmc} object containing the values of the requested
-  parameters over the constructed chain.
+parameters over the constructed chain.
 }
 \description{
 BayesSpace stores the MCMC chain associated with a clustering or enhancement
@@ -28,7 +28,25 @@ TidyBayes.
 To interact with the HDF5 file directly, obtain the filename from the
 SingleCellExperiment's metadata: \code{metadata(sce)$chain.h5}. Each
 parameter is stored as a separate dataset in the file, and is represented as
-a matrix of size (n_iterations x n_parameter_indices).
+a matrix of size (n_iterations x n_parameter_indices). Parameter choices
+for the spot-level clustering include:
+\itemize{
+\item \code{z} (cluster assignments)
+\item \code{weights} (\eqn{w_i})
+\item \code{mu} (mean vectors)
+\item \code{lambda} (precision matrix)
+\item \code{plogLik} (pseudo-log-likelihood)
+}
+
+Parameter choices for the subspot-level enhanced clustering include:
+\itemize{
+\item \code{z} (cluster assignments)
+\item \code{weights} (\eqn{w_i})
+\item \code{Y} (enhanced PCs)
+\item \code{mu} (mean vectors)
+\item \code{lambda} (precision matrix)
+\item \code{Ychange} (acceptance rate for the jittering of PCs)
+}
 }
 \examples{
 set.seed(149)

@@ -76,7 +76,7 @@ is rounded down to the nearest multiple of 100.}
 \item{jitter_scale}{Controls the amount of jittering. Small amounts of 
 jittering are more likely to be accepted but result in exploring the space
 more slowly. We suggest tuning \code{jitter_scale} so that Ychange is on 
-average around 30\%.}
+average around 25\%-40\%.}
 
 \item{jitter_prior}{Scale factor for the prior variance, parameterized as the
 proportion (default = 0.3) of the mean variance of the PCs.
@@ -92,10 +92,7 @@ Returns a new SingleCellExperiment object. By default, the
   \code{reducedDim(sce, 'PCA')}.
 }
 \description{
-Backend calls iterate_deconv(), written in Rcpp.
-Inputs are the same as \code{spatialCluster()} except you have to specify
-xdist and ydist instead of total dist...(maybe would be better to change
-\code{spatialCluster} to match this)
+Enhanced clustering of a spatial expression dataset to subspot resolution.
 }
 \details{
 The enhanced \code{SingleCellExperiment} has most of the properties of the

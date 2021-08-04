@@ -1,9 +1,6 @@
 #' Enhance spot resolution
 #' 
-#' Backend calls iterate_deconv(), written in Rcpp.
-#' Inputs are the same as \code{spatialCluster()} except you have to specify
-#' xdist and ydist instead of total dist...(maybe would be better to change
-#' \code{spatialCluster} to match this)
+#' Enhanced clustering of a spatial expression dataset to subspot resolution.
 #' 
 #' @param sce A SingleCellExperiment object containing the spatial data.
 #' @param q The number of clusters.
@@ -36,7 +33,7 @@
 #' @param jitter_scale Controls the amount of jittering. Small amounts of 
 #'   jittering are more likely to be accepted but result in exploring the space
 #'   more slowly. We suggest tuning \code{jitter_scale} so that Ychange is on 
-#'   average around 30\%.
+#'   average around 25\%-40\%.
 #' @param jitter_prior Scale factor for the prior variance, parameterized as the
 #'   proportion (default = 0.3) of the mean variance of the PCs.
 #'   We suggest making \code{jitter_prior} smaller if the jittered values are
