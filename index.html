@@ -36,7 +36,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">BayesSpace</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.99.7</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.1.4</span>
       </span>
     </div>
 
@@ -44,7 +44,7 @@
       <ul class="nav navbar-nav">
 <li>
   <a href="index.html">
-    <span class="fa fa-home"></span>
+    <span class="fas fa-home"></span>
      
   </a>
 </li>
@@ -70,6 +70,9 @@
     <li>
       <a href="articles/thrane_melanoma.html">Melanoma (Thrane et al., 2018)</a>
     </li>
+    <li>
+      <a href="articles/joint_clustering.html">Joint clustering</a>
+    </li>
   </ul>
 </li>
 <li>
@@ -79,7 +82,7 @@
 <ul class="nav navbar-nav navbar-right">
 <li>
   <a href="https://github.com/edward130603/BayesSpace">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fas fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -99,7 +102,7 @@
 <div class="page-header"><h1 class="hasAnchor">
 <a href="#bayesspace-" class="anchor"></a>BayesSpace <img src="inst/logo/logo.png" align="right" width="115">
 </h1></div>
-<p><!-- badges: start --> <a href="https://github.com/edward130603/BayesSpace/actions"><img src="https://github.com/edward130603/BayesSpace/workflows/R-CMD-check-bioc/badge.svg" alt="R build status"></a> <!-- badges: end --></p>
+<p><!-- badges: start --> <a href="https://bioconductor.org/checkResults/3.12/bioc-LATEST/BayesSpace/"><img src="http://bioconductor.org/shields/build/release/bioc/BayesSpace.svg" alt="Bioconductor build status"></a> <!-- badges: end --></p>
 <div id="overview" class="section level2">
 <h2 class="hasAnchor">
 <a href="#overview" class="anchor"></a>Overview</h2>
@@ -122,14 +125,20 @@
 <div id="software-dependencies" class="section level3">
 <h3 class="hasAnchor">
 <a href="#software-dependencies" class="anchor"></a>Software dependencies</h3>
-<p>BayesSpace requires R 4.0 and Bioconductor 3.11. Specific package dependencies are defined in the package DESCRIPTION and are managed by the Bioconductor and devtools installers.</p>
+<p>BayesSpace requires R 4.0 and Bioconductor 3.12. Specific package dependencies are defined in the package DESCRIPTION and are managed by the Bioconductor and devtools installers.</p>
 </div>
 </div>
 <div id="installation" class="section level2">
 <h2 class="hasAnchor">
 <a href="#installation" class="anchor"></a>Installation</h2>
-<p>BayesSpace has been submitted to Bioconductor. Until its availability there, it can be installed with <code>devtools</code>:</p>
-<pre><code># Install devtools if necessary
+<p>BayesSpace is available through <a href="https://bioconductor.org/packages/3.12/bioc/html/BayesSpace.html">Bioconductor</a>.</p>
+<pre><code># Install the Bioconductor package manager, if necessary
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("BayesSpace")</code></pre>
+<p>The development version can be installed via Bioconductor (see <a href="https://www.bioconductor.org/developers/how-to/useDevel/">instructions on using the devel branch</a>) or from github with <code>devtools</code>.</p>
+<pre><code># Install devtools, if necessary
 if (!requireNamespace("devtools", quietly = TRUE))
     install.packages("devtools")
 
@@ -163,6 +172,8 @@ devtools::install_github("edward130603/BayesSpace")</code></pre>
     <div class="links">
 <h2>Links</h2>
 <ul class="list-unstyled">
+<li>Download from BIOC at <br><a href="https://www.bioconductor.org/packages/BayesSpace">https://​www.bioconductor.org/​packages/​BayesSpace</a>
+</li>
 <li>Browse source code at <br><a href="https://github.com/edward130603/BayesSpace/">https://​github.com/​edward130603/​BayesSpace/​</a>
 </li>
 <li>Report a bug at <br><a href="https://github.com/edward130603/BayesSpace/issues">https://​github.com/​edward130603/​BayesSpace/​issues</a>

@@ -76,7 +76,7 @@ qPlot() displays the results." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">BayesSpace</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.99.7</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.1.4</span>
       </span>
     </div>
 
@@ -84,7 +84,7 @@ qPlot() displays the results." />
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fa fa-home"></span>
+    <span class="fas fa-home"></span>
      
   </a>
 </li>
@@ -110,6 +110,9 @@ qPlot() displays the results." />
     <li>
       <a href="../articles/thrane_melanoma.html">Melanoma (Thrane et al., 2018)</a>
     </li>
+    <li>
+      <a href="../articles/joint_clustering.html">Joint clustering</a>
+    </li>
   </ul>
 </li>
 <li>
@@ -119,7 +122,7 @@ qPlot() displays the results." />
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/edward130603/BayesSpace">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fas fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -149,9 +152,9 @@ negative log likelihood for a range of q values over iterations 100:1000, and
 <code>qPlot()</code> displays the results.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>qPlot</span>(<span class='kw'>sce</span>, qs = <span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span>(<span class='fl'>3</span>, <span class='fl'>7</span>), force.retune = <span class='fl'>FALSE</span>, <span class='kw'>...</span>)
+    <pre class="usage"><span class='fu'>qPlot</span><span class='op'>(</span><span class='va'>sce</span>, qs <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span><span class='op'>(</span><span class='fl'>3</span>, <span class='fl'>7</span><span class='op'>)</span>, force.retune <span class='op'>=</span> <span class='cn'>FALSE</span>, <span class='va'>...</span><span class='op'>)</span>
 
-<span class='fu'>qTune</span>(<span class='kw'>sce</span>, qs = <span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span>(<span class='fl'>3</span>, <span class='fl'>7</span>), burn.in = <span class='fl'>100</span>, nrep = <span class='fl'>1000</span>, <span class='kw'>...</span>)</pre>
+<span class='fu'>qTune</span><span class='op'>(</span><span class='va'>sce</span>, qs <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span><span class='op'>(</span><span class='fl'>3</span>, <span class='fl'>7</span><span class='op'>)</span>, burn.in <span class='op'>=</span> <span class='fl'>100</span>, nrep <span class='op'>=</span> <span class='fl'>1000</span>, <span class='va'>...</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -199,10 +202,10 @@ compute.</p></td>
   can take the same parameters as <code><a href='spatialCluster.html'>spatialCluster()</a></code>.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/Random.html'>set.seed</a></span>(<span class='fl'>149</span>)
-<span class='kw'>sce</span> <span class='op'>&lt;-</span> <span class='fu'><a href='exampleSCE.html'>exampleSCE</a></span>()
-<span class='kw'>sce</span> <span class='op'>&lt;-</span> <span class='fu'>qTune</span>(<span class='kw'>sce</span>, <span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span>(<span class='fl'>3</span>, <span class='fl'>7</span>), burn.in=<span class='fl'>10</span>, nrep=<span class='fl'>100</span>)
-</div><div class='output co'>#&gt; <span class='message'>Neighbors were identified for 96 out of 96 spots.</span></div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='input'><span class='fu'>qPlot</span>(<span class='kw'>sce</span>)
+    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/Random.html'>set.seed</a></span><span class='op'>(</span><span class='fl'>149</span><span class='op'>)</span>
+<span class='va'>sce</span> <span class='op'>&lt;-</span> <span class='fu'><a href='exampleSCE.html'>exampleSCE</a></span><span class='op'>(</span><span class='op'>)</span>
+<span class='va'>sce</span> <span class='op'>&lt;-</span> <span class='fu'>qTune</span><span class='op'>(</span><span class='va'>sce</span>, <span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span><span class='op'>(</span><span class='fl'>3</span>, <span class='fl'>7</span><span class='op'>)</span>, burn.in<span class='op'>=</span><span class='fl'>10</span>, nrep<span class='op'>=</span><span class='fl'>100</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='message'>Neighbors were identified for 96 out of 96 spots.</span></div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='input'><span class='fu'>qPlot</span><span class='op'>(</span><span class='va'>sce</span><span class='op'>)</span>
 </div><div class='img'><img src='qTune-1.png' alt='' width='700' height='433' /></div><div class='input'>
 </div></pre>
   </div>

@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">BayesSpace</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.99.7</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.1.4</span>
       </span>
     </div>
 
@@ -80,7 +80,7 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fa fa-home"></span>
+    <span class="fas fa-home"></span>
      
   </a>
 </li>
@@ -106,6 +106,9 @@
     <li>
       <a href="../articles/thrane_melanoma.html">Melanoma (Thrane et al., 2018)</a>
     </li>
+    <li>
+      <a href="../articles/joint_clustering.html">Joint clustering</a>
+    </li>
   </ul>
 </li>
 <li>
@@ -115,7 +118,7 @@
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/edward130603/BayesSpace">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fas fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -141,25 +144,25 @@
     <p>Wrapper around C++ <code>iterate_deconv()</code> function</p>
     </div>
 
-    <pre class="usage"><span class='fu'>deconvolve</span>(
-  <span class='kw'>Y</span>,
-  <span class='kw'>positions</span>,
-  <span class='kw'>xdist</span>,
-  <span class='kw'>ydist</span>,
-  <span class='kw'>q</span>,
-  <span class='kw'>init</span>,
-  nrep = <span class='fl'>1000</span>,
-  model = <span class='st'>"normal"</span>,
-  platform = <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"Visium"</span>, <span class='st'>"ST"</span>),
-  verbose = <span class='fl'>TRUE</span>,
-  jitter_scale = <span class='fl'>5</span>,
-  jitter_prior = <span class='fl'>0.01</span>,
-  mu0 = <span class='fu'><a href='https://rdrr.io/r/base/colSums.html'>colMeans</a></span>(<span class='kw'>Y</span>),
-  gamma = <span class='fl'>2</span>,
-  lambda0 = <span class='fu'><a href='https://rdrr.io/r/base/diag.html'>diag</a></span>(<span class='fl'>0.01</span>, nrow = <span class='fu'><a href='https://rdrr.io/r/base/nrow.html'>ncol</a></span>(<span class='kw'>Y</span>)),
-  alpha = <span class='fl'>1</span>,
-  beta = <span class='fl'>0.01</span>
-)</pre>
+    <pre class="usage"><span class='fu'>deconvolve</span><span class='op'>(</span>
+  <span class='va'>Y</span>,
+  <span class='va'>positions</span>,
+  <span class='va'>xdist</span>,
+  <span class='va'>ydist</span>,
+  <span class='va'>q</span>,
+  <span class='va'>init</span>,
+  nrep <span class='op'>=</span> <span class='fl'>1000</span>,
+  model <span class='op'>=</span> <span class='st'>"normal"</span>,
+  platform <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"Visium"</span>, <span class='st'>"ST"</span><span class='op'>)</span>,
+  verbose <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  jitter_scale <span class='op'>=</span> <span class='fl'>5</span>,
+  jitter_prior <span class='op'>=</span> <span class='fl'>0.01</span>,
+  mu0 <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/colSums.html'>colMeans</a></span><span class='op'>(</span><span class='va'>Y</span><span class='op'>)</span>,
+  gamma <span class='op'>=</span> <span class='fl'>2</span>,
+  lambda0 <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/diag.html'>diag</a></span><span class='op'>(</span><span class='fl'>0.01</span>, nrow <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/nrow.html'>ncol</a></span><span class='op'>(</span><span class='va'>Y</span><span class='op'>)</span><span class='op'>)</span>,
+  alpha <span class='op'>=</span> <span class='fl'>1</span>,
+  beta <span class='op'>=</span> <span class='fl'>0.01</span>
+<span class='op'>)</span></pre>
 
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>

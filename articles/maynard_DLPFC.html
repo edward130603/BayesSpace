@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">BayesSpace</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.99.7</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.1.4</span>
       </span>
     </div>
 
@@ -39,7 +39,7 @@
       <ul class="nav navbar-nav">
 <li>
   <a href="../index.html">
-    <span class="fa fa-home"></span>
+    <span class="fas fa-home"></span>
      
   </a>
 </li>
@@ -65,6 +65,9 @@
     <li>
       <a href="../articles/thrane_melanoma.html">Melanoma (Thrane et al., 2018)</a>
     </li>
+    <li>
+      <a href="../articles/joint_clustering.html">Joint clustering</a>
+    </li>
   </ul>
 </li>
 <li>
@@ -74,7 +77,7 @@
 <ul class="nav navbar-nav navbar-right">
 <li>
   <a href="https://github.com/edward130603/BayesSpace">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fas fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -88,7 +91,7 @@
 
       
 
-      </header><script src="maynard_DLPFC_files/header-attrs-2.3/header-attrs.js"></script><div class="row">
+      </header><script src="maynard_DLPFC_files/header-attrs-2.6/header-attrs.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>BayesSpace analysis of DLPFC dataset (Maynard et al., 2020)</h1>
@@ -102,10 +105,9 @@
 
     
     
-<div class="sourceCode" id="cb1"><pre class="downlit">
-<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="kw">BayesSpace</span>)
-<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="kw"><a href="http://ggplot2.tidyverse.org">ggplot2</a></span>)
-</pre></div>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">BayesSpace</span><span class="op">)</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org">ggplot2</a></span><span class="op">)</span></code></pre></div>
 <div id="overview" class="section level2">
 <h2 class="hasAnchor">
 <a href="#overview" class="anchor"></a>Overview</h2>
@@ -116,41 +118,39 @@
 <h2 class="hasAnchor">
 <a href="#processing-the-data" class="anchor"></a>Processing the data</h2>
 <p>A cleaned <code>SingleCellExperiment</code> object containing the dataset (after removing data specific to the spatialLIBD analyses) is available through BayesSpace. We preprocessed the data by performing PCA on the top 2,000 HVGs.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit">
-<span class="kw">dlpfc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getRDS.html">getRDS</a></span>(<span class="st">"2020_maynard_prefrontal-cortex"</span>, <span class="st">"151673"</span>)
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">dlpfc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getRDS.html">getRDS</a></span><span class="op">(</span><span class="st">"2020_maynard_prefrontal-cortex"</span>, <span class="st">"151673"</span><span class="op">)</span>
 
-<span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span>(<span class="fl">101</span>)
-<span class="kw">dec</span> <span class="op">&lt;-</span> <span class="kw">scran</span>::<span class="fu"><a href="https://rdrr.io/pkg/scran/man/modelGeneVar.html">modelGeneVar</a></span>(<span class="kw">dlpfc</span>)
-<span class="kw">top</span> <span class="op">&lt;-</span> <span class="kw">scran</span>::<span class="fu"><a href="https://rdrr.io/pkg/scran/man/getTopHVGs.html">getTopHVGs</a></span>(<span class="kw">dec</span>, n = <span class="fl">2000</span>)
+<span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">101</span><span class="op">)</span>
+<span class="va">dec</span> <span class="op">&lt;-</span> <span class="fu">scran</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/scran/man/modelGeneVar.html">modelGeneVar</a></span><span class="op">(</span><span class="va">dlpfc</span><span class="op">)</span>
+<span class="va">top</span> <span class="op">&lt;-</span> <span class="fu">scran</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/scran/man/getTopHVGs.html">getTopHVGs</a></span><span class="op">(</span><span class="va">dec</span>, n <span class="op">=</span> <span class="fl">2000</span><span class="op">)</span>
 
-<span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span>(<span class="fl">102</span>)
-<span class="kw">dlpfc</span> <span class="op">&lt;-</span> <span class="kw">scater</span>::<span class="fu"><a href="https://rdrr.io/pkg/scater/man/runPCA.html">runPCA</a></span>(<span class="kw">dlpfc</span>, subset_row=<span class="kw">top</span>)
+<span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">102</span><span class="op">)</span>
+<span class="va">dlpfc</span> <span class="op">&lt;-</span> <span class="fu">scater</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/scater/man/runPCA.html">runPCA</a></span><span class="op">(</span><span class="va">dlpfc</span>, subset_row<span class="op">=</span><span class="va">top</span><span class="op">)</span>
 
 <span class="co">## Add BayesSpace metadata</span>
-<span class="kw">dlpfc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spatialPreprocess.html">spatialPreprocess</a></span>(<span class="kw">dlpfc</span>, platform=<span class="st">"Visium"</span>, skip.PCA=<span class="fl">TRUE</span>)
-</pre></div>
+<span class="va">dlpfc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spatialPreprocess.html">spatialPreprocess</a></span><span class="op">(</span><span class="va">dlpfc</span>, platform<span class="op">=</span><span class="st">"Visium"</span>, skip.PCA<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
 </div>
 <div id="clustering-with-bayesspace" class="section level2">
 <h2 class="hasAnchor">
 <a href="#clustering-with-bayesspace" class="anchor"></a>Clustering with BayesSpace</h2>
 <p>We clustered the first 15 principal components, specifying 7 clusters to match the six brain layers plus one white matter region, and ran the MCMC algorithm for 50,000 iterations. We set our smoothing parameter <code>gamma</code> to 3, which we generally suggest for Visium datasets.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit">
-<span class="kw">q</span> <span class="op">&lt;-</span> <span class="fl">7</span>  <span class="co"># Number of clusters</span>
-<span class="kw">d</span> <span class="op">&lt;-</span> <span class="fl">15</span>  <span class="co"># Number of PCs</span>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">q</span> <span class="op">&lt;-</span> <span class="fl">7</span>  <span class="co"># Number of clusters</span>
+<span class="va">d</span> <span class="op">&lt;-</span> <span class="fl">15</span>  <span class="co"># Number of PCs</span>
 
 <span class="co">## Run BayesSpace clustering</span>
-<span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span>(<span class="fl">104</span>)
-<span class="kw">dlpfc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spatialCluster.html">spatialCluster</a></span>(<span class="kw">dlpfc</span>, q=<span class="kw">q</span>, d=<span class="kw">d</span>, platform=<span class="st">'Visium'</span>,
-                        nrep=<span class="fl">50000</span>, gamma=<span class="fl">3</span>, save.chain=<span class="fl">TRUE</span>)
+<span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">104</span><span class="op">)</span>
+<span class="va">dlpfc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spatialCluster.html">spatialCluster</a></span><span class="op">(</span><span class="va">dlpfc</span>, q<span class="op">=</span><span class="va">q</span>, d<span class="op">=</span><span class="va">d</span>, platform<span class="op">=</span><span class="st">'Visium'</span>,
+                        nrep<span class="op">=</span><span class="fl">50000</span>, gamma<span class="op">=</span><span class="fl">3</span>, save.chain<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span>
 
 <span class="co">## We recoded the cluster labels to match the expected brain layers</span>
-<span class="kw">labels</span> <span class="op">&lt;-</span> <span class="kw">dplyr</span>::<span class="fu"><a href="https://dplyr.tidyverse.org/reference/recode.html">recode</a></span>(<span class="kw">dlpfc</span><span class="op">$</span><span class="kw">spatial.cluster</span>, <span class="fl">3</span>, <span class="fl">4</span>, <span class="fl">5</span>, <span class="fl">6</span>, <span class="fl">2</span>, <span class="fl">7</span>, <span class="fl">1</span>)
+<span class="va">labels</span> <span class="op">&lt;-</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/recode.html">recode</a></span><span class="op">(</span><span class="va">dlpfc</span><span class="op">$</span><span class="va">spatial.cluster</span>, <span class="fl">3</span>, <span class="fl">4</span>, <span class="fl">5</span>, <span class="fl">6</span>, <span class="fl">2</span>, <span class="fl">7</span>, <span class="fl">1</span><span class="op">)</span>
 
 <span class="co">## View results</span>
-<span class="fu"><a href="../reference/clusterPlot.html">clusterPlot</a></span>(<span class="kw">dlpfc</span>, label=<span class="kw">labels</span>, palette=<span class="kw">NULL</span>, size=<span class="fl">0.05</span>) <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html">scale_fill_viridis_d</a></span>(option = <span class="st">"A"</span>, labels = <span class="fl">1</span><span class="op">:</span><span class="fl">7</span>) <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(title=<span class="st">"BayesSpace"</span>)
-</pre></div>
+<span class="fu"><a href="../reference/clusterPlot.html">clusterPlot</a></span><span class="op">(</span><span class="va">dlpfc</span>, label<span class="op">=</span><span class="va">labels</span>, palette<span class="op">=</span><span class="cn">NULL</span>, size<span class="op">=</span><span class="fl">0.05</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html">scale_fill_viridis_d</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"A"</span>, labels <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">7</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span><span class="op">(</span>title<span class="op">=</span><span class="st">"BayesSpace"</span><span class="op">)</span></code></pre></div>
 <p><img src="figures/maynard_DLPFC-spatialCluster-1.png" title="plot of chunk spatialCluster" alt="plot of chunk spatialCluster" width="100%"></p>
 </div>
 <div id="other-clustering-algorithms" class="section level2">
@@ -160,64 +160,60 @@
 <h3 class="hasAnchor">
 <a href="#bayesspace---normal-error-model" class="anchor"></a>BayesSpace - normal error model</h3>
 <p>We ran several clustering algorithms on each sample to evaluate relative performance. First, we ran the BayesSpace clustering algorithm using the normal error model in order to demonstrate the t-distributed error model’s improved handling of outlier spots.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit">
-<span class="kw">clusters</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>()
-<span class="kw">clusters</span>[[<span class="st">"BayesSpace (t-distributed error)"</span>]] <span class="op">&lt;-</span> <span class="kw">dlpfc</span><span class="op">$</span><span class="kw">spatial.cluster</span>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">clusters</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="op">)</span>
+<span class="va">clusters</span><span class="op">[[</span><span class="st">"BayesSpace (t-distributed error)"</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">dlpfc</span><span class="op">$</span><span class="va">spatial.cluster</span>
 
-<span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span>(<span class="fl">104</span>)
-<span class="kw">dlpfc.normal</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spatialCluster.html">spatialCluster</a></span>(<span class="kw">dlpfc</span>, q=<span class="kw">q</span>, d=<span class="kw">d</span>, platform=<span class="st">'Visium'</span>,
-                               nrep=<span class="fl">50000</span>, gamma=<span class="fl">3</span>, model=<span class="st">"normal"</span>)
-<span class="kw">clusters</span>[[<span class="st">"BayesSpace (normal error)"</span>]] <span class="op">&lt;-</span> <span class="kw">dlpfc.normal</span><span class="op">$</span><span class="kw">spatial.cluster</span>
-</pre></div>
+<span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">104</span><span class="op">)</span>
+<span class="va">dlpfc.normal</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spatialCluster.html">spatialCluster</a></span><span class="op">(</span><span class="va">dlpfc</span>, q<span class="op">=</span><span class="va">q</span>, d<span class="op">=</span><span class="va">d</span>, platform<span class="op">=</span><span class="st">'Visium'</span>,
+                               nrep<span class="op">=</span><span class="fl">50000</span>, gamma<span class="op">=</span><span class="fl">3</span>, model<span class="op">=</span><span class="st">"normal"</span><span class="op">)</span>
+<span class="va">clusters</span><span class="op">[[</span><span class="st">"BayesSpace (normal error)"</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">dlpfc.normal</span><span class="op">$</span><span class="va">spatial.cluster</span></code></pre></div>
 </div>
 <div id="non-spatial-clustering-algorithms" class="section level3">
 <h3 class="hasAnchor">
 <a href="#non-spatial-clustering-algorithms" class="anchor"></a>Non-spatial clustering algorithms</h3>
 <p>Next, we ran several popular non-spatial clustering algorithms that are typically used in scRNA-seq analysis - k-means, Louvain, and mclust. For each of these algorithms, we clustered the first 15 principal components of the log-normalized expression matrix, specifying 7 clusters when possible. The Louvain algorithm was run on the k=10 shared nearest neighbor graph (weighted using Jaccard similarity). The mclust algorithm was run using the EEE multivariate mixture model.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit">
-<span class="kw">Y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/reducedDims.html">reducedDim</a></span>(<span class="kw">dlpfc</span>, <span class="st">"PCA"</span>)[, <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq_len</a></span>(<span class="kw">d</span>)]
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">Y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/reducedDims.html">reducedDim</a></span><span class="op">(</span><span class="va">dlpfc</span>, <span class="st">"PCA"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq_len</a></span><span class="op">(</span><span class="va">d</span><span class="op">)</span><span class="op">]</span>
 
 <span class="co">## K-means</span>
-<span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span>(<span class="fl">103</span>)
-<span class="kw">clusters</span>[[<span class="st">"k-means"</span>]] <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/kmeans.html">kmeans</a></span>(<span class="kw">Y</span>, centers = <span class="kw">q</span>)<span class="op">$</span><span class="kw">cluster</span>
+<span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">103</span><span class="op">)</span>
+<span class="va">clusters</span><span class="op">[[</span><span class="st">"k-means"</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/kmeans.html">kmeans</a></span><span class="op">(</span><span class="va">Y</span>, centers <span class="op">=</span> <span class="va">q</span><span class="op">)</span><span class="op">$</span><span class="va">cluster</span>
 
 <span class="co">## Louvain</span>
-<span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span>(<span class="fl">100</span>)
-<span class="kw">g.jaccard</span> <span class="op">=</span> <span class="kw">scran</span>::<span class="fu"><a href="https://rdrr.io/pkg/scran/man/buildSNNGraph.html">buildSNNGraph</a></span>(<span class="kw">dlpfc</span>, use.dimred=<span class="st">"PCA"</span>, type=<span class="st">"jaccard"</span>)
-<span class="kw">clusters</span>[[<span class="st">"Louvain"</span>]] <span class="op">&lt;-</span> <span class="kw">igraph</span>::<span class="fu"><a href="https://rdrr.io/pkg/igraph/man/cluster_louvain.html">cluster_louvain</a></span>(<span class="kw">g.jaccard</span>)<span class="op">$</span><span class="kw">membership</span>
+<span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span>
+<span class="va">g.jaccard</span> <span class="op">=</span> <span class="fu">scran</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/scran/man/buildSNNGraph.html">buildSNNGraph</a></span><span class="op">(</span><span class="va">dlpfc</span>, use.dimred<span class="op">=</span><span class="st">"PCA"</span>, type<span class="op">=</span><span class="st">"jaccard"</span><span class="op">)</span>
+<span class="va">clusters</span><span class="op">[[</span><span class="st">"Louvain"</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu">igraph</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/igraph/man/cluster_louvain.html">cluster_louvain</a></span><span class="op">(</span><span class="va">g.jaccard</span><span class="op">)</span><span class="op">$</span><span class="va">membership</span>
 
 <span class="co">## mclust (BayesSpace initialization)</span>
-<span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span>(<span class="fl">104</span>)
-<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="kw"><a href="https://mclust-org.github.io/mclust">mclust</a></span>)
-<span class="kw">clusters</span>[[<span class="st">"mclust"</span>]] <span class="op">&lt;-</span> <span class="fu"><a href="https://mclust-org.github.io/mclust/reference/Mclust.html">Mclust</a></span>(<span class="kw">Y</span>, G = <span class="fl">7</span>, modelNames = <span class="st">"EEE"</span>)<span class="op">$</span><span class="kw">classification</span>
-</pre></div>
+<span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">104</span><span class="op">)</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://mclust-org.github.io/mclust/">mclust</a></span><span class="op">)</span>
+<span class="va">clusters</span><span class="op">[[</span><span class="st">"mclust"</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://mclust-org.github.io/mclust/reference/Mclust.html">Mclust</a></span><span class="op">(</span><span class="va">Y</span>, G <span class="op">=</span> <span class="fl">7</span>, modelNames <span class="op">=</span> <span class="st">"EEE"</span><span class="op">)</span><span class="op">$</span><span class="va">classification</span></code></pre></div>
 </div>
 <div id="spatial-clustering-algorithms" class="section level3">
 <h3 class="hasAnchor">
 <a href="#spatial-clustering-algorithms" class="anchor"></a>Spatial clustering algorithms</h3>
 <p>We also ran two recently published spatial clustering algorithms, stLearn and Giotto (HMRF). To analyze these samples we adapted the respective tutorials (<a href="https://stlearn.readthedocs.io/en/latest/stSME_clustering.html">stLearn</a>, <a href="http://spatialgiotto.rc.fas.harvard.edu/giotto.visium.brain.html">Giotto</a>) and provide this code separately. For ease of reproduction, we include the obtained cluster labels directly with this package.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit">
-<span class="kw">clusters</span>[[<span class="st">"stLearn (HVGs)"</span>]] <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html">read.csv</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span>(<span class="st">"extdata"</span>, <span class="st">"2020_maynard_prefrontal-cortex"</span>, <span class="st">"151673.stLearn_HVGs.csv"</span>, package = <span class="st">"BayesSpace"</span>))<span class="op">$</span><span class="kw">pca_kmeans</span> <span class="op">+</span> <span class="fl">1</span>
-<span class="kw">clusters</span>[[<span class="st">"stLearn (markers)"</span>]] <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html">read.csv</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span>(<span class="st">"extdata"</span>, <span class="st">"2020_maynard_prefrontal-cortex"</span>, <span class="st">"151673.stLearn_markers.csv"</span>, package = <span class="st">"BayesSpace"</span>))<span class="op">$</span><span class="kw">pca_kmeans</span> <span class="op">+</span> <span class="fl">1</span>
-<span class="kw">clusters</span>[[<span class="st">"Giotto"</span>]] <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html">read.csv</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span>(<span class="st">"extdata"</span>, <span class="st">"2020_maynard_prefrontal-cortex"</span>, <span class="st">"151673.Giotto_HMRF.csv"</span>, package = <span class="st">"BayesSpace"</span>))<span class="op">$</span><span class="kw">HMRF_km_Delaunay_k7_b.9</span>
-</pre></div>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">clusters</span><span class="op">[[</span><span class="st">"stLearn (HVGs)"</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html">read.csv</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"2020_maynard_prefrontal-cortex"</span>, <span class="st">"151673.stLearn_HVGs.csv"</span>, package <span class="op">=</span> <span class="st">"BayesSpace"</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">pca_kmeans</span> <span class="op">+</span> <span class="fl">1</span>
+<span class="va">clusters</span><span class="op">[[</span><span class="st">"stLearn (markers)"</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html">read.csv</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"2020_maynard_prefrontal-cortex"</span>, <span class="st">"151673.stLearn_markers.csv"</span>, package <span class="op">=</span> <span class="st">"BayesSpace"</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">pca_kmeans</span> <span class="op">+</span> <span class="fl">1</span>
+<span class="va">clusters</span><span class="op">[[</span><span class="st">"Giotto"</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html">read.csv</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"2020_maynard_prefrontal-cortex"</span>, <span class="st">"151673.Giotto_HMRF.csv"</span>, package <span class="op">=</span> <span class="st">"BayesSpace"</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">HMRF_km_Delaunay_k7_b.9</span></code></pre></div>
 </div>
 <div id="spatiallibd-cluster-assignments" class="section level3">
 <h3 class="hasAnchor">
 <a href="#spatiallibd-cluster-assignments" class="anchor"></a>spatialLIBD cluster assignments</h3>
 <p>Finally, to evaluate each algorithm’s cluster assignments, we use the manual annotations provided with the original data by Maynard et al. We also compare the cluster assignments reported in this paper using the Walktrap clustering algorithm (a non-spatial hierarchical clustering algorithm.)</p>
-<div class="sourceCode" id="cb7"><pre class="downlit">
-<span class="co">## Fetch original SCE with cluster labels</span>
-<span class="kw">sce</span> <span class="op">&lt;-</span> <span class="kw">spatialLIBD</span>::<span class="fu"><a href="https://rdrr.io/pkg/spatialLIBD/man/fetch_data.html">fetch_data</a></span>(type=<span class="st">"sce"</span>)
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co">## Fetch original SCE with cluster labels</span>
+<span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu">spatialLIBD</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/spatialLIBD/man/fetch_data.html">fetch_data</a></span><span class="op">(</span>type<span class="op">=</span><span class="st">"sce"</span><span class="op">)</span>
 <span class="co">#&gt; Loading objects:</span>
 <span class="co">#&gt;   sce</span>
-<span class="kw">sce</span> <span class="op">&lt;-</span> <span class="kw">sce</span>[, <span class="kw">sce</span><span class="op">$</span><span class="kw">sample_name</span> <span class="op">==</span> <span class="st">"151673"</span>]
+<span class="va">sce</span> <span class="op">&lt;-</span> <span class="va">sce</span><span class="op">[</span>, <span class="va">sce</span><span class="op">$</span><span class="va">sample_name</span> <span class="op">==</span> <span class="st">"151673"</span><span class="op">]</span>
 
 <span class="co">## Walktrap and ground truth (manual annotations)</span>
-<span class="kw">clusters</span>[[<span class="st">"Walktrap (HVGs)"</span>]] <span class="op">&lt;-</span> <span class="kw">sce</span><span class="op">$</span><span class="kw">HVG_PCA_spatial</span>
-<span class="kw">clusters</span>[[<span class="st">"Walktrap (markers)"</span>]] <span class="op">&lt;-</span> <span class="kw">sce</span><span class="op">$</span><span class="kw">markers_PCA_spatial</span>
-<span class="kw">clusters</span>[[<span class="st">"Manual annotation"</span>]] <span class="op">&lt;-</span> <span class="kw">sce</span><span class="op">$</span><span class="kw">layer_guess_reordered</span>
-</pre></div>
+<span class="va">clusters</span><span class="op">[[</span><span class="st">"Walktrap (HVGs)"</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">sce</span><span class="op">$</span><span class="va">HVG_PCA_spatial</span>
+<span class="va">clusters</span><span class="op">[[</span><span class="st">"Walktrap (markers)"</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">sce</span><span class="op">$</span><span class="va">markers_PCA_spatial</span>
+<span class="va">clusters</span><span class="op">[[</span><span class="st">"Manual annotation"</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">sce</span><span class="op">$</span><span class="va">layer_guess_reordered</span></code></pre></div>
 </div>
 </div>
 <div id="summary-of-clustering-assignments" class="section level2">
@@ -226,41 +222,39 @@
 <p>Here, we visualize the clustering of sample 151673 obtained using each algorithm. In the left column we show the ground truth (manual annotations) and the Walktrap clustering reported in the original study; in the second, we show the non-spatial algorithms; in the third, the spatial algorithms we compared to; and in the final column, we show the clustering identified by BayesSpace using the t-distributed and normal error models. Note that the t-distributed model resolves several of the outlier spots present when using the normal model.</p>
 <p><img src="figures/maynard_DLPFC-compare.clusters-1.png" title="plot of chunk compare.clusters" alt="plot of chunk compare.clusters" width="100%"></p>
 <p>Finally, we used the adjusted Rand index to evaluate the performance of each algorithm with respect to the ground truth labels. In the manuscript we present the range of ARIs obtained over all twelve samples.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit">
-<span class="kw">ARI</span> <span class="op">&lt;-</span> <span class="kw">purrr</span>::<span class="fu"><a href="https://purrr.tidyverse.org/reference/map.html">map</a></span>(<span class="kw">clusters</span>, <span class="fu">function</span>(<span class="kw">x</span>) <span class="kw">mclust</span>::<span class="fu"><a href="https://mclust-org.github.io/mclust/reference/adjustedRandIndex.html">adjustedRandIndex</a></span>(<span class="kw">x</span>, <span class="kw">clusters</span>[[<span class="st">"Manual annotation"</span>]]))
-</pre></div>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">ARI</span> <span class="op">&lt;-</span> <span class="fu">purrr</span><span class="fu">::</span><span class="fu"><a href="https://purrr.tidyverse.org/reference/map.html">map</a></span><span class="op">(</span><span class="va">clusters</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu">mclust</span><span class="fu">::</span><span class="fu"><a href="https://mclust-org.github.io/mclust/reference/adjustedRandIndex.html">adjustedRandIndex</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">clusters</span><span class="op">[[</span><span class="st">"Manual annotation"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></code></pre></div>
 <p><img src="figures/maynard_DLPFC-plot.ARI-1.png" title="plot of chunk plot.ARI" alt="plot of chunk plot.ARI" width="100%"></p>
 </div>
 <div id="spot-weights-and-principal-components" class="section level2">
 <h2 class="hasAnchor">
 <a href="#spot-weights-and-principal-components" class="anchor"></a>Spot weights and principal components</h2>
 <p>In Supplementary Figure S1, we also show the spatial distribution of the weights <span class="math inline">\(w_i\)</span>, along with the spatial distribution of the first three principal components. We note that some of the visible outlier spots in the second and third principal components are downweighted by the BayesSpace clustering algorithm (low <span class="math inline">\(w_i\)</span>).</p>
-<div class="sourceCode" id="cb9"><pre class="downlit">
-<span class="co">## Load the cached MCMC chain</span>
-<span class="kw">chain</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mcmcChain.html">mcmcChain</a></span>(<span class="kw">dlpfc</span>)
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co">## Load the cached MCMC chain</span>
+<span class="va">chain</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mcmcChain.html">mcmcChain</a></span><span class="op">(</span><span class="va">dlpfc</span><span class="op">)</span>
 
 <span class="co">## Average spot weights after excluding 1,000 burn-in iterations</span>
-<span class="kw">burn.in</span> <span class="op">&lt;-</span> <span class="fl">100</span>
-<span class="kw">weights</span> <span class="op">&lt;-</span> <span class="kw">chain</span>[, <span class="fu"><a href="https://rdrr.io/r/base/grep.html">grep</a></span>(<span class="st">"weights"</span>, <span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span>(<span class="kw">chain</span>))]
-<span class="kw">weights</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html">apply</a></span>(<span class="kw">weights</span>[<span class="op">-</span>(<span class="fl">1</span><span class="op">:</span><span class="kw">burn.in</span>),], <span class="fl">2</span>, <span class="kw">mean</span>)
+<span class="va">burn.in</span> <span class="op">&lt;-</span> <span class="fl">100</span>
+<span class="va">weights</span> <span class="op">&lt;-</span> <span class="va">chain</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/grep.html">grep</a></span><span class="op">(</span><span class="st">"weights"</span>, <span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="va">chain</span><span class="op">)</span><span class="op">)</span><span class="op">]</span>
+<span class="va">weights</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html">apply</a></span><span class="op">(</span><span class="va">weights</span><span class="op">[</span><span class="op">-</span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="va">burn.in</span><span class="op">)</span>,<span class="op">]</span>, <span class="fl">2</span>, <span class="va">mean</span><span class="op">)</span>
 
 <span class="co">## Plot the weights</span>
-<span class="kw">weights.plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/featurePlot.html">featurePlot</a></span>(<span class="kw">dlpfc</span>, <span class="kw">weights</span>, color=<span class="fl">NA</span>) <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(fill=<span class="kw">NULL</span>, title=<span class="fu"><a href="https://rdrr.io/r/base/expression.html">expression</a></span>(<span class="kw">Weights</span><span class="op">~</span>(<span class="kw">w</span>[<span class="kw">i</span>]))) <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_gradient.html">scale_fill_gradient2</a></span>(midpoint=<span class="fl">1</span>, low=<span class="kw">scales</span>::<span class="fu"><a href="https://scales.r-lib.org//reference/muted.html">muted</a></span>(<span class="st">"blue"</span>), high=<span class="kw">scales</span>::<span class="fu"><a href="https://scales.r-lib.org//reference/muted.html">muted</a></span>(<span class="st">"red"</span>), 
-                       breaks=<span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0</span>, <span class="fl">0.5</span>, <span class="fl">1</span>, <span class="fl">1.5</span>, <span class="fl">2</span>), limits=<span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0</span>, <span class="fl">2</span>))
+<span class="va">weights.plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/featurePlot.html">featurePlot</a></span><span class="op">(</span><span class="va">dlpfc</span>, <span class="va">weights</span>, color<span class="op">=</span><span class="cn">NA</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span><span class="op">(</span>fill<span class="op">=</span><span class="cn">NULL</span>, title<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/expression.html">expression</a></span><span class="op">(</span><span class="va">Weights</span><span class="op">~</span><span class="op">(</span><span class="va">w</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_gradient.html">scale_fill_gradient2</a></span><span class="op">(</span>midpoint<span class="op">=</span><span class="fl">1</span>, low<span class="op">=</span><span class="fu">scales</span><span class="fu">::</span><span class="fu"><a href="https://scales.r-lib.org/reference/muted.html">muted</a></span><span class="op">(</span><span class="st">"blue"</span><span class="op">)</span>, high<span class="op">=</span><span class="fu">scales</span><span class="fu">::</span><span class="fu"><a href="https://scales.r-lib.org/reference/muted.html">muted</a></span><span class="op">(</span><span class="st">"red"</span><span class="op">)</span>, 
+                       breaks<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.5</span>, <span class="fl">1</span>, <span class="fl">1.5</span>, <span class="fl">2</span><span class="op">)</span>, limits<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span>
 
 <span class="co">## Plot the principal components</span>
-<span class="kw">plot_PC</span> <span class="op">&lt;-</span> <span class="fu">function</span>(<span class="kw">comp</span>) {
-  <span class="fu"><a href="../reference/featurePlot.html">featurePlot</a></span>(<span class="kw">dlpfc</span>, <span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/reducedDims.html">reducedDim</a></span>(<span class="kw">dlpfc</span>, <span class="st">"PCA"</span>)[, <span class="kw">comp</span>], color=<span class="fl">NA</span>) <span class="op">+</span>
-    <span class="kw">viridis</span>::<span class="fu"><a href="https://rdrr.io/pkg/viridis/man/scale_viridis.html">scale_fill_viridis</a></span>(option=<span class="st">"A"</span>) <span class="op">+</span>
-    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(fill=<span class="kw">NULL</span>, title=<span class="fu"><a href="https://rdrr.io/r/base/sprintf.html">sprintf</a></span>(<span class="st">"PC%d"</span>, <span class="kw">comp</span>))
-}
-<span class="kw">components</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>)
-<span class="kw">PC_plots</span> <span class="op">&lt;-</span> <span class="kw">purrr</span>::<span class="fu"><a href="https://purrr.tidyverse.org/reference/map.html">map</a></span>(<span class="kw">components</span>, <span class="kw">plot_PC</span>)
+<span class="va">plot_PC</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">comp</span><span class="op">)</span> <span class="op">{</span>
+  <span class="fu"><a href="../reference/featurePlot.html">featurePlot</a></span><span class="op">(</span><span class="va">dlpfc</span>, <span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/reducedDims.html">reducedDim</a></span><span class="op">(</span><span class="va">dlpfc</span>, <span class="st">"PCA"</span><span class="op">)</span><span class="op">[</span>, <span class="va">comp</span><span class="op">]</span>, color<span class="op">=</span><span class="cn">NA</span><span class="op">)</span> <span class="op">+</span>
+    <span class="fu">viridis</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/viridis/man/scale_viridis.html">scale_fill_viridis</a></span><span class="op">(</span>option<span class="op">=</span><span class="st">"A"</span><span class="op">)</span> <span class="op">+</span>
+    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span><span class="op">(</span>fill<span class="op">=</span><span class="cn">NULL</span>, title<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html">sprintf</a></span><span class="op">(</span><span class="st">"PC%d"</span>, <span class="va">comp</span><span class="op">)</span><span class="op">)</span>
+<span class="op">}</span>
+<span class="va">components</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span>
+<span class="va">PC_plots</span> <span class="op">&lt;-</span> <span class="fu">purrr</span><span class="fu">::</span><span class="fu"><a href="https://purrr.tidyverse.org/reference/map.html">map</a></span><span class="op">(</span><span class="va">components</span>, <span class="va">plot_PC</span><span class="op">)</span>
 
-<span class="kw">patchwork</span>::<span class="fu"><a href="https://patchwork.data-imaginist.com/reference/wrap_plots.html">wrap_plots</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="kw">weights.plot</span>), <span class="kw">PC_plots</span>))
-</pre></div>
+<span class="fu">patchwork</span><span class="fu">::</span><span class="fu"><a href="https://patchwork.data-imaginist.com/reference/wrap_plots.html">wrap_plots</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="va">weights.plot</span><span class="op">)</span>, <span class="va">PC_plots</span><span class="op">)</span><span class="op">)</span></code></pre></div>
 <p><img src="figures/maynard_DLPFC-weights.PCs-1.png" title="plot of chunk weights.PCs" alt="plot of chunk weights.PCs" width="100%"></p>
 </div>
   </div>

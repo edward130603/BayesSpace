@@ -75,7 +75,7 @@ TidyBayes." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">BayesSpace</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.99.7</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.1.4</span>
       </span>
     </div>
 
@@ -83,7 +83,7 @@ TidyBayes." />
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fa fa-home"></span>
+    <span class="fas fa-home"></span>
      
   </a>
 </li>
@@ -109,6 +109,9 @@ TidyBayes." />
     <li>
       <a href="../articles/thrane_melanoma.html">Melanoma (Thrane et al., 2018)</a>
     </li>
+    <li>
+      <a href="../articles/joint_clustering.html">Joint clustering</a>
+    </li>
   </ul>
 </li>
 <li>
@@ -118,7 +121,7 @@ TidyBayes." />
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/edward130603/BayesSpace">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fas fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -147,9 +150,9 @@ specified by the user into a <code><a href='https://rdrr.io/pkg/coda/man/mcmc.ht
 TidyBayes.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>mcmcChain</span>(<span class='kw'>sce</span>, params = <span class='kw'>NULL</span>)
+    <pre class="usage"><span class='fu'>mcmcChain</span><span class='op'>(</span><span class='va'>sce</span>, params <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span>
 
-<span class='fu'>removeChain</span>(<span class='kw'>sce</span>)</pre>
+<span class='fu'>removeChain</span><span class='op'>(</span><span class='va'>sce</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -167,20 +170,37 @@ TidyBayes.</p>
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>Returns an <code>mcmc</code> object containing the values of the requested
-  parameters over the constructed chain.</p>
+parameters over the constructed chain.</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
     <p>To interact with the HDF5 file directly, obtain the filename from the
 SingleCellExperiment's metadata: <code>metadata(sce)$chain.h5</code>. Each
 parameter is stored as a separate dataset in the file, and is represented as
-a matrix of size (n_iterations x n_parameter_indices).</p>
+a matrix of size (n_iterations x n_parameter_indices). Parameter choices
+for the spot-level clustering include:</p><ul>
+<li><p><code>z</code> (cluster assignments)</p></li>
+<li><p><code>weights</code> (\(w_i\))</p></li>
+<li><p><code>mu</code> (mean vectors)</p></li>
+<li><p><code>lambda</code> (precision matrix)</p></li>
+<li><p><code>plogLik</code> (pseudo-log-likelihood)</p></li>
+</ul>
+
+<p>Parameter choices for the subspot-level enhanced clustering include:</p><ul>
+<li><p><code>z</code> (cluster assignments)</p></li>
+<li><p><code>weights</code> (\(w_i\))</p></li>
+<li><p><code>Y</code> (enhanced PCs)</p></li>
+<li><p><code>mu</code> (mean vectors)</p></li>
+<li><p><code>lambda</code> (precision matrix)</p></li>
+<li><p><code>Ychange</code> (acceptance rate for the jittering of PCs)</p></li>
+</ul>
+
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/Random.html'>set.seed</a></span>(<span class='fl'>149</span>)
-<span class='kw'>sce</span> <span class='op'>&lt;-</span> <span class='fu'><a href='exampleSCE.html'>exampleSCE</a></span>()
-<span class='kw'>sce</span> <span class='op'>&lt;-</span> <span class='fu'><a href='spatialCluster.html'>spatialCluster</a></span>(<span class='kw'>sce</span>, <span class='fl'>7</span>, nrep=<span class='fl'>100</span>, burn.in=<span class='fl'>10</span>, save.chain=<span class='fl'>TRUE</span>)
-</div><div class='output co'>#&gt; <span class='message'>Neighbors were identified for 96 out of 96 spots.</span></div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='output co'>#&gt; <span class='message'>Calculating labels using iterations 10 through 100.</span></div><div class='input'><span class='kw'>chain</span> <span class='op'>&lt;-</span> <span class='fu'>mcmcChain</span>(<span class='kw'>sce</span>)
-<span class='fu'>removeChain</span>(<span class='kw'>sce</span>)
+    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/Random.html'>set.seed</a></span><span class='op'>(</span><span class='fl'>149</span><span class='op'>)</span>
+<span class='va'>sce</span> <span class='op'>&lt;-</span> <span class='fu'><a href='exampleSCE.html'>exampleSCE</a></span><span class='op'>(</span><span class='op'>)</span>
+<span class='va'>sce</span> <span class='op'>&lt;-</span> <span class='fu'><a href='spatialCluster.html'>spatialCluster</a></span><span class='op'>(</span><span class='va'>sce</span>, <span class='fl'>7</span>, nrep<span class='op'>=</span><span class='fl'>100</span>, burn.in<span class='op'>=</span><span class='fl'>10</span>, save.chain<span class='op'>=</span><span class='cn'>TRUE</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='message'>Neighbors were identified for 96 out of 96 spots.</span></div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='output co'>#&gt; <span class='message'>Calculating labels using iterations 10 through 100.</span></div><div class='input'><span class='va'>chain</span> <span class='op'>&lt;-</span> <span class='fu'>mcmcChain</span><span class='op'>(</span><span class='va'>sce</span><span class='op'>)</span>
+<span class='fu'>removeChain</span><span class='op'>(</span><span class='va'>sce</span><span class='op'>)</span>
 
 </div></pre>
   </div>

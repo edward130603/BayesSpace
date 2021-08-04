@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">BayesSpace</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.99.7</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.1.4</span>
       </span>
     </div>
 
@@ -80,7 +80,7 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fa fa-home"></span>
+    <span class="fas fa-home"></span>
      
   </a>
 </li>
@@ -106,6 +106,9 @@
     <li>
       <a href="../articles/thrane_melanoma.html">Melanoma (Thrane et al., 2018)</a>
     </li>
+    <li>
+      <a href="../articles/joint_clustering.html">Joint clustering</a>
+    </li>
   </ul>
 </li>
 <li>
@@ -115,7 +118,7 @@
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/edward130603/BayesSpace">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fas fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -141,26 +144,26 @@
     <p>Cluster a spatial expression dataset.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>spatialCluster</span>(
-  <span class='kw'>sce</span>,
-  <span class='kw'>q</span>,
-  use.dimred = <span class='st'>"PCA"</span>,
-  d = <span class='fl'>15</span>,
-  platform = <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"Visium"</span>, <span class='st'>"ST"</span>),
-  init = <span class='kw'>NULL</span>,
-  init.method = <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"mclust"</span>, <span class='st'>"kmeans"</span>),
-  model = <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"t"</span>, <span class='st'>"normal"</span>),
-  precision = <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"equal"</span>, <span class='st'>"variable"</span>),
-  nrep = <span class='fl'>50000</span>,
-  burn.in = <span class='fl'>1000</span>,
-  gamma = <span class='kw'>NULL</span>,
-  mu0 = <span class='kw'>NULL</span>,
-  lambda0 = <span class='kw'>NULL</span>,
-  alpha = <span class='fl'>1</span>,
-  beta = <span class='fl'>0.01</span>,
-  save.chain = <span class='fl'>FALSE</span>,
-  chain.fname = <span class='kw'>NULL</span>
-)</pre>
+    <pre class="usage"><span class='fu'>spatialCluster</span><span class='op'>(</span>
+  <span class='va'>sce</span>,
+  <span class='va'>q</span>,
+  use.dimred <span class='op'>=</span> <span class='st'>"PCA"</span>,
+  d <span class='op'>=</span> <span class='fl'>15</span>,
+  platform <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"Visium"</span>, <span class='st'>"ST"</span><span class='op'>)</span>,
+  init <span class='op'>=</span> <span class='cn'>NULL</span>,
+  init.method <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"mclust"</span>, <span class='st'>"kmeans"</span><span class='op'>)</span>,
+  model <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"t"</span>, <span class='st'>"normal"</span><span class='op'>)</span>,
+  precision <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"equal"</span>, <span class='st'>"variable"</span><span class='op'>)</span>,
+  nrep <span class='op'>=</span> <span class='fl'>50000</span>,
+  burn.in <span class='op'>=</span> <span class='fl'>1000</span>,
+  gamma <span class='op'>=</span> <span class='cn'>NULL</span>,
+  mu0 <span class='op'>=</span> <span class='cn'>NULL</span>,
+  lambda0 <span class='op'>=</span> <span class='cn'>NULL</span>,
+  alpha <span class='op'>=</span> <span class='fl'>1</span>,
+  beta <span class='op'>=</span> <span class='fl'>0.01</span>,
+  save.chain <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  chain.fname <span class='op'>=</span> <span class='cn'>NULL</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -271,9 +274,9 @@ and the cluster initialization is stored in <code>cluster.init</code>.</p>
   MCMC chain associated with the clustering.</p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/Random.html'>set.seed</a></span>(<span class='fl'>149</span>)
-<span class='kw'>sce</span> <span class='op'>&lt;-</span> <span class='fu'><a href='exampleSCE.html'>exampleSCE</a></span>()
-<span class='kw'>sce</span> <span class='op'>&lt;-</span> <span class='fu'>spatialCluster</span>(<span class='kw'>sce</span>, <span class='fl'>7</span>, nrep=<span class='fl'>100</span>, burn.in=<span class='fl'>10</span>)
+    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/Random.html'>set.seed</a></span><span class='op'>(</span><span class='fl'>149</span><span class='op'>)</span>
+<span class='va'>sce</span> <span class='op'>&lt;-</span> <span class='fu'><a href='exampleSCE.html'>exampleSCE</a></span><span class='op'>(</span><span class='op'>)</span>
+<span class='va'>sce</span> <span class='op'>&lt;-</span> <span class='fu'>spatialCluster</span><span class='op'>(</span><span class='va'>sce</span>, <span class='fl'>7</span>, nrep<span class='op'>=</span><span class='fl'>100</span>, burn.in<span class='op'>=</span><span class='fl'>10</span><span class='op'>)</span>
 </div><div class='output co'>#&gt; <span class='message'>Neighbors were identified for 96 out of 96 spots.</span></div><div class='output co'>#&gt; <span class='message'>Fitting model...</span></div><div class='output co'>#&gt; <span class='message'>Calculating labels using iterations 10 through 100.</span></div><div class='input'>
 </div></pre>
   </div>

@@ -71,7 +71,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">BayesSpace</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.99.7</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.1.4</span>
       </span>
     </div>
 
@@ -79,7 +79,7 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fa fa-home"></span>
+    <span class="fas fa-home"></span>
      
   </a>
 </li>
@@ -105,6 +105,9 @@
     <li>
       <a href="../articles/thrane_melanoma.html">Melanoma (Thrane et al., 2018)</a>
     </li>
+    <li>
+      <a href="../articles/joint_clustering.html">Joint clustering</a>
+    </li>
   </ul>
 </li>
 <li>
@@ -114,7 +117,7 @@
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/edward130603/BayesSpace">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fas fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -135,12 +138,72 @@
       <small>Source: <a href='https://github.com/edward130603/BayesSpace/blob/master/NEWS.md'><code>NEWS.md</code></a></small>
     </div>
 
-    <div id="bayesspace-0997" class="section level1">
-<h1 class="page-header" data-toc-text="0.99.7">
-<a href="#bayesspace-0997" class="anchor"></a>BayesSpace 0.99.7</h1>
+    <div id="bayesspace-113" class="section level1">
+<h1 class="page-header" data-toc-text="1.1.3">
+<a href="#bayesspace-113" class="anchor"></a>BayesSpace 1.1.3</h1>
 <div id="minor-improvements-and-fixes" class="section level2">
 <h2 class="hasAnchor">
 <a href="#minor-improvements-and-fixes" class="anchor"></a>Minor improvements and fixes</h2>
+<ul>
+<li>Added information to documentation.</li>
+<li>
+<code><a href="../reference/getRDS.html">getRDS()</a></code> updated with new URL.</li>
+</ul>
+</div>
+</div>
+    <div id="bayesspace-112" class="section level1">
+<h1 class="page-header" data-toc-text="1.1.2">
+<a href="#bayesspace-112" class="anchor"></a>BayesSpace 1.1.2</h1>
+<div id="minor-improvements-and-fixes-1" class="section level2">
+<h2 class="hasAnchor">
+<a href="#minor-improvements-and-fixes-1" class="anchor"></a>Minor improvements and fixes</h2>
+<ul>
+<li>
+<code><a href="../reference/clusterPlot.html">clusterPlot()</a></code> accepts character vectors and factors as arguments to <code>label</code>.</li>
+</ul>
+</div>
+</div>
+    <div id="bayesspace-111" class="section level1">
+<h1 class="page-header" data-toc-text="1.1.1">
+<a href="#bayesspace-111" class="anchor"></a>BayesSpace 1.1.1</h1>
+<div id="minor-improvements-and-fixes-2" class="section level2">
+<h2 class="hasAnchor">
+<a href="#minor-improvements-and-fixes-2" class="anchor"></a>Minor improvements and fixes</h2>
+<ul>
+<li>
+<code><a href="../reference/spatialPreprocess.html">spatialPreprocess()</a></code> uses exact rather than approximate PCA by default.</li>
+</ul>
+</div>
+</div>
+    <div id="bayesspace-110" class="section level1">
+<h1 class="page-header" data-toc-text="1.1.0">
+<a href="#bayesspace-110" class="anchor"></a>BayesSpace 1.1.0</h1>
+<div id="new-bioconductor-devel-313" class="section level2">
+<h2 class="hasAnchor">
+<a href="#new-bioconductor-devel-313" class="anchor"></a>New Bioconductor devel (3.13)</h2>
+<ul>
+<li>Version numbering change with Bioconductor version bump</li>
+</ul>
+</div>
+</div>
+    <div id="bayesspace-0998" class="section level1">
+<h1 class="page-header" data-toc-text="0.99.8">
+<a href="#bayesspace-0998" class="anchor"></a>BayesSpace 0.99.8</h1>
+<div id="minor-improvements-and-fixes-3" class="section level2">
+<h2 class="hasAnchor">
+<a href="#minor-improvements-and-fixes-3" class="anchor"></a>Minor improvements and fixes</h2>
+<ul>
+<li>
+<code><a href="../reference/spatialCluster.html">spatialCluster()</a></code> and <code><a href="../reference/spatialEnhance.html">spatialEnhance()</a></code> now use a faster implementation of the multivariate normal density that reduces runtime by approximately 40%.</li>
+</ul>
+</div>
+</div>
+    <div id="bayesspace-0997" class="section level1">
+<h1 class="page-header" data-toc-text="0.99.7">
+<a href="#bayesspace-0997" class="anchor"></a>BayesSpace 0.99.7</h1>
+<div id="minor-improvements-and-fixes-4" class="section level2">
+<h2 class="hasAnchor">
+<a href="#minor-improvements-and-fixes-4" class="anchor"></a>Minor improvements and fixes</h2>
 <ul>
 <li>Documentation examples now use fewer iterations in order to reduce the runtime of R CMD check.</li>
 <li>In <code><a href="../reference/qTune.html">qTune()</a></code>, the <code>min_rep</code> and <code>max_rep</code> parameters have been replaced with <code>burn.in</code> and <code>nrep</code>, respectively, to be consistent with <code><a href="../reference/spatialCluster.html">spatialCluster()</a></code>.</li>
@@ -158,9 +221,9 @@
 <code><a href="../reference/getRDS.html">getRDS()</a></code> gains a <code>cache</code> parameter. When <code>TRUE</code>, the RDS is cached locally using <code>BiocFileCache</code>.</li>
 </ul>
 </div>
-<div id="minor-improvements-and-fixes-1" class="section level2">
+<div id="minor-improvements-and-fixes-5" class="section level2">
 <h2 class="hasAnchor">
-<a href="#minor-improvements-and-fixes-1" class="anchor"></a>Minor improvements and fixes</h2>
+<a href="#minor-improvements-and-fixes-5" class="anchor"></a>Minor improvements and fixes</h2>
 <ul>
 <li>Addressed reviewer concerns (<a href="https://github.com/Bioconductor/Contributions/issues/1624" class="uri">https://github.com/Bioconductor/Contributions/issues/1624</a>)
 <ul>
@@ -181,9 +244,9 @@
     <div id="bayesspace-0995" class="section level1">
 <h1 class="page-header" data-toc-text="0.99.5">
 <a href="#bayesspace-0995" class="anchor"></a>BayesSpace 0.99.5</h1>
-<div id="minor-improvements-and-fixes-2" class="section level2">
+<div id="minor-improvements-and-fixes-6" class="section level2">
 <h2 class="hasAnchor">
-<a href="#minor-improvements-and-fixes-2" class="anchor"></a>Minor improvements and fixes</h2>
+<a href="#minor-improvements-and-fixes-6" class="anchor"></a>Minor improvements and fixes</h2>
 <ul>
 <li>In <code><a href="../reference/spatialCluster.html">spatialCluster()</a></code> and <code><a href="../reference/spatialEnhance.html">spatialEnhance()</a></code>, setting <code>burn.in</code> equal to <code>nrep</code> now raises an error.</li>
 </ul>
@@ -204,9 +267,9 @@
 <li>Additional vignettes provided for reproducing the analyses of the melanoma, dorsolateral prefrontal cortex, and squamous cell carcinoma datasets presented in the bioRxiv manuscript.</li>
 </ul>
 </div>
-<div id="minor-improvements-and-fixes-3" class="section level2">
+<div id="minor-improvements-and-fixes-7" class="section level2">
 <h2 class="hasAnchor">
-<a href="#minor-improvements-and-fixes-3" class="anchor"></a>Minor improvements and fixes</h2>
+<a href="#minor-improvements-and-fixes-7" class="anchor"></a>Minor improvements and fixes</h2>
 <ul>
 <li>The internal layout of subspots is now correctly oriented (accounting for vertical flip of spot coordinates) when using spatial plot functions on enhanced Visium data.</li>
 <li>In <code><a href="../reference/spatialEnhance.html">spatialEnhance()</a></code>, PCs are now averaged over the MCMC iterations (excluding the burn-in period).</li>
@@ -220,9 +283,9 @@
     <div id="bayesspace-0993" class="section level1">
 <h1 class="page-header" data-toc-text="0.99.3">
 <a href="#bayesspace-0993" class="anchor"></a>BayesSpace 0.99.3</h1>
-<div id="minor-improvements-and-fixes-4" class="section level2">
+<div id="minor-improvements-and-fixes-8" class="section level2">
 <h2 class="hasAnchor">
-<a href="#minor-improvements-and-fixes-4" class="anchor"></a>Minor improvements and fixes</h2>
+<a href="#minor-improvements-and-fixes-8" class="anchor"></a>Minor improvements and fixes</h2>
 <ul>
 <li>Updated <code>README.md</code> to include system requirements, additional installation details, and link to vignette with demonstration of package functions, per journal guidelines.</li>
 </ul>
@@ -231,9 +294,9 @@
     <div id="bayesspace-0992" class="section level1">
 <h1 class="page-header" data-toc-text="0.99.2">
 <a href="#bayesspace-0992" class="anchor"></a>BayesSpace 0.99.2</h1>
-<div id="minor-improvements-and-fixes-5" class="section level2">
+<div id="minor-improvements-and-fixes-9" class="section level2">
 <h2 class="hasAnchor">
-<a href="#minor-improvements-and-fixes-5" class="anchor"></a>Minor improvements and fixes</h2>
+<a href="#minor-improvements-and-fixes-9" class="anchor"></a>Minor improvements and fixes</h2>
 <ul>
 <li>
 <code><a href="../reference/spatialEnhance.html">spatialEnhance()</a></code> incorrectly added row offset to spot column coordinate when generating subspot colData, and vice versa. This resulted in subspots being reflected over y=x in spatial plots, and has been fixed.</li>
@@ -244,9 +307,9 @@
     <div id="bayesspace-0991" class="section level1">
 <h1 class="page-header" data-toc-text="0.99.1">
 <a href="#bayesspace-0991" class="anchor"></a>BayesSpace 0.99.1</h1>
-<div id="minor-improvements-and-fixes-6" class="section level2">
+<div id="minor-improvements-and-fixes-10" class="section level2">
 <h2 class="hasAnchor">
-<a href="#minor-improvements-and-fixes-6" class="anchor"></a>Minor improvements and fixes</h2>
+<a href="#minor-improvements-and-fixes-10" class="anchor"></a>Minor improvements and fixes</h2>
 <ul>
 <li>Removed Maintainer field from DESCRIPTION to adhere to Bioconductor guidelines.</li>
 </ul>
