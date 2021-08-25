@@ -25,6 +25,8 @@
 #' * \code{lambda} (precision matrix) 
 #' * \code{Ychange} (acceptance rate for the jittering of PCs)
 #' 
+#' For best results, \code{Ychange} should average between 0.25 and 0.40.
+#' 
 #' @param sce SingleCellExperiment with a file path stored in its metadata.
 #' @param params List of model parameters to read
 #' 

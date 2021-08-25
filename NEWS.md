@@ -1,9 +1,21 @@
-# BayesSpace 1.1.3
+# BayesSpace 1.3.1
+
+## Minor improvements and fixes
+
+- Update documentation for `getRDS()`, `mcmcChain()`, and `spatialEnhance()`.
+
+# BayesSpace 1.3.0
 
 ## Minor improvements and fixes
 
 - Added information to documentation.
 - `getRDS()` updated with new URL.
+
+#BayesSpace 1.2.0
+
+## Minor improvements and fixes
+
+- Stable Bioconductor release 3.12
 
 # BayesSpace 1.1.2
 

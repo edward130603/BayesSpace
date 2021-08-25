@@ -1,7 +1,7 @@
 # BayesSpace <img src="inst/logo/logo.png" align="right" width="115" />
 
   <!-- badges: start -->
-  [![Bioconductor build status](http://bioconductor.org/shields/build/release/bioc/BayesSpace.svg)](https://bioconductor.org/checkResults/3.12/bioc-LATEST/BayesSpace/)
+  [![Bioconductor build status](http://bioconductor.org/shields/build/release/bioc/BayesSpace.svg)](https://bioconductor.org/checkResults/3.14/bioc-LATEST/BayesSpace/)
   <!-- badges: end -->
 
 ## Overview 
@@ -27,7 +27,7 @@ BayesSpace has been built and tested on the following operating systems:
 
 ### Software dependencies
 
-BayesSpace requires R 4.0 and Bioconductor 3.12. Specific package dependencies
+BayesSpace requires R 4.0+ and Bioconductor 3.12+. Specific package dependencies
 are defined in the package DESCRIPTION and are managed by the Bioconductor and
 devtools installers.
 

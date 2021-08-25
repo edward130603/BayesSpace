@@ -186,6 +186,18 @@ exampleSCE <- function(nrow=8, ncol=12, n_genes=100, n_PCs=10)
 #' @return sce A SingleCellExperiment with positional information in colData and
 #'   PCs based on the top 2000 HVGs
 #'   
+#' @details 
+#' The following datasets are available via \code{getRDS}.
+#' | Dataset  | Sample(s) |
+#' | ------------- | ------------- |
+#' | 2018_thrane_melanoma | ST_mel1_rep2 |
+#' | 2020_maynard_prefrontal-cortex  | 151507, 151508, 151509, 151510, 151669, 151670, 151671, 151672, 151673, 151674, 151675, 151676  |
+#' | 2020_ji_squamous-cell-carcinoma | P4_rep1 |
+#' | 2020_10X-IDC | IDC1 |
+#' | 2020_10X-demo_ovarian-cancer | whole_transcriptome |
+#' 
+#' @md
+#' 
 #' @examples
 #' sce <- getRDS("2018_thrane_melanoma", "ST_mel1_rep2", cache=FALSE)
 #'
