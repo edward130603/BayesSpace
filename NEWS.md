@@ -1,4 +1,4 @@
-# BayesSpace 1.1.3
+# BayesSpace 1.2.1
 
 ## Minor improvements and fixes
 
