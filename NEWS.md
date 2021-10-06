@@ -11,7 +11,7 @@
 - Added information to documentation.
 - `getRDS()` updated with new URL.
 
-#BayesSpace 1.2.0
+# BayesSpace 1.2.0
 
 ## Minor improvements and fixes
 
