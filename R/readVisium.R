@@ -52,13 +52,13 @@ readVisium <- function(dirname) {
     rownames(colData) <- colData$spot
     colData <- colData[colData$in_tissue > 0, ]
     
-    rowData <- read.table(file.path(matrix_dir, "features.tsv.gz"), header=FALSE)
+    rowData <- read.table(file.path(matrix_dir, "features.tsv.gz"), header=FALSE, sep = "\t")
     colnames(rowData) <- c("gene_id", "gene_name", "feature_type")
     rowData <- rowData[, c("gene_id", "gene_name")]
     rownames(rowData) <- scater::uniquifyFeatureNames(rowData$gene_id, rowData$gene_name)
     
     counts <- Matrix::readMM(file.path(matrix_dir, "matrix.mtx.gz"))
-    barcodes <- read.table(file.path(matrix_dir, "barcodes.tsv.gz"), header=FALSE)
+    barcodes <- read.table(file.path(matrix_dir, "barcodes.tsv.gz"), header=FALSE, sep = "\t")
     colnames(counts) <- barcodes$V1
     rownames(counts) <- rownames(rowData)
     counts <- counts[, rownames(colData)]
