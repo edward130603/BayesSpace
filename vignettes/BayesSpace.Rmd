@@ -168,6 +168,13 @@ components, and add these PCs as well as predicted cluster labels at subspot
 resolution to a new `SingleCellExperiment`. As with our demonstration of
 `spatialCluster()` above, we are using fewer iterations for the purpose of this
 example (`nrep=1000`) than we recommend in practice (`nrep=100000` or greater).
+Note that the `jitter_scale` parameter should be tuned so that proposals for 
+updating subspot-level expression are accepted around 30% of the time. This can
+be evaluated using `mcmcChain(melanoma.enhanced, "Ychange")`, where the chain 
+should stabilize to 0.25-0.40. Typically 1000-2500 iterations are sufficient to 
+evaluate if `jitter_scale` should be increased if acceptance is too high or 
+decreased if acceptance is too low. After tuning, proceed to a full run of 
+`spatialEnhance` with more iterations.
 
 ```{r enhance, eval=TRUE}
 melanoma.enhanced <- spatialEnhance(melanoma, q=4, platform="ST", d=7,

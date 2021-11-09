@@ -261,7 +261,7 @@ List iterate_t(arma::mat Y, List df_j, int nrep, int n, int d, double gamma, int
     NumericVector Ysums;
     for (int k = 1; k <= q; k++){
       uvec index_1k = find(df_sim_z.row(i-1) == k);
-      int n_i = sum(w(index_1k)); 
+      double n_i = sum(w(index_1k)); 
       mat Yrows = Y.rows(index_1k);
       Yrows.each_col() %= w(index_1k);
       Ysums = sum(Yrows, 0);
@@ -359,7 +359,7 @@ List iterate_t_vvv(arma::mat Y, List df_j, int nrep, int n, int d, double gamma,
     NumericVector Ysums;
     for (int k = 1; k <= q; k++){
       uvec index_1k = find(df_sim_z.row(i-1) == k);
-      int n_i = sum(w(index_1k)); 
+      double n_i = sum(w(index_1k)); 
       mat Yrows = Y.rows(index_1k);
       Yrows.each_col() %= w(index_1k);
       Ysums = sum(Yrows, 0);
@@ -489,7 +489,7 @@ List iterate_deconv(arma::mat Y, List df_j, bool tdist, int nrep, int n, int n0,
     NumericVector Ysums;
     for (int k = 1; k <= q; k++){
       uvec index_1k = find(z == k);
-      int n_i = sum(w(index_1k)); 
+      double n_i = sum(w(index_1k)); 
       mat Yrows = Y.rows(index_1k);
       Yrows.each_col() %= w(index_1k);
       Ysums = sum(Yrows, 0);

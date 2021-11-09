@@ -1,3 +1,17 @@
+# BayesSpace 1.4.1
+
+## Minor improvements and fixes
+
+- Update `readVisium` to work properly when feature names include whitespaces
+- Fix rounding of w_i sum in MCMC
+- Add details to vignette related to `spatialEnhance`
+
+# BayesSpace 1.4.0
+
+## New Bioconductor release (3.14)
+
+- Version numbering change with Bioconductor version bump
+
 # BayesSpace 1.3.1
 
 ## Minor improvements and fixes
@@ -13,9 +27,9 @@
 
 # BayesSpace 1.2.0
 
-## Minor improvements and fixes
+## New Bioconductor release (3.12)
 
-- Stable Bioconductor release 3.12
+- Version numbering change with Bioconductor version bump
 
 # BayesSpace 1.1.2
 
