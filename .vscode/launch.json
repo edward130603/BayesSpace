@@ -26,10 +26,43 @@
             ],
             "cwd": "${workspaceFolder}",
             "env": {
-                "R_HOME" : "/Library/Frameworks/R.framework/Resources"
+                "R_HOME": "/Library/Frameworks/R.framework/Resources"
             },
             "terminal": "console",
             "stopOnEntry": false
+        },
+        {
+            "name": "(gdb) Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/usr/lib/R/bin/exec/R",
+            "args": [
+                "--vanilla",
+                "-e",
+                "source('__tools/debug.R')"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [
+                {
+                    "name": "R_HOME",
+                    "value": "/usr/lib/R"
+                }
+            ],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ]
         }
     ]
 }

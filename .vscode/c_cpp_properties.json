@@ -7,7 +7,6 @@
                 "/Library/Frameworks/R.framework/Resources/include",
                 "/Library/Frameworks/R.framework/Versions/4.2/Resources/library/Rcpp/include",
                 "/Library/Frameworks/R.framework/Versions/4.2/Resources/library/RcppDist/include",
-                // "/Library/Frameworks/R.framework/Versions/4.2/Resources/library/cpp11/include",
                 "/Library/Frameworks/R.framework/Versions/4.2/Resources/library/RcppArmadillo/include",
                 "/Library/Frameworks/R.framework/Versions/4.2/Resources/library/RcppProgress/include"
             ],
@@ -17,6 +16,21 @@
             "compilerPath": "/usr/bin/clang",
             "cStandard": "c99",
             "intelliSenseMode": "macos-clang-x64",
+            "cppStandard": "c++17"
+        },
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/home/se3594/R/x86_64-pc-linux-gnu-library/4.2/Rcpp/include",
+                "/home/se3594/R/x86_64-pc-linux-gnu-library/4.2/RcppDist/include",
+                "/home/se3594/R/x86_64-pc-linux-gnu-library/4.2/RcppArmadillo/include",
+                "/home/se3594/R/x86_64-pc-linux-gnu-library/4.2/RcppProgress/include"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c99",
+            "intelliSenseMode": "linux-gcc-x64",
             "cppStandard": "c++17"
         }
     ],
