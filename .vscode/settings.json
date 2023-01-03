@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "*.rmd": "markdown",
+        "*.snake": "snakemake",
+        "cmath": "cpp",
+        "complex": "cpp"
+    }
+}

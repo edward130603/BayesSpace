@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "name": "Mac",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/Library/Frameworks/R.framework/Resources/include",
+                "/Library/Frameworks/R.framework/Versions/4.2/Resources/library/Rcpp/include",
+                "/Library/Frameworks/R.framework/Versions/4.2/Resources/library/RcppDist/include",
+                // "/Library/Frameworks/R.framework/Versions/4.2/Resources/library/cpp11/include",
+                "/Library/Frameworks/R.framework/Versions/4.2/Resources/library/RcppArmadillo/include",
+                "/Library/Frameworks/R.framework/Versions/4.2/Resources/library/RcppProgress/include"
+            ],
+            "macFrameworkPath": [
+                "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks"
+            ],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c99",
+            "intelliSenseMode": "macos-clang-x64",
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
+}

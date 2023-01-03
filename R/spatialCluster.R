@@ -54,7 +54,7 @@
 #'   assignments, \code{\link{featurePlot}} for visualizing expression levels
 #'   in spatial context, and \code{\link{mcmcChain}} for examining the full
 #'   MCMC chain associated with the clustering.
-#'   
+#'
 #' @name spatialCluster
 NULL
 
@@ -68,7 +68,7 @@ cluster <- function(Y, q, df_j, init = rep(1, nrow(Y)),
     model = c("t", "normal"), precision = c("equal", "variable"),
     mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)), 
     gamma = 3, alpha = 1, beta = 0.01, nrep = 1000) {
-    
+
     Y <- as.matrix(Y)
     d <- ncol(Y)
     n <- nrow(Y)

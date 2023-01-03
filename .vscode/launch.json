@@ -1,0 +1,35 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "R-Debugger",
+            "name": "Debug R-Function",
+            "request": "launch",
+            "debugMode": "function",
+            "workingDirectory": "${workspaceFolder}",
+            "file": "${cwd}/R/spatialEnhance.R",
+            "mainFunction": "main",
+            "allowGlobalDebugging": false
+        },
+        {
+            "name": "(lldb) Launch",
+            "type": "lldb",
+            "request": "launch",
+            "program": "/Library/Frameworks/R.framework/Resources/bin/exec/R",
+            "args": [
+                "--vanilla",
+                "-e",
+                "source('__tools/debug.R')"
+            ],
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "R_HOME" : "/Library/Frameworks/R.framework/Resources"
+            },
+            "terminal": "console",
+            "stopOnEntry": false
+        }
+    ]
+}
