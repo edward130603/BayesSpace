@@ -27,7 +27,6 @@
                 "/home/se3594/R/x86_64-pc-linux-gnu-library/4.2/RcppArmadillo/include",
                 "/home/se3594/R/x86_64-pc-linux-gnu-library/4.2/RcppProgress/include"
             ],
-            "defines": [],
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "c99",
             "intelliSenseMode": "linux-gcc-x64",

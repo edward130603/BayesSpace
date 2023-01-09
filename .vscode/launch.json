@@ -10,12 +10,11 @@
             "request": "launch",
             "debugMode": "function",
             "workingDirectory": "${workspaceFolder}",
-            "file": "${cwd}/R/spatialEnhance.R",
             "mainFunction": "main",
             "allowGlobalDebugging": false
         },
         {
-            "name": "(lldb) Launch",
+            "name": "macos (lldb) Launch",
             "type": "lldb",
             "request": "launch",
             "program": "/Library/Frameworks/R.framework/Resources/bin/exec/R",
@@ -32,7 +31,24 @@
             "stopOnEntry": false
         },
         {
-            "name": "(gdb) Launch",
+            "name": "linux (lldb) Launch",
+            "type": "lldb",
+            "request": "launch",
+            "program": "/usr/lib/R/bin/exec/R",
+            "args": [
+                "--vanilla",
+                "-e",
+                "source('__tools/debug.R')"
+            ],
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "R_HOME": "/usr/lib/R"
+            },
+            "terminal": "console",
+            "stopOnEntry": false
+        },
+        {
+            "name": "linux (gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
             "program": "/usr/lib/R/bin/exec/R",
