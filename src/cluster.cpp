@@ -538,25 +538,28 @@ iterate_t_vvv(
 /**
  * @brief
  *
- * @param Y
- * @param df_j
- * @param tdist
- * @param nrep
- * @param n
- * @param n0
- * @param d
- * @param gamma
- * @param q
- * @param init
- * @param subspots
- * @param verbose
- * @param jitter_scale
- * @param c
- * @param mu0
- * @param lambda0
- * @param alpha
- * @param beta
- * @return List
+ * @param Y the initialized principal components (num_subspots * num_pcs)
+ * @param df_j the indicies of neighbors of each spot (indices adjusted to
+ * 0-based)
+ * @param tdist whether to use multivariate t distribution or not
+ * @param nrep the number of MCMC iterations
+ * @param n the number of subspots (after deconvolution)
+ * @param n0 the number of spots (before deconvolution)
+ * @param d the number of PCs
+ * @param gamma smoothing parameter
+ * @param q the number of clusters
+ * @param init the initialized clustering of subspots
+ * @param subspots the number of subspots of each spot
+ * @param verbose whether to print more information
+ * @param jitter_scale the amount of jittering (the variance) for the proposal
+ * distribution
+ * @param c the amount of jittering (the variance) for the prior
+ * distribution
+ * @param mu0 the mean hyperparameetr of mu
+ * @param lambda0 the precision hyperparameter of mu
+ * @param alpha one of the hyperparamters of lambda
+ * @param beta one of the hyperparamters of lambda
+ * @return List MCMC samples of latent variables in a list
  */
 List
 iterate_deconv(
