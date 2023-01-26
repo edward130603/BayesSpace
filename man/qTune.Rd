@@ -23,14 +23,14 @@ be overwritten.}
 compute.}
 }
 \value{
-\code{qTune()} returns a modified \code{sce} with tuning log 
+\code{qTune()} returns a modified \code{sce} with tuning log
   likelihoods stored as an attribute named \code{"q.logliks"}.
-  
+
   \code{qPlot()} returns a ggplot object.
 }
 \description{
 Before running \code{spatialCluster()}, we recommend tuning the choice of
-\code{q} by choosing the \code{q} that maximizes the model's negative log
+\code{q} by choosing the \code{q} that minimizes the model's negative log
 likelihood over early iterations. \code{qTune()} computes the average
 negative log likelihood for a range of q values over iterations 100:1000, and
 \code{qPlot()} displays the results.
@@ -40,7 +40,7 @@ negative log likelihood for a range of q values over iterations 100:1000, and
   run the MCMC clustering algorithm up to \code{nrep} iterations for each
   value of \code{q}. The first \code{burn.in} iterations are discarded as
   burn-in and the log likelihood is averaged over the remaining iterations.
-  
+
 \code{qPlot()} plots the computed negative log likelihoods as a function of
   q. If \code{qTune()} was run previously, i.e. there exists an attribute of
   \code{sce} named \code{"q.logliks"}, the pre-computed results are
@@ -51,7 +51,7 @@ negative log likelihood for a range of q values over iterations 100:1000, and
 \examples{
 set.seed(149)
 sce <- exampleSCE()
-sce <- qTune(sce, seq(3, 7), burn.in=10, nrep=100)
+sce <- qTune(sce, seq(3, 7), burn.in = 10, nrep = 100)
 qPlot(sce)
 
 }

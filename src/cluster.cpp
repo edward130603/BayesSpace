@@ -534,7 +534,6 @@ iterate_t_vvv(
   return (out);
 }
 
-// [[Rcpp::export]]
 /**
  * @brief
  *
@@ -561,6 +560,7 @@ iterate_t_vvv(
  * @param beta one of the hyperparamters of lambda
  * @return List MCMC samples of latent variables in a list
  */
+// [[Rcpp::export]]
 List
 iterate_deconv(
     arma::mat Y, List df_j, bool tdist, int nrep, int n, int n0, int d,
@@ -649,12 +649,15 @@ iterate_deconv(
     // Update Y
     int updateCounter = 0;
     for (int j0 = 0; j0 < n0; j0++) {
-      Y_j_prev          = Y.rows(j0_vector * n0 + j0);
-      error             = rmvnorm(subspots, zero_vec, error_var);
+      Y_j_prev = Y.rows(j0_vector * n0 + j0);
+      error    = rmvnorm(subspots, zero_vec, error_var);
+
+      // Make sure that the sum of the error terms is zero.
       rowvec error_mean = sum(error, 0) / subspots;
       for (int r = 0; r < subspots; r++) {
         error.row(r) = error.row(r) - error_mean;
       }
+
       Y_j_new    = Y_j_prev + error;
       mat mu_i_j = mu_i_long.rows(j0_vector * n0 + j0);
       vec p_prev = {0.0};

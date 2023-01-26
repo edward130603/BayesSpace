@@ -100,7 +100,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // iterate_deconv
-/**  * @brief  *  * @param Y  * @param df_j  * @param tdist  * @param nrep  * @param n  * @param n0  * @param d  * @param gamma  * @param q  * @param init  * @param subspots  * @param verbose  * @param jitter_scale  * @param c  * @param mu0  * @param lambda0  * @param alpha  * @param beta  * @return List  */ List iterate_deconv(arma::mat Y, List df_j, bool tdist, int nrep, int n, int n0, int d, double gamma, int q, arma::vec init, int subspots, bool verbose, double jitter_scale, double c, NumericVector mu0, arma::mat lambda0, double alpha, double beta);
+List iterate_deconv(arma::mat Y, List df_j, bool tdist, int nrep, int n, int n0, int d, double gamma, int q, arma::vec init, int subspots, bool verbose, double jitter_scale, double c, NumericVector mu0, arma::mat lambda0, double alpha, double beta);
 RcppExport SEXP _BayesSpace_iterate_deconv(SEXP YSEXP, SEXP df_jSEXP, SEXP tdistSEXP, SEXP nrepSEXP, SEXP nSEXP, SEXP n0SEXP, SEXP dSEXP, SEXP gammaSEXP, SEXP qSEXP, SEXP initSEXP, SEXP subspotsSEXP, SEXP verboseSEXP, SEXP jitter_scaleSEXP, SEXP cSEXP, SEXP mu0SEXP, SEXP lambda0SEXP, SEXP alphaSEXP, SEXP betaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
