@@ -68,7 +68,7 @@ qPlot <- function(sce, qs = seq(3, 7), force.retune = FALSE, ...) {
 #'
 #' @export
 #' @rdname qTune
-qTune <- function(sce, qs = seq(3, 7), burn.in = 100, nrep = 1000, ...) {
+qTune <- function(sce, qs = seq(3, 7), burn.in = 100, nrep = 1000, cores = 1L, ...) {
     args <- list(...)
 
     assert_that(nrep >= 1)
@@ -96,17 +96,26 @@ qTune <- function(sce, qs = seq(3, 7), burn.in = 100, nrep = 1000, ...) {
     })
     cluster.args <- compact(args[cluster.args])
     cluster.args$nrep <- nrep
+    
+    logliks <- paraLapply(
+      qs,
+      function(q) {
+        init <- do.call(
+          .init_cluster,
+          c(list(Y = Y, q = q), init.args)
+        )
+        results <- do.call(
+          cluster,
+          c(list(Y = Y, q = q, df_j = df_j, init = init), cluster.args)
+        )
+        
+        data.frame(q = q, loglik = mean(results$plogLik[(burn.in + 1):nrep]))
+      },
+      cores = cores,
+      type = "fork",
+      verbose = FALSE
+    )
 
-    logliks <- list()
-    for (q in qs) {
-        init <- do.call(.init_cluster, c(list(Y = Y, q = q), init.args))
-
-        input.args <- list(Y = Y, q = q, df_j = df_j, init = init)
-
-        results <- do.call(cluster, c(input.args, cluster.args))
-        logliks[[q]] <- data.frame(q = q, loglik = mean(results$plogLik[(burn.in + 1):nrep]))
-    }
-
-    attr(sce, "q.logliks") <- unlist(logliks)
+    attr(sce, "q.logliks") <- do.call(rbind, logliks)
     sce
 }

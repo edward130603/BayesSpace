@@ -18,7 +18,7 @@ NULL
 #' @importFrom assertthat assert_that
 #'
 #' @keywords internal
-list2vec <- function(X, sep = ":", collapse = ",", use_names = TRUE) {
+list2vec <- function(X, sep = "=", collapse = ",", use_names = TRUE) {
   assert_that(!missing(X) && !is.null(X) && is.list(X))
   
   if (is.null(names(X)) && use_names)
@@ -49,7 +49,7 @@ paraLapply <- function(X, FUN, BPPARAM = NULL, cores = 1L, type = c("serial", "f
   assert_that(!missing(X) && !is.null(X) && length(X) > 0)
   assert_that(!missing(FUN) && !is.null(FUN))
   assert_that(is.null(BPPARAM) || inherits(BPPARAM, "BiocParallelParam"))
-  assert_that(length(cores) == 1L && is.integer(cores) && cores > 0L)
+  assert_that(length(cores) == 1L && is.numeric(cores) && cores > 0L)
   
   # Common arguments for "BiocParallelParam".
   .common.args <- c("stop.on.error", "progressbar", "RNGseed", "timeout", "threshold", "log", "logdir", "resultdir", "jobname")
@@ -67,8 +67,7 @@ paraLapply <- function(X, FUN, BPPARAM = NULL, cores = 1L, type = c("serial", "f
     .init.args <- compact(.args[.common.args])
     
     # Set the number of cores to be used.
-    if (!is.null(cores))
-      .init.args[["workers"]] = cores
+    .init.args[["workers"]] = as.integer(cores)
     
     if (verbose)
       message(sprintf("[DEBUG] Provided effective arguments for creating a parallelization back end: %s", list2vec(.init.args)))
@@ -77,10 +76,10 @@ paraLapply <- function(X, FUN, BPPARAM = NULL, cores = 1L, type = c("serial", "f
     .is.windows <- switch(Sys.info()[["sysname"]], Windows = TRUE, Linux = FALSE, Darwin = FALSE)
     
     # Create an object for parallelization reasonably.
-    if (type == "serial") {
+    if (type == "serial" || cores == 1L) {
       BPPARAM <- do.call(
         SerialParam,
-        discard(.init.args, function(x) x %in% c("workers"))
+        .init.args[discard(names(.init.args), function(x) x %in% c("workers"))]
       )
       
       if (verbose)
