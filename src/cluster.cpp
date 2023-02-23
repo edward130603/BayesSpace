@@ -1,5 +1,5 @@
 // [[Rcpp::plugins("cpp11")]]
-// [[Rcpp::depends(RcppArmadillo, RcppDist, RcppProgress, RcppClock)]]
+// [[Rcpp::depends(RcppArmadillo, RcppDist, RcppProgress)]]
 #include "neighbor.h"
 #include <RcppArmadillo.h>
 #include <RcppDist.h>
@@ -17,9 +17,9 @@ static double const log2pi = std::log(2.0 * M_PI);
 
 template <typename T>
 void
-print_helper(const T *arr, size_t size) {
-  if (size > 0) {
-    for (size_t i = 0; i < size; i++)
+print_thread_hits(const std::vector<T> &arr) {
+  if (arr.size() > 0) {
+    for (size_t i = 0; i < arr.size(); i++)
       std::cout << "[DEBUG] Thread " << i << " is hit " << arr[i]
                 << " times.\n";
     std::cout << std::endl;
@@ -621,9 +621,12 @@ iterate_deconv(
     double jitter_scale, double c, NumericVector mu0, arma::mat lambda0,
     double alpha, double beta, int thread_num = 1
 ) {
+  if (verbose) {
+    std::cout << "[DEBUG] The number of threads is " << thread_num << std::endl;
+  }
   omp_set_num_threads(thread_num);
 
-  long thread_hits[thread_num] = {0};
+  std::vector<long> thread_hits(thread_num, 0);
 
   // Initalize matrices storing iterations
   mat Y0              = Y.rows(0, n0 - 1);   // The input PCs on spot level.
@@ -861,7 +864,7 @@ iterate_deconv(
   );
 
   if (verbose) {
-    print_helper(thread_hits, thread_num);
+    print_thread_hits(thread_hits);
   }
 
   return (out);
