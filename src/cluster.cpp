@@ -1,29 +1,47 @@
 // [[Rcpp::plugins("cpp11")]]
-// [[Rcpp::depends(RcppArmadillo, RcppDist, RcppProgress)]]
+// [[Rcpp::depends(RcppArmadillo, RcppDist, RcppProgress, RcppClock)]]
+#include "neighbor.h"
 #include <RcppArmadillo.h>
 #include <RcppDist.h>
+#include <iostream>
+#include <omp.h>
 #include <progress.hpp>
 #include <progress_bar.hpp>
+#include <vector>
 using namespace Rcpp;
 using namespace arma;
 
+// [[Rcpp::plugins(openmp)]]
+
 static double const log2pi = std::log(2.0 * M_PI);
+
+template <typename T>
+void
+print_helper(const T *arr, size_t size) {
+  if (size > 0) {
+    for (size_t i = 0; i < size; i++)
+      std::cout << "[DEBUG] Thread " << i << " is hit " << arr[i]
+                << " times.\n";
+    std::cout << std::endl;
+  }
+}
 
 /* C++ version of the dtrmv BLAS function */
 void
-inplace_tri_mat_mult(arma::rowvec &x, arma::mat const &trimat) {
+inplace_tri_mat_mult_t(arma::rowvec &x, arma::mat const &trimat) {
   arma::uword const n = trimat.n_cols;
 
-  for (unsigned j = n; j-- > 0;) {
+  for (unsigned i = 0; i < n; i++) {
     double tmp(0.);
-    for (unsigned i = 0; i <= j; ++i)
-      tmp += trimat.at(i, j) * x[i];
-    x[j] = tmp;
+    for (unsigned j = i; j < n; j++)
+      tmp += trimat.at(i, j) * x[j];
+    x[i] = tmp;
   }
 }
 
 // Borrowed with appreciation from Nino Hardt, Dicko Ahmadou, Ben Christofferson
 // https://gallery.rcpp.org/articles/dmvnorm_arma/
+// Use covariance matrix
 arma::vec
 dmvnrm_arma_fast(
     arma::mat const &x, arma::rowvec const &mean, arma::mat const &sigma,
@@ -40,13 +58,46 @@ dmvnrm_arma_fast(
   arma::rowvec z;
   for (uword i = 0; i < n; i++) {
     z = (x.row(i) - mean);
-    inplace_tri_mat_mult(z, rooti);
+    inplace_tri_mat_mult_t(z, rooti);
     out(i) = other_terms - 0.5 * arma::dot(z, z);
   }
 
   if (logd)
     return out;
   return exp(out);
+}
+
+// Use precision matrix
+arma::vec
+dmvnrm_prec_arma_fast(
+    arma::mat const &x, arma::rowvec const &mean, arma::mat const &lambda,
+    bool const logd = false
+) {
+  using arma::uword;
+  uword const n = x.n_rows, xdim = x.n_cols;
+  arma::vec out(n);
+  arma::mat const rooti    = arma::trimatu(arma::chol(lambda));
+  double const rootisum    = arma::sum(log(rooti.diag())),
+               constants   = -(double) xdim / 2.0 * log2pi,
+               other_terms = rootisum + constants;
+
+  arma::rowvec z;
+  for (uword i = 0; i < n; i++) {
+    z = (x.row(i) - mean);
+    inplace_tri_mat_mult_t(z, rooti);
+    out(i) = other_terms - 0.5 * arma::dot(z, z);
+  }
+
+  if (logd)
+    return out;
+  return exp(out);
+}
+
+void
+convert_neighbors(const List &ori, std::vector<Neighbor> &des) {
+  for (auto i = 0; i != ori.size(); i++) {
+    des.emplace_back(Neighbor(NumericVector(ori[i])));
+  }
 }
 
 // [[Rcpp::export]]
@@ -558,20 +609,30 @@ iterate_t_vvv(
  * @param lambda0 the precision hyperparameter of mu
  * @param alpha one of the hyperparamters of lambda
  * @param beta one of the hyperparamters of lambda
+ * @param thread_num the number of threads to be used
+ * @param verbose information for debugging
  * @return List MCMC samples of latent variables in a list
  */
 // [[Rcpp::export]]
 List
 iterate_deconv(
     arma::mat Y, List df_j, bool tdist, int nrep, int n, int n0, int d,
-    double gamma, int q, arma::vec init, int subspots, bool verbose,
+    double gamma, int q, arma::uvec init, int subspots, bool verbose,
     double jitter_scale, double c, NumericVector mu0, arma::mat lambda0,
-    double alpha, double beta
+    double alpha, double beta, int thread_num = 1
 ) {
+  omp_set_num_threads(thread_num);
+
+  long thread_hits[thread_num] = {0};
 
   // Initalize matrices storing iterations
-  mat Y0 = Y.rows(0, n0 - 1);
-  mat df_sim_z(nrep / 100 + 1, n, fill::zeros);
+  mat Y0              = Y.rows(0, n0 - 1);   // The input PCs on spot level.
+  mat Y_new           = mat(Y.n_rows,
+                            Y.n_cols);   // The proposed PCs on subspot level.
+  uvec z_new          = uvec(n);         // The proposed zs on subspot level.
+  vec acceptance_prob = vec(n);   // The probability of accepting the proposals
+                                  // on subspot level.
+  umat df_sim_z(nrep / 100 + 1, n, fill::zeros);
   mat df_sim_mu(nrep, q * d, fill::zeros);
   List df_sim_lambda(nrep / 100 + 1);
   List df_sim_Y(nrep / 100 + 1);
@@ -582,12 +643,16 @@ iterate_deconv(
   rowvec initmu    = rep(mu0, q);
   df_sim_mu.row(0) = initmu;
   df_sim_lambda[0] = lambda0;
-  mat lambda_i     = lambda0;
-  df_sim_z.row(0)  = init.t();
-  vec z            = init;
-  df_sim_Y[0]      = Y;
-  vec w            = ones<vec>(n);
-  df_sim_w.row(0)  = w.t();
+  vec beta_d(d, fill::value(beta));
+  mat Vinv        = diagmat(beta_d);
+  mat lambda_i    = lambda0;
+  df_sim_z.row(0) = init.t();
+  uvec z          = init;
+  df_sim_Y[0]     = Y;
+  vec w           = ones<vec>(n);
+  df_sim_w.row(0) = w.t();
+  std::vector<Neighbor> neighbors;
+  convert_neighbors(df_j, neighbors);
 
   // Iterate
   colvec mu0vec = as<colvec>(mu0);
@@ -601,10 +666,15 @@ iterate_deconv(
   }
   mat Y_j_prev(subspots, d);
   mat Y_j_new(subspots, d);
-  mat error(subspots, d);
-  vec zero_vec  = zeros<vec>(d);
-  vec one_vec   = ones<vec>(d);
-  mat error_var = diagmat(one_vec) / d * jitter_scale;
+  mat error(n, d);
+  mat error_j(subspots, d);
+  const double w_alpha     = (d + 4) / 2;   // shape parameter
+  const IntegerVector qvec = seq_len(q);
+  const vec zero_vec       = zeros<vec>(d);
+  const vec one_vec        = ones<vec>(d);
+  const mat error_var =
+      diagmat(one_vec) / d *
+      jitter_scale;   // d here does not seem to have an effect
   Progress p(nrep - 1, verbose);
   for (int i = 1; i < nrep; i++) {
     // Check for interrupt every ~1-2 seconds (0.24s/iter based on 6k subspots)
@@ -628,49 +698,58 @@ iterate_deconv(
       mat Yrows     = Y.rows(index_1k);
       Yrows.each_col() %= w(index_1k);
       Ysums      = sum(Yrows, 0);
-      vec mean_i = inv(lambda0 + n_i * lambda_i) *
-                   (lambda0 * mu0vec + lambda_i * as<colvec>(Ysums));
-      mat var_i       = inv(lambda0 + n_i * lambda_i);
+      mat var_i  = inv(lambda0 + n_i * lambda_i);
+      vec mean_i = var_i * (lambda0 * mu0vec + lambda_i * as<colvec>(Ysums));
       mu_i.row(k - 1) = rmvnorm(1, mean_i, var_i);
     }
     df_sim_mu.row(i) = vectorise(mu_i, 1);
 
     // Update lambda
     for (int j = 0; j < n; j++) {
-      mu_i_long.row(j) = mu_i.row(z[j] - 1);
+      mu_i_long.row(j) = mu_i.row(z(j) - 1);
     }
     mat sumofsq = (Y - mu_i_long).t() * diagmat(w) * (Y - mu_i_long);
-    vec beta_d(d);
-    beta_d.fill(beta);
-    mat Vinv    = diagmat(beta_d);
     lambda_i    = rwish(n + alpha, inv(Vinv + sumofsq));
-    mat sigma_i = inv(lambda_i);
 
-    // Update Y
+    // Propose new values for Y.
     int updateCounter = 0;
+    error             = rmvnorm(
+        n, zero_vec, error_var
+    );   // Generate random numbers before entering multithreading.
+
+    // Multithreading to compute the MCMC kernel of Y.
+#pragma omp parallel for schedule(static) default(none                         \
+) private(Y_j_prev, error_j, Y_j_new)                                          \
+    shared(                                                                    \
+        Y, Y_new, error, acceptance_prob, j0_vector, subspots, zero_vec,       \
+        mu_i_long, Y0, lambda_i, n0, w, c, updateCounter, thread_hits          \
+    ) num_threads(thread_num)
     for (int j0 = 0; j0 < n0; j0++) {
+#pragma omp atomic update
+      thread_hits[omp_get_thread_num()]++;
+
       Y_j_prev = Y.rows(j0_vector * n0 + j0);
-      error    = rmvnorm(subspots, zero_vec, error_var);
+      error_j  = error.rows(j0_vector * n0 + j0);
 
       // Make sure that the sum of the error terms is zero.
-      rowvec error_mean = sum(error, 0) / subspots;
+      const rowvec error_mean = sum(error_j, 0) / subspots;
       for (int r = 0; r < subspots; r++) {
-        error.row(r) = error.row(r) - error_mean;
+        error_j.row(r) = error_j.row(r) - error_mean;
       }
 
-      Y_j_new    = Y_j_prev + error;
-      mat mu_i_j = mu_i_long.rows(j0_vector * n0 + j0);
-      vec p_prev = {0.0};
-      vec p_new  = {0.0};
+      Y_j_new          = Y_j_prev + error_j;
+      const mat mu_i_j = mu_i_long.rows(j0_vector * n0 + j0);
+      vec p_prev       = {0.0};
+      vec p_new        = {0.0};
       for (int r = 0; r < subspots; r++) {
         p_prev +=
-            dmvnrm_arma_fast(
-                Y_j_prev.row(r), mu_i_j.row(r), sigma_i / w[j0 + n0 * r], true
+            dmvnrm_prec_arma_fast(
+                Y_j_prev.row(r), mu_i_j.row(r), lambda_i / w(j0 + n0 * r), true
             ) -
             c * (accu(pow(Y_j_prev.row(r) - Y0.row(j0), 2)));
         p_new +=
-            dmvnrm_arma_fast(
-                Y_j_new.row(r), mu_i_j.row(r), sigma_i / w[j0 + n0 * r], true
+            dmvnrm_prec_arma_fast(
+                Y_j_new.row(r), mu_i_j.row(r), lambda_i / w(j0 + n0 * r), true
             ) -
             c * (accu(pow(Y_j_new.row(r) - Y0.row(j0), 2)));
       }
@@ -678,61 +757,96 @@ iterate_deconv(
       if (probY_j > 1) {
         probY_j = 1;
       }
-      IntegerVector Ysample = {0, 1};
-      NumericVector probsY  = {1 - probY_j, probY_j};
-      int yesUpdate         = sample(Ysample, 1, true, probsY)[0];
+#pragma omp critical(y_acceptance_prob)
+      {
+        acceptance_prob(j0)             = probY_j;
+        Y_new.rows(j0_vector * n0 + j0) = Y_j_new;
+      }
+    }
+
+    // Accept or reject proposals of Y; update w; propose new values for z.
+    for (int j0 = 0; j0 < n0; j0++) {
+      const IntegerVector Ysample = {0, 1};
+      const NumericVector probsY  = {
+          1 - acceptance_prob(j0), acceptance_prob(j0)};
+      const int yesUpdate = sample(Ysample, 1, true, probsY)[0];
       if (yesUpdate == 1) {
-        Y.rows(j0_vector * n0 + j0) = Y_j_new;
+        Y.rows(j0_vector * n0 + j0) = Y_new.rows(j0_vector * n0 + j0);
         updateCounter++;
+      }
+
+      for (int r = 0; r < subspots; r++) {
+        // Update w.
+        if (tdist) {
+          const double w_beta = as_scalar(
+              2 /
+              ((Y.row(r * n0 + j0) - mu_i_long.row(r * n0 + j0)) * lambda_i *
+                   (Y.row(r * n0 + j0) - mu_i_long.row(r * n0 + j0)).t() +
+               4)
+          );   // scale parameter
+          w(r * n0 + j0) =
+              R::rgamma(w_alpha, w_beta);   // sample from posterior for w
+        }
+
+        // Propose new values for z.
+        const IntegerVector qlessk = qvec[qvec != z(r * n0 + j0)];
+        z_new(r * n0 + j0)         = sample(qlessk, 1)[0];
       }
     }
     Ychange[i] = updateCounter * 1.0 / n0;
 
-    // Update w and z
-    double w_alpha = (d + 4) / 2;   // shape parameter
-    double w_beta;
-    IntegerVector qvec = seq_len(q);
+    // Update z
+#pragma omp parallel for schedule(static) default(none) shared(                \
+    n, z, z_new, neighbors, gamma, Y, mu_i, lambda_i, w, acceptance_prob,      \
+    thread_hits                                                                \
+) num_threads(thread_num)
     for (int j = 0; j < n; j++) {
-      if (tdist) {
-        w_beta = as_scalar(
-            2 / ((Y.row(j) - mu_i_long.row(j)) * lambda_i *
-                     (Y.row(j) - mu_i_long.row(j)).t() +
-                 4)
-        );                                   // scale parameter
-        w[j] = R::rgamma(w_alpha, w_beta);   // sample from posterior for w
-      }
-      int z_j_prev         = z[j];
-      IntegerVector qlessk = qvec[qvec != z_j_prev];
-      int z_j_new          = sample(qlessk, 1)[0];
-      uvec j_vector        = df_j[j];
+#pragma omp atomic update
+      thread_hits[omp_get_thread_num()]++;
+
+      const int z_j_prev      = z(j);
+      const int z_j_new       = z_new(j);
+      const Neighbor j_vector = neighbors[j];
       double h_z_prev;
       double h_z_new;
-      if (j_vector.size() != 0) {
-        h_z_prev =
-            gamma / j_vector.size() * 2 * accu((z(j_vector) == z_j_prev)) +
-            dmvnrm_arma_fast(
-                Y.row(j), mu_i.row(z_j_prev - 1), sigma_i / w[j], true
-            )[0];
-        h_z_new = gamma / j_vector.size() * 2 * accu((z(j_vector) == z_j_new)) +
-                  dmvnrm_arma_fast(
-                      Y.row(j), mu_i.row(z_j_new - 1), sigma_i / w[j], true
+      if (j_vector.get_size() != 0) {
+        h_z_prev = gamma / j_vector.get_size() * 2 *
+                       accu((z(j_vector.get_neighbors()) == z_j_prev)) +
+                   dmvnrm_prec_arma_fast(
+                       Y.row(j), mu_i.row(z_j_prev - 1), lambda_i / w(j), true
+                   )[0];
+        h_z_new = gamma / j_vector.get_size() * 2 *
+                      accu((z(j_vector.get_neighbors()) == z_j_new)) +
+                  dmvnrm_prec_arma_fast(
+                      Y.row(j), mu_i.row(z_j_new - 1), lambda_i / w(j), true
                   )[0];
       } else {
-        h_z_prev = dmvnrm_arma_fast(
-            Y.row(j), mu_i.row(z_j_prev - 1), sigma_i / w[j], true
+        h_z_prev = dmvnrm_prec_arma_fast(
+            Y.row(j), mu_i.row(z_j_prev - 1), lambda_i / w(j), true
         )[0];
-        h_z_new = dmvnrm_arma_fast(
-            Y.row(j), mu_i.row(z_j_new - 1), sigma_i / w[j], true
+        h_z_new = dmvnrm_prec_arma_fast(
+            Y.row(j), mu_i.row(z_j_new - 1), lambda_i / w(j), true
         )[0];
       }
       double prob_j = exp(h_z_new - h_z_prev);
       if (prob_j > 1) {
         prob_j = 1;
       }
-      IntegerVector zsample = {z_j_prev, z_j_new};
-      NumericVector probs   = {1 - prob_j, prob_j};
-      z[j]                  = sample(zsample, 1, true, probs)[0];
+#pragma omp atomic write
+      acceptance_prob(j) = prob_j;
     }
+
+    // Accept or reject proposals of z.
+    for (int j = 0; j < n; j++) {
+      const IntegerVector zsample = {0, 1};
+      const NumericVector probs = {1 - acceptance_prob(j), acceptance_prob(j)};
+      const int yesUpdate       = sample(zsample, 1, true, probs)[0];
+      if (yesUpdate == 1) {
+        z(j) = z_new(j);
+      }
+    }
+
+    // Save samples for every 100 iterations.
     if ((i + 1) % 100 == 0) {
       df_sim_lambda[(i + 1) / 100] = lambda_i;
       df_sim_Y[(i + 1) / 100]      = Y;
@@ -740,9 +854,15 @@ iterate_deconv(
       df_sim_z.row((i + 1) / 100)  = z.t();
     }
   }
+
   List out = List::create(
       _["z"] = df_sim_z, _["mu"] = df_sim_mu, _["lambda"] = df_sim_lambda,
       _["weights"] = df_sim_w, _["Y"] = df_sim_Y, _["Ychange"] = Ychange
   );
+
+  if (verbose) {
+    print_helper(thread_hits, thread_num);
+  }
+
   return (out);
 }
