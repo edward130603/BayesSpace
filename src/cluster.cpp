@@ -1,5 +1,6 @@
 // [[Rcpp::plugins("cpp11")]]
 // [[Rcpp::depends(RcppArmadillo, RcppDist, RcppProgress)]]
+#include "double_states_vector.h"
 #include "neighbor.h"
 #include <RcppArmadillo.h>
 #include <RcppDist.h>
@@ -626,7 +627,7 @@ iterate_deconv(
   }
   omp_set_num_threads(thread_num);
 
-  std::vector<long> thread_hits(thread_num, 0);
+  std::vector<u_int64_t> thread_hits(thread_num, 0);
 
   // Initalize matrices storing iterations
   mat Y0              = Y.rows(0, n0 - 1);   // The input PCs on spot level.
@@ -635,12 +636,15 @@ iterate_deconv(
   uvec z_new          = uvec(n);         // The proposed zs on subspot level.
   vec acceptance_prob = vec(n);   // The probability of accepting the proposals
                                   // on subspot level.
+  DoubleStatesVector<double> log_likelihoods(n
+  );   // The log-likelihoods on subspot level.
   umat df_sim_z(nrep / 100 + 1, n, fill::zeros);
   mat df_sim_mu(nrep, q * d, fill::zeros);
   List df_sim_lambda(nrep / 100 + 1);
   List df_sim_Y(nrep / 100 + 1);
   mat df_sim_w(nrep / 100 + 1, n);
   NumericVector Ychange(nrep, NA_REAL);
+  NumericVector plogLik(nrep, NA_REAL);
 
   // Initialize parameters
   rowvec initmu    = rep(mu0, q);
@@ -689,7 +693,8 @@ iterate_deconv(
       if (Progress::check_abort())
         return (List::create(
             _["z"] = df_sim_z, _["mu"] = df_sim_mu, _["lambda"] = df_sim_lambda,
-            _["weights"] = df_sim_w, _["Y"] = df_sim_Y, _["Ychange"] = Ychange
+            _["weights"] = df_sim_w, _["Y"] = df_sim_Y, _["Ychange"] = Ychange,
+            _["plogLik"] = plogLik
         ));
     }
 
@@ -760,7 +765,7 @@ iterate_deconv(
       if (probY_j > 1) {
         probY_j = 1;
       }
-#pragma omp critical(y_acceptance_prob)
+#pragma omp critical(iter_y)
       {
         acceptance_prob(j0)             = probY_j;
         Y_new.rows(j0_vector * n0 + j0) = Y_j_new;
@@ -801,7 +806,7 @@ iterate_deconv(
     // Update z
 #pragma omp parallel for schedule(static) default(none) shared(                \
     n, z, z_new, neighbors, gamma, Y, mu_i, lambda_i, w, acceptance_prob,      \
-    thread_hits                                                                \
+    thread_hits, log_likelihoods                                               \
 ) num_threads(thread_num)
     for (int j = 0; j < n; j++) {
 #pragma omp atomic update
@@ -810,44 +815,46 @@ iterate_deconv(
       const int z_j_prev      = z(j);
       const int z_j_new       = z_new(j);
       const Neighbor j_vector = neighbors[j];
-      double h_z_prev;
-      double h_z_new;
+
+      // log likelihood; prior
+      vec h_z_prev(2, fill::zeros), h_z_new(2, fill::zeros);
+
+      h_z_prev(0) = dmvnrm_prec_arma_fast(
+          Y.row(j), mu_i.row(z_j_prev - 1), lambda_i / w(j), true
+      )[0];
+      h_z_new(0) = dmvnrm_prec_arma_fast(
+          Y.row(j), mu_i.row(z_j_new - 1), lambda_i / w(j), true
+      )[0];
+
       if (j_vector.get_size() != 0) {
-        h_z_prev = gamma / j_vector.get_size() * 2 *
-                       accu((z(j_vector.get_neighbors()) == z_j_prev)) +
-                   dmvnrm_prec_arma_fast(
-                       Y.row(j), mu_i.row(z_j_prev - 1), lambda_i / w(j), true
-                   )[0];
-        h_z_new = gamma / j_vector.get_size() * 2 *
-                      accu((z(j_vector.get_neighbors()) == z_j_new)) +
-                  dmvnrm_prec_arma_fast(
-                      Y.row(j), mu_i.row(z_j_new - 1), lambda_i / w(j), true
-                  )[0];
-      } else {
-        h_z_prev = dmvnrm_prec_arma_fast(
-            Y.row(j), mu_i.row(z_j_prev - 1), lambda_i / w(j), true
-        )[0];
-        h_z_new = dmvnrm_prec_arma_fast(
-            Y.row(j), mu_i.row(z_j_new - 1), lambda_i / w(j), true
-        )[0];
+        h_z_prev(1) = gamma / j_vector.get_size() * 2 *
+                      accu((z(j_vector.get_neighbors()) == z_j_prev));
+        h_z_new(1) = gamma / j_vector.get_size() * 2 *
+                     accu((z(j_vector.get_neighbors()) == z_j_new));
       }
-      double prob_j = exp(h_z_new - h_z_prev);
+      double prob_j = exp(accu(h_z_new) - accu(h_z_prev));
       if (prob_j > 1) {
         prob_j = 1;
       }
-#pragma omp atomic write
-      acceptance_prob(j) = prob_j;
+
+#pragma omp critical(iter_z)
+      {
+        acceptance_prob(j)     = prob_j;
+        log_likelihoods.row(j) = {h_z_prev(0), h_z_new(0)};
+      }
     }
 
     // Accept or reject proposals of z.
     for (int j = 0; j < n; j++) {
       const IntegerVector zsample = {0, 1};
       const NumericVector probs = {1 - acceptance_prob(j), acceptance_prob(j)};
-      const int yesUpdate       = sample(zsample, 1, true, probs)[0];
+      const uword yesUpdate     = sample(zsample, 1, true, probs)[0];
+      log_likelihoods.set_col_idx(j, yesUpdate);
       if (yesUpdate == 1) {
         z(j) = z_new(j);
       }
     }
+    plogLik[i] = accu(log_likelihoods.get_current_values());
 
     // Save samples for every 100 iterations.
     if ((i + 1) % 100 == 0) {
@@ -860,7 +867,8 @@ iterate_deconv(
 
   List out = List::create(
       _["z"] = df_sim_z, _["mu"] = df_sim_mu, _["lambda"] = df_sim_lambda,
-      _["weights"] = df_sim_w, _["Y"] = df_sim_Y, _["Ychange"] = Ychange
+      _["weights"] = df_sim_w, _["Y"] = df_sim_Y, _["Ychange"] = Ychange,
+      _["plogLik"] = plogLik
   );
 
   if (verbose) {
