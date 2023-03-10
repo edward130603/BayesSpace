@@ -726,8 +726,7 @@ iterate_deconv(
     );   // Generate random numbers before entering multithreading.
 
     // Multithreading to compute the MCMC kernel of Y.
-#pragma omp parallel for schedule(static) default(none                         \
-) private(Y_j_prev, error_j, Y_j_new)                                          \
+#pragma omp parallel for schedule(static) private(Y_j_prev, error_j, Y_j_new)  \
     shared(                                                                    \
         Y, Y_new, error, acceptance_prob, j0_vector, subspots, zero_vec,       \
         mu_i_long, Y0, lambda_i, n0, w, c, updateCounter, thread_hits          \
@@ -804,7 +803,7 @@ iterate_deconv(
     Ychange[i] = updateCounter * 1.0 / n0;
 
     // Update z
-#pragma omp parallel for schedule(static) default(none) shared(                \
+#pragma omp parallel for schedule(static) shared(                              \
     n, z, z_new, neighbors, gamma, Y, mu_i, lambda_i, w, acceptance_prob,      \
     thread_hits, log_likelihoods                                               \
 ) num_threads(thread_num)
@@ -817,7 +816,7 @@ iterate_deconv(
       const Neighbor j_vector = neighbors[j];
 
       // log likelihood; prior
-      vec h_z_prev(2, fill::zeros), h_z_new(2, fill::zeros);
+      vec h_z_prev(2, arma::fill::zeros), h_z_new(2, arma::fill::zeros);
 
       h_z_prev(0) = dmvnrm_prec_arma_fast(
           Y.row(j), mu_i.row(z_j_prev - 1), lambda_i / w(j), true

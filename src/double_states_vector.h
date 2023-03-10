@@ -17,7 +17,7 @@ public:
   DoubleStatesVector(DoubleStatesVector &&);
   ~DoubleStatesVector();
 
-  T &operator()(const arma::uword, const arma::uword) throw(const char *);
+  T &operator()(const arma::uword, const arma::uword);
 
   arma::subview_row<T> row(const arma::uword);
   const arma::subview_row<T> row(const arma::uword) const;
@@ -28,7 +28,7 @@ public:
   arma::subview<T> cols(const arma::uvec &);
   const arma::subview<T> cols(const arma::uvec &) const;
 
-  void set_col_idx(const arma::uword, const arma::uword) throw(const char *);
+  void set_col_idx(const arma::uword, const arma::uword);
   const arma::Col<T> get_current_values() const;
 };
 
@@ -59,7 +59,7 @@ template <class T>
 T &
 DoubleStatesVector<T>::operator()(
     const arma::uword row_idx, const arma::uword col_idx
-) throw(const char *) {
+) {
   if (col_idx > 1 || row_idx > __row_idx.n_elem) {
     throw "Invalid matrix access.";
   }
@@ -119,7 +119,7 @@ template <class T>
 void
 DoubleStatesVector<T>::set_col_idx(
     const arma::uword idx, const arma::uword val
-) throw(const char *) {
+) {
   if (val > 1 || idx > __row_idx.n_elem) {
     throw "Invalid vector access.";
   }
