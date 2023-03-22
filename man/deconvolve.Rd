@@ -21,7 +21,8 @@ deconvolve(
   gamma = 2,
   lambda0 = diag(0.01, nrow = ncol(Y)),
   alpha = 1,
-  beta = 0.01
+  beta = 0.01,
+  cores = 1
 )
 }
 \value{

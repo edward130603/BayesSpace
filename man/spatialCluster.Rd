@@ -30,12 +30,12 @@ spatialCluster(
 
 \item{q}{The number of clusters.}
 
-\item{use.dimred}{Name of a reduced dimensionality result in 
+\item{use.dimred}{Name of a reduced dimensionality result in
 \code{reducedDims(sce)}. If provided, cluster on these features directly.}
 
 \item{d}{Number of top principal components to use when clustering.}
 
-\item{platform}{Spatial transcriptomic platform. Specify 'Visium' for hex 
+\item{platform}{Spatial transcriptomic platform. Specify 'Visium' for hex
 lattice geometry or 'ST' for square lattice geometry. Specifying this
 parameter is optional when analyzing SingleCellExperiments processed using
 \code{\link{readVisium}} or \code{\link{spatialPreprocess}}, as this
@@ -43,12 +43,12 @@ information is included in their metadata.}
 
 \item{init}{Initial cluster assignments for spots.}
 
-\item{init.method}{If \code{init} is not provided, cluster the top \code{d} 
+\item{init.method}{If \code{init} is not provided, cluster the top \code{d}
 PCs with this method to obtain initial cluster assignments.}
 
 \item{model}{Error model. ('normal' or 't')}
 
-\item{precision}{Covariance structure. ('equal' or 'variable' for EEE and 
+\item{precision}{Covariance structure. ('equal' or 'variable' for EEE and
 VVV covariance models, respectively.)}
 
 \item{nrep}{The number of MCMC iterations.}
@@ -91,7 +91,7 @@ and the cluster initialization is stored in \code{cluster.init}.
 \examples{
 set.seed(149)
 sce <- exampleSCE()
-sce <- spatialCluster(sce, 7, nrep=100, burn.in=10)
+sce <- spatialCluster(sce, 7, nrep = 100, burn.in = 10)
 
 }
 \seealso{

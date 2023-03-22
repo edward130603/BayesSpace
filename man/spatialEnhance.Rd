@@ -24,6 +24,7 @@ spatialEnhance(
   burn.in = 10000,
   jitter_scale = 5,
   jitter_prior = 0.3,
+  cores = 1,
   verbose = FALSE
 )
 }
@@ -82,6 +83,9 @@ average around 25\%-40\%. Ychange can be accessed via \code{mcmcChain()}.}
 proportion (default = 0.3) of the mean variance of the PCs.
 We suggest making \code{jitter_prior} smaller if the jittered values are
 not expected to vary much from the overall mean of the spot.}
+
+\item{cores}{The number of threads to use. The results are invariate to the
+value of \code{cores}.}
 
 \item{verbose}{Log progress to stderr.}
 }

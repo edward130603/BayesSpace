@@ -7,7 +7,7 @@
 \usage{
 qPlot(sce, qs = seq(3, 7), force.retune = FALSE, ...)
 
-qTune(sce, qs = seq(3, 7), burn.in = 100, nrep = 1000, ...)
+qTune(sce, qs = seq(3, 7), burn.in = 100, nrep = 1000, cores = 1L, ...)
 }
 \arguments{
 \item{sce}{A SingleCellExperiment object containing the spatial data.}
@@ -21,6 +21,9 @@ be overwritten.}
 
 \item{burn.in, nrep}{Integers specifying the range of repetitions to
 compute.}
+
+\item{cores}{The number of threads to use. The results are invariate to the
+value of \code{cores}.}
 }
 \value{
 \code{qTune()} returns a modified \code{sce} with tuning log

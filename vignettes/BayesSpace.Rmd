@@ -108,7 +108,7 @@ pseudo-log-likelihood. It accepts any arguments to `spatialCluster()`.
 choosing a `q` around the elbow of this plot.
 
 ```{r tuning_q}
-melanoma <- qTune(melanoma, qs=seq(2, 10), platform="ST", d=7)
+melanoma <- qTune(melanoma, qs=seq(2, 10), platform="ST", d=7, cores=2)
 qPlot(melanoma)
 ```
 
@@ -181,7 +181,7 @@ melanoma.enhanced <- spatialEnhance(melanoma, q=4, platform="ST", d=7,
                                     model="t", gamma=2,
                                     jitter_prior=0.3, jitter_scale=3.5,
                                     nrep=1000, burn.in=100,
-                                    save.chain=TRUE)
+                                    save.chain=TRUE, cores = 1)
 ```
 
 The enhanced `SingleCellExperiment` includes an index to the parent spot in the

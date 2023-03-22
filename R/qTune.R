@@ -10,6 +10,8 @@
 #' @param qs The values of q to evaluate.
 #' @param burn.in,nrep Integers specifying the range of repetitions to
 #'   compute.
+#' @param cores The number of threads to use. The results are invariate to the
+#'   value of \code{cores}.
 #' @param force.retune If specified, existing tuning values in \code{sce} will
 #'   be overwritten.
 #' @param ... Other parameters are passed to \code{spatialCluster()}.
@@ -46,20 +48,20 @@ NULL
 #' @export
 #' @rdname qTune
 qPlot <- function(sce, qs = seq(3, 7), force.retune = FALSE, ...) {
-    if (!("q.logliks" %in% names(attributes(sce))) || force.retune) {
-        sce <- qTune(sce, qs, ...)
-    }
+  if (!("q.logliks" %in% names(attributes(sce))) || force.retune) {
+    sce <- qTune(sce, qs, ...)
+  }
 
-    logliks <- attr(sce, "q.logliks")
-    qplot <- ggplot(data = logliks, aes_(x = ~q, y = ~ (-loglik))) +
-        geom_line() +
-        geom_point() +
-        xlab("Number of clusters (q)") +
-        ylab("Negative log likelihood") +
-        labs(title = "spatialCluster likelihood as a function of q") +
-        theme_bw()
+  logliks <- attr(sce, "q.logliks")
+  qplot <- ggplot(data = logliks, aes_(x = ~q, y = ~ (-loglik))) +
+    geom_line() +
+    geom_point() +
+    xlab("Number of clusters (q)") +
+    ylab("Negative log likelihood") +
+    labs(title = "spatialCluster likelihood as a function of q") +
+    theme_bw()
 
-    qplot
+  qplot
 }
 
 
@@ -69,53 +71,53 @@ qPlot <- function(sce, qs = seq(3, 7), force.retune = FALSE, ...) {
 #' @export
 #' @rdname qTune
 qTune <- function(sce, qs = seq(3, 7), burn.in = 100, nrep = 1000, cores = 1L, ...) {
-    args <- list(...)
+  args <- list(...)
 
-    assert_that(nrep >= 1)
-    assert_that(burn.in >= 0)
-    assert_that(nrep > burn.in)
+  assert_that(nrep >= 1)
+  assert_that(burn.in >= 0)
+  assert_that(nrep > burn.in)
 
-    ## Get PCs
-    use.dimred <- ifelse(is.null(args$use.dimred), "PCA", args$use.dimred)
-    d <- ifelse(is.null(args$d), 15, as.integer(args$d))
-    Y <- reducedDim(sce, use.dimred)
-    d <- min(ncol(Y), d)
-    Y <- Y[, seq_len(d)]
+  ## Get PCs
+  use.dimred <- ifelse(is.null(args$use.dimred), "PCA", args$use.dimred)
+  d <- ifelse(is.null(args$d), 15, as.integer(args$d))
+  Y <- reducedDim(sce, use.dimred)
+  d <- min(ncol(Y), d)
+  Y <- Y[, seq_len(d)]
 
-    ## Get neighbors
-    platform <- ifelse(is.null(args$platform), "Visium", args$platform)
-    df_j <- .find_neighbors(sce, platform)
+  ## Get neighbors
+  platform <- ifelse(is.null(args$platform), "Visium", args$platform)
+  df_j <- .find_neighbors(sce, platform)
 
-    ## Parse args from ... for cluster initialization
-    init.args <- c("init", "init.method")
-    init.args <- compact(args[init.args])
+  ## Parse args from ... for cluster initialization
+  init.args <- c("init", "init.method")
+  init.args <- compact(args[init.args])
 
-    ## Parse args from ... for BayesSpace clustering
-    cluster.args <- discard(names(args), function(x) {
-        x %in% c(c("use.dimred", "d", "platform"), names(init.args))
-    })
-    cluster.args <- compact(args[cluster.args])
-    cluster.args$nrep <- nrep
-    
-    logliks <- paraLapply(
-      qs,
-      function(q) {
-        init <- do.call(
-          .init_cluster,
-          c(list(Y = Y, q = q), init.args)
-        )
-        results <- do.call(
-          cluster,
-          c(list(Y = Y, q = q, df_j = df_j, init = init), cluster.args)
-        )
-        
-        data.frame(q = q, loglik = mean(results$plogLik[(burn.in + 1):nrep]))
-      },
-      cores = cores,
-      type = "fork",
-      verbose = FALSE
-    )
+  ## Parse args from ... for BayesSpace clustering
+  cluster.args <- discard(names(args), function(x) {
+    x %in% c(c("use.dimred", "d", "platform"), names(init.args))
+  })
+  cluster.args <- compact(args[cluster.args])
+  cluster.args$nrep <- nrep
 
-    attr(sce, "q.logliks") <- do.call(rbind, logliks)
-    sce
+  logliks <- paraLapply(
+    qs,
+    function(q) {
+      init <- do.call(
+        .init_cluster,
+        c(list(Y = Y, q = q), init.args)
+      )
+      results <- do.call(
+        cluster,
+        c(list(Y = Y, q = q, df_j = df_j, init = init), cluster.args)
+      )
+
+      data.frame(q = q, loglik = mean(results$plogLik[(burn.in + 1):nrep]))
+    },
+    cores = cores,
+    type = "fork",
+    verbose = FALSE
+  )
+
+  attr(sce, "q.logliks") <- do.call(rbind, logliks)
+  sce
 }

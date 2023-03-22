@@ -38,6 +38,8 @@
 #'   proportion (default = 0.3) of the mean variance of the PCs.
 #'   We suggest making \code{jitter_prior} smaller if the jittered values are
 #'   not expected to vary much from the overall mean of the spot.
+#' @param cores The number of threads to use. The results are invariate to the
+#'   value of \code{cores}.
 #' @param verbose Log progress to stderr.
 #'
 #' @return Returns a new SingleCellExperiment object. By default, the
@@ -96,7 +98,7 @@ NULL
 deconvolve <- function(Y, positions, xdist, ydist, q, init, nrep = 1000,
                        model = "normal", platform = c("Visium", "ST"), verbose = TRUE,
                        jitter_scale = 5, jitter_prior = 0.01, mu0 = colMeans(Y), gamma = 2,
-                       lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01, thread_num = 1) {
+                       lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01, cores = 1) {
     d <- ncol(Y)
     n0 <- nrow(Y)
     Y <- as.matrix(Y)
@@ -136,7 +138,7 @@ deconvolve <- function(Y, positions, xdist, ydist, q, init, nrep = 1000,
         Y = Y2, df_j = df_j, tdist = tdist, nrep = nrep, n = n, n0 = n0,
         d = d, gamma = gamma, q = q, init = init1, subspots = subspots, verbose = verbose,
         jitter_scale = jitter_scale, c = c, mu0 = mu0, lambda0 = lambda0, alpha = alpha,
-        beta = beta, thread_num = thread_num
+        beta = beta, thread_num = cores
     )
     out$positions <- positions2
     out
@@ -213,7 +215,7 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
                            model = c("t", "normal"), nrep = 200000, gamma = NULL,
                            mu0 = NULL, lambda0 = NULL, alpha = 1, beta = 0.01,
                            save.chain = FALSE, chain.fname = NULL, burn.in = 10000,
-                           jitter_scale = 5, jitter_prior = 0.3, thread_num = 1, verbose = FALSE) {
+                           jitter_scale = 5, jitter_prior = 0.3, cores = 1, verbose = FALSE) {
     assert_that(nrep >= 100) # require at least one iteration after thinning
     assert_that(burn.in >= 0)
     if (burn.in >= nrep) {
@@ -282,7 +284,7 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
         xdist = inputs$xdist, ydist = inputs$ydist, q = q, init = init, model = model,
         platform = platform, verbose = verbose, jitter_scale = jitter_scale,
         jitter_prior = jitter_prior, mu0 = mu0, lambda0 = lambda0, alpha = alpha,
-        beta = beta, thread_num = thread_num
+        beta = beta, cores = cores
     )
 
     ## Create enhanced SCE
@@ -328,24 +330,4 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
     metadata(enhanced)$BayesSpace.data$is.enhanced <- TRUE
 
     enhanced
-}
-
-
-#' Debug
-main <- function() {
-    devtools::load_all()
-
-    spatialEnhance(
-        readRDS("__tools/data.RDS"),
-        q = 4,
-        platform = "ST",
-        d = 7,
-        model = "t",
-        gamma = 2,
-        jitter_prior = 0.3,
-        jitter_scale = 3.5,
-        nrep = 1000,
-        burn.in = 100,
-        save.chain = TRUE
-    )
 }

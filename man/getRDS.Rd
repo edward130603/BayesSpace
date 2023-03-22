@@ -35,6 +35,6 @@ The following datasets are available via \code{getRDS}.\tabular{ll}{
 }
 }
 \examples{
-sce <- getRDS("2018_thrane_melanoma", "ST_mel1_rep2", cache=FALSE)
+sce <- getRDS("2018_thrane_melanoma", "ST_mel1_rep2", cache = FALSE)
 
 }
