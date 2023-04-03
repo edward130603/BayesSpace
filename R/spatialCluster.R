@@ -229,18 +229,18 @@ spatialCluster <- function(
     }
 
     ## Get array coordinates (and label by index of spot in SCE)
-    spot.positions <- colData(sce)[, c("col", "row")]
+    spot.positions <- colData(sce)[, c("array_col", "array_row")]
     spot.positions$spot.idx <- seq_len(nrow(spot.positions))
 
     ## Compute coordinates of each possible spot neighbor
     neighbor.positions <- merge(spot.positions, offsets)
-    neighbor.positions$x.pos <- neighbor.positions$col + neighbor.positions$x.offset
-    neighbor.positions$y.pos <- neighbor.positions$row + neighbor.positions$y.offset
+    neighbor.positions$x.pos <- neighbor.positions$array_col + neighbor.positions$x.offset
+    neighbor.positions$y.pos <- neighbor.positions$array_row + neighbor.positions$y.offset
 
     ## Select spots that exist at neighbor coordinates
     neighbors <- merge(as.data.frame(neighbor.positions),
         as.data.frame(spot.positions),
-        by.x = c("x.pos", "y.pos"), by.y = c("col", "row"),
+        by.x = c("x.pos", "y.pos"), by.y = c("array_col", "array_row"),
         suffixes = c(".primary", ".neighbor"),
         all.x = TRUE
     )

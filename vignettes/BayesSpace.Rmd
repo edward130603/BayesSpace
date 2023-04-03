@@ -53,10 +53,11 @@ melanoma <- getRDS(dataset="2018_thrane_melanoma", sample="ST_mel1_rep2")
 
 Finally, `SingleCellExperiment` objects can be constructed manually from a
 counts matrix and tables of row and column data. BayesSpace only requires that
-spot array coordinates be provided as columns named `row` and `col` in
-`colData`. (Note that enhancement of Visium datasets additionally requires the
-pixel coordinates of each spot in the tissue image, but in this case the dataset
-should be loaded with `readVisium()`, which loads these data automatically.)
+spot array coordinates be provided as columns named `array_row` and `array_col`
+in `colData`. (Note that enhancement of Visium datasets additionally requires
+the pixel coordinates of each spot in the tissue image, but in this case the
+dataset should be loaded with `readVisium()`, which loads these data
+automatically.)
 
 ```{r manual.sce, eval=FALSE}
 library(Matrix)

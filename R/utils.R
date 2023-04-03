@@ -32,7 +32,7 @@ find_neighbors <- function(
 #' each axis. Add these distances to estimate the L1 distance between two
 #' spots, then add a small buffer.
 #'
-#' @param sce SingleCellExperiment (must include row, col, imagerow, imagecol
+#' @param sce SingleCellExperiment (must include array_row, array_col, pxl_row_in_fullres, pxl_col_in_fullres
 #'   in colData)
 #' @param scale.factor Scale estimated L1 difference up by this amount.
 #'
@@ -41,12 +41,12 @@ find_neighbors <- function(
 #' @keywords internal
 #' @importFrom stats lm coef
 .compute_interspot_distances <- function(sce, scale.factor = 1.02) {
-    cols <- c("row", "col", "imagerow", "imagecol")
+    cols <- c("array_row", "array_col", "pxl_row_in_fullres", "pxl_col_in_fullres")
     assert_that(all(cols %in% colnames(colData(sce))))
 
     dists <- list()
-    dists$xdist <- coef(lm(sce$imagecol ~ sce$col))[2]
-    dists$ydist <- coef(lm(sce$imagerow ~ sce$row))[2]
+    dists$xdist <- coef(lm(sce$pxl_col_in_fullres ~ sce$array_col))[2]
+    dists$ydist <- coef(lm(sce$pxl_row_in_fullres ~ sce$array_row))[2]
     dists$radius <- (dists$xdist + dists$ydist) * scale.factor
 
     dists
@@ -77,7 +77,7 @@ Mode <- function(x) {
 #' @importFrom purrr imap
 .prepare_inputs <- function(
     sce, use.dimred = "PCA", d = 15,
-    positions = NULL, position.cols = c("imagecol", "imagerow"),
+    positions = NULL, position.cols = c("pxl_col_in_fullres", "pxl_row_in_fullres"),
     radius = NULL, xdist = NULL, ydist = NULL) {
     inputs <- list()
 
@@ -149,14 +149,14 @@ exampleSCE <- function(nrow = 8, ncol = 12, n_genes = 100, n_PCs = 10) {
 
     ## Make array coordinates - filled rectangle
     cdata <- list()
-    cdata$row <- rep(seq_len(nrow), each = ncol)
-    cdata$col <- rep(seq_len(ncol), nrow)
+    cdata$array_row <- rep(seq_len(nrow), each = ncol)
+    cdata$array_col <- rep(seq_len(ncol), nrow)
     cdata <- as.data.frame(do.call(cbind, cdata))
 
     ## Scale and jitter image coordinates
     scale.factor <- rnorm(1, 8)
-    cdata$imagerow <- scale.factor * cdata$row + rnorm(n_spots)
-    cdata$imagecol <- scale.factor * cdata$col + rnorm(n_spots)
+    cdata$pxl_row_in_fullres <- scale.factor * cdata$row + rnorm(n_spots)
+    cdata$pxl_col_in_fullres <- scale.factor * cdata$col + rnorm(n_spots)
 
     ## Make SCE
     ## note: scater::runPCA throws warning on our small sim data, so use prcomp
@@ -222,7 +222,17 @@ getRDS <- function(dataset, sample, cache = TRUE) {
         download.file(url, local.path, quiet = TRUE, mode = "wb")
     }
 
-    readRDS(local.path)
+    ret <- readRDS(local.path)
+    
+    # Rename columns of colData of `ret` for compatibility reasons.
+    if (any(c("row", "col") %in% colnames(colData(ret)))) {
+      col.names <- colnames(colData(ret))
+      col.names <- gsub("row", "array_row", col.names)
+      col.names <- gsub("col", "array_col", col.names)
+      colnames(colData(ret)) <- col.names
+    }
+    
+    ret
 }
 
 #' Access BayesSpace metadata

@@ -54,8 +54,6 @@ readVisium <- function(dirname) {
         stop("Spatial directory does not exist:\n  ", spatial_dir)
     }
 
-    colData <- .read_spot_pos(spatial_dir)
-
     rowData <- read.table(file.path(matrix_dir, "features.tsv.gz"), header = FALSE, sep = "\t")
     colnames(rowData) <- c("gene_id", "gene_name", "feature_type")
     rowData <- rowData[, c("gene_id", "gene_name")]
@@ -63,6 +61,7 @@ readVisium <- function(dirname) {
 
     .counts <- Matrix::readMM(file.path(matrix_dir, "matrix.mtx.gz"))
     barcodes <- read.table(file.path(matrix_dir, "barcodes.tsv.gz"), header = FALSE, sep = "\t")
+    colData <- .read_spot_pos(spatial_dir, barcodes)
     colnames(.counts) <- barcodes$V1
     rownames(.counts) <- rownames(rowData)
     .counts <- .counts[, rownames(colData)]
@@ -154,8 +153,9 @@ read10Xh5 <- function(dirname, fname = "filtered_feature_bc_matrix.h5") {
 #'
 #' @importFrom utils read.csv
 #' @importFrom tibble as_tibble
+#' @importFrom dplyr inner_join
 #' @importFrom tidyr uncount
-.read_spot_pos <- function(dirname) {
+.read_spot_pos <- function(dirname, barcodes = NULL) {
     if (file.exists(file.path(dirname, "tissue_positions_list.csv"))) {
         message("Inferred Space Ranger version < V2.0")
         colData <- read.csv(file.path(dirname, "tissue_positions_list.csv"), header = FALSE)
@@ -165,6 +165,14 @@ read10Xh5 <- function(dirname, fname = "filtered_feature_bc_matrix.h5") {
         colData <- read.csv(file.path(dirname, "tissue_positions.csv"))
     } else {
         stop("No file for spot positions found in ", dirname)
+    }
+  
+    if (!is.null(barcodes)) {
+      colData <- inner_join(
+        colData,
+        barcodes,
+        by = c("barcode" = "V1")
+      )
     }
 
     rownames(colData) <- colData$barcode

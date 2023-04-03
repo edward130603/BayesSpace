@@ -180,7 +180,7 @@ deconvolve <- function(Y, positions, xdist, ydist, q, init, nrep = 1000,
 #' @importFrom assertthat assert_that
 .make_subspot_coldata <- function(positions, sce, n_subspots_per) {
     cdata <- as.data.frame(positions)
-    colnames(cdata) <- c("imagecol", "imagerow")
+    colnames(cdata) <- c("pxl_col_in_fullres", "pxl_row_in_fullres")
 
     n_spots <- ncol(sce)
     n_subspots <- nrow(cdata)
@@ -195,12 +195,12 @@ deconvolve <- function(Y, positions, xdist, ydist, q, init, nrep = 1000,
     rownames(cdata) <- paste0("subspot_", spot_idxs, ".", subspot_idxs)
 
     offsets <- .make_subspot_offsets(n_subspots_per)
-    cdata$spot.row <- rep(sce$row, n_subspots_per)
-    cdata$spot.col <- rep(sce$col, n_subspots_per)
-    cdata$col <- cdata$spot.col + rep(offsets[, 1], each = n_spots)
-    cdata$row <- cdata$spot.row + rep(offsets[, 2], each = n_spots)
+    cdata$spot.row <- rep(sce$array_row, n_subspots_per)
+    cdata$spot.col <- rep(sce$array_col, n_subspots_per)
+    cdata$array_col <- cdata$spot.col + rep(offsets[, 1], each = n_spots)
+    cdata$array_row <- cdata$spot.row + rep(offsets[, 2], each = n_spots)
 
-    cols <- c("spot.idx", "subspot.idx", "spot.row", "spot.col", "row", "col", "imagerow", "imagecol")
+    cols <- c("spot.idx", "subspot.idx", "spot.row", "spot.col", "array_row", "array_col", "pxl_row_in_fullres", "pxl_col_in_fullres")
     cdata[, cols]
 }
 
@@ -235,10 +235,10 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
     }
 
     if (platform == "Visium") {
-        position.cols <- c("imagecol", "imagerow")
+        position.cols <- c("pxl_col_in_fullres", "pxl_row_in_fullres")
         xdist <- ydist <- NULL # Compute with .prepare_inputs
     } else if (platform == "ST") {
-        position.cols <- c("col", "row")
+        position.cols <- c("array_col", "array_row")
         xdist <- ydist <- 1
     }
 
