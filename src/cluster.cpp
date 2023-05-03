@@ -630,16 +630,16 @@ iterate_deconv(
   std::vector<u_int64_t> thread_hits(thread_num, 0);
 
   // Initalize matrices storing iterations
-  mat Y0              = Y.rows(0, n0 - 1);   // The input PCs on spot level.
+  const mat Y0        = Y.rows(0, n0 - 1);   // The input PCs on spot level.
   mat Y_new           = mat(Y.n_rows,
                             Y.n_cols);   // The proposed PCs on subspot level.
   uvec z_new          = uvec(n);         // The proposed zs on subspot level.
   vec acceptance_prob = vec(n);   // The probability of accepting the proposals
                                   // on subspot level.
   DoubleStatesVector<double> log_likelihoods(n
-  );   // The log-likelihoods on subspot level.
+  );                              // The log-likelihoods on subspot level.
   umat df_sim_z(nrep / 100 + 1, n, fill::zeros);
-  mat df_sim_mu(nrep, q * d, fill::zeros);
+  mat df_sim_mu(nrep, d * q, fill::zeros);
   List df_sim_lambda(nrep / 100 + 1);
   List df_sim_Y(nrep / 100 + 1);
   mat df_sim_w(nrep / 100 + 1, n);
@@ -647,22 +647,20 @@ iterate_deconv(
   NumericVector plogLik(nrep, NA_REAL);
 
   // Initialize parameters
-  rowvec initmu    = rep(mu0, q);
-  df_sim_mu.row(0) = initmu;
+  df_sim_mu.row(0) = rowvec(rep(mu0, q));
   df_sim_lambda[0] = lambda0;
-  vec beta_d(d, fill::value(beta));
-  mat Vinv        = diagmat(beta_d);
-  mat lambda_i    = lambda0;
-  df_sim_z.row(0) = init.t();
-  uvec z          = init;
-  df_sim_Y[0]     = Y;
-  vec w           = ones<vec>(n);
-  df_sim_w.row(0) = w.t();
+  const mat Vinv   = diagmat(vec(d, fill::value(beta)));
+  mat lambda_i     = lambda0;
+  df_sim_z.row(0)  = init.t();
+  uvec z           = init;
+  df_sim_Y[0]      = Y;
+  vec w            = ones<vec>(n);
+  df_sim_w.row(0)  = w.t();
   std::vector<Neighbor> neighbors;
   convert_neighbors(df_j, neighbors);
 
   // Iterate
-  colvec mu0vec = as<colvec>(mu0);
+  const colvec mu0vec = as<colvec>(mu0);
   mat mu_i(q, d);
   mat mu_i_long(n, d);
   uvec j0_vector;
@@ -701,13 +699,13 @@ iterate_deconv(
     // Update mu
     NumericVector Ysums;
     for (int k = 1; k <= q; k++) {
-      uvec index_1k = find(z == k);
-      double n_i    = sum(w(index_1k));
-      mat Yrows     = Y.rows(index_1k);
+      const uvec index_1k = find(z == k);
+      mat Yrows           = Y.rows(index_1k);
       Yrows.each_col() %= w(index_1k);
-      Ysums      = sum(Yrows, 0);
-      mat var_i  = inv(lambda0 + n_i * lambda_i);
-      vec mean_i = var_i * (lambda0 * mu0vec + lambda_i * as<colvec>(Ysums));
+      Ysums           = sum(Yrows, 0);
+      const mat var_i = inv(lambda0 + sum(w(index_1k)) * lambda_i);
+      const vec mean_i =
+          var_i * (lambda0 * mu0vec + lambda_i * as<colvec>(Ysums));
       mu_i.row(k - 1) = rmvnorm(1, mean_i, var_i);
     }
     df_sim_mu.row(i) = vectorise(mu_i, 1);
@@ -716,8 +714,10 @@ iterate_deconv(
     for (int j = 0; j < n; j++) {
       mu_i_long.row(j) = mu_i.row(z(j) - 1);
     }
-    mat sumofsq = (Y - mu_i_long).t() * diagmat(w) * (Y - mu_i_long);
-    lambda_i    = rwish(n + alpha, inv(Vinv + sumofsq));
+    lambda_i = rwish(
+        n + alpha,
+        inv(Vinv + (Y - mu_i_long).t() * diagmat(w) * (Y - mu_i_long))
+    );
 
     // Propose new values for Y.
     int updateCounter = 0;
@@ -725,12 +725,11 @@ iterate_deconv(
         n, zero_vec, error_var
     );   // Generate random numbers before entering multithreading.
 
-    // Multithreading to compute the MCMC kernel of Y.
+                     // Multithreading to compute the MCMC kernel of Y.
 #pragma omp parallel for schedule(static) private(Y_j_prev, error_j, Y_j_new)  \
-    shared(                                                                    \
-        Y, Y_new, error, acceptance_prob, j0_vector, subspots, zero_vec,       \
-        mu_i_long, Y0, lambda_i, n0, w, c, updateCounter, thread_hits          \
-    ) num_threads(thread_num)
+    shared(Y, Y_new, error, acceptance_prob, j0_vector, subspots, zero_vec,    \
+               mu_i_long, Y0, lambda_i, n0, w, c, updateCounter, thread_hits)  \
+    num_threads(thread_num)
     for (int j0 = 0; j0 < n0; j0++) {
 #pragma omp atomic update
       thread_hits[omp_get_thread_num()]++;
@@ -751,12 +750,12 @@ iterate_deconv(
       for (int r = 0; r < subspots; r++) {
         p_prev +=
             dmvnrm_prec_arma_fast(
-                Y_j_prev.row(r), mu_i_j.row(r), lambda_i / w(j0 + n0 * r), true
+                Y_j_prev.row(r), mu_i_j.row(r), lambda_i * w(j0 + n0 * r), true
             ) -
             c * (accu(pow(Y_j_prev.row(r) - Y0.row(j0), 2)));
         p_new +=
             dmvnrm_prec_arma_fast(
-                Y_j_new.row(r), mu_i_j.row(r), lambda_i / w(j0 + n0 * r), true
+                Y_j_new.row(r), mu_i_j.row(r), lambda_i * w(j0 + n0 * r), true
             ) -
             c * (accu(pow(Y_j_new.row(r) - Y0.row(j0), 2)));
       }
@@ -790,7 +789,7 @@ iterate_deconv(
               ((Y.row(r * n0 + j0) - mu_i_long.row(r * n0 + j0)) * lambda_i *
                    (Y.row(r * n0 + j0) - mu_i_long.row(r * n0 + j0)).t() +
                4)
-          );   // scale parameter
+          );                                // scale parameter
           w(r * n0 + j0) =
               R::rgamma(w_alpha, w_beta);   // sample from posterior for w
         }
@@ -803,10 +802,10 @@ iterate_deconv(
     Ychange[i] = updateCounter * 1.0 / n0;
 
     // Update z
-#pragma omp parallel for schedule(static) shared(                              \
-    n, z, z_new, neighbors, gamma, Y, mu_i, lambda_i, w, acceptance_prob,      \
-    thread_hits, log_likelihoods                                               \
-) num_threads(thread_num)
+#pragma omp parallel for schedule(static)                                      \
+    shared(n, z, z_new, neighbors, gamma, Y, mu_i, lambda_i, w,                \
+               acceptance_prob, thread_hits, log_likelihoods)                  \
+    num_threads(thread_num)
     for (int j = 0; j < n; j++) {
 #pragma omp atomic update
       thread_hits[omp_get_thread_num()]++;
@@ -819,10 +818,10 @@ iterate_deconv(
       vec h_z_prev(2, arma::fill::zeros), h_z_new(2, arma::fill::zeros);
 
       h_z_prev(0) = dmvnrm_prec_arma_fast(
-          Y.row(j), mu_i.row(z_j_prev - 1), lambda_i / w(j), true
+          Y.row(j), mu_i.row(z_j_prev - 1), lambda_i * w(j), true
       )[0];
       h_z_new(0) = dmvnrm_prec_arma_fast(
-          Y.row(j), mu_i.row(z_j_new - 1), lambda_i / w(j), true
+          Y.row(j), mu_i.row(z_j_new - 1), lambda_i * w(j), true
       )[0];
 
       if (j_vector.get_size() != 0) {
