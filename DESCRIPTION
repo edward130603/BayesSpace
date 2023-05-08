@@ -1,6 +1,6 @@
 Package: BayesSpace
-Version: 1.5.1
-Date: 2021-11-03
+Version: 1.11.0
+Date: 2023-05-03
 Title: Clustering and Resolution Enhancement of Spatial Transcriptomes
 Authors@R: c(
     person("Edward", "Zhao", role=c("aut"), email="ezhao@fredhutch.org"),
@@ -33,12 +33,13 @@ Imports:
     DirichletReg,
     xgboost,
     utils,
-    ggplot2,
+    tidyverse,
     scales,
     BiocFileCache,
-    BiocSingular
+    BiocSingular,
+    BiocParallel
 License: MIT + file LICENSE
-RoxygenNote: 7.1.1
+RoxygenNote: 7.2.3
 LinkingTo: 
     Rcpp,
     RcppArmadillo,
@@ -53,7 +54,6 @@ Suggests:
     rmarkdown,
     igraph,
     spatialLIBD,
-    dplyr,
     viridis,
     patchwork,
     RColorBrewer,

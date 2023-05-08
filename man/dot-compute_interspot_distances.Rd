@@ -7,7 +7,7 @@
 .compute_interspot_distances(sce, scale.factor = 1.02)
 }
 \arguments{
-\item{sce}{SingleCellExperiment (must include row, col, imagerow, imagecol 
+\item{sce}{SingleCellExperiment (must include row, col, imagerow, imagecol
 in colData)}
 
 \item{scale.factor}{Scale estimated L1 difference up by this amount.}

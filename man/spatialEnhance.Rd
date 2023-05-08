@@ -24,6 +24,7 @@ spatialEnhance(
   burn.in = 10000,
   jitter_scale = 5,
   jitter_prior = 0.3,
+  cores = 1,
   verbose = FALSE
 )
 }
@@ -32,21 +33,21 @@ spatialEnhance(
 
 \item{q}{The number of clusters.}
 
-\item{platform}{Spatial transcriptomic platform. Specify 'Visium' for hex 
+\item{platform}{Spatial transcriptomic platform. Specify 'Visium' for hex
 lattice geometry or 'ST' for square lattice geometry. Specifying this
 parameter is optional when analyzing SingleCellExperiments processed using
 \code{\link{readVisium}}, \code{\link{spatialPreprocess}}, or
 \code{\link{spatialCluster}}, as this information is included in their
 metadata.}
 
-\item{use.dimred}{Name of a reduced dimensionality result in 
+\item{use.dimred}{Name of a reduced dimensionality result in
 \code{reducedDims(sce)}. If provided, cluster on these features directly.}
 
 \item{d}{Number of top principal components to use when clustering.}
 
 \item{init}{Initial cluster assignments for spots.}
 
-\item{init.method}{If \code{init} is not provided, cluster the top \code{d} 
+\item{init.method}{If \code{init} is not provided, cluster the top \code{d}
 PCs with this method to obtain initial cluster assignments.}
 
 \item{model}{Error model. ('normal' or 't')}
@@ -73,21 +74,24 @@ is set to a diagonal matrix \eqn{0.01 I}.}
 iterations are currently thinned to every 100; accordingly \code{burn.in}
 is rounded down to the nearest multiple of 100.}
 
-\item{jitter_scale}{Controls the amount of jittering. Small amounts of 
+\item{jitter_scale}{Controls the amount of jittering. Small amounts of
 jittering are more likely to be accepted but result in exploring the space
-more slowly. We suggest tuning \code{jitter_scale} so that Ychange is on 
-average around 25\%-40\%.}
+more slowly. We suggest tuning \code{jitter_scale} so that Ychange is on
+average around 25\%-40\%. Ychange can be accessed via \code{mcmcChain()}.}
 
 \item{jitter_prior}{Scale factor for the prior variance, parameterized as the
 proportion (default = 0.3) of the mean variance of the PCs.
 We suggest making \code{jitter_prior} smaller if the jittered values are
 not expected to vary much from the overall mean of the spot.}
 
+\item{cores}{The number of threads to use. The results are invariate to the
+value of \code{cores}.}
+
 \item{verbose}{Log progress to stderr.}
 }
 \value{
-Returns a new SingleCellExperiment object. By default, the 
-  \code{assays} of this object are empty, and the enhanced resolution PCs 
+Returns a new SingleCellExperiment object. By default, the
+  \code{assays} of this object are empty, and the enhanced resolution PCs
   are stored as a reduced dimensionality result accessible with
   \code{reducedDim(sce, 'PCA')}.
 }
@@ -100,7 +104,7 @@ The enhanced \code{SingleCellExperiment} has most of the properties of the
   not include expression data in \code{counts} or \code{logcounts}. To impute
   enhanced expression vectors, please use [enhanceFeatures()] after
   running \code{spatialEnhance}.
-  
+
 The \code{colData} of the enhanced \code{SingleCellExperiment} includes the
   following columns to permit referencing the subspots in spatial context and
   linking back to the original spots:
@@ -123,8 +127,8 @@ The \code{colData} of the enhanced \code{SingleCellExperiment} includes the
 \examples{
 set.seed(149)
 sce <- exampleSCE()
-sce <- spatialCluster(sce, 7, nrep=100, burn.in=10)
-enhanced <- spatialEnhance(sce, 7, nrep=100, burn.in=10)
+sce <- spatialCluster(sce, 7, nrep = 100, burn.in = 10)
+enhanced <- spatialEnhance(sce, 7, nrep = 100, burn.in = 10)
 
 }
 \seealso{

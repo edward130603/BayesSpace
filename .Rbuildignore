@@ -6,3 +6,7 @@
 ^pkgdown$
 ^\.github$
 ^LICENSE\.md$
+
+^\.vscode$
+^__tools$
+^\.clang-format$

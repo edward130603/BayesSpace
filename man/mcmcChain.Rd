@@ -47,6 +47,8 @@ Parameter choices for the subspot-level enhanced clustering include:
 \item \code{lambda} (precision matrix)
 \item \code{Ychange} (acceptance rate for the jittering of PCs)
 }
+
+For best results, \code{Ychange} should average between 0.25 and 0.40.
 }
 \examples{
 set.seed(149)

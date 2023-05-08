@@ -2,22 +2,33 @@
 % Please edit documentation in R/readVisium.R
 \name{readVisium}
 \alias{readVisium}
+\alias{read10Xh5}
 \title{Load a Visium spatial dataset as a SingleCellExperiment.}
 \usage{
 readVisium(dirname)
+
+read10Xh5(dirname, fname = "filtered_feature_bc_matrix.h5")
 }
 \arguments{
 \item{dirname}{Path to spaceranger output directory (e.g. "sampleID/outs/").
 This directory must contain the counts matrix and feature/barcode TSVs in
-\code{filtered_feature_bc_matrix/}, and the spot positions at
-\code{spatial/tissue_positions_list.csv}. (These are default locations for
-spaceranger outputs.)}
+\code{filtered_feature_bc_matrix/} for \code{readVisium}, or in
+\code{filtered_feature_bc_matrix.h5} for \code{read10Xh5}. Besides, it
+must also contain a file for spot positions at
+\code{spatial/tissue_positions_list.csv} (before Space Ranger V2.0) or
+\code{spatial/tissue_positions.csv} (since Space Ranger V2.0).
+(To understand the output directory, refer to the corresponding
+\href{https://support.10xgenomics.com/spatial-gene-expression/software/pipelines/latest/output/overview}{10X Genomics help page}.)}
+
+\item{fname}{File name of the h5 file. It should be inside \code{dirname}.
+(By default "filtered_feature_bc_matrix.h5")}
 }
 \value{
 SingleCellExperiment containing the counts matrix in \code{counts}
   and spatial data in \code{colData}. Array coordinates for each spot are
-  stored in columns \code{row} and \code{col}, while image coordinates are
-  stored in columns \code{imagerow} and \code{imagecol}.
+  stored in columns \code{array_row} and \code{array_col}, while image
+  coordinates are stored in columns \code{pxl_row_in_fullres} and
+  \code{pxl_col_in_fullres}.
 }
 \description{
 Load a Visium spatial dataset as a SingleCellExperiment.

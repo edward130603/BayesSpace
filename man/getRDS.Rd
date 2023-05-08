@@ -17,14 +17,24 @@ subsequent loads, but consumes disk space.}
 }
 \value{
 sce A SingleCellExperiment with positional information in colData and
-  PCs based on the top 2000 HVGs
+PCs based on the top 2000 HVGs
 }
 \description{
 Datasets are cached locally using \code{BiocFileCache}. The first time using
 this function, you may need to consent to creating a BiocFileCache directory
 if one does not already exist.
 }
+\details{
+The following datasets are available via \code{getRDS}.\tabular{ll}{
+   Dataset \tab Sample(s) \cr
+   2018_thrane_melanoma \tab ST_mel1_rep2 \cr
+   2020_maynard_prefrontal-cortex \tab 151507, 151508, 151509, 151510, 151669, 151670, 151671, 151672, 151673, 151674, 151675, 151676 \cr
+   2020_ji_squamous-cell-carcinoma \tab P4_rep1 \cr
+   2020_10X-IDC \tab IDC1 \cr
+   2020_10X-demo_ovarian-cancer \tab whole_transcriptome \cr
+}
+}
 \examples{
-sce <- getRDS("2018_thrane_melanoma", "ST_mel1_rep2", cache=FALSE)
+sce <- getRDS("2018_thrane_melanoma", "ST_mel1_rep2", cache = FALSE)
 
 }

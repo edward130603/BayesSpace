@@ -198,7 +198,7 @@ featurePlot <- function(sce, feature,
 #' 
 #' @keywords internal
 #' @importFrom assertthat assert_that
-.select_spot_positions <- function(cdata, x="col", y="row", fill="spatial.cluster") {
+.select_spot_positions <- function(cdata, x="array_col", y="array_row", fill="spatial.cluster") {
     ## Provide either a column name or vector of labels/values
     assert_that(is.vector(fill) || is.character(fill) || is.factor(fill))
     

@@ -202,10 +202,9 @@ NULL
     }
     
     ## Include function-specific chain parameters
-    if (method == "cluster") {
-        out$plogLik <- as.matrix(out$plogLik)
-        colnames(out$plogLik) <- c("pLogLikelihood")
-    } else if (method == "enhance") {
+    out$plogLik <- as.matrix(out$plogLik)
+    colnames(out$plogLik) <- c("pLogLikelihood")
+    if (method == "enhance") {
         out$Y <- .flatten_matrix_list(out$Y, "Y", n, d)
         out$Ychange <- as.matrix(out$Ychange)
         colnames(out$Ychange) <- c("Ychange")
@@ -220,6 +219,9 @@ NULL
         ## Subset of a one-column matrix is a vector, not a matrix
         out$Ychange <- as.matrix(out$Ychange[thinned_idx, ])
         colnames(out$Ychange) <- c("Ychange")
+        
+        out$plogLik <- as.matrix(out$plogLik[thinned_idx, ])
+        colnames(out$plogLik) <- c("pLogLikelihood")
     }
     
     out
