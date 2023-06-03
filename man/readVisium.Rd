@@ -3,11 +3,14 @@
 \name{readVisium}
 \alias{readVisium}
 \alias{read10Xh5}
+\alias{counts2h5}
 \title{Load a Visium spatial dataset as a SingleCellExperiment.}
 \usage{
 readVisium(dirname)
 
 read10Xh5(dirname, fname = "filtered_feature_bc_matrix.h5")
+
+counts2h5(dirname)
 }
 \arguments{
 \item{dirname}{Path to spaceranger output directory (e.g. "sampleID/outs/").

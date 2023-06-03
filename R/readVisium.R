@@ -83,51 +83,70 @@ readVisium <- function(dirname) {
 }
 
 #' @export
-#' @importFrom Matrix sparseMatrix colSums
+#' @importFrom Matrix sparseMatrix colSums readMM
 #' @importFrom SingleCellExperiment SingleCellExperiment counts
 #' @importFrom S4Vectors metadata metadata<-
 #' @importFrom rhdf5 h5read
+#' @importFrom dplyr %>% group_by mutate select n case_when
+#' @importFrom tibble column_to_rownames
 #' @rdname readVisium
 read10Xh5 <- function(dirname, fname = "filtered_feature_bc_matrix.h5") {
     spatial_dir <- file.path(dirname, "spatial")
     h5_file <- file.path(dirname, fname)
 
     if (!dir.exists(spatial_dir)) {
-        stop("Spatial directory does not exist:\n  ", spatial_dir)
+      stop("Spatial directory does not exist:\n  ", spatial_dir)
     }
 
     if (!file.exists(h5_file)) {
-        stop("H5 file does not exist:\n  ", h5_file)
+      stop("H5 file does not exist:\n  ", h5_file)
     }
 
     colData <- .read_spot_pos(spatial_dir)
 
     non.zero.indices <- .extract_indices(
-        h5read(h5_file, "matrix/indices"),
-        h5read(h5_file, "matrix/indptr")
+      h5read(h5_file, "matrix/indices"),
+      h5read(h5_file, "matrix/indptr")
     )
 
-    rowData <- h5read(h5_file, "matrix/features/id")
+    rowData <- data.frame(
+      gene_id = h5read(h5_file, "matrix/features/id"),
+      gene_name = h5read(h5_file, "matrix/features/name")
+    ) %>%
+      group_by(
+        gene_name
+      ) %>%
+      mutate(
+        idx = 1:n(),
+        row_name = case_when(
+          max(idx) > 1 ~ paste(gene_name, gene_id, sep = "_"),
+          TRUE ~ gene_name
+        )
+      ) %>%
+      column_to_rownames("row_name") %>%
+      select(
+        -idx
+      )
 
     .counts <- sparseMatrix(
-        i = non.zero.indices$i,
-        j = non.zero.indices$j,
-        x = h5read(h5_file, "matrix/data"),
-        dims = h5read(h5_file, "matrix/shape"),
-        dimnames = list(
-            rowData,
-            h5read(h5_file, "matrix/barcodes")
-        ),
-        index1 = FALSE
+      i = non.zero.indices$i,
+      j = non.zero.indices$j,
+      x = h5read(h5_file, "matrix/data"),
+      dims = h5read(h5_file, "matrix/shape"),
+      dimnames = list(
+        rownames(rowData),
+        h5read(h5_file, "matrix/barcodes")
+      ),
+      index1 = FALSE
     )
     .counts <- .counts[, rownames(colData)]
 
     sce <- SingleCellExperiment(
-        assays = list(
-            counts = .counts
-        ),
-        rowData = rowData,
-        colData = colData
+      assays = list(
+        counts = .counts
+      ),
+      rowData = rowData,
+      colData = colData
     )
 
     # Remove spots with no reads for all genes.
@@ -138,6 +157,58 @@ read10Xh5 <- function(dirname, fname = "filtered_feature_bc_matrix.h5") {
     metadata(sce)$BayesSpace.data$is.enhanced <- FALSE
 
     sce
+}
+
+#' @export
+#' @importFrom rhdf5 h5read h5createFile h5createGroup h5write
+#' @rdname readVisium
+counts2h5 <- function(dirname) {
+  h5_file <- file.path(dirname, "filtered_feature_bc_matrix.h5")
+  spatial_dir <- file.path(dirname, "spatial")
+  matrix_dir <- file.path(dirname, "filtered_feature_bc_matrix")
+  
+  if (file.exists(h5_file)) {
+    stop("H5 file exists:\n ", h5_file)
+  }
+  
+  if (!dir.exists(matrix_dir)) {
+    stop("Matrix directory does not exist:\n  ", matrix_dir)
+  }
+  if (!dir.exists(spatial_dir)) {
+    stop("Spatial directory does not exist:\n  ", spatial_dir)
+  }
+  
+  rowData <- read.table(file.path(matrix_dir, "features.tsv.gz"), header = FALSE, sep = "\t")
+  colnames(rowData) <- c("gene_id", "gene_name", "feature_type")
+  
+  .counts <- readMM(file.path(matrix_dir, "matrix.mtx.gz"))
+  counts <- matrix(
+    as.integer(as.matrix(.counts)),
+    nrow = dim(.counts)[1]
+  )
+  .counts <- as(.counts, "dgCMatrix")
+  barcodes <- read.table(file.path(matrix_dir, "barcodes.tsv.gz"), header = FALSE, sep = "\t")
+  colData <- .read_spot_pos(spatial_dir, barcodes)
+  
+  h5createFile(h5_file)
+  
+  h5createGroup(h5_file, "matrix")
+  
+  h5write(barcodes[[1]], h5_file, "matrix/barcodes")
+  h5write(counts[counts > 0], h5_file, "matrix/data")
+  
+  h5createGroup(h5_file, "matrix/features")
+  h5write("genome", h5_file, "/matrix/features/_all_tag_keys")
+  h5write(rowData$feature_type, h5_file, "/matrix/features/feature_type")
+  h5write("GRCh38", h5_file, "/matrix/features/genome")
+  h5write(rowData$gene_id, h5_file, "/matrix/features/id")
+  h5write(rowData$gene_name, h5_file, "/matrix/features/name")
+  
+  h5write(.counts@i, h5_file, "matrix/indices")
+  h5write(.counts@p, h5_file, "matrix/indptr")
+  h5write(dim(counts), h5_file, "matrix/shape")
+  
+  h5ls(h5_file)
 }
 
 #' Load spot positions.
