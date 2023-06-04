@@ -186,7 +186,7 @@ counts2h5 <- function(dirname) {
     as.integer(as.matrix(.counts)),
     nrow = dim(.counts)[1]
   )
-  .counts <- as(.counts, "dgCMatrix")
+  .counts <- as(.counts, "CsparseMatrix")
   barcodes <- read.table(file.path(matrix_dir, "barcodes.tsv.gz"), header = FALSE, sep = "\t")
   colData <- .read_spot_pos(spatial_dir, barcodes)
   
@@ -208,7 +208,7 @@ counts2h5 <- function(dirname) {
   h5write(.counts@p, h5_file, "matrix/indptr")
   h5write(dim(counts), h5_file, "matrix/shape")
   
-  h5ls(h5_file)
+  NULL
 }
 
 #' Load spot positions.
