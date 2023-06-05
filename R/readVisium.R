@@ -200,7 +200,6 @@ counts2h5 <- function(dirname) {
   h5createGroup(h5_file, "matrix/features")
   h5write("genome", h5_file, "/matrix/features/_all_tag_keys")
   h5write(rowData$feature_type, h5_file, "/matrix/features/feature_type")
-  h5write("GRCh38", h5_file, "/matrix/features/genome")
   h5write(rowData$gene_id, h5_file, "/matrix/features/id")
   h5write(rowData$gene_name, h5_file, "/matrix/features/name")
   
