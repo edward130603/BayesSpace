@@ -43,12 +43,16 @@
 #' @param verbose Log progress to stderr.
 #' @param test.cores Either a list of, or a maximum number of cores to test. In
 #'   the latter case, a list of values (power of 2) will be created
-#' @param ... Arguments for \code{\link{spatialEnhance}} (except for cores).
+#' @param test.times Times to repeat the benchmarking with microbenchmark.
+#' @param ... Arguments for \code{spatialEnhance} (except for cores).
 #'
-#' @return Returns a new SingleCellExperiment object. By default, the
-#'   \code{assays} of this object are empty, and the enhanced resolution PCs
-#'   are stored as a reduced dimensionality result accessible with
-#'   \code{reducedDim(sce, 'PCA')}.
+#' @return
+#' \code{spatialEnhance} returns a new SingleCellExperiment object.
+#'   By default, the \code{assays} of this object are empty, and the enhanced
+#'   resolution PCs are stored as a reduced dimensionality result accessible
+#'   with \code{reducedDim(sce, 'PCA')}.
+#'   
+#' \code{coresTune} returns the output of \code{microbenchmark}.
 #'
 #' @details
 #' The enhanced \code{SingleCellExperiment} has most of the properties of the
@@ -340,7 +344,7 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
 #' @importFrom microbenchmark microbenchmark
 #' @importFrom parallel detectCores
 #' @importFrom purrr compact discard
-coreTune <- function(sce, test.cores = detectCores(), ...) {
+coreTune <- function(sce, test.cores = detectCores(), test.times = 1, ...) {
   assert_that(
     length(test.cores) == length(unique(test.cores)),
     msg = paste0("Duplicate values found in 'test.cores'.")
@@ -396,6 +400,6 @@ coreTune <- function(sce, test.cores = detectCores(), ...) {
   
   microbenchmark(
     list = exprs,
-    times = 1
+    times = test.times
   )
 }

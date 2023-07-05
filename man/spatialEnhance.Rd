@@ -29,7 +29,7 @@ spatialEnhance(
   verbose = FALSE
 )
 
-coreTune(sce, test.cores = detectCores(), ...)
+coreTune(sce, test.cores = detectCores(), test.times = 1, ...)
 }
 \arguments{
 \item{sce}{A SingleCellExperiment object containing the spatial data.}
@@ -95,13 +95,17 @@ value of \code{cores}.}
 \item{test.cores}{Either a list of, or a maximum number of cores to test. In
 the latter case, a list of values (power of 2) will be created}
 
-\item{...}{Arguments for \code{\link{spatialEnhance}} (except for cores).}
+\item{test.times}{Times to repeat the benchmarking with microbenchmark.}
+
+\item{...}{Arguments for \code{spatialEnhance} (except for cores).}
 }
 \value{
-Returns a new SingleCellExperiment object. By default, the
-  \code{assays} of this object are empty, and the enhanced resolution PCs
-  are stored as a reduced dimensionality result accessible with
-  \code{reducedDim(sce, 'PCA')}.
+\code{spatialEnhance} returns a new SingleCellExperiment object.
+  By default, the \code{assays} of this object are empty, and the enhanced
+  resolution PCs are stored as a reduced dimensionality result accessible
+  with \code{reducedDim(sce, 'PCA')}.
+  
+\code{coresTune} returns the output of \code{microbenchmark}.
 }
 \description{
 Enhanced clustering of a spatial expression dataset to subspot resolution.
