@@ -41,6 +41,9 @@
 #' @param cores The number of threads to use. The results are invariate to the
 #'   value of \code{cores}.
 #' @param verbose Log progress to stderr.
+#' @param test.cores Either a list of, or a maximum number of cores to test. In
+#'   the latter case, a list of values (power of 2) will be created
+#' @param ... Arguments for \code{\link{spatialEnhance}} (except for cores).
 #'
 #' @return Returns a new SingleCellExperiment object. By default, the
 #'   \code{assays} of this object are empty, and the enhanced resolution PCs
@@ -63,13 +66,13 @@
 #'   \item \code{subspot.idx}: Index of the subspot within its parent spot.
 #'   \item \code{spot.row}: Array row of the subspot's parent spot.
 #'   \item \code{spot.col}: Array col of the subspot's parent spot.
-#'   \item \code{row}: Array row of the subspot. This is the parent spot's row
+#'   \item \code{array_row}: Array row of the subspot. This is the parent spot's row
 #'     plus an offset based on the subspot's position within the spot.
-#'   \item \code{col}: Array col of the subspot. This is the parent spot's col
+#'   \item \code{array_col}: Array col of the subspot. This is the parent spot's col
 #'     plus an offset based on the subspot's position within the spot.
-#'   \item \code{imagerow}: Pixel row of the subspot. This is the parent spot's
+#'   \item \code{pxl_row_in_fullres}: Pixel row of the subspot. This is the parent spot's
 #'     row plus an offset based on the subspot's position within the spot.
-#'   \item \code{imagecol}: Pixel col of the subspot. This is the parent spot's
+#'   \item \code{pxl_col_in_fullres}: Pixel col of the subspot. This is the parent spot's
 #'     col plus an offset based on the subspot's position within the spot.
 #'   }
 #'
@@ -330,4 +333,69 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
     metadata(enhanced)$BayesSpace.data$is.enhanced <- TRUE
 
     enhanced
+}
+
+#' @export
+#' @rdname spatialEnhance
+#' @importFrom microbenchmark microbenchmark
+#' @importFrom parallel detectCores
+#' @importFrom purrr compact discard
+coreTune <- function(sce, test.cores = detectCores(), ...) {
+  assert_that(
+    length(test.cores) == length(unique(test.cores)),
+    msg = paste0("Duplicate values found in 'test.cores'.")
+  )
+  
+  args <- list(...)
+  eff.args <- discard(
+    names(args),
+    function(x) x %in% c("save.chain", "chain.fname", "cores")
+  )
+  
+  # Maximum 1000 iterations.
+  if (("nrep" %in% names(args) && args["nrep"] > 1000) || !("nrep" %in% names(args))) {
+    args["nrep"] <- 1000
+    args["burn.in"] <- 100
+  }
+  
+  if (length(test.cores) == 1)
+    cores <- as.integer(vapply(
+      seq(
+        from = 0,
+        to = floor(log(test.cores, 2)),
+        by = 1
+      ),
+      function(x) 2^x,
+      FUN.VALUE = numeric(1),
+      USE.NAMES = FALSE
+    ))
+  
+  if (is.null(names(cores)))
+    names(cores) <- paste("c", cores, sep = "_")
+  
+  message(paste0(
+    "Number of cores to test: ",
+    paste0(cores, collapse = ",")
+  ))
+  
+  exprs <- sapply(
+    cores,
+    function(x) bquote(do.call(
+      spatialEnhance,
+      c(
+        sce = sce,
+        args[eff.args],
+        list(
+          save.chain = FALSE,
+          cores = .(x)
+        )
+      )
+    )),
+    simplify = FALSE
+  )
+  
+  microbenchmark(
+    list = exprs,
+    times = 1
+  )
 }

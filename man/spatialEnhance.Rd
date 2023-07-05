@@ -2,6 +2,7 @@
 % Please edit documentation in R/spatialEnhance.R
 \name{spatialEnhance}
 \alias{spatialEnhance}
+\alias{coreTune}
 \title{Enhance spot resolution}
 \usage{
 spatialEnhance(
@@ -27,6 +28,8 @@ spatialEnhance(
   cores = 1,
   verbose = FALSE
 )
+
+coreTune(sce, test.cores = detectCores(), ...)
 }
 \arguments{
 \item{sce}{A SingleCellExperiment object containing the spatial data.}
@@ -88,6 +91,11 @@ not expected to vary much from the overall mean of the spot.}
 value of \code{cores}.}
 
 \item{verbose}{Log progress to stderr.}
+
+\item{test.cores}{Either a list of, or a maximum number of cores to test. In
+the latter case, a list of values (power of 2) will be created}
+
+\item{...}{Arguments for \code{\link{spatialEnhance}} (except for cores).}
 }
 \value{
 Returns a new SingleCellExperiment object. By default, the
@@ -114,13 +122,13 @@ The \code{colData} of the enhanced \code{SingleCellExperiment} includes the
   \item \code{subspot.idx}: Index of the subspot within its parent spot.
   \item \code{spot.row}: Array row of the subspot's parent spot.
   \item \code{spot.col}: Array col of the subspot's parent spot.
-  \item \code{row}: Array row of the subspot. This is the parent spot's row
+  \item \code{array_row}: Array row of the subspot. This is the parent spot's row
     plus an offset based on the subspot's position within the spot.
-  \item \code{col}: Array col of the subspot. This is the parent spot's col
+  \item \code{array_col}: Array col of the subspot. This is the parent spot's col
     plus an offset based on the subspot's position within the spot.
-  \item \code{imagerow}: Pixel row of the subspot. This is the parent spot's
+  \item \code{pxl_row_in_fullres}: Pixel row of the subspot. This is the parent spot's
     row plus an offset based on the subspot's position within the spot.
-  \item \code{imagecol}: Pixel col of the subspot. This is the parent spot's
+  \item \code{pxl_col_in_fullres}: Pixel col of the subspot. This is the parent spot's
     col plus an offset based on the subspot's position within the spot.
   }
 }

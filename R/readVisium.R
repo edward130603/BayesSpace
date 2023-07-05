@@ -226,28 +226,42 @@ counts2h5 <- function(dirname) {
 #' @importFrom dplyr inner_join
 #' @importFrom tidyr uncount
 .read_spot_pos <- function(dirname, barcodes = NULL) {
-    if (file.exists(file.path(dirname, "tissue_positions_list.csv"))) {
-        message("Inferred Space Ranger version < V2.0")
-        colData <- read.csv(file.path(dirname, "tissue_positions_list.csv"), header = FALSE)
-        colnames(colData) <- c("barcode", "in_tissue", "array_row", "array_col", "pxl_row_in_fullres", "pxl_col_in_fullres")
-    } else if (file.exists(file.path(dirname, "tissue_positions.csv"))) {
-        message("Inferred Space Ranger version >= V2.0")
-        colData <- read.csv(file.path(dirname, "tissue_positions.csv"))
-    } else {
-        stop("No file for spot positions found in ", dirname)
-    }
-  
-    if (!is.null(barcodes)) {
-      colData <- inner_join(
-        colData,
-        barcodes,
-        by = c("barcode" = "V1")
-      )
-    }
+  if (file.exists(file.path(dirname, "tissue_positions_list.csv"))) {
+      message("Inferred Space Ranger version < V2.0")
+      colData <- read.csv(file.path(dirname, "tissue_positions_list.csv"), header = FALSE)
+      colnames(colData) <- c("barcode", "in_tissue", "array_row", "array_col", "pxl_row_in_fullres", "pxl_col_in_fullres")
+  } else if (file.exists(file.path(dirname, "tissue_positions.csv"))) {
+      message("Inferred Space Ranger version >= V2.0")
+      colData <- read.csv(file.path(dirname, "tissue_positions.csv"))
+  } else {
+      stop("No file for spot positions found in ", dirname)
+  }
 
-    rownames(colData) <- colData$barcode
-    colData <- colData[colData$in_tissue > 0, ]
-    return(colData)
+  if (!is.null(barcodes)) {
+    colData <- inner_join(
+      colData,
+      barcodes,
+      by = c("barcode" = "V1")
+    )
+  }
+  
+  # Sanity check.
+  if (
+    abs(cor(colData$array_row, colData$pxl_row_in_fullres)) < abs(cor(colData$array_row, colData$pxl_col_in_fullres)) &&
+    abs(cor(colData$array_col, colData$pxl_col_in_fullres)) < abs(cor(colData$array_col, colData$pxl_row_in_fullres))
+  ) {
+    message("Warning! The coordinates with indices and pixels do not match. Swapping the pixel values between the row and column...")
+    
+    colData <- transform(
+      colData,
+      pxl_row_in_fullres = pxl_col_in_fullres,
+      pxl_col_in_fullres = pxl_row_in_fullres
+    )
+  }
+
+  rownames(colData) <- colData$barcode
+  colData <- colData[colData$in_tissue > 0, ]
+  return(colData)
 }
 
 #' Extract row and column indices of the count matrix from h5 file.
