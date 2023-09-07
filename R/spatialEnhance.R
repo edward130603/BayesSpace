@@ -373,6 +373,8 @@ coreTune <- function(sce, test.cores = detectCores(), test.times = 1, ...) {
       FUN.VALUE = numeric(1),
       USE.NAMES = FALSE
     ))
+  else
+    cores <- test.cores
   
   if (is.null(names(cores)))
     names(cores) <- paste("c", cores, sep = "_")

@@ -1,20 +1,27 @@
 // [[Rcpp::plugins("cpp11")]]
-// [[Rcpp::depends(RcppArmadillo, RcppDist, RcppProgress)]]
+// [[Rcpp::depends(RcppArmadillo, RcppDist)]]
 #include "double_states_vector.h"
 #include "neighbor.h"
 #include <RcppArmadillo.h>
 #include <RcppDist.h>
+#include <chrono>
+#include <csignal>
+#include <indicators/cursor_control.hpp>
+#include <indicators/progress_bar.hpp>
 #include <iostream>
-#include <omp.h>
-#include <progress.hpp>
-#include <progress_bar.hpp>
 #include <vector>
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 using namespace Rcpp;
 using namespace arma;
 
 // [[Rcpp::plugins(openmp)]]
 
-static double const log2pi = std::log(2.0 * M_PI);
+static double const log2pi              = std::log(2.0 * M_PI);
+static volatile sig_atomic_t early_stop = 0;
 
 template <typename T>
 void
@@ -25,6 +32,14 @@ print_thread_hits(const std::vector<T> &arr) {
                 << " times.\n";
     std::cout << std::endl;
   }
+}
+
+static void
+sig_handler(int _) {
+  (void) _;
+  std::cerr << "\nStopping..." << std::endl;
+
+  early_stop = 1;
 }
 
 /* C++ version of the dtrmv BLAS function */
@@ -622,12 +637,19 @@ iterate_deconv(
     double jitter_scale, double c, NumericVector mu0, arma::mat lambda0,
     double alpha, double beta, int thread_num = 1
 ) {
+  std::vector<int> thread_hits;
+
+#ifdef _OPENMP
+  omp_set_max_active_levels(2);
+  omp_set_num_threads(thread_num);
+
+  for (int i = 0; i < thread_num; i++)
+    thread_hits.emplace_back(0);
+
   if (verbose) {
     std::cout << "[DEBUG] The number of threads is " << thread_num << std::endl;
   }
-  omp_set_num_threads(thread_num);
-
-  std::vector<u_int64_t> thread_hits(thread_num, 0);
+#endif
 
   // Initalize matrices storing iterations
   const mat Y0        = Y.rows(0, n0 - 1);   // The input PCs on spot level.
@@ -637,7 +659,7 @@ iterate_deconv(
   vec acceptance_prob = vec(n);   // The probability of accepting the proposals
                                   // on subspot level.
   DoubleStatesVector<double> log_likelihoods(n
-  );                              // The log-likelihoods on subspot level.
+  );   // The log-likelihoods on subspot level.
   umat df_sim_z(nrep / 100 + 1, n, fill::zeros);
   mat df_sim_mu(nrep, d * q, fill::zeros);
   List df_sim_lambda(nrep / 100 + 1);
@@ -669,10 +691,7 @@ iterate_deconv(
   } else {
     j0_vector = {0, 1, 2, 3, 4, 5, 6, 7, 8};
   }
-  mat Y_j_prev(subspots, d);
-  mat Y_j_new(subspots, d);
   mat error(n, d);
-  mat error_j(subspots, d);
   const double w_alpha     = (d + 4) / 2;   // shape parameter
   const IntegerVector qvec = seq_len(q);
   const vec zero_vec       = zeros<vec>(d);
@@ -680,186 +699,220 @@ iterate_deconv(
   const mat error_var =
       diagmat(one_vec) / d *
       jitter_scale;   // d here does not seem to have an effect
-  Progress p(nrep - 1, verbose);
-  for (int i = 1; i < nrep; i++) {
-    // Check for interrupt every ~1-2 seconds (0.24s/iter based on 6k subspots)
-    if (i % 4 == 0)
-      Rcpp::checkUserInterrupt();
 
-    p.increment();
-    if (i % 10 == 0) {
-      if (Progress::check_abort())
-        return (List::create(
-            _["z"] = df_sim_z, _["mu"] = df_sim_mu, _["lambda"] = df_sim_lambda,
-            _["weights"] = df_sim_w, _["Y"] = df_sim_Y, _["Ychange"] = Ychange,
-            _["plogLik"] = plogLik
-        ));
-    }
-
-    // Update mu
-    NumericVector Ysums;
-    for (int k = 1; k <= q; k++) {
-      const uvec index_1k = find(z == k);
-      mat Yrows           = Y.rows(index_1k);
-      Yrows.each_col() %= w(index_1k);
-      Ysums           = sum(Yrows, 0);
-      const mat var_i = inv(lambda0 + sum(w(index_1k)) * lambda_i);
-      const vec mean_i =
-          var_i * (lambda0 * mu0vec + lambda_i * as<colvec>(Ysums));
-      mu_i.row(k - 1) = rmvnorm(1, mean_i, var_i);
-    }
-    df_sim_mu.row(i) = vectorise(mu_i, 1);
-
-    // Update lambda
-    for (int j = 0; j < n; j++) {
-      mu_i_long.row(j) = mu_i.row(z(j) - 1);
-    }
-    lambda_i = rwish(
-        n + alpha,
-        inv(Vinv + (Y - mu_i_long).t() * diagmat(w) * (Y - mu_i_long))
-    );
-
-    // Propose new values for Y.
-    int updateCounter = 0;
-    error             = rmvnorm(
-        n, zero_vec, error_var
-    );   // Generate random numbers before entering multithreading.
-
-                     // Multithreading to compute the MCMC kernel of Y.
-#pragma omp parallel for schedule(static) private(Y_j_prev, error_j, Y_j_new)  \
-    shared(Y, Y_new, error, acceptance_prob, j0_vector, subspots, zero_vec,    \
-               mu_i_long, Y0, lambda_i, n0, w, c, updateCounter, thread_hits)  \
-    num_threads(thread_num)
-    for (int j0 = 0; j0 < n0; j0++) {
-#pragma omp atomic update
-      thread_hits[omp_get_thread_num()]++;
-
-      Y_j_prev = Y.rows(j0_vector * n0 + j0);
-      error_j  = error.rows(j0_vector * n0 + j0);
-
-      // Make sure that the sum of the error terms is zero.
-      const rowvec error_mean = sum(error_j, 0) / subspots;
-      for (int r = 0; r < subspots; r++) {
-        error_j.row(r) = error_j.row(r) - error_mean;
+  // Progress bar
+  indicators::show_console_cursor(false);
+  indicators::ProgressBar pb{
+      indicators::option::MaxProgress{nrep - 1},
+      indicators::option::BarWidth{50},
+      indicators::option::Start{" ["},
+      indicators::option::Fill{"█"},
+      indicators::option::Lead{"█"},
+      indicators::option::Remainder{"-"},
+      indicators::option::End{"]"},
+      indicators::option::PrefixText{"Enhancing"},
+      indicators::option::ForegroundColor{indicators::Color::blue},
+      indicators::option::ShowElapsedTime{true},
+      indicators::option::ShowRemainingTime{true},
+      indicators::option::FontStyles{
+          std::vector<indicators::FontStyle>{indicators::FontStyle::bold}
       }
+  };
 
-      Y_j_new          = Y_j_prev + error_j;
-      const mat mu_i_j = mu_i_long.rows(j0_vector * n0 + j0);
-      vec p_prev       = {0.0};
-      vec p_new        = {0.0};
-      for (int r = 0; r < subspots; r++) {
-        p_prev +=
-            dmvnrm_prec_arma_fast(
-                Y_j_prev.row(r), mu_i_j.row(r), lambda_i * w(j0 + n0 * r), true
-            ) -
-            c * (accu(pow(Y_j_prev.row(r) - Y0.row(j0), 2)));
-        p_new +=
-            dmvnrm_prec_arma_fast(
-                Y_j_new.row(r), mu_i_j.row(r), lambda_i * w(j0 + n0 * r), true
-            ) -
-            c * (accu(pow(Y_j_new.row(r) - Y0.row(j0), 2)));
-      }
-      double probY_j = as_scalar(exp(p_new - p_prev));
-      if (probY_j > 1) {
-        probY_j = 1;
-      }
-#pragma omp critical(iter_y)
+  // Keyboard interruption
+  signal(SIGABRT, sig_handler);
+
+#pragma omp parallel shared(                                                   \
+        early_stop, Y, Y_new, error, acceptance_prob, j0_vector, subspots,     \
+            zero_vec, mu_i_long, Y0, lambda_i, n0, c, thread_hits, n, z,       \
+            z_new, neighbors, gamma, mu_i, w, log_likelihoods                  \
+)
+  {
+    for (int i = 1; i < nrep; i++) {
+#pragma omp barrier
+#pragma omp single
       {
-        acceptance_prob(j0)             = probY_j;
-        Y_new.rows(j0_vector * n0 + j0) = Y_j_new;
-      }
-    }
+        pb.tick();
 
-    // Accept or reject proposals of Y; update w; propose new values for z.
-    for (int j0 = 0; j0 < n0; j0++) {
-      const IntegerVector Ysample = {0, 1};
-      const NumericVector probsY  = {
-          1 - acceptance_prob(j0), acceptance_prob(j0)};
-      const int yesUpdate = sample(Ysample, 1, true, probsY)[0];
-      if (yesUpdate == 1) {
-        Y.rows(j0_vector * n0 + j0) = Y_new.rows(j0_vector * n0 + j0);
-        updateCounter++;
+        // Update mu
+        NumericVector Ysums;
+        for (int k = 1; k <= q; k++) {
+          const uvec index_1k = find(z == k);
+          mat Yrows           = Y.rows(index_1k);
+          Yrows.each_col() %= w(index_1k);
+          Ysums           = sum(Yrows, 0);
+          const mat var_i = inv(lambda0 + sum(w(index_1k)) * lambda_i);
+          const vec mean_i =
+              var_i * (lambda0 * mu0vec + lambda_i * as<colvec>(Ysums));
+          mu_i.row(k - 1) = rmvnorm(1, mean_i, var_i);
+        }
+        df_sim_mu.row(i) = vectorise(mu_i, 1);
+
+        // Update lambda
+        for (int j = 0; j < n; j++) {
+          mu_i_long.row(j) = mu_i.row(z(j) - 1);
+        }
+        lambda_i = rwish(
+            n + alpha,
+            inv(Vinv + (Y - mu_i_long).t() * diagmat(w) * (Y - mu_i_long))
+        );
+
+        // Propose new values for Y.
+        error = rmvnorm(
+            n, zero_vec, error_var
+        );   // Generate random numbers before entering multithreading.
       }
 
-      for (int r = 0; r < subspots; r++) {
-        // Update w.
-        if (tdist) {
-          const double w_beta = as_scalar(
-              2 /
-              ((Y.row(r * n0 + j0) - mu_i_long.row(r * n0 + j0)) * lambda_i *
-                   (Y.row(r * n0 + j0) - mu_i_long.row(r * n0 + j0)).t() +
-               4)
-          );                                // scale parameter
-          w(r * n0 + j0) =
-              R::rgamma(w_alpha, w_beta);   // sample from posterior for w
+      // Multithreading to compute the MCMC kernel of Y.
+#pragma omp for
+      for (int j0 = 0; j0 < n0; j0++) {
+#ifdef _OPENMP
+#pragma omp atomic update
+        thread_hits[omp_get_thread_num()]++;
+#endif
+
+        const mat Y_j_prev = Y.rows(j0_vector * n0 + j0);
+        mat error_j        = error.rows(j0_vector * n0 + j0);
+
+        // Make sure that the sum of the error terms is zero.
+        const rowvec error_mean = sum(error_j, 0) / subspots;
+        for (int r = 0; r < subspots; r++) {
+          error_j.row(r) = error_j.row(r) - error_mean;
         }
 
-        // Propose new values for z.
-        const IntegerVector qlessk = qvec[qvec != z(r * n0 + j0)];
-        z_new(r * n0 + j0)         = sample(qlessk, 1)[0];
+        const mat Y_j_new = Y_j_prev + error_j;
+        const mat mu_i_j  = mu_i_long.rows(j0_vector * n0 + j0);
+        vec p_prev        = {0.0};
+        vec p_new         = {0.0};
+        for (int r = 0; r < subspots; r++) {
+          p_prev += dmvnrm_prec_arma_fast(
+                        Y_j_prev.row(r), mu_i_j.row(r),
+                        lambda_i * w(j0 + n0 * r), true
+                    ) -
+                    c * (accu(pow(Y_j_prev.row(r) - Y0.row(j0), 2)));
+          p_new +=
+              dmvnrm_prec_arma_fast(
+                  Y_j_new.row(r), mu_i_j.row(r), lambda_i * w(j0 + n0 * r), true
+              ) -
+              c * (accu(pow(Y_j_new.row(r) - Y0.row(j0), 2)));
+        }
+        double probY_j = as_scalar(exp(p_new - p_prev));
+        if (probY_j > 1) {
+          probY_j = 1;
+        }
+#pragma omp critical(iter_y)
+        {
+          acceptance_prob(j0)             = probY_j;
+          Y_new.rows(j0_vector * n0 + j0) = Y_j_new;
+        }
       }
-    }
-    Ychange[i] = updateCounter * 1.0 / n0;
 
-    // Update z
-#pragma omp parallel for schedule(static)                                      \
-    shared(n, z, z_new, neighbors, gamma, Y, mu_i, lambda_i, w,                \
-               acceptance_prob, thread_hits, log_likelihoods)                  \
-    num_threads(thread_num)
-    for (int j = 0; j < n; j++) {
+#pragma omp single
+      {
+        int updateCounter = 0;
+
+        // Accept or reject proposals of Y; update w; propose new values for
+        // z.
+        for (int j0 = 0; j0 < n0; j0++) {
+          const IntegerVector Ysample = {0, 1};
+          const NumericVector probsY  = {
+              1 - acceptance_prob(j0), acceptance_prob(j0)
+          };
+          const int yesUpdate = sample(Ysample, 1, true, probsY)[0];
+          if (yesUpdate == 1) {
+            Y.rows(j0_vector * n0 + j0) = Y_new.rows(j0_vector * n0 + j0);
+            updateCounter++;
+          }
+
+          for (int r = 0; r < subspots; r++) {
+            // Update w.
+            if (tdist) {
+              const double w_beta = as_scalar(
+                  2 /
+                  ((Y.row(r * n0 + j0) - mu_i_long.row(r * n0 + j0)) *
+                       lambda_i *
+                       (Y.row(r * n0 + j0) - mu_i_long.row(r * n0 + j0)).t() +
+                   4)
+              );   // scale parameter
+              w(r * n0 + j0) =
+                  R::rgamma(w_alpha, w_beta);   // sample from posterior for w
+            }
+
+            // Propose new values for z.
+            const IntegerVector qlessk = qvec[qvec != z(r * n0 + j0)];
+            z_new(r * n0 + j0)         = sample(qlessk, 1)[0];
+          }
+        }
+        Ychange[i] = updateCounter * 1.0 / n0;
+      }
+
+      // Update z
+#pragma omp for
+      for (int j = 0; j < n; j++) {
+#ifdef _OPENMP
 #pragma omp atomic update
-      thread_hits[omp_get_thread_num()]++;
+        thread_hits[omp_get_thread_num()]++;
+#endif
 
-      const int z_j_prev      = z(j);
-      const int z_j_new       = z_new(j);
-      const Neighbor j_vector = neighbors[j];
+        const int z_j_prev      = z(j);
+        const int z_j_new       = z_new(j);
+        const Neighbor j_vector = neighbors[j];
 
-      // log likelihood; prior
-      vec h_z_prev(2, arma::fill::zeros), h_z_new(2, arma::fill::zeros);
+        // log likelihood; prior
+        vec h_z_prev(2, arma::fill::zeros), h_z_new(2, arma::fill::zeros);
 
-      h_z_prev(0) = dmvnrm_prec_arma_fast(
-          Y.row(j), mu_i.row(z_j_prev - 1), lambda_i * w(j), true
-      )[0];
-      h_z_new(0) = dmvnrm_prec_arma_fast(
-          Y.row(j), mu_i.row(z_j_new - 1), lambda_i * w(j), true
-      )[0];
+        h_z_prev(0) = dmvnrm_prec_arma_fast(
+            Y.row(j), mu_i.row(z_j_prev - 1), lambda_i * w(j), true
+        )[0];
+        h_z_new(0) = dmvnrm_prec_arma_fast(
+            Y.row(j), mu_i.row(z_j_new - 1), lambda_i * w(j), true
+        )[0];
 
-      if (j_vector.get_size() != 0) {
-        h_z_prev(1) = gamma / j_vector.get_size() * 2 *
-                      accu((z(j_vector.get_neighbors()) == z_j_prev));
-        h_z_new(1) = gamma / j_vector.get_size() * 2 *
-                     accu((z(j_vector.get_neighbors()) == z_j_new));
-      }
-      double prob_j = exp(accu(h_z_new) - accu(h_z_prev));
-      if (prob_j > 1) {
-        prob_j = 1;
-      }
+        if (j_vector.get_size() != 0) {
+          h_z_prev(1) = gamma / j_vector.get_size() * 2 *
+                        accu((z(j_vector.get_neighbors()) == z_j_prev));
+          h_z_new(1) = gamma / j_vector.get_size() * 2 *
+                       accu((z(j_vector.get_neighbors()) == z_j_new));
+        }
+        double prob_j = exp(accu(h_z_new) - accu(h_z_prev));
+        if (prob_j > 1) {
+          prob_j = 1;
+        }
 
 #pragma omp critical(iter_z)
+        {
+          acceptance_prob(j)     = prob_j;
+          log_likelihoods.row(j) = {h_z_prev(0), h_z_new(0)};
+        }
+      }
+
+#pragma omp single
       {
-        acceptance_prob(j)     = prob_j;
-        log_likelihoods.row(j) = {h_z_prev(0), h_z_new(0)};
-      }
-    }
+        // Accept or reject proposals of z.
+        for (int j = 0; j < n; j++) {
+          const IntegerVector zsample = {0, 1};
+          const NumericVector probs   = {
+              1 - acceptance_prob(j), acceptance_prob(j)
+          };
+          const uword yesUpdate = sample(zsample, 1, true, probs)[0];
+          log_likelihoods.set_col_idx(j, yesUpdate);
+          if (yesUpdate == 1) {
+            z(j) = z_new(j);
+          }
+        }
+        plogLik[i] = accu(log_likelihoods.get_current_values());
 
-    // Accept or reject proposals of z.
-    for (int j = 0; j < n; j++) {
-      const IntegerVector zsample = {0, 1};
-      const NumericVector probs = {1 - acceptance_prob(j), acceptance_prob(j)};
-      const uword yesUpdate     = sample(zsample, 1, true, probs)[0];
-      log_likelihoods.set_col_idx(j, yesUpdate);
-      if (yesUpdate == 1) {
-        z(j) = z_new(j);
+        // Save samples for every 100 iterations.
+        if ((i + 1) % 100 == 0) {
+          df_sim_lambda[(i + 1) / 100] = lambda_i;
+          df_sim_Y[(i + 1) / 100]      = Y;
+          df_sim_w.row((i + 1) / 100)  = w.t();
+          df_sim_z.row((i + 1) / 100)  = z.t();
+        }
       }
-    }
-    plogLik[i] = accu(log_likelihoods.get_current_values());
 
-    // Save samples for every 100 iterations.
-    if ((i + 1) % 100 == 0) {
-      df_sim_lambda[(i + 1) / 100] = lambda_i;
-      df_sim_Y[(i + 1) / 100]      = Y;
-      df_sim_w.row((i + 1) / 100)  = w.t();
-      df_sim_z.row((i + 1) / 100)  = z.t();
+      if ((i + 1) % 100 == 0 && early_stop > 0)
+        i = nrep;
     }
   }
 
@@ -869,9 +922,13 @@ iterate_deconv(
       _["plogLik"] = plogLik
   );
 
+  indicators::show_console_cursor(true);
+
+#ifdef _OPENMP
   if (verbose) {
     print_thread_hits(thread_hits);
   }
+#endif
 
   return (out);
 }
