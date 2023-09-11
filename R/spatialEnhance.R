@@ -327,7 +327,7 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
 
     if (save.chain) {
         deconv <- .clean_chain(deconv, method = "enhance")
-        params <- c("z", "mu", "lambda", "weights", "Y", "Ychange", "plogLik")
+        params <- c("z", "mu", "lambda", "weights", "Y", "Ychange", "plogLik", "jitterScale")
         metadata(enhanced)$chain.h5 <- .write_chain(deconv, chain.fname, params)
     }
 

@@ -206,8 +206,12 @@ NULL
     colnames(out$plogLik) <- c("pLogLikelihood")
     if (method == "enhance") {
         out$Y <- .flatten_matrix_list(out$Y, "Y", n, d)
+        
         out$Ychange <- as.matrix(out$Ychange)
         colnames(out$Ychange) <- c("Ychange")
+        
+        out$jitterScale <- as.matrix(out$jitterScale)
+        colnames(out$jitterScale) <- c("jitterScale")
     }
     
     if (method == "enhance") {

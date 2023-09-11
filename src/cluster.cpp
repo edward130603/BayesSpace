@@ -4,6 +4,7 @@
 #include "neighbor.h"
 #include <RcppArmadillo.h>
 #include <RcppDist.h>
+#include <algorithm>
 #include <chrono>
 #include <csignal>
 #include <indicators/cursor_control.hpp>
@@ -40,6 +41,24 @@ sig_handler(int _) {
   std::cerr << "\nStopping..." << std::endl;
 
   early_stop = 1;
+}
+
+double
+update_jitter_scale(
+    double accpet_rate, double target_accept_rate, size_t min_iter,
+    size_t curr_iter, double curr_jitter_scale
+) {
+  if (min_iter >= curr_iter)
+    return curr_jitter_scale;
+
+  const double step_size = std::min(0.01, 1.0 / sqrt(curr_iter));
+
+  if (accpet_rate < target_accept_rate)
+    return curr_jitter_scale - step_size;
+  else if (accpet_rate > target_accept_rate)
+    return curr_jitter_scale + step_size;
+  else
+    return curr_jitter_scale;
 }
 
 /* C++ version of the dtrmv BLAS function */
@@ -667,6 +686,7 @@ iterate_deconv(
   mat df_sim_w(nrep / 100 + 1, n);
   NumericVector Ychange(nrep, NA_REAL);
   NumericVector plogLik(nrep, NA_REAL);
+  NumericVector jitterScale(nrep, NA_REAL);
 
   // Initialize parameters
   df_sim_mu.row(0) = rowvec(rep(mu0, q));
@@ -697,8 +717,11 @@ iterate_deconv(
   const vec zero_vec       = zeros<vec>(d);
   const vec one_vec        = ones<vec>(d);
   const mat error_var =
-      diagmat(one_vec) / d *
-      jitter_scale;   // d here does not seem to have an effect
+      diagmat(one_vec) / d;   // d here does not seem to have an effect
+
+  // For adaptive MCMC
+  size_t num_accepts = 0;
+  size_t num_rejects = 0;
 
   // Progress bar
   indicators::show_console_cursor(false);
@@ -720,16 +743,16 @@ iterate_deconv(
   };
 
   // Keyboard interruption
-  signal(SIGABRT, sig_handler);
+  signal(SIGTERM, sig_handler);
 
 #pragma omp parallel shared(                                                   \
-        early_stop, Y, Y_new, error, acceptance_prob, j0_vector, subspots,     \
-            zero_vec, mu_i_long, Y0, lambda_i, n0, c, thread_hits, n, z,       \
-            z_new, neighbors, gamma, mu_i, w, log_likelihoods                  \
+        early_stop, Y, Y_new, error, error_var, num_accepts, num_rejects,      \
+            acceptance_prob, j0_vector, subspots, zero_vec, mu_i_long, Y0,     \
+            lambda_i, n0, c, thread_hits, n, z, z_new, neighbors, gamma, mu_i, \
+            w, log_likelihoods                                                 \
 )
   {
     for (int i = 1; i < nrep; i++) {
-#pragma omp barrier
 #pragma omp single
       {
         pb.tick();
@@ -759,7 +782,7 @@ iterate_deconv(
 
         // Propose new values for Y.
         error = rmvnorm(
-            n, zero_vec, error_var
+            n, zero_vec, error_var * jitter_scale
         );   // Generate random numbers before entering multithreading.
       }
 
@@ -821,8 +844,11 @@ iterate_deconv(
           const int yesUpdate = sample(Ysample, 1, true, probsY)[0];
           if (yesUpdate == 1) {
             Y.rows(j0_vector * n0 + j0) = Y_new.rows(j0_vector * n0 + j0);
+
+            num_accepts++;
             updateCounter++;
-          }
+          } else
+            num_rejects++;
 
           for (int r = 0; r < subspots; r++) {
             // Update w.
@@ -844,6 +870,12 @@ iterate_deconv(
           }
         }
         Ychange[i] = updateCounter * 1.0 / n0;
+
+        jitter_scale = update_jitter_scale(
+            static_cast<double>(num_accepts) / (num_accepts + num_rejects),
+            0.234, 10, i, jitter_scale
+        );
+        jitterScale[i] = jitter_scale;
       }
 
       // Update z
@@ -913,13 +945,14 @@ iterate_deconv(
 
       if ((i + 1) % 100 == 0 && early_stop > 0)
         i = nrep;
+#pragma omp barrier
     }
   }
 
   List out = List::create(
       _["z"] = df_sim_z, _["mu"] = df_sim_mu, _["lambda"] = df_sim_lambda,
       _["weights"] = df_sim_w, _["Y"] = df_sim_Y, _["Ychange"] = Ychange,
-      _["plogLik"] = plogLik
+      _["plogLik"] = plogLik, _["jitterScale"] = jitterScale
   );
 
   indicators::show_console_cursor(true);
