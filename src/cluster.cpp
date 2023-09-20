@@ -43,22 +43,24 @@ sig_handler(int _) {
   early_stop = 1;
 }
 
-double
-update_jitter_scale(
-    double accpet_rate, double target_accept_rate, size_t min_iter,
-    size_t curr_iter, double curr_jitter_scale
+mat
+adaptive_mcmc(
+    double accpetance_rate, double target_acceptance_rate, size_t curr_iter,
+    const mat &identity_mtx, const mat &adaptive_mtx, const rowvec &samples
 ) {
-  if (min_iter >= curr_iter)
-    return curr_jitter_scale;
+  const double step_size =
+      std::min(1.0, samples.n_elem * std::pow(curr_iter, -2.0 / 3));
 
-  const double step_size = std::min(0.01, 1.0 / sqrt(curr_iter));
+  const mat sample_mtx = resize(samples, samples.n_elem, 1);
 
-  if (accpet_rate < target_accept_rate)
-    return curr_jitter_scale - step_size;
-  else if (accpet_rate > target_accept_rate)
-    return curr_jitter_scale + step_size;
-  else
-    return curr_jitter_scale;
+  return chol(
+      adaptive_mtx *
+          (identity_mtx +
+           step_size * (accpetance_rate - target_acceptance_rate) * sample_mtx *
+               sample_mtx.t() / accu(samples % samples)) *
+          adaptive_mtx.t(),
+      "lower"
+  );
 }
 
 /* C++ version of the dtrmv BLAS function */
@@ -716,12 +718,19 @@ iterate_deconv(
   const IntegerVector qvec = seq_len(q);
   const vec zero_vec       = zeros<vec>(d);
   const vec one_vec        = ones<vec>(d);
-  const mat error_var =
-      diagmat(one_vec) / d;   // d here does not seem to have an effect
+  const mat error_var      = diagmat(one_vec);
+  jitter_scale /= d;
 
   // For adaptive MCMC
-  size_t num_accepts = 0;
-  size_t num_rejects = 0;
+  std::vector<size_t> num_accepts(n0, 0);
+  std::vector<size_t> num_rejects(n0, 0);
+  std::vector<mat> adaptive_mtx(n);
+  if (jitter_scale == 0.0) {
+#pragma omp parallel for
+    for (int i = 0; i < n; i++) {
+      adaptive_mtx[i] = diagmat(one_vec);
+    }
+  }
 
   // Progress bar
   indicators::show_console_cursor(false);
@@ -747,9 +756,9 @@ iterate_deconv(
 
 #pragma omp parallel shared(                                                   \
         early_stop, Y, Y_new, error, error_var, num_accepts, num_rejects,      \
-            acceptance_prob, j0_vector, subspots, zero_vec, mu_i_long, Y0,     \
-            lambda_i, n0, c, thread_hits, n, z, z_new, neighbors, gamma, mu_i, \
-            w, log_likelihoods                                                 \
+            adaptive_mtx, acceptance_prob, j0_vector, subspots, zero_vec,      \
+            mu_i_long, Y0, lambda_i, n0, c, thread_hits, n, z, z_new,          \
+            neighbors, gamma, mu_i, w, log_likelihoods                         \
 )
   {
     for (int i = 1; i < nrep; i++) {
@@ -782,7 +791,8 @@ iterate_deconv(
 
         // Propose new values for Y.
         error = rmvnorm(
-            n, zero_vec, error_var * jitter_scale
+            n, zero_vec,
+            jitter_scale == 0.0 ? error_var : error_var * jitter_scale
         );   // Generate random numbers before entering multithreading.
       }
 
@@ -796,6 +806,15 @@ iterate_deconv(
 
         const mat Y_j_prev = Y.rows(j0_vector * n0 + j0);
         mat error_j        = error.rows(j0_vector * n0 + j0);
+
+        if (jitter_scale == 0.0) {
+          for (int r = 0; r < subspots; r++) {
+            error_j.row(r) = trans(
+                adaptive_mtx[r * n0 + j0] *
+                resize(error_j.row(r), error_j.n_cols, 1)
+            );
+          }
+        }
 
         // Make sure that the sum of the error terms is zero.
         const rowvec error_mean = sum(error_j, 0) / subspots;
@@ -845,12 +864,21 @@ iterate_deconv(
           if (yesUpdate == 1) {
             Y.rows(j0_vector * n0 + j0) = Y_new.rows(j0_vector * n0 + j0);
 
-            num_accepts++;
+            num_accepts[j0]++;
             updateCounter++;
           } else
-            num_rejects++;
+            num_rejects[j0]++;
 
           for (int r = 0; r < subspots; r++) {
+            // Adaptive MCMC.
+            if (jitter_scale == 0.0 && i > 10)
+              adaptive_mtx[r * n0 + j0] = adaptive_mcmc(
+                  static_cast<double>(num_accepts[j0]) /
+                      (num_accepts[j0] + num_rejects[j0]),
+                  0.234, i, error_var, adaptive_mtx[r * n0 + j0],
+                  error.row(r * n0 + j0)
+              );
+
             // Update w.
             if (tdist) {
               const double w_beta = as_scalar(
@@ -870,12 +898,6 @@ iterate_deconv(
           }
         }
         Ychange[i] = updateCounter * 1.0 / n0;
-
-        jitter_scale = update_jitter_scale(
-            static_cast<double>(num_accepts) / (num_accepts + num_rejects),
-            0.234, 10, i, jitter_scale
-        );
-        jitterScale[i] = jitter_scale;
       }
 
       // Update z
