@@ -688,7 +688,6 @@ iterate_deconv(
   mat df_sim_w(nrep / 100 + 1, n);
   NumericVector Ychange(nrep, NA_REAL);
   NumericVector plogLik(nrep, NA_REAL);
-  NumericVector jitterScale(nrep, NA_REAL);
 
   // Initialize parameters
   df_sim_mu.row(0) = rowvec(rep(mu0, q));
@@ -726,6 +725,10 @@ iterate_deconv(
   std::vector<size_t> num_rejects(n0, 0);
   std::vector<mat> adaptive_mtx(n);
   if (jitter_scale == 0.0) {
+    if (verbose) {
+      std::cout << "[DEBUG] Turning on adaptive MCMC... " << std::endl;
+    }
+
 #pragma omp parallel for
     for (int i = 0; i < n; i++) {
       adaptive_mtx[i] = diagmat(one_vec);
@@ -870,15 +873,6 @@ iterate_deconv(
             num_rejects[j0]++;
 
           for (int r = 0; r < subspots; r++) {
-            // Adaptive MCMC.
-            if (jitter_scale == 0.0 && i > 10)
-              adaptive_mtx[r * n0 + j0] = adaptive_mcmc(
-                  static_cast<double>(num_accepts[j0]) /
-                      (num_accepts[j0] + num_rejects[j0]),
-                  0.234, i, error_var, adaptive_mtx[r * n0 + j0],
-                  error.row(r * n0 + j0)
-              );
-
             // Update w.
             if (tdist) {
               const double w_beta = as_scalar(
@@ -907,6 +901,15 @@ iterate_deconv(
 #pragma omp atomic update
         thread_hits[omp_get_thread_num()]++;
 #endif
+
+        // Adaptive MCMC.
+        if (jitter_scale == 0.0 && i > 10) {
+          adaptive_mtx[j] = adaptive_mcmc(
+              static_cast<double>(num_accepts[j % n0]) /
+                  (num_accepts[j % n0] + num_rejects[j % n0]),
+              0.234, i, error_var, adaptive_mtx[j], error.row(j)
+          );
+        }
 
         const int z_j_prev      = z(j);
         const int z_j_new       = z_new(j);
@@ -974,7 +977,7 @@ iterate_deconv(
   List out = List::create(
       _["z"] = df_sim_z, _["mu"] = df_sim_mu, _["lambda"] = df_sim_lambda,
       _["weights"] = df_sim_w, _["Y"] = df_sim_Y, _["Ychange"] = Ychange,
-      _["plogLik"] = plogLik, _["jitterScale"] = jitterScale
+      _["plogLik"] = plogLik
   );
 
   indicators::show_console_cursor(true);
