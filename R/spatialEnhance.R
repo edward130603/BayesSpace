@@ -29,11 +29,13 @@
 #' @param chain.fname File path for saved chain. Tempfile used if not provided.
 #' @param burn.in Number of iterations to exclude as burn-in period. The MCMC
 #'   iterations are currently thinned to every 100; accordingly \code{burn.in}
-#'   is rounded down to the nearest multiple of 100.
+#'   is rounded down to the nearest multiple of 100. If a value no larger than 1
+#'   is set, it is considered as a percentage.
 #' @param jitter_scale Controls the amount of jittering. Small amounts of
 #'   jittering are more likely to be accepted but result in exploring the space
 #'   more slowly. We suggest tuning \code{jitter_scale} so that Ychange is on
 #'   average around 25\%-40\%. Ychange can be accessed via \code{mcmcChain()}.
+#'   Alternatively, set it to 0 to activate adaptive MCMC.
 #' @param jitter_prior Scale factor for the prior variance, parameterized as the
 #'   proportion (default = 0.3) of the mean variance of the PCs.
 #'   We suggest making \code{jitter_prior} smaller if the jittered values are
@@ -53,6 +55,9 @@
 #'   with \code{reducedDim(sce, 'PCA')}.
 #'   
 #' \code{coresTune} returns the output of \code{microbenchmark}.
+#' 
+#' \code{adjustClusterLabels} adjusts the cluster labels from the MCMC samples
+#'   via \code{burn.in}. The MCMC chain must be retained.
 #'
 #' @details
 #' The enhanced \code{SingleCellExperiment} has most of the properties of the
@@ -227,6 +232,8 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
     assert_that(burn.in >= 0)
     if (burn.in >= nrep) {
         stop("Please specify a burn-in period shorter than the total number of iterations.")
+    } else if (burn.in < 1) {
+      burn.in <- as.integer(nrep * burn.in)
     }
 
     ## Thinning interval; only every 100 iterations are kept to reduce memory
@@ -327,7 +334,7 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
 
     if (save.chain) {
         deconv <- .clean_chain(deconv, method = "enhance")
-        params <- c("z", "mu", "lambda", "weights", "Y", "Ychange", "plogLik", "jitterScale")
+        params <- c("z", "mu", "lambda", "weights", "Y", "Ychange", "plogLik")
         metadata(enhanced)$chain.h5 <- .write_chain(deconv, chain.fname, params)
     }
 
@@ -404,4 +411,27 @@ coreTune <- function(sce, test.cores = detectCores(), test.times = 1, ...) {
     list = exprs,
     times = test.times
   )
+}
+
+#' @export
+#' @rdname spatialEnhance
+adjustClusterLabels <- function(sce, burn.in) {
+  zsamples <- mcmcChain(sce, "z")
+  n_iter <- nrow(zsamples) - 1  # this is technically n_iters / 100
+  
+  assert_that(burn.in >= 0)
+  if (burn.in < 1) {
+    burn.in <- as.integer(n_iter * burn.in)
+  }
+  
+  zs <- zsamples[seq(burn.in, n_iter + 1), ]
+  if (burn.in == n_iter + 1) {
+    labels <- matrix(zs, nrow = 1)
+  } else {
+    labels <- apply(zs, 2, Mode)
+  }
+  
+  sce$spatial.cluster <- unname(labels)
+  
+  sce
 }

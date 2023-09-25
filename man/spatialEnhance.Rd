@@ -3,6 +3,7 @@
 \name{spatialEnhance}
 \alias{spatialEnhance}
 \alias{coreTune}
+\alias{adjustClusterLabels}
 \title{Enhance spot resolution}
 \usage{
 spatialEnhance(
@@ -30,6 +31,8 @@ spatialEnhance(
 )
 
 coreTune(sce, test.cores = detectCores(), test.times = 1, ...)
+
+adjustClusterLabels(sce, burn.in)
 }
 \arguments{
 \item{sce}{A SingleCellExperiment object containing the spatial data.}
@@ -75,12 +78,14 @@ is set to a diagonal matrix \eqn{0.01 I}.}
 
 \item{burn.in}{Number of iterations to exclude as burn-in period. The MCMC
 iterations are currently thinned to every 100; accordingly \code{burn.in}
-is rounded down to the nearest multiple of 100.}
+is rounded down to the nearest multiple of 100. If a value no larger than 1
+is set, it is considered as a percentage.}
 
 \item{jitter_scale}{Controls the amount of jittering. Small amounts of
 jittering are more likely to be accepted but result in exploring the space
 more slowly. We suggest tuning \code{jitter_scale} so that Ychange is on
-average around 25\%-40\%. Ychange can be accessed via \code{mcmcChain()}.}
+average around 25\%-40\%. Ychange can be accessed via \code{mcmcChain()}.
+Alternatively, set it to 0 to activate adaptive MCMC.}
 
 \item{jitter_prior}{Scale factor for the prior variance, parameterized as the
 proportion (default = 0.3) of the mean variance of the PCs.
@@ -106,6 +111,9 @@ the latter case, a list of values (power of 2) will be created}
   with \code{reducedDim(sce, 'PCA')}.
   
 \code{coresTune} returns the output of \code{microbenchmark}.
+
+\code{adjustClusterLabels} adjusts the cluster labels from the MCMC samples
+  via \code{burn.in}. The MCMC chain must be retained.
 }
 \description{
 Enhanced clustering of a spatial expression dataset to subspot resolution.

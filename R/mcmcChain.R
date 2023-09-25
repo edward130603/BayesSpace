@@ -209,9 +209,6 @@ NULL
         
         out$Ychange <- as.matrix(out$Ychange)
         colnames(out$Ychange) <- c("Ychange")
-        
-        out$jitterScale <- as.matrix(out$jitterScale)
-        colnames(out$jitterScale) <- c("jitterScale")
     }
     
     if (method == "enhance") {
