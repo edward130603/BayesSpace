@@ -51,13 +51,11 @@ adaptive_mcmc(
   const double step_size =
       std::min(1.0, samples.n_elem * std::pow(curr_iter, -2.0 / 3));
 
-  const mat sample_mtx = resize(samples, samples.n_elem, 1);
-
   return chol(
       adaptive_mtx *
-          (identity_mtx +
-           step_size * (accpetance_rate - target_acceptance_rate) * sample_mtx *
-               sample_mtx.t() / accu(samples % samples)) *
+          (identity_mtx + step_size *
+                              (accpetance_rate - target_acceptance_rate) *
+                              samples.t() * samples / accu(samples % samples)) *
           adaptive_mtx.t(),
       "lower"
   );
@@ -809,6 +807,10 @@ iterate_deconv(
 
         const mat Y_j_prev = Y.rows(j0_vector * n0 + j0);
         mat error_j        = error.rows(j0_vector * n0 + j0);
+
+        if (i > 10 && j0 == 0) {
+          std::cout << "i = " << i << ":\n" << adaptive_mtx[0] << std::endl;
+        }
 
         if (jitter_scale == 0.0) {
           for (int r = 0; r < subspots; r++) {
