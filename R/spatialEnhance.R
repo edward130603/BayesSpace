@@ -36,6 +36,9 @@
 #'   more slowly. We suggest tuning \code{jitter_scale} so that Ychange is on
 #'   average around 25\%-40\%. Ychange can be accessed via \code{mcmcChain()}.
 #'   Alternatively, set it to 0 to activate adaptive MCMC.
+#' @param adapt.before Adapting the MCMC chain before the specified number
+#'   or proportion of iterations (by default equal to \code{burn.in}; set to 0
+#'   to always adapt). Only valid when \code{jitter_scale} is 0.
 #' @param jitter_prior Scale factor for the prior variance, parameterized as the
 #'   proportion (default = 0.3) of the mean variance of the PCs.
 #'   We suggest making \code{jitter_prior} smaller if the jittered values are
@@ -149,8 +152,8 @@ deconvolve <- function(Y, positions, xdist, ydist, q, init, nrep = 1000,
     out <- iterate_deconv(
         Y = Y2, df_j = df_j, tdist = tdist, nrep = nrep, n = n, n0 = n0,
         d = d, gamma = gamma, q = q, init = init1, subspots = subspots, verbose = verbose,
-        jitter_scale = jitter_scale, c = c, mu0 = mu0, lambda0 = lambda0, alpha = alpha,
-        beta = beta, thread_num = cores
+        jitter_scale = jitter_scale, adapt_before = adapt.before, c = c, mu0 = mu0,
+        lambda0 = lambda0, alpha = alpha, beta = beta, thread_num = cores
     )
     out$positions <- positions2
     out
@@ -227,13 +230,24 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
                            model = c("t", "normal"), nrep = 200000, gamma = NULL,
                            mu0 = NULL, lambda0 = NULL, alpha = 1, beta = 0.01,
                            save.chain = FALSE, chain.fname = NULL, burn.in = 10000,
-                           jitter_scale = 5, jitter_prior = 0.3, cores = 1, verbose = FALSE) {
+                           jitter_scale = 5, jitter_prior = 0.3, adapt.before = burn.in, cores = 1,
+                           verbose = FALSE) {
     assert_that(nrep >= 100) # require at least one iteration after thinning
     assert_that(burn.in >= 0)
     if (burn.in >= nrep) {
         stop("Please specify a burn-in period shorter than the total number of iterations.")
     } else if (burn.in < 1) {
       burn.in <- as.integer(nrep * burn.in)
+    }
+    
+    if (jitter_scale == 0) {
+      assert_that(adapt.before >= 0)
+      
+      if (adapt.before >= nrep) {
+        stop("Please specify a period for adaptive MCMC shorter than the total number of iterations.")
+      } else if (adapt.before < 1) {
+        adapt.before <- as.integer(nrep * adapt.before)
+      }
     }
 
     ## Thinning interval; only every 100 iterations are kept to reduce memory

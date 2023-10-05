@@ -653,8 +653,8 @@ List
 iterate_deconv(
     arma::mat Y, List df_j, bool tdist, int nrep, int n, int n0, int d,
     double gamma, int q, arma::uvec init, int subspots, bool verbose,
-    double jitter_scale, double c, NumericVector mu0, arma::mat lambda0,
-    double alpha, double beta, int thread_num = 1
+    double jitter_scale, int adapt_before, double c, NumericVector mu0,
+    arma::mat lambda0, double alpha, double beta, int thread_num = 1
 ) {
   std::vector<int> thread_hits;
 
@@ -724,7 +724,14 @@ iterate_deconv(
   std::vector<mat> adaptive_mtx(n);
   if (jitter_scale == 0.0) {
     if (verbose) {
-      std::cout << "[DEBUG] Turning on adaptive MCMC... " << std::endl;
+      std::cout << "[DEBUG] Turning on adaptive MCMC ";
+
+      if (adapt_before == 0) {
+        std::cout << "throughout the entire chain." << std::endl;
+      } else {
+        std::cout << "only in the first " << adapt_before << " iterations."
+                  << std::endl;
+      }
     }
 
 #pragma omp parallel for
@@ -905,7 +912,8 @@ iterate_deconv(
 #endif
 
         // Adaptive MCMC.
-        if (jitter_scale == 0.0 && i > 10) {
+        if (jitter_scale == 0.0 && i > 10 &&
+            (adapt_before == 0 || i <= adapt_before)) {
           adaptive_mtx[j] = adaptive_mcmc(
               static_cast<double>(num_accepts[j % n0]) /
                   (num_accepts[j % n0] + num_rejects[j % n0]),
