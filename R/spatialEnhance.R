@@ -112,7 +112,7 @@ NULL
 #' @importFrom stats cov
 deconvolve <- function(Y, positions, xdist, ydist, q, init, nrep = 1000,
                        model = "normal", platform = c("Visium", "ST"), verbose = TRUE,
-                       jitter_scale = 5, jitter_prior = 0.01, mu0 = colMeans(Y), gamma = 2,
+                       jitter_scale = 5, jitter_prior = 0.01, adapt.before = 100, mu0 = colMeans(Y), gamma = 2,
                        lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01, cores = 1) {
     d <- ncol(Y)
     n0 <- nrow(Y)
@@ -311,8 +311,8 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
         nrep = nrep, gamma = gamma,
         xdist = inputs$xdist, ydist = inputs$ydist, q = q, init = init, model = model,
         platform = platform, verbose = verbose, jitter_scale = jitter_scale,
-        jitter_prior = jitter_prior, mu0 = mu0, lambda0 = lambda0, alpha = alpha,
-        beta = beta, cores = cores
+        jitter_prior = jitter_prior, adapt.before = adapt.before, mu0 = mu0,
+        lambda0 = lambda0, alpha = alpha, beta = beta, cores = cores
     )
 
     ## Create enhanced SCE

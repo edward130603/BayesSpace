@@ -17,6 +17,7 @@ deconvolve(
   verbose = TRUE,
   jitter_scale = 5,
   jitter_prior = 0.01,
+  adapt.before = 100,
   mu0 = colMeans(Y),
   gamma = 2,
   lambda0 = diag(0.01, nrow = ncol(Y)),

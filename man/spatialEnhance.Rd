@@ -26,6 +26,7 @@ spatialEnhance(
   burn.in = 10000,
   jitter_scale = 5,
   jitter_prior = 0.3,
+  adapt.before = burn.in,
   cores = 1,
   verbose = FALSE
 )
@@ -91,6 +92,10 @@ Alternatively, set it to 0 to activate adaptive MCMC.}
 proportion (default = 0.3) of the mean variance of the PCs.
 We suggest making \code{jitter_prior} smaller if the jittered values are
 not expected to vary much from the overall mean of the spot.}
+
+\item{adapt.before}{Adapting the MCMC chain before the specified number
+or proportion of iterations (by default equal to \code{burn.in}; set to 0
+to always adapt). Only valid when \code{jitter_scale} is 0.}
 
 \item{cores}{The number of threads to use. The results are invariate to the
 value of \code{cores}.}

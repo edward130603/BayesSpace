@@ -815,10 +815,6 @@ iterate_deconv(
         const mat Y_j_prev = Y.rows(j0_vector * n0 + j0);
         mat error_j        = error.rows(j0_vector * n0 + j0);
 
-        if (i > 10 && j0 == 0) {
-          std::cout << "i = " << i << ":\n" << adaptive_mtx[0] << std::endl;
-        }
-
         if (jitter_scale == 0.0) {
           for (int r = 0; r < subspots; r++) {
             error_j.row(r) = trans(

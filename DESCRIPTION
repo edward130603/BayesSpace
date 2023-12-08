@@ -1,6 +1,6 @@
 Package: BayesSpace
-Version: 1.11.6
-Date: 2023-10-05
+Version: 1.11.7
+Date: 2023-12-08
 Title: Clustering and Resolution Enhancement of Spatial Transcriptomes
 Authors@R: c(
     person("Edward", "Zhao", role=c("aut"), email="ezhao@fredhutch.org"),
