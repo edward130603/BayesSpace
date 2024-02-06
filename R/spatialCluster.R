@@ -149,6 +149,9 @@ spatialCluster <- function(
     ## Get indices of neighboring spots, and initialize cluster assignments
     df_j <- .find_neighbors(sce, platform)
     init <- .init_cluster(Y, q, init, init.method)
+    if (is.null(init)) {
+      stop("Empty initialization. Please use a different initialization method.")
+    }
 
     ## Set model parameters
     model <- match.arg(model)
