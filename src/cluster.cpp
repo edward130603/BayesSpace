@@ -674,9 +674,8 @@ iterate_deconv(
   const mat Y0        = Y.rows(0, n0 - 1);   // The input PCs on spot level.
   mat Y_new           = mat(Y.n_rows,
                             Y.n_cols);   // The proposed PCs on subspot level.
-  uvec z_new          = uvec(n);         // The proposed zs on subspot level.
-  vec acceptance_prob = vec(n);   // The probability of accepting the proposals
-                                  // on subspot level.
+  vec acceptance_prob = vec(n0);   // The probability of accepting the proposals
+                                   // on subspot level.
   DoubleStatesVector<double> log_likelihoods(n
   );   // The log-likelihoods on subspot level.
   umat df_sim_z(nrep / 100 + 1, n, fill::zeros);
@@ -762,16 +761,25 @@ iterate_deconv(
   // Keyboard interruption
   signal(SIGTERM, sig_handler);
 
+  // Time measurement
+  // double t_start, t_end;
+
 #pragma omp parallel shared(                                                   \
         early_stop, Y, Y_new, error, error_var, num_accepts, num_rejects,      \
             adaptive_mtx, acceptance_prob, j0_vector, subspots, zero_vec,      \
-            mu_i_long, Y0, lambda_i, n0, c, thread_hits, n, z, z_new,          \
-            neighbors, gamma, mu_i, w, log_likelihoods                         \
+            mu_i_long, Y0, lambda_i, n0, c, thread_hits, n, z, neighbors,      \
+            gamma, mu_i, w, log_likelihoods                                    \
 )
   {
     for (int i = 1; i < nrep; i++) {
 #pragma omp single
       {
+
+#ifdef _OPENMP
+        if (i == 1)
+          t_start = omp_get_wtime();
+#endif
+
         pb.tick();
 
         // Update mu
@@ -861,14 +869,14 @@ iterate_deconv(
       {
         int updateCounter = 0;
 
-        // Accept or reject proposals of Y; update w; propose new values for
-        // z.
+        // Accept or reject proposals of Y; update w and z.
         for (int j0 = 0; j0 < n0; j0++) {
           const IntegerVector Ysample = {0, 1};
           const NumericVector probsY  = {
               1 - acceptance_prob(j0), acceptance_prob(j0)
           };
-          const int yesUpdate = sample(Ysample, 1, true, probsY)[0];
+
+          uword yesUpdate = sample(Ysample, 1, true, probsY)[0];
           if (yesUpdate == 1) {
             Y.rows(j0_vector * n0 + j0) = Y_new.rows(j0_vector * n0 + j0);
 
@@ -878,6 +886,18 @@ iterate_deconv(
             num_rejects[j0]++;
 
           for (int r = 0; r < subspots; r++) {
+
+            // Adaptive MCMC.
+            if (jitter_scale == 0.0 && i > 10 &&
+                (adapt_before == 0 || i <= adapt_before)) {
+              adaptive_mtx[r * n0 + j0] = adaptive_mcmc(
+                  static_cast<double>(num_accepts[j0]) /
+                      (num_accepts[j0] + num_rejects[j0]),
+                  0.234, i, error_var, adaptive_mtx[r * n0 + j0],
+                  error.row(r * n0 + j0)
+              );
+            }
+
             // Update w.
             if (tdist) {
               const double w_beta = as_scalar(
@@ -891,80 +911,75 @@ iterate_deconv(
                   R::rgamma(w_alpha, w_beta);   // sample from posterior for w
             }
 
-            // Propose new values for z.
+            // Update z.
             const IntegerVector qlessk = qvec[qvec != z(r * n0 + j0)];
-            z_new(r * n0 + j0)         = sample(qlessk, 1)[0];
+            const int z_j_new          = sample(qlessk, 1)[0];
+
+            const int z_j_prev      = z(r * n0 + j0);
+            const Neighbor j_vector = neighbors[r * n0 + j0];
+
+            // log likelihood; prior
+            vec h_z_prev(2, arma::fill::zeros), h_z_new(2, arma::fill::zeros);
+
+            h_z_prev(0) = dmvnrm_prec_arma_fast(
+                Y.row(r * n0 + j0), mu_i.row(z_j_prev - 1),
+                lambda_i * w(r * n0 + j0), true
+            )[0];
+            h_z_new(0) = dmvnrm_prec_arma_fast(
+                Y.row(r * n0 + j0), mu_i.row(z_j_new - 1),
+                lambda_i * w(r * n0 + j0), true
+            )[0];
+
+            if (j_vector.get_size() != 0) {
+              h_z_prev(1) = gamma / j_vector.get_size() * 2 *
+                            accu((z(j_vector.get_neighbors()) == z_j_prev));
+              h_z_new(1) = gamma / j_vector.get_size() * 2 *
+                           accu((z(j_vector.get_neighbors()) == z_j_new));
+            }
+            log_likelihoods.row(r * n0 + j0) = {h_z_prev(0), h_z_new(0)};
+
+            const double prob_j = exp(accu(h_z_new) - accu(h_z_prev));
+
+            if (prob_j >= 1) {
+              yesUpdate = 1;
+            } else {
+              const IntegerVector zsample = {0, 1};
+              const NumericVector probs   = {1 - prob_j, prob_j};
+
+              yesUpdate = sample(zsample, 1, true, probs)[0];
+            }
+
+            log_likelihoods.set_col_idx(r * n0 + j0, yesUpdate);
+            if (yesUpdate == 1) {
+              z(r * n0 + j0) = z_j_new;
+            }
           }
         }
+
         Ychange[i] = updateCounter * 1.0 / n0;
+        plogLik[i] = accu(log_likelihoods.get_current_values());
       }
 
-      // Update z
-#pragma omp for
-      for (int j = 0; j < n; j++) {
-#ifdef _OPENMP
-#pragma omp atomic update
-        thread_hits[omp_get_thread_num()]++;
-#endif
+      // Adaptive MCMC.
+      // #pragma omp for
+      //       for (int j = 0; j < n; j++) {
+      // #ifdef _OPENMP
+      // #pragma omp atomic update
+      //         thread_hits[omp_get_thread_num()]++;
+      // #endif
 
-        // Adaptive MCMC.
-        if (jitter_scale == 0.0 && i > 10 &&
-            (adapt_before == 0 || i <= adapt_before)) {
-          adaptive_mtx[j] = adaptive_mcmc(
-              static_cast<double>(num_accepts[j % n0]) /
-                  (num_accepts[j % n0] + num_rejects[j % n0]),
-              0.234, i, error_var, adaptive_mtx[j], error.row(j)
-          );
-        }
-
-        const int z_j_prev      = z(j);
-        const int z_j_new       = z_new(j);
-        const Neighbor j_vector = neighbors[j];
-
-        // log likelihood; prior
-        vec h_z_prev(2, arma::fill::zeros), h_z_new(2, arma::fill::zeros);
-
-        h_z_prev(0) = dmvnrm_prec_arma_fast(
-            Y.row(j), mu_i.row(z_j_prev - 1), lambda_i * w(j), true
-        )[0];
-        h_z_new(0) = dmvnrm_prec_arma_fast(
-            Y.row(j), mu_i.row(z_j_new - 1), lambda_i * w(j), true
-        )[0];
-
-        if (j_vector.get_size() != 0) {
-          h_z_prev(1) = gamma / j_vector.get_size() * 2 *
-                        accu((z(j_vector.get_neighbors()) == z_j_prev));
-          h_z_new(1) = gamma / j_vector.get_size() * 2 *
-                       accu((z(j_vector.get_neighbors()) == z_j_new));
-        }
-        double prob_j = exp(accu(h_z_new) - accu(h_z_prev));
-        if (prob_j > 1) {
-          prob_j = 1;
-        }
-
-#pragma omp critical(iter_z)
-        {
-          acceptance_prob(j)     = prob_j;
-          log_likelihoods.row(j) = {h_z_prev(0), h_z_new(0)};
-        }
-      }
+      //         if (jitter_scale == 0.0 && i > 10 &&
+      //             (adapt_before == 0 || i <= adapt_before)) {
+      //           adaptive_mtx[j] = adaptive_mcmc(
+      //               static_cast<double>(num_accepts[j % n0]) /
+      //                   (num_accepts[j % n0] + num_rejects[j % n0]),
+      //               0.234, i, error_var, adaptive_mtx[j], error.row(j)
+      //           );
+      //         }
+      //       }
 
 #pragma omp single
       {
-        // Accept or reject proposals of z.
-        for (int j = 0; j < n; j++) {
-          const IntegerVector zsample = {0, 1};
-          const NumericVector probs   = {
-              1 - acceptance_prob(j), acceptance_prob(j)
-          };
-          const uword yesUpdate = sample(zsample, 1, true, probs)[0];
-          log_likelihoods.set_col_idx(j, yesUpdate);
-          if (yesUpdate == 1) {
-            z(j) = z_new(j);
-          }
-        }
-        plogLik[i] = accu(log_likelihoods.get_current_values());
-
         // Save samples for every 100 iterations.
         if ((i + 1) % 100 == 0) {
           df_sim_lambda[(i + 1) / 100] = lambda_i;
@@ -972,13 +987,43 @@ iterate_deconv(
           df_sim_w.row((i + 1) / 100)  = w.t();
           df_sim_z.row((i + 1) / 100)  = z.t();
         }
+
+        // #ifdef _OPENMP
+        //         if (i == 1) {
+        //           t_end = omp_get_wtime();
+
+        //           if (verbose) {
+        //             const double t_per_iter = t_end - t_start;
+
+        //             std::cout << "[DEBUG] " << std::setprecision(2) <<
+        //             t_per_iter
+        //                       << "s per iteration (expecting "
+        //                       << t_per_iter * nrep / 3600 << " hours in
+        //                       total)."
+        //                       << std::endl;
+        //           }
+        //         }
+        // #endif
       }
 
       if ((i + 1) % 100 == 0 && early_stop > 0)
         i = nrep;
+
 #pragma omp barrier
     }
   }
+
+  // #ifdef _OPENMP
+  //   t_end = omp_get_wtime();
+
+  //   if (verbose) {
+  //     const double t_all = t_end - t_start;
+
+  //     std::cout << "[DEBUG] Finished in " << std::setprecision(2) << t_all /
+  //     3600
+  //               << " hours." << std::endl;
+  //   }
+  // #endif
 
   List out = List::create(
       _["z"] = df_sim_z, _["mu"] = df_sim_mu, _["lambda"] = df_sim_lambda,
