@@ -775,10 +775,10 @@ iterate_deconv(
 #pragma omp single
       {
 
-#ifdef _OPENMP
-        if (i == 1)
-          t_start = omp_get_wtime();
-#endif
+//#ifdef _OPENMP
+        //if (i == 1)
+          //t_start = omp_get_wtime();
+//#endif
 
         pb.tick();
 
