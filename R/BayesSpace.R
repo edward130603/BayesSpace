@@ -13,7 +13,6 @@
 #' \code{vignette("BayesSpace", package="BayesSpace")}
 #'
 #' 
-#' @docType _PACKAGE
 #' @name BayesSpace
 #' 
 #' @keywords internal
@@ -23,4 +22,4 @@
 #' @importFrom SingleCellExperiment altExpNames
 #' @useDynLib BayesSpace
 #' @useDynLib BayesSpace, .registration=TRUE
-NULL
+"_PACKAGE"
