@@ -223,8 +223,7 @@ counts2h5 <- function(dirname) {
 #'
 #' @importFrom utils read.csv
 #' @importFrom magrittr %>%
-#' @importFrom tibble column_to_rownames
-#' @importFrom dplyr inner_join filter
+#' @importFrom dplyr inner_join
 #' @importFrom tidyr uncount
 .read_spot_pos <- function(dirname, barcodes = NULL) {
   if (file.exists(file.path(dirname, "tissue_positions_list.csv"))) {
@@ -260,13 +259,9 @@ counts2h5 <- function(dirname) {
     )
   }
   
-  colData %>%
-    column_to_rownames(
-      "barcode"
-    ) %>%
-    filter(
-      in_tissue > 0
-    )
+  rownames(colData) <- colData$barcode
+  colData <- colData[colData$in_tissue > 0, ]
+  return(colData)
 }
 
 #' Extract row and column indices of the count matrix from h5 file.
