@@ -13,7 +13,7 @@
 #' \code{vignette("BayesSpace", package="BayesSpace")}
 #'
 #' 
-#' @docType package
+#' @docType _PACKAGE
 #' @name BayesSpace
 #' 
 #' @keywords internal
