@@ -5,10 +5,10 @@
 #' @param sce A SingleCellExperiment object containing the spatial data.
 #' @param q The number of clusters.
 #' @param platform Spatial transcriptomic platform. Specify 'Visium' for hex
-#'   lattice geometry or 'ST' for square lattice geometry. Specifying this
-#'   parameter is optional when analyzing SingleCellExperiments processed using
-#'   \code{\link{readVisium}}, \code{\link{spatialPreprocess}}, or
-#'   \code{\link{spatialCluster}}, as this information is included in their
+#'   lattice geometry or 'ST' and 'VisiumHD' for square lattice geometry.
+#'   Specifying this parameter is optional when analyzing SingleCellExperiments
+#'   processed using \code{\link{readVisium}}, \code{\link{spatialPreprocess}},
+#'   or \code{\link{spatialCluster}}, as this information is included in their
 #'   metadata.
 #' @param use.dimred Name of a reduced dimensionality result in
 #'   \code{reducedDims(sce)}. If provided, cluster on these features directly.
@@ -56,9 +56,9 @@
 #'   By default, the \code{assays} of this object are empty, and the enhanced
 #'   resolution PCs are stored as a reduced dimensionality result accessible
 #'   with \code{reducedDim(sce, 'PCA')}.
-#'   
+#'
 #' \code{coresTune} returns the output of \code{microbenchmark}.
-#' 
+#'
 #' \code{adjustClusterLabels} adjusts the cluster labels from the MCMC samples
 #'   via \code{burn.in}. The MCMC chain must be retained.
 #'
@@ -112,53 +112,120 @@ NULL
 #' @importFrom stats cov
 #' @importFrom purrr discard
 deconvolve <- function(Y, positions, xdist, ydist, scalef, q, spot_neighbors, init, nrep = 1000,
-                       model = "normal", platform = c("Visium", "ST"), verbose = TRUE,
+                       model = "normal", platform = c("Visium", "VisiumHD", "ST"), verbose = TRUE,
                        jitter_scale = 5, jitter_prior = 0.01, adapt.before = 100, mu0 = colMeans(Y), gamma = 2,
                        lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01, cores = 1) {
-    d <- ncol(Y)
-    n0 <- nrow(Y)
-    Y <- as.matrix(Y)
-    c <- jitter_prior * 1 / (2 * mean(diag(cov(Y))))
+  d <- ncol(Y)
+  n0 <- nrow(Y)
+  Y <- as.matrix(Y)
+  c <- jitter_prior * 1 / (2 * mean(diag(cov(Y))))
 
-    positions <- as.matrix(positions)
-    colnames(positions) <- c("x", "y")
+  positions <- as.matrix(positions)
+  colnames(positions) <- c("x", "y")
 
-    platform <- match.arg(platform)
-    subspots <- ifelse(platform == "Visium", 6, 9)
+  platform <- match.arg(platform)
+  subspots <- ifelse(platform == "Visium", 6, 9)
 
-    init1 <- rep(init, subspots)
-    Y2 <- Y[rep(seq_len(n0), subspots), ] # rbind 6 or 9 times
-    positions2 <- positions[rep(seq_len(n0), subspots), ] # rbind 7 times
+  init1 <- rep(init, subspots)
+  Y2 <- Y[rep(seq_len(n0), subspots), ] # rbind 6 or 9 times
+  positions2 <- positions[rep(seq_len(n0), subspots), ] # rbind 7 times
+  
+  shift <- .make_subspots(platform, xdist, ydist, scalef)
+  shift_long <- shift$shift[rep(seq_len(subspots), each = n0), ]
+  positions2[, "x"] <- positions2[, "x"] + shift_long[, "x"]
+  positions2[, "y"] <- positions2[, "y"] + shift_long[, "y"]
+  n <- nrow(Y2)
 
-    shift <- .make_subspots(platform, xdist, ydist, scalef)
-    shift_long <- shift$shift[rep(seq_len(subspots), each = n0), ]
-    positions2[, "x"] <- positions2[, "x"] + shift_long[, "x"]
-    positions2[, "y"] <- positions2[, "y"] + shift_long[, "y"]
-    n <- nrow(Y2)
+  if (verbose) {
+    message("Fitting model...")
+  }
+  tdist <- (model == "t")
+  out <- iterate_deconv(
+    subspot_positions = positions2,
+    dist = as.numeric(shift$dist),
+    spot_neighbors = spot_neighbors,
+    Y = Y2, tdist = tdist, nrep = nrep, n = n, n0 = n0,
+    d = d, gamma = gamma, q = q, init = init1, subspots = subspots, verbose = verbose,
+    jitter_scale = jitter_scale, adapt_before = adapt.before, c = c, mu0 = mu0,
+    lambda0 = lambda0, alpha = alpha, beta = beta, thread_num = cores
+  )
 
-    if (verbose) {
-        message("Fitting model...")
+  # The indices of neighbors are 1-based.
+  out$df_j <- apply(
+    out$df_j,
+    1,
+    function(x) paste(sort(discard(x, function(y) y == 0)), collapse = ",")
+  )
+
+  out$positions <- positions2
+  out
+}
+
+#' Define offsets and Manhattan distances for each subspot layout.
+#'
+#' Hex spots are divided into 6 triangular subspots, square spots are divided
+#' into 9 squares. Offsets are relative to the spot center. A unit corresponds
+#' to the diameter of a spot.
+#'
+#' Manhattan distance is used here instead of Euclidean to avoid numerical
+#' issues.
+#'
+#' @param platform The platform from which the data comes.
+#' @param scalef Scale factors of Visium data.
+#' @return Matrix of x and y offsets, one row per subspot
+#'
+#' @keywords internal
+#'
+#' @importFrom assertthat assert_that
+.make_subspots <- function(
+    platform, xdist, ydist, num_subspots_per_edge = 3, tolerance = 1.05) {
+  if (platform == "Visium") {
+    if (abs(xdist) >= abs(ydist)) {
+      stop("Unable to find neighbors of subspots. Please raise an issue to maintainers.")
     }
-    tdist <- (model == "t")
-    out <- iterate_deconv(
-        subspot_positions = positions2,
-        dist = as.numeric(shift$dist),
-        spot_neighbors = spot_neighbors,
-        Y = Y2, tdist = tdist, nrep = nrep, n = n, n0 = n0,
-        d = d, gamma = gamma, q = q, init = init1, subspots = subspots, verbose = verbose,
-        jitter_scale = jitter_scale, adapt_before = adapt.before, c = c, mu0 = mu0,
-        lambda0 = lambda0, alpha = alpha, beta = beta, thread_num = cores
+
+    shift <- .make_subspot_offsets(6)
+  } else if (platform %in% c("VisiumHD", "ST")) {
+    vec <- .make_square_vec(3, tolerance)
+
+    shift <- expand.grid(
+      list(
+        x = vec$vec,
+        y = vec$vec
+      )
     )
-    
-    # The indices of neighbors are 1-based.
-    out$df_j <- apply(
-      out$df_j,
+
+    dist <- vec$dist
+  } else {
+    stop("Only data from Visium, VisiumHD and ST currently supported.")
+  }
+
+  shift[, c("x", "y")] <- as.data.frame(t(
+    t(as.matrix(shift[, c("x", "y")])) * c(xdist, ydist)
+  ))
+
+  if (platform == "Visium") {
+    dist <- max(rowSums(abs(shift))) * tolerance
+  }
+
+  list(
+    shift = shift,
+    dist = dist
+  )
+}
+
+#' @keywords internal
+.make_square_vec <- function(num_subspots_per_edge, tolerance = 1.05) {
+  stopifnot(tolerance > 1)
+
+  list(
+    vec = seq(
+      1 / (2 * num_subspots_per_edge),
       1,
-      function(x) paste(sort(discard(x, function(y) y == 0)), collapse = ",")
-    )
-    
-    out$positions <- positions2
-    out
+      by = 1 / num_subspots_per_edge
+    ) - 1 / 2,
+    dist = tolerance / num_subspots_per_edge
+  )
 }
 
 #' Define offsets and Manhattan distances for each subspot layout.
@@ -240,17 +307,20 @@ deconvolve <- function(Y, positions, xdist, ydist, scalef, q, spot_neighbors, in
 #' @keywords internal
 .make_subspot_offsets <- function(n_subspots_per) {
   if (n_subspots_per == 6) {
-    rbind(expand.grid(
-      list(
-        x = c(1 / 3, -1 / 3),
-        y = c(1 / 3, -1 / 3))
-    ),
-    expand.grid(
-      list(
-        x = c(2 / 3, -2 / 3),
-        y = 0
+    rbind(
+      expand.grid(
+        list(
+          x = c(1 / 3, -1 / 3),
+          y = c(1 / 3, -1 / 3)
+        )
+      ),
+      expand.grid(
+        list(
+          x = c(2 / 3, -2 / 3),
+          y = 0
+        )
       )
-    ))
+    )
     # } else if (n_subspots_per == 7) {
     #     rbind(expand.grid(c(1/3, -1/3), c(1/3, -1/3)), expand.grid(c(2/3, -2/3, 0), 0))
   } else if (n_subspots_per == 9) {
@@ -274,31 +344,31 @@ deconvolve <- function(Y, positions, xdist, ydist, scalef, q, spot_neighbors, in
 #' @keywords internal
 #' @importFrom assertthat assert_that
 .make_subspot_coldata <- function(positions, sce, n_subspots_per, spot_neighbors, subspot_neighbors) {
-    cdata <- as.data.frame(positions)
-    colnames(cdata) <- c("pxl_col_in_fullres", "pxl_row_in_fullres")
+  cdata <- as.data.frame(positions)
+  colnames(cdata) <- c("pxl_col_in_fullres", "pxl_row_in_fullres")
 
-    n_spots <- ncol(sce)
-    n_subspots <- nrow(cdata)
-    assert_that(nrow(cdata) == n_spots * n_subspots_per)
+  n_spots <- ncol(sce)
+  n_subspots <- nrow(cdata)
+  assert_that(nrow(cdata) == n_spots * n_subspots_per)
 
-    ## Index of parent spot is (subspot % n_spots)
-    idxs <- seq_len(n_subspots)
-    spot_idxs <- ((idxs - 1) %% n_spots) + 1
-    subspot_idxs <- rep(seq_len(n_subspots_per), each = n_spots)
-    cdata$spot.idx <- spot_idxs
-    cdata$spot.neighbors <- spot_neighbors[spot_idxs]
-    cdata$subspot.idx <- subspot_idxs
-    cdata$subspot.neighbors <- subspot_neighbors
-    rownames(cdata) <- paste0("subspot_", spot_idxs, ".", subspot_idxs)
+  ## Index of parent spot is (subspot % n_spots)
+  idxs <- seq_len(n_subspots)
+  spot_idxs <- ((idxs - 1) %% n_spots) + 1
+  subspot_idxs <- rep(seq_len(n_subspots_per), each = n_spots)
+  cdata$spot.idx <- spot_idxs
+  cdata$spot.neighbors <- spot_neighbors[spot_idxs]
+  cdata$subspot.idx <- subspot_idxs
+  cdata$subspot.neighbors <- subspot_neighbors
+  rownames(cdata) <- paste0("subspot_", spot_idxs, ".", subspot_idxs)
 
-    offsets <- .make_subspot_offsets(n_subspots_per)
-    cdata$spot.row <- rep(sce$array_row, n_subspots_per)
-    cdata$spot.col <- rep(sce$array_col, n_subspots_per)
-    cdata$array_col <- cdata$spot.col + rep(offsets[, 1], each = n_spots)
-    cdata$array_row <- cdata$spot.row + rep(offsets[, 2], each = n_spots)
+  offsets <- .make_subspot_offsets(n_subspots_per)
+  cdata$spot.row <- rep(sce$array_row, n_subspots_per)
+  cdata$spot.col <- rep(sce$array_col, n_subspots_per)
+  cdata$array_col <- cdata$spot.col + rep(offsets[, 1], each = n_spots)
+  cdata$array_row <- cdata$spot.row + rep(offsets[, 2], each = n_spots)
 
-    cols <- c("spot.idx", "subspot.idx", "spot.row", "spot.col", "array_row", "array_col", "pxl_row_in_fullres", "pxl_col_in_fullres")
-    cdata[, cols]
+  cols <- c("spot.idx", "spot.neighbors", "subspot.idx", "subspot.neighbors", "spot.row", "spot.col", "array_row", "array_col", "pxl_row_in_fullres", "pxl_col_in_fullres")
+  cdata[, cols]
 }
 
 #' @export
@@ -306,7 +376,7 @@ deconvolve <- function(Y, positions, xdist, ydist, scalef, q, spot_neighbors, in
 #' @importFrom SingleCellExperiment SingleCellExperiment reducedDim<-
 #' @importFrom SummarizedExperiment rowData
 #' @importFrom assertthat assert_that
-spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
+spatialEnhance <- function(sce, q, platform = c("Visium", "VisiumHD", "ST"),
                            use.dimred = "PCA", d = 15,
                            init = NULL, init.method = c("spatialCluster", "mclust", "kmeans"),
                            model = c("t", "normal"), nrep = 200000, gamma = NULL,
@@ -314,134 +384,133 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
                            save.chain = FALSE, chain.fname = NULL, burn.in = 10000,
                            jitter_scale = 5, jitter_prior = 0.3, adapt.before = burn.in, cores = 1,
                            verbose = FALSE) {
-    assert_that(nrep >= 100) # require at least one iteration after thinning
-    assert_that(burn.in >= 0)
-    if (burn.in >= nrep) {
-        stop("Please specify a burn-in period shorter than the total number of iterations.")
-    } else if (burn.in < 1) {
-      burn.in <- as.integer(nrep * burn.in)
-    }
-    
-    if (jitter_scale == 0) {
-      assert_that(adapt.before >= 0)
-      
-      if (adapt.before >= nrep) {
-        stop("Please specify a period for adaptive MCMC shorter than the total number of iterations.")
-      } else if (adapt.before < 1) {
-        adapt.before <- as.integer(nrep * adapt.before)
-      }
-    }
+  assert_that(nrep >= 100) # require at least one iteration after thinning
+  assert_that(burn.in >= 0)
+  if (burn.in >= nrep) {
+    stop("Please specify a burn-in period shorter than the total number of iterations.")
+  } else if (burn.in < 1) {
+    burn.in <- as.integer(nrep * burn.in)
+  }
 
-    ## Thinning interval; only every 100 iterations are kept to reduce memory
-    ## This is temporarily hard-coded into the C++ code
-    thin <- 100
+  if (jitter_scale == 0) {
+    assert_that(adapt.before >= 0)
 
-    ## If user didn't specify a platform, attempt to parse from SCE metadata
-    ## otherwise check against valid options
-    if (length(platform) > 1) {
-        platform <- .bsData(sce, "platform", match.arg(platform))
+    if (adapt.before >= nrep) {
+      stop("Please specify a period for adaptive MCMC shorter than the total number of iterations.")
+    } else if (adapt.before < 1) {
+      adapt.before <- as.integer(nrep * adapt.before)
+    }
+  }
+
+  ## Thinning interval; only every 100 iterations are kept to reduce memory
+  ## This is temporarily hard-coded into the C++ code
+  thin <- 100
+
+  ## If user didn't specify a platform, attempt to parse from SCE metadata
+  ## otherwise check against valid options
+  if (length(platform) > 1) {
+    platform <- .bsData(sce, "platform", match.arg(platform))
+  } else {
+    platform <- match.arg(platform)
+  }
+
+  if (platform == "Visium") {
+    position.cols <- c("pxl_col_in_fullres", "pxl_row_in_fullres")
+    xdist <- ydist <- NULL # Compute with .prepare_inputs
+  } else if (platform %in% c("VisiumHD", "ST")) {
+    position.cols <- c("array_col", "array_row")
+    xdist <- ydist <- 1
+  }
+
+  inputs <- .prepare_inputs(sce,
+    use.dimred = use.dimred, d = d,
+    positions = NULL, position.cols = position.cols,
+    xdist = xdist, ydist = ydist
+  )
+
+  ## Initialize cluster assignments (use spatialCluster by default)
+  if (is.null(init)) {
+    init.method <- match.arg(init.method)
+    if (init.method == "spatialCluster") {
+      msg <- paste0(
+        "Must run spatialCluster on sce before enhancement ",
+        "if using spatialCluster to initialize."
+      )
+      assert_that("spatial.cluster" %in% colnames(colData(sce)), msg = msg)
+      init <- sce$spatial.cluster
     } else {
-        platform <- match.arg(platform)
+      init <- .init_cluster(inputs$PCs, q, init, init.method)
     }
+  }
 
+  ## Set model parameters
+  model <- match.arg(model)
+  if (is.null(mu0)) {
+    mu0 <- colMeans(inputs$PCs)
+  }
+  if (is.null(lambda0)) {
+    lambda0 <- diag(0.01, ncol(inputs$PCs))
+  }
+  if (is.null(gamma)) {
     if (platform == "Visium") {
-        position.cols <- c("pxl_col_in_fullres", "pxl_row_in_fullres")
-        xdist <- ydist <- NULL # Compute with .prepare_inputs
-    } else if (platform == "ST") {
-        position.cols <- c("array_col", "array_row")
-        xdist <- ydist <- 1
+      gamma <- 3
+    } else if (platform %in% c("VisiumHD", "ST")) {
+      gamma <- 2
     }
+  }
 
-    inputs <- .prepare_inputs(sce,
-        use.dimred = use.dimred, d = d,
-        positions = NULL, position.cols = position.cols,
-        xdist = xdist, ydist = ydist
-    )
+  deconv <- deconvolve(inputs$PCs, inputs$positions,
+    nrep = nrep, gamma = gamma,
+    xdist = inputs$xdist, ydist = inputs$ydist, scalef = .bsData(sce, "scalef"),
+    q = q, spot_neighbors = sce$spot.neighbors, init = init, model = model,
+    platform = platform, verbose = verbose, jitter_scale = jitter_scale,
+    jitter_prior = jitter_prior, adapt.before = adapt.before, mu0 = mu0,
+    lambda0 = lambda0, alpha = alpha, beta = beta, cores = cores
+  )
 
-    ## Initialize cluster assignments (use spatialCluster by default)
-    if (is.null(init)) {
-        init.method <- match.arg(init.method)
-        if (init.method == "spatialCluster") {
-            msg <- paste0(
-                "Must run spatialCluster on sce before enhancement ",
-                "if using spatialCluster to initialize."
-            )
-            assert_that("spatial.cluster" %in% colnames(colData(sce)), msg = msg)
-            init <- sce$spatial.cluster
-        } else {
-            init <- .init_cluster(inputs$PCs, q, init, init.method)
-        }
-    }
+  ## Create enhanced SCE
+  n_subspots_per <- ifelse(platform == "Visium", 6, 9)
+  cdata <- .make_subspot_coldata(deconv$positions, sce, n_subspots_per, sce$spot.neighbors, deconv$df_j)
+  enhanced <- SingleCellExperiment(
+    assays = list(),
+    rowData = rowData(sce), colData = cdata
+  )
 
-    ## Set model parameters
-    model <- match.arg(model)
-    if (is.null(mu0)) {
-        mu0 <- colMeans(inputs$PCs)
-    }
-    if (is.null(lambda0)) {
-        lambda0 <- diag(0.01, ncol(inputs$PCs))
-    }
-    if (is.null(gamma)) {
-        if (platform == "Visium") {
-            gamma <- 3
-        } else if (platform == "ST") {
-            gamma <- 2
-        }
-    }
+  ## Scale burn.in period to thinned intervals, and
+  ## add one to skip initialization values stored before first iteration
+  burn.in <- (burn.in %/% thin) + 1
 
-    deconv <- deconvolve(inputs$PCs, inputs$positions,
-        nrep = nrep, gamma = gamma,
-        xdist = inputs$xdist, ydist = inputs$ydist, scalef = .bsData(sce, "scalef"),
-        q = q, spot_neighbors = sce$spot.neighbors, init = init, model = model,
-        platform = platform, verbose = verbose, jitter_scale = jitter_scale,
-        jitter_prior = jitter_prior, adapt.before = adapt.before, mu0 = mu0,
-        lambda0 = lambda0, alpha = alpha, beta = beta, cores = cores
-    )
+  ## Average PCs, excluding burn-in
+  deconv_PCs <- Reduce(`+`, deconv$Y[-seq_len(burn.in)]) / (length(deconv$Y) - burn.in)
+  colnames(deconv_PCs) <- paste0("PC", seq_len(ncol(deconv_PCs)))
+  reducedDim(enhanced, "PCA") <- deconv_PCs
 
-    ## Create enhanced SCE
-    n_subspots_per <- ifelse(platform == "Visium", 6, 9)
-    cdata <- .make_subspot_coldata(deconv$positions, sce, n_subspots_per, sce$spot.neighbors, deconv$df_j)
-    enhanced <- SingleCellExperiment(
-        assays = list(),
-        rowData = rowData(sce), colData = cdata
-    )
+  ## Choose modal cluster label, excluding burn-in
+  message(
+    "Calculating labels using iterations ", (burn.in - 1) * thin,
+    " through ", nrep, "."
+  )
+  zs <- deconv$z[seq(burn.in, (nrep %/% thin) + 1), ]
+  if (burn.in == (nrep %/% thin) + 1) {
+    labels <- matrix(zs, nrow = 1)
+  } else {
+    labels <- apply(zs, 2, Mode)
+  }
 
-    ## Scale burn.in period to thinned intervals, and
-    ## add one to skip initialization values stored before first iteration
-    burn.in <- (burn.in %/% thin) + 1
+  enhanced$spatial.cluster <- unname(labels)
 
-    ## Average PCs, excluding burn-in
-    deconv_PCs <- Reduce(`+`, deconv$Y[-seq_len(burn.in)]) / (length(deconv$Y) - burn.in)
-    colnames(deconv_PCs) <- paste0("PC", seq_len(ncol(deconv_PCs)))
-    reducedDim(enhanced, "PCA") <- deconv_PCs
+  if (save.chain) {
+    deconv <- .clean_chain(deconv, method = "enhance")
+    params <- c("z", "mu", "lambda", "weights", "Y", "Ychange", "plogLik")
+    metadata(enhanced)$chain.h5 <- .write_chain(deconv, chain.fname, params)
+  }
 
-    ## Choose modal cluster label, excluding burn-in
-    message(
-        "Calculating labels using iterations ", (burn.in - 1) * thin,
-        " through ", nrep, "."
-    )
-    zs <- deconv$z[seq(burn.in, (nrep %/% thin) + 1), ]
-    if (burn.in == (nrep %/% thin) + 1) {
-        labels <- matrix(zs, nrow = 1)
-    } else {
-        labels <- apply(zs, 2, Mode)
-    }
+  ## Add metadata to new SingleCellExperiment object
+  metadata(enhanced)$BayesSpace.data <- list()
+  metadata(enhanced)$BayesSpace.data$platform <- platform
+  metadata(enhanced)$BayesSpace.data$is.enhanced <- TRUE
 
-    enhanced$spatial.cluster <- unname(labels)
-
-    if (save.chain) {
-        deconv <- .clean_chain(deconv, method = "enhance")
-        params <- c("z", "mu", "lambda", "weights", "Y", "Ychange", "plogLik")
-        metadata(enhanced)$chain.h5 <- .write_chain(deconv, chain.fname, params)
-    }
-
-    ## Add metadata to new SingleCellExperiment object
-    metadata(enhanced)$BayesSpace.data <- list()
-    metadata(enhanced)$BayesSpace.data$platform <- platform
-    metadata(enhanced)$BayesSpace.data$is.enhanced <- TRUE
-    metadata(enhanced)$BayesSpace.data$df_j <- deconv$df_j
-
-    enhanced
+  enhanced
 }
 
 #' @export
@@ -454,9 +523,9 @@ coreTune <- function(sce, test.cores = detectCores(), test.times = 1, ...) {
     length(test.cores) == length(unique(test.cores)),
     msg = paste0("Duplicate values found in 'test.cores'.")
   )
-  
+
   args <- list(...)
-  
+
   # Maximum 1000 iterations.
   if (("nrep" %in% names(args) && args["nrep"] > 1000) || !("nrep" %in% names(args))) {
     args["nrep"] <- 1000
@@ -468,7 +537,7 @@ coreTune <- function(sce, test.cores = detectCores(), test.times = 1, ...) {
     function(x) x %in% c("save.chain", "chain.fname", "cores")
   )
   
-  if (length(test.cores) == 1)
+  if (length(test.cores) == 1) {
     cores <- as.integer(vapply(
       seq(
         from = 0,
@@ -479,33 +548,37 @@ coreTune <- function(sce, test.cores = detectCores(), test.times = 1, ...) {
       FUN.VALUE = numeric(1),
       USE.NAMES = FALSE
     ))
-  else
+  } else {
     cores <- test.cores
-  
-  if (is.null(names(cores)))
+  }
+
+  if (is.null(names(cores))) {
     names(cores) <- paste("c", cores, sep = "_")
-  
+  }
+
   message(paste0(
     "Number of cores to test: ",
     paste0(cores, collapse = ",")
   ))
-  
+
   exprs <- sapply(
     cores,
-    function(x) bquote(do.call(
-      spatialEnhance,
-      c(
-        sce = sce,
-        args[eff.args],
-        list(
-          save.chain = FALSE,
-          cores = .(x)
+    function(x) {
+      bquote(do.call(
+        spatialEnhance,
+        c(
+          sce = sce,
+          args[eff.args],
+          list(
+            save.chain = FALSE,
+            cores = .(x)
+          )
         )
-      )
-    )),
+      ))
+    },
     simplify = FALSE
   )
-  
+
   microbenchmark(
     list = exprs,
     times = test.times
@@ -516,21 +589,21 @@ coreTune <- function(sce, test.cores = detectCores(), test.times = 1, ...) {
 #' @rdname spatialEnhance
 adjustClusterLabels <- function(sce, burn.in) {
   zsamples <- mcmcChain(sce, "z")
-  n_iter <- nrow(zsamples) - 1  # this is technically n_iters / 100
-  
+  n_iter <- nrow(zsamples) - 1 # this is technically n_iters / 100
+
   assert_that(burn.in >= 0)
   if (burn.in < 1) {
     burn.in <- as.integer(n_iter * burn.in)
   }
-  
+
   zs <- zsamples[seq(burn.in, n_iter + 1), ]
   if (burn.in == n_iter + 1) {
     labels <- matrix(zs, nrow = 1)
   } else {
     labels <- apply(zs, 2, Mode)
   }
-  
+
   sce$spatial.cluster <- unname(labels)
-  
+
   sce
 }

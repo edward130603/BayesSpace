@@ -5,7 +5,7 @@
 #' 
 #' @param sce SingleCellExperiment to preprocess
 #' @param platform Spatial sequencing platform. Used to determine spot layout
-#'   and neighborhood structure (Visium = hex, ST = square).
+#'   and neighborhood structure (Visium = hex, VisiumHD = square, ST = square).
 #' @param n.PCs Number of principal components to compute. We suggest using the
 #'   top 15 PCs in most cases.
 #' @param n.HVGs Number of highly variable genes to run PCA upon.
@@ -35,7 +35,7 @@
 #' @importFrom scran modelGeneVar getTopHVGs
 #' @importFrom SummarizedExperiment rowData<-
 #' @importFrom BiocSingular ExactParam
-spatialPreprocess <- function(sce, platform=c("Visium", "ST"),
+spatialPreprocess <- function(sce, platform=c("Visium", "VisiumHD", "ST"),
                               n.PCs=15, n.HVGs=2000, skip.PCA=FALSE,
                               log.normalize=TRUE, assay.type="logcounts",
                               BSPARAM=ExactParam()) {

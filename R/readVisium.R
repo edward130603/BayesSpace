@@ -232,14 +232,19 @@ counts2h5 <- function(dirname) {
 #' @importFrom magrittr %>%
 #' @importFrom dplyr inner_join
 #' @importFrom tidyr uncount
+#' @importFrom arrow read_parquet
 .read_spot_pos <- function(dirname, barcodes = NULL) {
   if (file.exists(file.path(dirname, "tissue_positions_list.csv"))) {
-      message("Inferred Space Ranger version < V2.0")
+      message("Loading Visium with SpaceRanger version < V2.0")
       colData <- read.csv(file.path(dirname, "tissue_positions_list.csv"), header = FALSE)
       colnames(colData) <- c("barcode", "in_tissue", "array_row", "array_col", "pxl_row_in_fullres", "pxl_col_in_fullres")
   } else if (file.exists(file.path(dirname, "tissue_positions.csv"))) {
-      message("Inferred Space Ranger version >= V2.0")
+      message("Loading Visium with SpaceRanger version >= V2.0")
       colData <- read.csv(file.path(dirname, "tissue_positions.csv"))
+  } else if (file.exists(file.path(dirname, "tissue_positions.parquet"))) {
+      message("Loading Visium HD")
+      colData <- read_parquet(file.path(dirname, "tissue_positions.parquet")) %>%
+        as.data.frame()
   } else {
       stop("No file for spot positions found in ", dirname)
   }

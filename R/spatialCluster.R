@@ -4,11 +4,13 @@
 #'
 #' @param sce A SingleCellExperiment object containing the spatial data.
 #' @param q The number of clusters.
+
 #' @param platform Spatial transcriptomic platform. Specify 'Visium' for hex
-#'   lattice geometry or 'ST' for square lattice geometry. Specifying this
-#'   parameter is optional when analyzing SingleCellExperiments processed using
-#'   \code{\link{readVisium}} or \code{\link{spatialPreprocess}}, as this
-#'   information is included in their metadata.
+#'   lattice geometry or 'ST' and 'VisiumHD' for square lattice geometry.
+#'   Specifying this parameter is optional when analyzing SingleCellExperiments
+#'   processed using \code{\link{readVisium}}, \code{\link{spatialPreprocess}},
+#'   or \code{\link{spatialCluster}}, as this information is included in their
+#'   metadata.
 #' @param use.dimred Name of a reduced dimensionality result in
 #'   \code{reducedDims(sce)}. If provided, cluster on these features directly.
 #' @param d Number of top principal components to use when clustering.
@@ -117,7 +119,7 @@ cluster <- function(
 #' @rdname spatialCluster
 spatialCluster <- function(
     sce, q, use.dimred = "PCA", d = 15,
-    platform = c("Visium", "ST"),
+    platform = c("Visium", "VisiumHD", "ST"),
     init = NULL, init.method = c("mclust", "kmeans"),
     model = c("t", "normal"), precision = c("equal", "variable"),
     nrep = 50000, burn.in = 1000, gamma = NULL, mu0 = NULL, lambda0 = NULL,
@@ -169,7 +171,7 @@ spatialCluster <- function(
     if (is.null(gamma)) {
         if (platform == "Visium") {
             gamma <- 3
-        } else if (platform == "ST") {
+        } else if (platform %in% c("VisiumHD", "ST")) {
             gamma <- 2
         }
     }
@@ -225,7 +227,7 @@ spatialCluster <- function(
             x.offset = c(-2, 2, -1, 1, -1, 1),
             y.offset = c(0, 0, -1, -1, 1, 1)
         )
-    } else if (platform == "ST") {
+    } else if (platform %in% c("VisiumHD", "ST")) {
         ## L1 radius of 1 (spots above, right, below, and left)
         offsets <- data.frame(
             x.offset = c(0, 1, 0, -1),
