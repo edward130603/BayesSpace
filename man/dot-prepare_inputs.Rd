@@ -10,7 +10,6 @@
   d = 15,
   positions = NULL,
   position.cols = c("pxl_col_in_fullres", "pxl_row_in_fullres"),
-  radius = NULL,
   xdist = NULL,
   ydist = NULL
 )

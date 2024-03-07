@@ -1,5 +1,5 @@
 Package: BayesSpace
-Version: 1.11.9
+Version: 1.11.10
 Date: 2023-12-08
 Title: Clustering and Resolution Enhancement of Spatial Transcriptomes
 Authors@R: c(
@@ -49,7 +49,7 @@ LinkingTo:
     RcppDist,
     RcppProgress
 NeedsCompilation: yes
-SystemRequirements: C++11
+SystemRequirements: C++17
 Encoding: UTF-8
 Suggests: 
     testthat,

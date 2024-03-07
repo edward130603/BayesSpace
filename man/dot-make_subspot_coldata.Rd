@@ -4,7 +4,13 @@
 \alias{.make_subspot_coldata}
 \title{Add subspot labels and offset row/col locations before making enhanced SCE.}
 \usage{
-.make_subspot_coldata(positions, sce, n_subspots_per)
+.make_subspot_coldata(
+  positions,
+  sce,
+  n_subspots_per,
+  spot_neighbors,
+  subspot_neighbors
+)
 }
 \arguments{
 \item{sce}{Original sce (to obtain number of spots and original row/col)}

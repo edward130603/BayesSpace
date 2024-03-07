@@ -146,8 +146,12 @@ spatialCluster <- function(
         platform <- match.arg(platform)
     }
 
-    ## Get indices of neighboring spots, and initialize cluster assignments
-    df_j <- .find_neighbors(sce, platform)
+    ## Get indices of neighboring spots
+    .neighbors <- .find_neighbors(sce, platform)
+    sce <- .neighbors[[1]]
+    df_j <- .neighbors[[2]]
+    
+    ## Initialize cluster assignments
     init <- .init_cluster(Y, q, init, init.method)
     if (is.null(init)) {
       stop("Empty initialization. Please use a different initialization method.")
@@ -232,8 +236,8 @@ spatialCluster <- function(
     }
 
     ## Get array coordinates (and label by index of spot in SCE)
-    spot.positions <- colData(sce)[, c("array_col", "array_row")]
-    spot.positions$spot.idx <- seq_len(nrow(spot.positions))
+    sce$spot.idx <- seq_len(ncol(sce))
+    spot.positions <- colData(sce)[, c("spot.idx", "array_col", "array_row")]
 
     ## Compute coordinates of each possible spot neighbor
     neighbor.positions <- merge(spot.positions, offsets)
@@ -248,9 +252,6 @@ spatialCluster <- function(
         all.x = TRUE
     )
 
-    ## Shift to zero-indexing for C++
-    neighbors$spot.idx.neighbor <- neighbors$spot.idx.neighbor - 1
-
     ## Group neighbor indices by spot
     ## (sort first for consistency with older implementation)
     neighbors <- neighbors[order(
@@ -258,13 +259,28 @@ spatialCluster <- function(
         neighbors$spot.idx.neighbor
     ), ]
     df_j <- split(neighbors$spot.idx.neighbor, neighbors$spot.idx.primary)
-    df_j <- unname(df_j)
 
     ## Discard neighboring spots without spot data
     ## This can be implemented by eliminating `all.x=TRUE` above, but
     ## this makes it easier to keep empty lists for spots with no neighbors
     ## (as expected by C++ code)
     df_j <- map(df_j, function(nbrs) discard(nbrs, function(x) is.na(x)))
+    
+    ## Save spot neighbors to sce for later usage in enhancement
+    sce$spot.neighbors <- vapply(
+      df_j,
+      function(x) {
+        if (length(x) == 0) {
+          return(NA_character_)
+        } else {
+          return(paste0(x, collapse = ","))
+        }
+      },
+      FUN.VALUE = character(1)
+    )
+    
+    ## Shift to zero-indexing for C++
+    df_j <- map(df_j, function(x) x - 1)
 
     ## Log number of spots with neighbors
     n_with_neighbors <- length(keep(df_j, function(nbrs) length(nbrs) > 0))
@@ -272,8 +288,11 @@ spatialCluster <- function(
         "Neighbors were identified for ", n_with_neighbors, " out of ",
         ncol(sce), " spots."
     )
-
-    df_j
+    
+    list(
+      sce,
+      unname(df_j)
+    )
 }
 
 #' Initialize cluster assignments

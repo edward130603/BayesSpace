@@ -110,7 +110,8 @@ NULL
 #'
 #' @keywords internal
 #' @importFrom stats cov
-deconvolve <- function(Y, positions, xdist, ydist, q, init, nrep = 1000,
+#' @importFrom purrr discard
+deconvolve <- function(Y, positions, xdist, ydist, scalef, q, init, nrep = 1000,
                        model = "normal", platform = c("Visium", "ST"), verbose = TRUE,
                        jitter_scale = 5, jitter_prior = 0.01, adapt.before = 100, mu0 = colMeans(Y), gamma = 2,
                        lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01, cores = 1) {
@@ -129,34 +130,103 @@ deconvolve <- function(Y, positions, xdist, ydist, q, init, nrep = 1000,
     Y2 <- Y[rep(seq_len(n0), subspots), ] # rbind 6 or 9 times
     positions2 <- positions[rep(seq_len(n0), subspots), ] # rbind 7 times
 
-    shift <- .make_subspot_offsets(subspots)
-    shift <- t(t(shift) * c(xdist, ydist))
-    dist <- max(rowSums(abs(shift))) * 1.05
-    if (platform == "ST") {
-        dist <- dist / 2
-    }
-    shift_long <- shift[rep(seq_len(subspots), each = n0), ]
-    positions2[, "x"] <- positions2[, "x"] + shift_long[, "Var1"]
-    positions2[, "y"] <- positions2[, "y"] + shift_long[, "Var2"]
+    shift <- .make_subspots(platform, xdist, ydist, scalef)
+    shift_long <- shift$shift[rep(seq_len(subspots), each = n0), ]
+    positions2[, "x"] <- positions2[, "x"] + shift_long[, "x"]
+    positions2[, "y"] <- positions2[, "y"] + shift_long[, "y"]
     n <- nrow(Y2)
-
-    if (verbose) {
-        message("Calculating neighbors...")
-    }
-    df_j <- find_neighbors(positions2, dist, "manhattan")
 
     if (verbose) {
         message("Fitting model...")
     }
     tdist <- (model == "t")
     out <- iterate_deconv(
-        Y = Y2, df_j = df_j, tdist = tdist, nrep = nrep, n = n, n0 = n0,
+        subspot_positions = positions2,
+        dist = as.numeric(shift$dist),
+        spot_neighbors = sce$spot.neighbors,
+        Y = Y2, tdist = tdist, nrep = nrep, n = n, n0 = n0,
         d = d, gamma = gamma, q = q, init = init1, subspots = subspots, verbose = verbose,
         jitter_scale = jitter_scale, adapt_before = adapt.before, c = c, mu0 = mu0,
         lambda0 = lambda0, alpha = alpha, beta = beta, thread_num = cores
     )
+    
+    # The indices of neighbors are 1-based.
+    out$df_j <- apply(
+      out$df_j,
+      1,
+      function(x) paste(sort(discard(x, function(y) y == 0)), collapse = ",")
+    )
+    
     out$positions <- positions2
     out
+}
+
+#' Define offsets and Manhattan distances for each subspot layout.
+#'
+#' Hex spots are divided into 6 triangular subspots, square spots are divided
+#' into 9 squares. Offsets are relative to the spot center. A unit corresponds
+#' to the diameter of a spot.
+#' 
+#' Manhattan distance is used here instead of Euclidean to avoid numerical
+#' issues.
+#'
+#' @param platform The platform from which the data comes.
+#' @param scalef Scale factors of Visium data.
+#' @return Matrix of x and y offsets, one row per subspot
+#'
+#' @keywords internal
+#'
+#' @importFrom assertthat assert_that
+.make_subspots <- function(
+    platform, xdist, ydist, num_subspots_per_edge = 3, tolerance = 1.05
+) {
+  if (platform == "Visium") {
+    if (abs(xdist) >= abs(ydist)) {
+      stop("Unable to find neighbors of subspots. Please raise an issue to maintainers.")
+    }
+    
+    shift <- .make_subspot_offsets(6)
+  } else if (platform == "ST") {
+    vec <- .make_square_vec(3, tolerance)
+    
+    shift <- expand.grid(
+      list(
+        x = vec$vec,
+        y = vec$vec
+      )
+    )
+    
+    dist <- vec$dist
+  } else {
+    stop("Only data from Visium and ST currently supported.")
+  }
+
+  shift[, c("x", "y")] <- as.data.frame(t(
+    t(as.matrix(shift[, c("x", "y")])) * c(xdist, ydist)
+  ))
+  
+  if (platform == "Visium") {
+    dist <- max(rowSums(abs(shift))) * tolerance
+  }
+  
+  list(
+    shift = shift,
+    dist = dist
+  )
+}
+
+#' @keywords internal
+.make_square_vec <- function(num_subspots_per_edge, tolerance = 1.05) {
+  stopifnot(tolerance > 1)
+  
+  list(
+    vec = seq(
+      1/(2 * num_subspots_per_edge),
+      1,
+      by = 1/num_subspots_per_edge
+    ) - 1/2,
+    dist = tolerance/num_subspots_per_edge
+  )
 }
 
 #' Define offsets for each subspot layout.
@@ -169,15 +239,25 @@ deconvolve <- function(Y, positions, xdist, ydist, q, init, nrep = 1000,
 #'
 #' @keywords internal
 .make_subspot_offsets <- function(n_subspots_per) {
-    if (n_subspots_per == 6) {
-        rbind(expand.grid(c(1 / 3, -1 / 3), c(1 / 3, -1 / 3)), expand.grid(c(2 / 3, -2 / 3), 0))
-        # } else if (n_subspots_per == 7) {
-        #     rbind(expand.grid(c(1/3, -1/3), c(1/3, -1/3)), expand.grid(c(2/3, -2/3, 0), 0))
-    } else if (n_subspots_per == 9) {
-        rbind(expand.grid(c(1 / 3, -1 / 3, 0), c(1 / 3, -1 / 3, 0)))
-    } else {
-        stop("Only 6 and 9 subspots currently supported.")
-    }
+  if (n_subspots_per == 6) {
+    rbind(expand.grid(
+      list(
+        x = c(1 / 3, -1 / 3),
+        y = c(1 / 3, -1 / 3))
+    ),
+    expand.grid(
+      list(
+        x = c(2 / 3, -2 / 3),
+        y = 0
+      )
+    ))
+    # } else if (n_subspots_per == 7) {
+    #     rbind(expand.grid(c(1/3, -1/3), c(1/3, -1/3)), expand.grid(c(2/3, -2/3, 0), 0))
+  } else if (n_subspots_per == 9) {
+    rbind(expand.grid(c(1 / 3, -1 / 3, 0), c(1 / 3, -1 / 3, 0)))
+  } else {
+    stop("Only 6 and 9 subspots currently supported.")
+  }
 }
 
 #' Add subspot labels and offset row/col locations before making enhanced SCE.
@@ -193,7 +273,7 @@ deconvolve <- function(Y, positions, xdist, ydist, q, init, nrep = 1000,
 #'
 #' @keywords internal
 #' @importFrom assertthat assert_that
-.make_subspot_coldata <- function(positions, sce, n_subspots_per) {
+.make_subspot_coldata <- function(positions, sce, n_subspots_per, spot_neighbors, subspot_neighbors) {
     cdata <- as.data.frame(positions)
     colnames(cdata) <- c("pxl_col_in_fullres", "pxl_row_in_fullres")
 
@@ -206,7 +286,9 @@ deconvolve <- function(Y, positions, xdist, ydist, q, init, nrep = 1000,
     spot_idxs <- ((idxs - 1) %% n_spots) + 1
     subspot_idxs <- rep(seq_len(n_subspots_per), each = n_spots)
     cdata$spot.idx <- spot_idxs
+    cdata$spot.neighbors <- spot_neighbors[spot_idxs]
     cdata$subspot.idx <- subspot_idxs
+    cdata$subspot.neighbors <- subspot_neighbors
     rownames(cdata) <- paste0("subspot_", spot_idxs, ".", subspot_idxs)
 
     offsets <- .make_subspot_offsets(n_subspots_per)
@@ -309,7 +391,8 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
 
     deconv <- deconvolve(inputs$PCs, inputs$positions,
         nrep = nrep, gamma = gamma,
-        xdist = inputs$xdist, ydist = inputs$ydist, q = q, init = init, model = model,
+        xdist = inputs$xdist, ydist = inputs$ydist, scalef = .bsData(sce, "scalef"),
+        q = q, init = init, model = model,
         platform = platform, verbose = verbose, jitter_scale = jitter_scale,
         jitter_prior = jitter_prior, adapt.before = adapt.before, mu0 = mu0,
         lambda0 = lambda0, alpha = alpha, beta = beta, cores = cores
@@ -317,7 +400,7 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
 
     ## Create enhanced SCE
     n_subspots_per <- ifelse(platform == "Visium", 6, 9)
-    cdata <- .make_subspot_coldata(deconv$positions, sce, n_subspots_per)
+    cdata <- .make_subspot_coldata(deconv$positions, sce, n_subspots_per, sce$spot.neighbors, deconv$df_j)
     enhanced <- SingleCellExperiment(
         assays = list(),
         rowData = rowData(sce), colData = cdata
@@ -356,6 +439,7 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
     metadata(enhanced)$BayesSpace.data <- list()
     metadata(enhanced)$BayesSpace.data$platform <- platform
     metadata(enhanced)$BayesSpace.data$is.enhanced <- TRUE
+    metadata(enhanced)$BayesSpace.data$df_j <- deconv$df_j
 
     enhanced
 }

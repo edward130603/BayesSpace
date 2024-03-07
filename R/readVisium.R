@@ -4,9 +4,10 @@
 #'   This directory must contain the counts matrix and feature/barcode TSVs in
 #'   \code{filtered_feature_bc_matrix/} for \code{readVisium}, or in
 #'   \code{filtered_feature_bc_matrix.h5} for \code{read10Xh5}. Besides, it
-#'   must also contain a file for spot positions at
+#'   must also contain a file for spot positions named
 #'   \code{spatial/tissue_positions_list.csv} (before Space Ranger V2.0) or
-#'   \code{spatial/tissue_positions.csv} (since Space Ranger V2.0).
+#'   \code{spatial/tissue_positions.csv} (since Space Ranger V2.0), as well as
+#'   a file containing scale factors named \code{spatial/scalefactors_json.json}.
 #'   (To understand the output directory, refer to the corresponding
 #'   \href{https://support.10xgenomics.com/spatial-gene-expression/software/pipelines/latest/output/overview}{10X Genomics help page}.)
 #' @param fname File name of the h5 file. It should be inside \code{dirname}.
@@ -65,6 +66,8 @@ readVisium <- function(dirname) {
     colnames(.counts) <- barcodes$V1
     rownames(.counts) <- rownames(rowData)
     .counts <- .counts[, rownames(colData)]
+    
+    scalef <- .read_scale_factors(spatial_dir)
 
     sce <- SingleCellExperiment(
         assays = list(counts = .counts),
@@ -78,6 +81,7 @@ readVisium <- function(dirname) {
     metadata(sce)$BayesSpace.data <- list()
     metadata(sce)$BayesSpace.data$platform <- "Visium"
     metadata(sce)$BayesSpace.data$is.enhanced <- FALSE
+    metadata(sce)$BayesSpace.data$scalef <- scalef
 
     sce
 }
@@ -140,6 +144,8 @@ read10Xh5 <- function(dirname, fname = "filtered_feature_bc_matrix.h5") {
       index1 = FALSE
     )
     .counts <- .counts[, rownames(colData)]
+    
+    scalef <- .read_scale_factors(spatial_dir)
 
     sce <- SingleCellExperiment(
       assays = list(
@@ -155,6 +161,7 @@ read10Xh5 <- function(dirname, fname = "filtered_feature_bc_matrix.h5") {
     metadata(sce)$BayesSpace.data <- list()
     metadata(sce)$BayesSpace.data$platform <- "Visium"
     metadata(sce)$BayesSpace.data$is.enhanced <- FALSE
+    metadata(sce)$BayesSpace.data$scalef <- scalef
 
     sce
 }
@@ -262,6 +269,19 @@ counts2h5 <- function(dirname) {
   rownames(colData) <- colData$barcode
   colData <- colData[colData$in_tissue > 0, ]
   return(colData)
+}
+
+#' @keywords internal
+#' 
+#' @importFrom rjson fromJSON
+.read_scale_factors <- function(dirname) {
+  filename <- file.path(dirname, "scalefactors_json.json")
+  
+  if (!file.exists(filename)) {
+    stop(paste(filename, "does not exist!"))
+  }
+  
+  fromJSON(file = filename)
 }
 
 #' Extract row and column indices of the count matrix from h5 file.

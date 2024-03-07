@@ -41,7 +41,7 @@ spatialPreprocess <- function(sce, platform=c("Visium", "ST"),
                               BSPARAM=ExactParam()) {
     
     ## Set BayesSpace metadata
-    metadata(sce)$BayesSpace.data <- list()
+    metadata(sce)$BayesSpace.data <- .bsData(sce, name = NULL, default = list())
     metadata(sce)$BayesSpace.data$platform <- match.arg(platform)
     metadata(sce)$BayesSpace.data$is.enhanced <- FALSE
     # metadata(sce)$BayesSpace.data$use_dimred <- use.dimred

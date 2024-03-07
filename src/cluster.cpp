@@ -6,6 +6,7 @@
 #include <RcppDist.h>
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <csignal>
 #include <indicators/cursor_control.hpp>
 #include <indicators/progress_bar.hpp>
@@ -129,9 +130,85 @@ dmvnrm_prec_arma_fast(
 }
 
 void
-convert_neighbors(const List &ori, std::vector<Neighbor> &des) {
+convert_neighbors(const CharacterVector &ori, std::vector<Neighbor> &des) {
   for (auto i = 0; i != ori.size(); i++) {
-    des.emplace_back(Neighbor(NumericVector(ori[i])));
+    if (CharacterVector::is_na(ori(i))) {
+      des.emplace_back(Neighbor());
+    } else {
+      des.emplace_back(
+          Neighbor(static_cast<std::string>(ori(i)), std::string(","), false)
+      );
+    }
+  }
+}
+
+umat
+convert_neighbors2mtx(std::vector<Neighbor> neighbors) {
+  umat ret(neighbors.size(), 4, fill::zeros);
+
+  for (size_t i = 0; i < neighbors.size(); i++) {
+    if (neighbors[i].get_size() > 0) {
+      ret(i, span(0, neighbors[i].get_size() - 1)) =
+          neighbors[i].get_neighbors().t() + 1;
+    }
+  }
+
+  return ret;
+}
+
+void
+find_subspot_neighbors(
+    const std::vector<Neighbor> &spot_neighbors, const mat &subspot_positions,
+    const double dist, std::vector<Neighbor> &subspot_neighbors
+) {
+  const uword num_subspots = subspot_positions.n_rows / spot_neighbors.size();
+
+  if (std::abs(
+          static_cast<double>(subspot_positions.n_rows) /
+              spot_neighbors.size() -
+          num_subspots
+      ) > 1e-6) {
+    throw std::runtime_error("Invalid arguments!");
+  }
+
+  const uvec subspots = linspace<uvec>(0, num_subspots - 1, num_subspots);
+
+  for (uword subspot_idx = 0; subspot_idx < subspot_positions.n_rows;
+       subspot_idx++) {
+    // Get spot index.
+    const uword spot_idx = subspot_idx % spot_neighbors.size();
+
+    // Get candidate spot neighbors.
+    urowvec __spot_neighbors(spot_neighbors[spot_idx].get_neighbors().t());
+    __spot_neighbors.resize(__spot_neighbors.n_elem + 1);
+    __spot_neighbors(__spot_neighbors.n_elem - 1) = spot_idx;
+
+    // Get candidate subspot neighbors.
+    const uvec candidate_neighbors =
+        ((umat(subspots) *
+          umat(ones<urowvec>(__spot_neighbors.n_elem) * spot_neighbors.size()))
+             .eval()
+             .each_row() +
+         __spot_neighbors)
+            .as_col();
+
+    // Compute Manhattan distance.
+    const mat man_dist =
+        sum(abs(subspot_positions.rows(candidate_neighbors).eval().each_row() -
+                subspot_positions.rows(uvec(std::vector<arma::uword>{subspot_idx
+                }))),
+            1);
+
+    // Get neighbors.
+    const uvec neighbor_idx = (man_dist < dist) && (man_dist > 1e-6);
+
+    if (accu(neighbor_idx) < 2) {
+      throw std::runtime_error("Error in finding neighbors of subspots!");
+    }
+
+    subspot_neighbors.emplace_back(
+        Neighbor(candidate_neighbors(find(neighbor_idx == 1)))
+    );
   }
 }
 
@@ -623,38 +700,42 @@ iterate_t_vvv(
 /**
  * @brief
  *
- * @param Y the initialized principal components (num_subspots * num_pcs)
- * @param df_j the indicies of neighbors of each spot (indices adjusted to
- * 0-based)
- * @param tdist whether to use multivariate t distribution or not
- * @param nrep the number of MCMC iterations
- * @param n the number of subspots (after deconvolution)
- * @param n0 the number of spots (before deconvolution)
- * @param d the number of PCs
- * @param gamma smoothing parameter
- * @param q the number of clusters
- * @param init the initialized clustering of subspots
- * @param subspots the number of subspots of each spot
- * @param verbose whether to print more information
- * @param jitter_scale the amount of jittering (the variance) for the proposal
+ * @param subspot_positions: coordinates of subspots
+ * @param dist: the maximum distance used to identify neighbors of each subspot
+ * @param spot_neighbors: indices of neighbors of each spot (1-based)
+ * @param Y: the initialized principal components (num_subspots * num_pcs)
+ * @param tdist: whether to use multivariate t distribution or not
+ * @param nrep: the number of MCMC iterations
+ * @param n: the number of subspots (after deconvolution)
+ * @param n0: the number of spots (before deconvolution)
+ * @param d: the number of PCs
+ * @param gamma: smoothing parameter
+ * @param q: the number of clusters
+ * @param init: the initialized clustering of subspots
+ * @param subspots: the number of subspots of each spot
+ * @param verbose: whether to print more information
+ * @param jitter_scale: the amount of jittering (the variance) for the proposal
  * distribution
- * @param c the amount of jittering (the variance) for the prior
+ * @param c: the amount of jittering (the variance) for the prior
  * distribution
- * @param mu0 the mean hyperparameetr of mu
- * @param lambda0 the precision hyperparameter of mu
- * @param alpha one of the hyperparamters of lambda
- * @param beta one of the hyperparamters of lambda
- * @param thread_num the number of threads to be used
- * @param verbose information for debugging
+ * @param mu0: the mean hyperparameetr of mu
+ * @param lambda0: the precision hyperparameter of mu
+ * @param alpha: one of the hyperparamters of lambda
+ * @param beta: one of the hyperparamters of lambda
+ * @param thread_num: the number of threads to be used
+ * @param verbose: information for debugging
+ *
  * @return List MCMC samples of latent variables in a list
  */
 // [[Rcpp::export]]
 List
 iterate_deconv(
-    arma::mat Y, List df_j, bool tdist, int nrep, int n, int n0, int d,
-    double gamma, int q, arma::uvec init, int subspots, bool verbose,
-    double jitter_scale, int adapt_before, double c, NumericVector mu0,
-    arma::mat lambda0, double alpha, double beta, int thread_num = 1
+    const arma::mat &subspot_positions, const double dist,
+    const CharacterVector &spot_neighbors, arma::mat &Y, bool tdist, int nrep,
+    int n, int n0, int d, double gamma, int q, const arma::uvec &init,
+    int subspots, bool verbose, double jitter_scale, int adapt_before, double c,
+    const NumericVector &mu0, const arma::mat &lambda0, double alpha,
+    double beta, int thread_num = 1
 ) {
   std::vector<int> thread_hits;
 
@@ -669,6 +750,16 @@ iterate_deconv(
     std::cout << "[DEBUG] The number of threads is " << thread_num << std::endl;
   }
 #endif
+
+  // To identify neighbors of subspots.
+  if (verbose) {
+    std::cout << "[DEBUG] Identifying neighbors of subspots..." << std::endl;
+  }
+  std::vector<Neighbor> __spot_neighbors, __subspot_neighbors;
+  convert_neighbors(spot_neighbors, __spot_neighbors);
+  find_subspot_neighbors(
+      __spot_neighbors, subspot_positions, dist, __subspot_neighbors
+  );
 
   // Initalize matrices storing iterations
   const mat Y0        = Y.rows(0, n0 - 1);   // The input PCs on spot level.
@@ -696,8 +787,6 @@ iterate_deconv(
   df_sim_Y[0]      = Y;
   vec w            = ones<vec>(n);
   df_sim_w.row(0)  = w.t();
-  std::vector<Neighbor> neighbors;
-  convert_neighbors(df_j, neighbors);
 
   // Iterate
   const colvec mu0vec = as<colvec>(mu0);
@@ -767,18 +856,18 @@ iterate_deconv(
 #pragma omp parallel shared(                                                   \
         early_stop, Y, Y_new, error, error_var, num_accepts, num_rejects,      \
             adaptive_mtx, acceptance_prob, j0_vector, subspots, zero_vec,      \
-            mu_i_long, Y0, lambda_i, n0, c, thread_hits, n, z, neighbors,      \
-            gamma, mu_i, w, log_likelihoods                                    \
+            mu_i_long, Y0, lambda_i, n0, c, thread_hits, n, z,                 \
+            __subspot_neighbors, gamma, mu_i, w, log_likelihoods               \
 )
   {
     for (int i = 1; i < nrep; i++) {
 #pragma omp single
       {
 
-//#ifdef _OPENMP
-        //if (i == 1)
-          //t_start = omp_get_wtime();
-//#endif
+        // #ifdef _OPENMP
+        // if (i == 1)
+        // t_start = omp_get_wtime();
+        // #endif
 
         pb.tick();
 
@@ -916,7 +1005,7 @@ iterate_deconv(
             const int z_j_new          = sample(qlessk, 1)[0];
 
             const int z_j_prev      = z(r * n0 + j0);
-            const Neighbor j_vector = neighbors[r * n0 + j0];
+            const Neighbor j_vector = __subspot_neighbors[r * n0 + j0];
 
             // log likelihood; prior
             vec h_z_prev(2, arma::fill::zeros), h_z_new(2, arma::fill::zeros);
@@ -1028,7 +1117,8 @@ iterate_deconv(
   List out = List::create(
       _["z"] = df_sim_z, _["mu"] = df_sim_mu, _["lambda"] = df_sim_lambda,
       _["weights"] = df_sim_w, _["Y"] = df_sim_Y, _["Ychange"] = Ychange,
-      _["plogLik"] = plogLik
+      _["plogLik"] = plogLik,
+      _["df_j"]    = convert_neighbors2mtx(__subspot_neighbors)
   );
 
   indicators::show_console_cursor(true);

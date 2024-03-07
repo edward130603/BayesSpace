@@ -9,6 +9,7 @@ deconvolve(
   positions,
   xdist,
   ydist,
+  scalef,
   q,
   init,
   nrep = 1000,

@@ -36,18 +36,17 @@ find_neighbors <- function(
 #'   in colData)
 #' @param scale.factor Scale estimated L1 difference up by this amount.
 #'
-#' @return doubles xdist, ydist, radius
+#' @return doubles xdist, ydist
 #'
 #' @keywords internal
 #' @importFrom stats lm coef
-.compute_interspot_distances <- function(sce, scale.factor = 1.02) {
+.compute_interspot_distances <- function(sce) {
     cols <- c("array_row", "array_col", "pxl_row_in_fullres", "pxl_col_in_fullres")
     assert_that(all(cols %in% colnames(colData(sce))))
 
     dists <- list()
     dists$xdist <- coef(lm(sce$pxl_col_in_fullres ~ sce$array_col))[2]
     dists$ydist <- coef(lm(sce$pxl_row_in_fullres ~ sce$array_row))[2]
-    dists$radius <- (dists$xdist + dists$ydist) * scale.factor
 
     dists
 }
@@ -78,7 +77,7 @@ Mode <- function(x) {
 .prepare_inputs <- function(
     sce, use.dimred = "PCA", d = 15,
     positions = NULL, position.cols = c("pxl_col_in_fullres", "pxl_row_in_fullres"),
-    radius = NULL, xdist = NULL, ydist = NULL) {
+    xdist = NULL, ydist = NULL) {
     inputs <- list()
 
     if (!(use.dimred %in% reducedDimNames(sce))) {
@@ -99,12 +98,11 @@ Mode <- function(x) {
     ## Compute inter-spot distances (for neighbor finding)
     ## This should only be necessary for Visium enhancement since switching to
     ## array-coordinate-based neighbor finding
-    if (is.null(radius) && is.null(xdist) && is.null(ydist)) {
+    if (is.null(xdist) && is.null(ydist)) {
         dists <- .compute_interspot_distances(sce)
         dists <- imap(dists, function(d, n) ifelse(is.null(get(n)), d, get(n)))
         inputs <- c(inputs, dists)
     } else {
-        inputs$radius <- radius
         inputs$xdist <- xdist
         inputs$ydist <- ydist
     }
@@ -245,11 +243,13 @@ getRDS <- function(dataset, sample, cache = TRUE) {
 #' @keywords internal
 .bsData <- function(sce, name, default = NULL, warn = FALSE) {
     if (!exists("BayesSpace.data", metadata(sce))) {
-        stop("BayesSpace metadata not present in this object.")
+        return(default)
     }
 
     bsData <- metadata(sce)[["BayesSpace.data"]]
-    if (exists(name, bsData)) {
+    if (is.null(name) || is.na(name)) {
+        bsData
+    } else if (exists(name, bsData)) {
         bsData[[name]]
     } else {
         if (warn) {
