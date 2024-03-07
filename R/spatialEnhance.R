@@ -111,7 +111,7 @@ NULL
 #' @keywords internal
 #' @importFrom stats cov
 #' @importFrom purrr discard
-deconvolve <- function(Y, positions, xdist, ydist, scalef, q, init, nrep = 1000,
+deconvolve <- function(Y, positions, xdist, ydist, scalef, q, spot_neighbors, init, nrep = 1000,
                        model = "normal", platform = c("Visium", "ST"), verbose = TRUE,
                        jitter_scale = 5, jitter_prior = 0.01, adapt.before = 100, mu0 = colMeans(Y), gamma = 2,
                        lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01, cores = 1) {
@@ -143,7 +143,7 @@ deconvolve <- function(Y, positions, xdist, ydist, scalef, q, init, nrep = 1000,
     out <- iterate_deconv(
         subspot_positions = positions2,
         dist = as.numeric(shift$dist),
-        spot_neighbors = sce$spot.neighbors,
+        spot_neighbors = spot_neighbors,
         Y = Y2, tdist = tdist, nrep = nrep, n = n, n0 = n0,
         d = d, gamma = gamma, q = q, init = init1, subspots = subspots, verbose = verbose,
         jitter_scale = jitter_scale, adapt_before = adapt.before, c = c, mu0 = mu0,
@@ -392,7 +392,7 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "ST"),
     deconv <- deconvolve(inputs$PCs, inputs$positions,
         nrep = nrep, gamma = gamma,
         xdist = inputs$xdist, ydist = inputs$ydist, scalef = .bsData(sce, "scalef"),
-        q = q, init = init, model = model,
+        q = q, spot_neighbors = sce$spot.neighbors, init = init, model = model,
         platform = platform, verbose = verbose, jitter_scale = jitter_scale,
         jitter_prior = jitter_prior, adapt.before = adapt.before, mu0 = mu0,
         lambda0 = lambda0, alpha = alpha, beta = beta, cores = cores
@@ -456,16 +456,17 @@ coreTune <- function(sce, test.cores = detectCores(), test.times = 1, ...) {
   )
   
   args <- list(...)
-  eff.args <- discard(
-    names(args),
-    function(x) x %in% c("save.chain", "chain.fname", "cores")
-  )
   
   # Maximum 1000 iterations.
   if (("nrep" %in% names(args) && args["nrep"] > 1000) || !("nrep" %in% names(args))) {
     args["nrep"] <- 1000
     args["burn.in"] <- 100
   }
+  
+  eff.args <- discard(
+    names(args),
+    function(x) x %in% c("save.chain", "chain.fname", "cores")
+  )
   
   if (length(test.cores) == 1)
     cores <- as.integer(vapply(
