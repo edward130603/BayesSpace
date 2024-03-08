@@ -162,7 +162,7 @@ featurePlot <- function(sce, feature,
 #' @param sce SingleCellExperiment with row/col in colData
 #' @param fill Name of a column in \code{colData(sce)} or a vector of values to
 #'   use as fill for each spot
-#' @param platform "Visium" or "ST", used to determine spot layout
+#' @param platform "Visium", "VisiumHD" or"ST", used to determine spot layout
 #' @param is.enhanced If true, \code{sce} contains enhanced subspot data instead
 #'   of spot-level expression. Used to determine spot layout.
 #'   
@@ -179,7 +179,7 @@ featurePlot <- function(sce, feature,
         } else {
             vertices <- .make_hex_spots(cdata, fill)
         }
-    } else if (platform == "ST") {
+    } else if (platform %in% c("VisiumHD", "ST")) {
         if (is.enhanced) {
             vertices <- .make_square_spots(cdata, fill, scale.factor=(1/3))
         } else {
