@@ -34,7 +34,6 @@ find_neighbors <- function(
 #'
 #' @param sce SingleCellExperiment (must include array_row, array_col, pxl_row_in_fullres, pxl_col_in_fullres
 #'   in colData)
-#' @param platform One of \code{Visium} and \code{VisiumHD}.
 #'
 #' @return doubles xdist, ydist
 #'

@@ -181,7 +181,7 @@ featurePlot <- function(sce, feature,
         }
     } else if (platform %in% c("VisiumHD", "ST")) {
         if (is.enhanced) {
-            vertices <- .make_square_spots(cdata, fill, scale.factor=(1/3))
+            vertices <- .make_square_spots(cdata, fill, scale.factor = 1/3, offset = -1/6)
         } else {
             vertices <- .make_square_spots(cdata, fill)
         }
@@ -294,18 +294,18 @@ featurePlot <- function(sce, feature,
 
 #' Make vertices for each square spot
 #'
-#' Squares are simple, just mae a unit square at each array coordinate
+#' Squares are simple, just make a unit square at each array coordinate
 #' 
 #' @return Table of (x.pos, y.pos, spot, fill); where \code{spot} groups the
 #'   vertices outlining the spot's border
 #' 
 #' @keywords internal
-.make_square_spots <- function(cdata, fill="spatial.cluster", scale.factor=1) {
+.make_square_spots <- function(cdata, fill="spatial.cluster", scale.factor = 1, offset = 0) {
     spot_positions <- .select_spot_positions(cdata, fill=fill)
     
     vertex_offsets <- data.frame(x.offset=c(0, 1, 1, 0),
                                   y.offset=c(0, 0, 1, 1))
-    vertex_offsets <- vertex_offsets * scale.factor
+    vertex_offsets <- vertex_offsets * scale.factor + offset
 
     .make_spot_vertices(spot_positions, vertex_offsets)
 }
