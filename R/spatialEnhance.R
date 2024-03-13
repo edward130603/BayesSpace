@@ -178,13 +178,27 @@ deconvolve <- function(Y, positions, xdist, ydist, scalef, q, spot_neighbors, in
 #'
 #' @importFrom assertthat assert_that
 .make_subspots <- function(
-    platform, xdist, ydist, num_subspots_per_edge = 3, tolerance = 1.05) {
+    platform, xdist, ydist, force = FALSE, num_subspots_per_edge = 3, tolerance = 1.05
+) {
   if (platform == "Visium") {
-    if (abs(xdist) >= abs(ydist)) {
+    if (abs(xdist) >= abs(ydist) && !force) {
       stop("Unable to find neighbors of subspots. Please raise an issue to maintainers.")
     }
 
-    shift <- .make_subspot_offsets(6)
+    shift <- rbind(
+      expand.grid(
+        list(
+          x = c(1 / 3, -1 / 3),
+          y = c(1 / 3, -1 / 3)
+        )
+      ),
+      expand.grid(
+        list(
+          x = c(2 / 3, -2 / 3),
+          y = 0
+        )
+      )
+    )
   } else if (platform %in% c("VisiumHD", "ST")) {
     vec <- .make_square_vec(3, tolerance)
 
@@ -228,53 +242,39 @@ deconvolve <- function(Y, positions, xdist, ydist, scalef, q, spot_neighbors, in
   )
 }
 
-#' @keywords internal
-.make_square_vec <- function(num_subspots_per_edge, tolerance = 1.05) {
-  stopifnot(tolerance > 1)
-  
-  list(
-    vec = seq(
-      1/(2 * num_subspots_per_edge),
-      1,
-      by = 1/num_subspots_per_edge
-    ) - 1/2,
-    dist = tolerance/num_subspots_per_edge
-  )
-}
-
-#' Define offsets for each subspot layout.
-#'
-#' Hex spots are divided into 6 triangular subspots, square spots are divided
-#' into 9 squares. Offsets are relative to the spot center.
-#'
-#' @param n_subspots_per Number of subspots per spot
-#' @return Matrix of x and y offsets, one row per subspot
-#'
-#' @keywords internal
-.make_subspot_offsets <- function(n_subspots_per) {
-  if (n_subspots_per == 6) {
-    rbind(
-      expand.grid(
-        list(
-          x = c(1 / 3, -1 / 3),
-          y = c(1 / 3, -1 / 3)
-        )
-      ),
-      expand.grid(
-        list(
-          x = c(2 / 3, -2 / 3),
-          y = 0
-        )
-      )
-    )
-    # } else if (n_subspots_per == 7) {
-    #     rbind(expand.grid(c(1/3, -1/3), c(1/3, -1/3)), expand.grid(c(2/3, -2/3, 0), 0))
-  } else if (n_subspots_per == 9) {
-    rbind(expand.grid(c(1 / 3, -1 / 3, 0), c(1 / 3, -1 / 3, 0)))
-  } else {
-    stop("Only 6 and 9 subspots currently supported.")
-  }
-}
+#' #' Define offsets for each subspot layout.
+#' #'
+#' #' Hex spots are divided into 6 triangular subspots, square spots are divided
+#' #' into 9 squares. Offsets are relative to the spot center.
+#' #'
+#' #' @param n_subspots_per Number of subspots per spot
+#' #' @return Matrix of x and y offsets, one row per subspot
+#' #'
+#' #' @keywords internal
+#' .make_subspot_offsets <- function(n_subspots_per) {
+#'   if (n_subspots_per == 6) {
+#'     rbind(
+#'       expand.grid(
+#'         list(
+#'           x = c(1 / 3, -1 / 3),
+#'           y = c(1 / 3, -1 / 3)
+#'         )
+#'       ),
+#'       expand.grid(
+#'         list(
+#'           x = c(2 / 3, -2 / 3),
+#'           y = 0
+#'         )
+#'       )
+#'     )
+#'     # } else if (n_subspots_per == 7) {
+#'     #     rbind(expand.grid(c(1/3, -1/3), c(1/3, -1/3)), expand.grid(c(2/3, -2/3, 0), 0))
+#'   } else if (n_subspots_per == 9) {
+#'     rbind(expand.grid(c(1 / 3, -1 / 3, 0), c(1 / 3, -1 / 3, 0)))
+#'   } else {
+#'     stop("Only 6 and 9 subspots currently supported.")
+#'   }
+#' }
 
 #' Add subspot labels and offset row/col locations before making enhanced SCE.
 #'
@@ -289,9 +289,18 @@ deconvolve <- function(Y, positions, xdist, ydist, scalef, q, spot_neighbors, in
 #'
 #' @keywords internal
 #' @importFrom assertthat assert_that
-.make_subspot_coldata <- function(positions, sce, n_subspots_per, spot_neighbors, subspot_neighbors) {
-  cdata <- as.data.frame(positions)
-  colnames(cdata) <- c("pxl_col_in_fullres", "pxl_row_in_fullres")
+.make_subspot_coldata <- function(
+    cdata, sce, subspot_neighbors, platform, num_subspots_per_edge = 3
+) {
+  if (platform == "Visium") {
+    n_subspots_per <- 6
+    colnames(cdata) <- c("pxl_col_in_fullres", "pxl_row_in_fullres")
+  } else if (platform %in% c("VisiumHD", "ST")) {
+    n_subspots_per <- num_subspots_per_edge ^ 2
+    colnames(cdata) <- c("array_col", "array_row")
+  } else {
+    stop("Only Visium, VisumHD, and ST are supported.")
+  }
 
   n_spots <- ncol(sce)
   n_subspots <- nrow(cdata)
@@ -302,18 +311,49 @@ deconvolve <- function(Y, positions, xdist, ydist, scalef, q, spot_neighbors, in
   spot_idxs <- ((idxs - 1) %% n_spots) + 1
   subspot_idxs <- rep(seq_len(n_subspots_per), each = n_spots)
   cdata$spot.idx <- spot_idxs
-  cdata$spot.neighbors <- spot_neighbors[spot_idxs]
+  cdata$spot.neighbors <- sce$spot.neighbors[spot_idxs]
   cdata$subspot.idx <- subspot_idxs
   cdata$subspot.neighbors <- subspot_neighbors
   rownames(cdata) <- paste0("subspot_", spot_idxs, ".", subspot_idxs)
 
-  offsets <- .make_subspot_offsets(n_subspots_per)
+  # w.r.t. the coordinate system of array
+  array_offsets <- .make_subspots(platform, 1, 1, TRUE, num_subspots_per_edge)$shift
+  
   cdata$spot.row <- rep(sce$array_row, n_subspots_per)
   cdata$spot.col <- rep(sce$array_col, n_subspots_per)
-  cdata$array_col <- cdata$spot.col + rep(offsets[, 1], each = n_spots)
-  cdata$array_row <- cdata$spot.row + rep(offsets[, 2], each = n_spots)
+  
+  if (platform == "Visium") {
+    cdata$array_col <- cdata$spot.col + rep(array_offsets[, "x"], each = n_spots)
+    cdata$array_row <- cdata$spot.row + rep(array_offsets[, "y"], each = n_spots)
+  }
+  
+  cols <- c(
+    "spot.idx", "spot.neighbors",
+    "subspot.idx", "subspot.neighbors",
+    "spot.row", "spot.col", "array_row", "array_col"
+  )
+  
+  if (platform %in% c("Visium", "VisiumHD")) {
+    cdata$spot.pxl.row <- rep(sce$pxl_row_in_fullres, n_subspots_per)
+    cdata$spot.pxl.col <- rep(sce$pxl_col_in_fullres, n_subspots_per)
+    
+    if (platform == "VisiumHD") {
+      dist <- .compute_interspot_distances(sce)
+      
+      # w.r.t. the coordinate system of the full resolution image
+      pxl_offsets <- .make_subspots(platform, dist$xdist, dist$ydist, num_subspots_per_edge)$shift
+      
+      cdata$pxl_col_in_fullres <- cdata$spot.pxl.col + rep(pxl_offsets[, "x"], each = n_spots)
+      cdata$pxl_row_in_fullres <- cdata$spot.pxl.row + rep(pxl_offsets[, "y"], each = n_spots)
+    }
+    
+    cols <- c(
+      cols,
+      "spot.pxl.row", "spot.pxl.col",
+      "pxl_row_in_fullres", "pxl_col_in_fullres"
+    )
+  }
 
-  cols <- c("spot.idx", "spot.neighbors", "subspot.idx", "subspot.neighbors", "spot.row", "spot.col", "array_row", "array_col", "pxl_row_in_fullres", "pxl_col_in_fullres")
   cdata[, cols]
 }
 
@@ -416,7 +456,9 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "VisiumHD", "ST"),
 
   ## Create enhanced SCE
   n_subspots_per <- ifelse(platform == "Visium", 6, 9)
-  cdata <- .make_subspot_coldata(deconv$positions, sce, n_subspots_per, sce$spot.neighbors, deconv$df_j)
+  cdata <- .make_subspot_coldata(
+    as.data.frame(deconv$positions), sce, deconv$df_j, platform, 3
+  )
   enhanced <- SingleCellExperiment(
     assays = list(),
     rowData = rowData(sce), colData = cdata

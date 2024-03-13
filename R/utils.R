@@ -34,21 +34,22 @@ find_neighbors <- function(
 #'
 #' @param sce SingleCellExperiment (must include array_row, array_col, pxl_row_in_fullres, pxl_col_in_fullres
 #'   in colData)
-#' @param scale.factor Scale estimated L1 difference up by this amount.
+#' @param platform One of \code{Visium} and \code{VisiumHD}.
 #'
 #' @return doubles xdist, ydist
 #'
 #' @keywords internal
 #' @importFrom stats lm coef
 .compute_interspot_distances <- function(sce) {
-    cols <- c("array_row", "array_col", "pxl_row_in_fullres", "pxl_col_in_fullres")
-    assert_that(all(cols %in% colnames(colData(sce))))
+  cols <- c("array_row", "array_col", "pxl_row_in_fullres", "pxl_col_in_fullres")
+  assert_that(all(cols %in% colnames(colData(sce))))
 
-    dists <- list()
-    dists$xdist <- coef(lm(sce$pxl_col_in_fullres ~ sce$array_col))[2]
-    dists$ydist <- coef(lm(sce$pxl_row_in_fullres ~ sce$array_row))[2]
-
-    dists
+  dists <- list()
+  
+  dists$xdist <- coef(lm(sce$pxl_col_in_fullres ~ sce$array_col))[2]
+  dists$ydist <- coef(lm(sce$pxl_row_in_fullres ~ sce$array_row))[2]
+  
+  dists
 }
 
 #' Find the mode
