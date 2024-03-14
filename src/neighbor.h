@@ -57,7 +57,7 @@ Neighbor::Neighbor(const Rcpp::NumericVector &v, const bool is_zero_based) {
     }
 
     if (!is_zero_based) {
-      this->neighbors < -this->neighbors - 1;
+      this->neighbors = -this->neighbors - 1;
     }
   } else {
     this->neighbors.reset();
