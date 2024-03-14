@@ -155,7 +155,27 @@ featurePlot <- function(sce, feature,
     splot
 }
 
-
+#' Whether to flip x and y axis to align the plot with the corresponding image.
+#' 
+#' @return A list indicates the multiplier for each axis.
+#' 
+#' @keywords internal
+.flip_axis <- function(sce, platform) {
+  ret <- list(
+    x = 1,
+    y = 1
+  )
+  
+  if (platform %in% c("Visium", "VisiumHD")) {
+    .x <- cor(sce$array_col, sce$pxl_col_in_fullres)
+    .y <- cor(sce$array_row, sce$pxl_row_in_fullres)
+    
+    if (.x < 0) ret$x <- -1
+    if (.y > 0) ret$y <- -1
+  }
+  
+  ret
+}
 
 #' Make vertices outlining spots/subspots for geom_polygon()
 #' 
@@ -172,18 +192,19 @@ featurePlot <- function(sce, feature,
 #' @keywords internal
 .make_vertices <- function(sce, fill, platform, is.enhanced) {
     cdata <- data.frame(colData(sce))
+    coord.multiplier <- .flip_axis(sce, platform)
     
     if (platform == "Visium") {
         if (is.enhanced) {
-            vertices <- .make_triangle_subspots(cdata, fill)
+            vertices <- .make_triangle_subspots(cdata, fill, coord.multiplier)
         } else {
-            vertices <- .make_hex_spots(cdata, fill)
+            vertices <- .make_hex_spots(cdata, fill, coord.multiplier)
         }
     } else if (platform %in% c("VisiumHD", "ST")) {
         if (is.enhanced) {
-            vertices <- .make_square_spots(cdata, fill, scale.factor = 1/3, offset = -1/6)
+            vertices <- .make_square_spots(cdata, fill, scale.factor = 1/3, offset = -1/6, coord.multiplier = coord.multiplier)
         } else {
-            vertices <- .make_square_spots(cdata, fill)
+            vertices <- .make_square_spots(cdata, fill, coord.multiplier = coord.multiplier)
         }
     } else {
         stop("Unsupported platform: \"", platform, "\". Cannot create spot layout.")
@@ -241,26 +262,31 @@ featurePlot <- function(sce, feature,
 #'   vertices outlining the spot's border
 #' 
 #' @keywords internal
-.make_hex_spots <- function(cdata, fill) {
-    ## R = circumradius, distance from center to vertex
-    ## r = inradius, distance from center to edge midpoint
-    r <- 1/2
-    R <- (2 / sqrt(3)) * r
+#' 
+#' @importFrom assertthat assert_that
+.make_hex_spots <- function(cdata, fill, coord.multiplier = list(x = 1, y = 1)) {
+  assert_that(all(c("x", "y") %in% names(coord.multiplier)))
 
-    spot_positions <- .select_spot_positions(cdata, fill=fill)
-    spot_positions <- .adjust_hex_centers(spot_positions)
+  ## R = circumradius, distance from center to vertex
+  ## r = inradius, distance from center to edge midpoint
+  r <- 1/2
+  R <- (2 / sqrt(3)) * r
 
-    ## vertices of each hex (with respect to center coordinates)
-    ## start at top center, loop clockwise
-    vertex_offsets <- data.frame(x.offset=c(0, r, r, 0, -r, -r),
-                                 y.offset=c(-R, -R/2, R/2, R, R/2, -R/2))
+  spot_positions <- .select_spot_positions(cdata, fill=fill)
+  spot_positions <- .adjust_hex_centers(spot_positions)
 
-    spot_vertices <- .make_spot_vertices(spot_positions, vertex_offsets)
+  ## vertices of each hex (with respect to center coordinates)
+  ## start at top center, loop clockwise
+  vertex_offsets <- data.frame(x.offset=c(0, r, r, 0, -r, -r),
+                               y.offset=c(-R, -R/2, R/2, R, R/2, -R/2))
 
-    ## Flip to match image orientation
-    spot_vertices$y.vertex <- -spot_vertices$y.vertex
+  spot_vertices <- .make_spot_vertices(spot_positions, vertex_offsets)
 
-    spot_vertices
+  ## Flip to match image orientation
+  spot_vertices$x.vertex <- spot_vertices$x.vertex * coord.multiplier$x
+  spot_vertices$y.vertex <- spot_vertices$y.vertex * coord.multiplier$y
+
+  spot_vertices
 }
 
 #' Adjust hex spot positions so hexagons are adjacent to each other in plot
@@ -300,14 +326,23 @@ featurePlot <- function(sce, feature,
 #'   vertices outlining the spot's border
 #' 
 #' @keywords internal
-.make_square_spots <- function(cdata, fill="spatial.cluster", scale.factor = 1, offset = 0) {
-    spot_positions <- .select_spot_positions(cdata, fill=fill)
+#' 
+#' @importFrom assertthat assert_that
+.make_square_spots <- function(cdata, fill="spatial.cluster", scale.factor = 1, offset = 0, coord.multiplier = list(x = 1, y = 1)) {
+  assert_that(all(c("x", "y") %in% names(coord.multiplier)))
+  
+  spot_positions <- .select_spot_positions(cdata, fill=fill)
     
-    vertex_offsets <- data.frame(x.offset=c(0, 1, 1, 0),
-                                  y.offset=c(0, 0, 1, 1))
-    vertex_offsets <- vertex_offsets * scale.factor + offset
+  vertex_offsets <- data.frame(x.offset=c(0, 1, 1, 0),
+                                y.offset=c(0, 0, 1, 1))
+  vertex_offsets <- vertex_offsets * scale.factor + offset
 
-    .make_spot_vertices(spot_positions, vertex_offsets)
+  vertices <- .make_spot_vertices(spot_positions, vertex_offsets)
+  
+  vertices$x.vertex <- vertices$x.vertex * coord.multiplier$x
+  vertices$y.vertex <- vertices$y.vertex * coord.multiplier$y
+  
+  vertices
 }
 
 #' Helper to pull out subspot position columns
@@ -341,7 +376,11 @@ featurePlot <- function(sce, feature,
 #'   vertices outlining the spot's border
 #'
 #' @keywords internal
-.make_triangle_subspots <- function(cdata, fill="spatial.cluster") {
+#' 
+#' @importFrom assertthat assert_that
+.make_triangle_subspots <- function(cdata, fill="spatial.cluster", coord.multiplier = list(x = 1, y = 1)) {
+    assert_that(all(c("x", "y") %in% names(coord.multiplier)))
+  
     spot_positions <- .select_subspot_positions(cdata, x="spot.col", y="spot.row", fill=fill)
     spot_positions <- .adjust_hex_centers(spot_positions)
     
@@ -366,7 +405,9 @@ featurePlot <- function(sce, feature,
     ## note that instead of cartesian product, `merge()` does an outer join
     ## on subspot.idx here
     spot_vertices <- .make_spot_vertices(spot_positions, vertex_offsets)
-    spot_vertices$y.vertex <- -spot_vertices$y.vertex
+    
+    spot_vertices$x.vertex <- spot_vertices$x.vertex * coord.multiplier$x
+    spot_vertices$y.vertex <- spot_vertices$y.vertex * coord.multiplier$y
     
     spot_vertices
 }
