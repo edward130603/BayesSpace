@@ -12,7 +12,7 @@
 \item{fill}{Name of a column in \code{colData(sce)} or a vector of values to
 use as fill for each spot}
 
-\item{platform}{"Visium" or "ST", used to determine spot layout}
+\item{platform}{"Visium", "VisiumHD" or"ST", used to determine spot layout}
 
 \item{is.enhanced}{If true, \code{sce} contains enhanced subspot data instead
 of spot-level expression. Used to determine spot layout.}

@@ -9,7 +9,7 @@
 spatialEnhance(
   sce,
   q,
-  platform = c("Visium", "ST"),
+  platform = c("Visium", "VisiumHD", "ST"),
   use.dimred = "PCA",
   d = 15,
   init = NULL,
@@ -41,10 +41,10 @@ adjustClusterLabels(sce, burn.in)
 \item{q}{The number of clusters.}
 
 \item{platform}{Spatial transcriptomic platform. Specify 'Visium' for hex
-lattice geometry or 'ST' for square lattice geometry. Specifying this
-parameter is optional when analyzing SingleCellExperiments processed using
-\code{\link{readVisium}}, \code{\link{spatialPreprocess}}, or
-\code{\link{spatialCluster}}, as this information is included in their
+lattice geometry or 'ST' and 'VisiumHD' for square lattice geometry.
+Specifying this parameter is optional when analyzing SingleCellExperiments
+processed using \code{\link{readVisium}}, \code{\link{spatialPreprocess}},
+or \code{\link{spatialCluster}}, as this information is included in their
 metadata.}
 
 \item{use.dimred}{Name of a reduced dimensionality result in
@@ -114,7 +114,7 @@ the latter case, a list of values (power of 2) will be created}
   By default, the \code{assays} of this object are empty, and the enhanced
   resolution PCs are stored as a reduced dimensionality result accessible
   with \code{reducedDim(sce, 'PCA')}.
-  
+
 \code{coresTune} returns the output of \code{microbenchmark}.
 
 \code{adjustClusterLabels} adjusts the cluster labels from the MCMC samples

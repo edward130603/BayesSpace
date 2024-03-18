@@ -23,6 +23,10 @@
 #'   To perform a faster approximate PCA, please specify
 #'   \code{FastAutoParam()} and set a random seed to ensure
 #'   reproducibility.
+#' @param BPPARAM A \linkS4class{BiocParallelParam} object specifying whether
+#'   to compute PCA in parallel or not (default to \code{SerialParam()}).
+#'   To perform faster PCA decomposition, please specify \code{SnowParam()} or
+#'   \code{MulticoreParam()}.
 #' 
 #' @return SingleCellExperiment with PCA and BayesSpace metadata
 #' 
@@ -35,10 +39,11 @@
 #' @importFrom scran modelGeneVar getTopHVGs
 #' @importFrom SummarizedExperiment rowData<-
 #' @importFrom BiocSingular ExactParam
+#' @importFrom BiocParallel SerialParam
 spatialPreprocess <- function(sce, platform=c("Visium", "VisiumHD", "ST"),
                               n.PCs=15, n.HVGs=2000, skip.PCA=FALSE,
                               log.normalize=TRUE, assay.type="logcounts",
-                              BSPARAM=ExactParam()) {
+                              BSPARAM=ExactParam(), BPPARAM = SerialParam()) {
     
     ## Set BayesSpace metadata
     metadata(sce)$BayesSpace.data <- .bsData(sce, name = NULL, default = list())
@@ -55,7 +60,7 @@ spatialPreprocess <- function(sce, platform=c("Visium", "VisiumHD", "ST"),
         dec <- modelGeneVar(sce, assay.type=assay.type)
         top <- getTopHVGs(dec, n=n.HVGs)
         sce <- runPCA(sce, subset_row=top, ncomponents=n.PCs, 
-                      exprs_values=assay.type, BSPARAM=BSPARAM)
+                      exprs_values=assay.type, BSPARAM=BSPARAM, BPPARAM=BPPARAM)
         rowData(sce)[["is.HVG"]] <- (rownames(sce) %in% top)
     }
 

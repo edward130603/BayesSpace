@@ -8,6 +8,7 @@
   platform,
   xdist,
   ydist,
+  force = FALSE,
   num_subspots_per_edge = 3,
   tolerance = 1.05
 )
