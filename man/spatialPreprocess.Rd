@@ -46,9 +46,9 @@ To perform a faster approximate PCA, please specify
 reproducibility.}
 
 \item{BPPARAM}{A \linkS4class{BiocParallelParam} object specifying whether
-to compute PCA in parallel or not (default to \code{SerialParam()}).
-To perform faster PCA decomposition, please specify \code{SnowParam()} or
-\code{MulticoreParam()}.}
+to model the gene variation in parallel or not
+(default to \code{SerialParam()}). To perform faster modeling, please
+specify \code{SnowParam()} or \code{MulticoreParam()}.}
 }
 \value{
 SingleCellExperiment with PCA and BayesSpace metadata

@@ -10,6 +10,7 @@
 #'   a file containing scale factors named \code{spatial/scalefactors_json.json}.
 #'   (To understand the output directory, refer to the corresponding
 #'   \href{https://support.10xgenomics.com/spatial-gene-expression/software/pipelines/latest/output/overview}{10X Genomics help page}.)
+#' @param rm.feats.pat Patterns for features (genes) to remove.
 #' @param fname File name of the h5 file. It should be inside \code{dirname}.
 #'   (By default "filtered_feature_bc_matrix.h5")
 #'
@@ -44,7 +45,10 @@ NULL
 #' @importFrom SingleCellExperiment SingleCellExperiment counts
 #' @importFrom S4Vectors metadata metadata<-
 #' @rdname readVisium
-readVisium <- function(dirname) {
+readVisium <- function(
+    dirname,
+    rm.feats.pat = c("^NegControl.*", "^BLANK.*", "^DEPRECATED.*")
+) {
     spatial_dir <- file.path(dirname, "spatial")
     matrix_dir <- file.path(dirname, "filtered_feature_bc_matrix")
 
@@ -66,6 +70,13 @@ readVisium <- function(dirname) {
     colnames(.counts) <- barcodes$V1
     rownames(.counts) <- rownames(rowData)
     .counts <- .counts[, rownames(colData)]
+    
+    if (!is.null(rm.feats.pat) && length(rm.feats.pat) > 0) {
+      .rm.feats.pat <- paste(rm.feats.pat, collapse = "|")
+      rowData <- rowData[!grepl(.rm.feats.pat, rowData[["gene_name"]]), ]
+      
+      .counts <- .counts[rownames(rowData), ]
+    }
     
     scalef <- .read_scale_factors(spatial_dir)
 
@@ -94,7 +105,11 @@ readVisium <- function(dirname) {
 #' @importFrom dplyr %>% group_by mutate select n case_when
 #' @importFrom tibble column_to_rownames
 #' @rdname readVisium
-read10Xh5 <- function(dirname, fname = "filtered_feature_bc_matrix.h5") {
+read10Xh5 <- function(
+    dirname,
+    fname = "filtered_feature_bc_matrix.h5",
+    rm.feats.pat = c("^NegControl.*", "^BLANK.*", "^DEPRECATED.*")
+) {
     spatial_dir <- file.path(dirname, "spatial")
     h5_file <- file.path(dirname, fname)
 
@@ -144,6 +159,13 @@ read10Xh5 <- function(dirname, fname = "filtered_feature_bc_matrix.h5") {
       index1 = FALSE
     )
     .counts <- .counts[, rownames(colData)]
+    
+    if (!is.null(rm.feats.pat) && length(rm.feats.pat) > 0) {
+      .rm.feats.pat <- paste(rm.feats.pat, collapse = "|")
+      rowData <- rowData[!grepl(.rm.feats.pat, rowData[["gene_name"]]), ]
+      
+      .counts <- .counts[rownames(rowData), ]
+    }
     
     scalef <- .read_scale_factors(spatial_dir)
 

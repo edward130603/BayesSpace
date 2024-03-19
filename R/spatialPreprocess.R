@@ -24,9 +24,9 @@
 #'   \code{FastAutoParam()} and set a random seed to ensure
 #'   reproducibility.
 #' @param BPPARAM A \linkS4class{BiocParallelParam} object specifying whether
-#'   to compute PCA in parallel or not (default to \code{SerialParam()}).
-#'   To perform faster PCA decomposition, please specify \code{SnowParam()} or
-#'   \code{MulticoreParam()}.
+#'   to model the gene variation in parallel or not
+#'   (default to \code{SerialParam()}). To perform faster modeling, please
+#'   specify \code{SnowParam()} or \code{MulticoreParam()}.
 #' 
 #' @return SingleCellExperiment with PCA and BayesSpace metadata
 #' 
@@ -38,8 +38,8 @@
 #' @importFrom scater logNormCounts runPCA
 #' @importFrom scran modelGeneVar getTopHVGs
 #' @importFrom SummarizedExperiment rowData<-
-#' @importFrom BiocSingular ExactParam
-#' @importFrom BiocParallel SerialParam
+#' @importFrom BiocSingular ExactParam IrlbaParam RandomParam FastAutoParam
+#' @importFrom BiocParallel SerialParam MulticoreParam SnowParam
 spatialPreprocess <- function(sce, platform=c("Visium", "VisiumHD", "ST"),
                               n.PCs=15, n.HVGs=2000, skip.PCA=FALSE,
                               log.normalize=TRUE, assay.type="logcounts",
@@ -57,10 +57,10 @@ spatialPreprocess <- function(sce, platform=c("Visium", "VisiumHD", "ST"),
         if (log.normalize)
             sce <- logNormCounts(sce)
    
-        dec <- modelGeneVar(sce, assay.type=assay.type)
+        dec <- modelGeneVar(sce, assay.type=assay.type, BPPARAM=BPPARAM)
         top <- getTopHVGs(dec, n=n.HVGs)
         sce <- runPCA(sce, subset_row=top, ncomponents=n.PCs, 
-                      exprs_values=assay.type, BSPARAM=BSPARAM, BPPARAM=BPPARAM)
+                      exprs_values=assay.type, BSPARAM=BSPARAM)
         rowData(sce)[["is.HVG"]] <- (rownames(sce) %in% top)
     }
 
