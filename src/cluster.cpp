@@ -1,5 +1,6 @@
 // [[Rcpp::plugins("cpp11")]]
 // [[Rcpp::depends(RcppArmadillo, RcppDist)]]
+
 #include "double_states_vector.h"
 #include "neighbor.h"
 #include <RcppArmadillo.h>
@@ -215,21 +216,23 @@ find_subspot_neighbors(
 // [[Rcpp::export]]
 List
 iterate(
-    arma::mat Y, List df_j, int nrep, int n, int d, double gamma, int q,
-    arma::vec init, NumericVector mu0, arma::mat lambda0, double alpha,
-    double beta
+    const arma::mat &Y, const List &df_j, int nrep, int thin, int n, int d,
+    double gamma, int q, const arma::uvec &init, const NumericVector &mu0,
+    const arma::mat &lambda0, double alpha, double beta
 ) {
 
   // Initalize matrices storing iterations
-  mat df_sim_z(nrep, n, fill::zeros);
-  mat df_sim_mu(nrep, q * d, fill::zeros);
-  List df_sim_lambda(nrep);
+  umat df_sim_z(nrep / thin + 1, n, fill::zeros);
+  mat df_sim_mu(nrep / thin + 1, q * d, fill::zeros);
+  List df_sim_lambda(nrep / thin + 1);
   NumericVector plogLik(nrep, NA_REAL);
 
   // Initialize parameters
   rowvec initmu    = rep(mu0, q);
   df_sim_mu.row(0) = initmu;
+  mat lambda_i     = lambda0;
   df_sim_lambda[0] = lambda0;
+  uvec z           = init;
   df_sim_z.row(0)  = init.t();
 
   // Iterate
@@ -241,55 +244,48 @@ iterate(
 
     // Update mu
     mat mu_i(q, d);
-    mat lambda_prev = df_sim_lambda[i - 1];
     for (int k = 1; k <= q; k++) {
-      uvec index_1k = find(df_sim_z.row(i - 1) == k);
+      uvec index_1k = find(z == k);
       int n_i       = index_1k.n_elem;
       NumericVector Ysums;
       mat Yrows  = Y.rows(index_1k);
       Ysums      = sum(Yrows, 0);
-      vec mean_i = inv(lambda0 + n_i * lambda_prev) *
-                   (lambda0 * mu0vec + lambda_prev * as<colvec>(Ysums));
-      mat var_i       = inv(lambda0 + n_i * lambda_prev);
+      vec mean_i = inv(lambda0 + n_i * lambda_i) *
+                   (lambda0 * mu0vec + lambda_i * as<colvec>(Ysums));
+      mat var_i       = inv(lambda0 + n_i * lambda_i);
       mu_i.row(k - 1) = rmvnorm(1, mean_i, var_i);
     }
-    df_sim_mu.row(i) = vectorise(mu_i, 1);
 
     // Update lambda
     mat mu_i_long(n, d);
     for (int j = 0; j < n; j++) {
-      mu_i_long.row(j) = mu_i.row(df_sim_z(i - 1, j) - 1);
+      mu_i_long.row(j) = mu_i.row(z(j) - 1);
     }
     mat sumofsq = (Y - mu_i_long).t() * (Y - mu_i_long);
     vec beta_d(d);
     beta_d.fill(beta);
-    mat Vinv         = diagmat(beta_d);
-    mat lambda_i     = rwish(n + alpha, inv(Vinv + sumofsq));
-    df_sim_lambda[i] = lambda_i;
-    mat sigma_i      = inv(lambda_i);
+    mat Vinv          = diagmat(beta_d);
+    lambda_i          = rwish(n + alpha, inv(Vinv + sumofsq));
+    const mat sigma_i = inv(lambda_i);
 
     // Update z
-    df_sim_z.row(i)    = df_sim_z.row(i - 1);
     IntegerVector qvec = seq_len(q);
     NumericVector plogLikj(n, NA_REAL);
     for (int j = 0; j < n; j++) {
-      int z_j_prev         = df_sim_z(i, j);
+      int z_j_prev         = z(j);
       IntegerVector qlessk = qvec[qvec != z_j_prev];
       int z_j_new          = sample(qlessk, 1)[0];
       uvec j_vector        = df_j[j];
-      uvec i_vector(1);
-      i_vector.fill(i);
       double h_z_prev;
       double h_z_new;
       if (j_vector.size() != 0) {
-        h_z_prev = gamma / j_vector.size() * 2 *
-                       accu((df_sim_z(i_vector, j_vector) == z_j_prev)) +
-                   dmvnrm_arma_fast(
-                       Y.row(j), mu_i.row(z_j_prev - 1), sigma_i, true
-                   )[0];
+        h_z_prev =
+            gamma / j_vector.size() * 2 * accu((z(j_vector) == z_j_prev)) +
+            dmvnrm_arma_fast(
+                Y.row(j), mu_i.row(z_j_prev - 1), sigma_i, true
+            )[0];
         h_z_new =
-            gamma / j_vector.size() * 2 *
-                accu((df_sim_z(i_vector, j_vector) == z_j_new)) +
+            gamma / j_vector.size() * 2 * accu((z(j_vector) == z_j_new)) +
             dmvnrm_arma_fast(Y.row(j), mu_i.row(z_j_new - 1), sigma_i, true)[0];
       } else {
         h_z_prev = dmvnrm_arma_fast(
@@ -304,10 +300,17 @@ iterate(
       }
       IntegerVector zsample = {z_j_prev, z_j_new};
       NumericVector probs   = {1 - prob_j, prob_j};
-      df_sim_z(i, j)        = sample(zsample, 1, true, probs)[0];
+      z(j)                  = sample(zsample, 1, true, probs)[0];
       plogLikj[j]           = h_z_prev;
     }
     plogLik[i] = sum(plogLikj);
+
+    // Save samples for every a few iterations.
+    if ((i + 1) % thin == 0) {
+      df_sim_mu.row((i + 1) / thin) = vectorise(mu_i, 1);
+      df_sim_lambda[(i + 1) / thin] = lambda_i;
+      df_sim_z.row((i + 1) / thin)  = z.t();
+    }
   }
   List out = List::create(
       _["z"] = df_sim_z, _["mu"] = df_sim_mu, _["lambda"] = df_sim_lambda,
@@ -319,27 +322,30 @@ iterate(
 // [[Rcpp::export]]
 List
 iterate_vvv(
-    arma::mat Y, List df_j, int nrep, int n, int d, double gamma, int q,
-    arma::vec init, NumericVector mu0, arma::mat lambda0, double alpha,
-    double beta
+    const arma::mat &Y, const List &df_j, int nrep, int thin, int n, int d,
+    double gamma, int q, const arma::uvec &init, const NumericVector &mu0,
+    const arma::mat &lambda0, double alpha, double beta
 ) {
 
   // Initalize matrices storing iterations
-  mat df_sim_z(nrep, n, fill::zeros);
-  mat df_sim_mu(nrep, q * d, fill::zeros);
-  List df_sim_lambda(nrep);
+  umat df_sim_z(nrep / thin + 1, n, fill::zeros);
+  mat df_sim_mu(nrep / thin + 1, q * d, fill::zeros);
+  List df_sim_lambda(nrep / thin + 1);
   List lambda_list(q);
+  lambda_list[0] = lambda0;
   List sigma_list(q);
+  sigma_list[0] = inv(lambda0);
   NumericVector plogLik(nrep, NA_REAL);
 
   // Initialize parameters
   rowvec initmu    = rep(mu0, q);
   df_sim_mu.row(0) = initmu;
-  for (int k = 1; k <= q; k++) {
-    lambda_list[k - 1] = lambda0;
-    sigma_list[k - 1]  = inv(lambda0);
+  for (int k = 1; k < q; k++) {
+    lambda_list[k] = lambda_list[0];
+    sigma_list[k]  = sigma_list[0];
   }
   df_sim_lambda[0] = lambda_list;
+  uvec z           = init;
   df_sim_z.row(0)  = init.t();
 
   // Iterate
@@ -351,64 +357,55 @@ iterate_vvv(
 
     // Update mu
     mat mu_i(q, d);
-    List lambda_prev = df_sim_lambda[i - 1];
     NumericVector Ysums;
     for (int k = 1; k <= q; k++) {
-      uvec index_1k = find(df_sim_z.row(i - 1) == k);
+      uvec index_1k = find(z == k);
       int n_i       = index_1k.n_elem;
       mat Yrows     = Y.rows(index_1k);
       Ysums         = sum(Yrows, 0);
-      mat lambda_k  = lambda_prev[k - 1];
+      mat lambda_k  = lambda_list[k - 1];
       vec mean_i    = inv(lambda0 + n_i * lambda_k) *
                    (lambda0 * mu0vec + lambda_k * as<colvec>(Ysums));
       mat var_i       = inv(lambda0 + n_i * lambda_k);
       mu_i.row(k - 1) = rmvnorm(1, mean_i, var_i);
     }
-    df_sim_mu.row(i) = vectorise(mu_i, 1);
 
     // Update lambda
     mat mu_i_long(n, d);
     for (int j = 0; j < n; j++) {
-      mu_i_long.row(j) = mu_i.row(df_sim_z(i - 1, j) - 1);
+      mu_i_long.row(j) = mu_i.row(z(j) - 1);
     }
     vec beta_d(d);
     beta_d.fill(beta);
     mat Vinv = diagmat(beta_d);
     for (int k = 1; k <= q; k++) {
-      uvec index_1k = find(df_sim_z.row(i - 1) == k);
+      uvec index_1k = find(z == k);
       int n_i       = index_1k.n_elem;
       mat sumofsq   = (Y.rows(index_1k) - mu_i_long.rows(index_1k)).t() *
                     (Y.rows(index_1k) - mu_i_long.rows(index_1k));
       mat lambda_i       = rwish(n_i + alpha, inv(Vinv + sumofsq));
-      mat sigma_i        = inv(lambda_i);
       lambda_list[k - 1] = lambda_i;
-      sigma_list[k - 1]  = sigma_i;
+      sigma_list[k - 1]  = inv(lambda_i);
     }
-    df_sim_lambda[i] = lambda_list;
 
     // Update z
-    df_sim_z.row(i)    = df_sim_z.row(i - 1);
     IntegerVector qvec = seq_len(q);
     NumericVector plogLikj(n, NA_REAL);
     for (int j = 0; j < n; j++) {
-      int z_j_prev         = df_sim_z(i, j);
+      int z_j_prev         = z(j);
       IntegerVector qlessk = qvec[qvec != z_j_prev];
       int z_j_new          = sample(qlessk, 1)[0];
       uvec j_vector        = df_j[j];
-      uvec i_vector(1);
-      i_vector.fill(i);
       double h_z_prev;
       double h_z_new;
       if (j_vector.size() != 0) {
         h_z_prev =
-            gamma / j_vector.size() * 2 *
-                accu((df_sim_z(i_vector, j_vector) == z_j_prev)) +
+            gamma / j_vector.size() * 2 * accu(((j_vector) == z_j_prev)) +
             dmvnrm_arma_fast(
                 Y.row(j), mu_i.row(z_j_prev - 1), sigma_list[z_j_prev - 1], true
             )[0];
         h_z_new =
-            gamma / j_vector.size() * 2 *
-                accu((df_sim_z(i_vector, j_vector) == z_j_new)) +
+            gamma / j_vector.size() * 2 * accu((z(j_vector) == z_j_new)) +
             dmvnrm_arma_fast(
                 Y.row(j), mu_i.row(z_j_new - 1), sigma_list[z_j_new - 1], true
             )[0];
@@ -426,10 +423,17 @@ iterate_vvv(
       }
       IntegerVector zsample = {z_j_prev, z_j_new};
       NumericVector probs   = {1 - prob_j, prob_j};
-      df_sim_z(i, j)        = sample(zsample, 1, true, probs)[0];
+      z(j)                  = sample(zsample, 1, true, probs)[0];
       plogLikj[j]           = h_z_prev;
     }
     plogLik[i] = sum(plogLikj);
+
+    // Save samples for every a few iterations.
+    if ((i + 1) % thin == 0) {
+      df_sim_mu.row((i + 1) / thin) = vectorise(mu_i, 1);
+      df_sim_lambda[(i + 1) / thin] = lambda_list;
+      df_sim_z.row((i + 1) / thin)  = z.t();
+    }
   }
   List out = List::create(
       _["z"] = df_sim_z, _["mu"] = df_sim_mu, _["lambda"] = df_sim_lambda,
@@ -441,22 +445,24 @@ iterate_vvv(
 // [[Rcpp::export]]
 List
 iterate_t(
-    arma::mat Y, List df_j, int nrep, int n, int d, double gamma, int q,
-    arma::vec init, NumericVector mu0, arma::mat lambda0, double alpha,
-    double beta
+    const arma::mat &Y, const List &df_j, int nrep, int thin, int n, int d,
+    double gamma, int q, const arma::uvec &init, const NumericVector &mu0,
+    const arma::mat &lambda0, double alpha, double beta
 ) {
 
   // Initalize matrices storing iterations
-  mat df_sim_z(nrep, n, fill::zeros);
-  mat df_sim_mu(nrep, q * d, fill::zeros);
-  List df_sim_lambda(nrep);
-  mat df_sim_w(nrep, n);
+  umat df_sim_z(nrep / thin + 1, n, fill::zeros);
+  mat df_sim_mu(nrep / thin + 1, q * d, fill::zeros);
+  List df_sim_lambda(nrep / thin + 1);
+  mat df_sim_w(nrep / thin + 1, n);
   NumericVector plogLik(nrep, NA_REAL);
 
   // Initialize parameters
   rowvec initmu    = rep(mu0, q);
   df_sim_mu.row(0) = initmu;
+  mat lambda_i     = lambda0;
   df_sim_lambda[0] = lambda0;
+  uvec z           = init;
   df_sim_z.row(0)  = init.t();
   vec w            = ones<vec>(n);
   df_sim_w.row(0)  = w.t();
@@ -470,40 +476,36 @@ iterate_t(
 
     // Update mu
     mat mu_i(q, d);
-    mat lambda_prev = df_sim_lambda[i - 1];
     NumericVector Ysums;
     for (int k = 1; k <= q; k++) {
-      uvec index_1k = find(df_sim_z.row(i - 1) == k);
+      uvec index_1k = find(z == k);
       double n_i    = sum(w(index_1k));
       mat Yrows     = Y.rows(index_1k);
       Yrows.each_col() %= w(index_1k);
-      Ysums      = sum(Yrows, 0);
-      vec mean_i = inv(lambda0 + n_i * lambda_prev) *
-                   (lambda0 * mu0vec + lambda_prev * as<colvec>(Ysums)
-                   );                                 // posterior mean
-      mat var_i = inv(lambda0 + n_i * lambda_prev);   // posterior variance
+      Ysums = sum(Yrows, 0);
+      vec mean_i =
+          inv(lambda0 + n_i * lambda_i) *
+          (lambda0 * mu0vec + lambda_i * as<colvec>(Ysums));   // posterior mean
+      mat var_i = inv(lambda0 + n_i * lambda_i);   // posterior variance
       mu_i.row(k - 1) =
           rmvnorm(1, mean_i, var_i);   // sample from posterior for mu
     }
-    df_sim_mu.row(i) = vectorise(mu_i, 1);
 
     // Update lambda
     mat mu_i_long(n, d);
     for (int j = 0; j < n; j++) {
-      mu_i_long.row(j) = mu_i.row(df_sim_z(i - 1, j) - 1);
+      mu_i_long.row(j) = mu_i.row(z(j) - 1);
     }
     mat sumofsq = (Y - mu_i_long).t() * diagmat(w) * (Y - mu_i_long);
     vec beta_d(d);
     beta_d.fill(beta);
-    mat Vinv         = diagmat(beta_d);
-    mat lambda_i     = rwish(n + alpha, inv(Vinv + sumofsq));
-    df_sim_lambda[i] = lambda_i;
-    mat sigma_i      = inv(lambda_i);
+    mat Vinv          = diagmat(beta_d);
+    lambda_i          = rwish(n + alpha, inv(Vinv + sumofsq));
+    const mat sigma_i = inv(lambda_i);
 
     // Update z and w
     double w_alpha = (d + 4) / 2;   // shape parameter
     double w_beta;
-    df_sim_z.row(i)    = df_sim_z.row(i - 1);
     IntegerVector qvec = seq_len(q);
     NumericVector plogLikj(n, NA_REAL);
     for (int j = 0; j < n; j++) {
@@ -514,22 +516,19 @@ iterate_t(
       );                                   // scale parameter
       w[j] = R::rgamma(w_alpha, w_beta);   // sample from posterior for w
 
-      int z_j_prev         = df_sim_z(i, j);
+      int z_j_prev         = z(j);
       IntegerVector qlessk = qvec[qvec != z_j_prev];
       int z_j_new          = sample(qlessk, 1)[0];
       uvec j_vector        = df_j[j];
-      uvec i_vector(1);
-      i_vector.fill(i);
       double h_z_prev;
       double h_z_new;
       if (j_vector.size() != 0) {
-        h_z_prev = gamma / j_vector.size() * 2 *
-                       accu((df_sim_z(i_vector, j_vector) == z_j_prev)) +
-                   dmvnrm_arma_fast(
-                       Y.row(j), mu_i.row(z_j_prev - 1), sigma_i / w[j], true
-                   )[0];
-        h_z_new = gamma / j_vector.size() * 2 *
-                      accu((df_sim_z(i_vector, j_vector) == z_j_new)) +
+        h_z_prev =
+            gamma / j_vector.size() * 2 * accu((z(j_vector) == z_j_prev)) +
+            dmvnrm_arma_fast(
+                Y.row(j), mu_i.row(z_j_prev - 1), sigma_i / w[j], true
+            )[0];
+        h_z_new = gamma / j_vector.size() * 2 * accu((z(j_vector) == z_j_new)) +
                   dmvnrm_arma_fast(
                       Y.row(j), mu_i.row(z_j_new - 1), sigma_i / w[j], true
                   )[0];
@@ -547,11 +546,18 @@ iterate_t(
       }
       IntegerVector zsample = {z_j_prev, z_j_new};
       NumericVector probs   = {1 - prob_j, prob_j};
-      df_sim_z(i, j)        = sample(zsample, 1, true, probs)[0];
+      z(j)                  = sample(zsample, 1, true, probs)[0];
       plogLikj[j]           = h_z_prev;
     }
-    df_sim_w.row(i) = w.t();
-    plogLik[i]      = sum(plogLikj);
+    plogLik[i] = sum(plogLikj);
+
+    // Save samples for every a few iterations.
+    if ((i + 1) % thin == 0) {
+      df_sim_mu.row((i + 1) / thin) = vectorise(mu_i, 1);
+      df_sim_lambda[(i + 1) / thin] = lambda_i;
+      df_sim_w.row((i + 1) / thin)  = w.t();
+      df_sim_z.row((i + 1) / thin)  = z.t();
+    }
   }
   List out = List::create(
       _["z"] = df_sim_z, _["mu"] = df_sim_mu, _["lambda"] = df_sim_lambda,
@@ -563,29 +569,34 @@ iterate_t(
 // [[Rcpp::export]]
 List
 iterate_t_vvv(
-    arma::mat Y, List df_j, int nrep, int n, int d, double gamma, int q,
-    arma::vec init, NumericVector mu0, arma::mat lambda0, double alpha,
-    double beta
+    const arma::mat &Y, const List &df_j, int nrep, int thin, int n, int d,
+    double gamma, int q, const arma::uvec &init, const NumericVector &mu0,
+    const arma::mat &lambda0, double alpha, double beta
 ) {
 
   // Initalize matrices storing iterations
-  mat df_sim_z(nrep, n, fill::zeros);
-  mat df_sim_mu(nrep, q * d, fill::zeros);
-  List df_sim_lambda(nrep);
+  umat df_sim_z(nrep / thin + 1, n, fill::zeros);
+  mat df_sim_mu(nrep / thin + 1, q * d, fill::zeros);
+  List df_sim_lambda(nrep / thin + 1);
+  mat df_sim_w(nrep / thin + 1, n);
   List lambda_list(q);
+  lambda_list[0] = lambda0;
   List sigma_list(q);
+  sigma_list[0] = inv(lambda0);
   NumericVector plogLik(nrep, NA_REAL);
 
   // Initialize parameters
   rowvec initmu    = rep(mu0, q);
   df_sim_mu.row(0) = initmu;
-  for (int k = 1; k <= q; k++) {
-    lambda_list[k - 1] = lambda0;
-    sigma_list[k - 1]  = inv(lambda0);
+  for (int k = 1; k < q; k++) {
+    lambda_list[k] = lambda_list[0];
+    sigma_list[k]  = sigma_list[0];
   }
   df_sim_lambda[0] = lambda_list;
+  uvec z           = init;
   df_sim_z.row(0)  = init.t();
   vec w            = ones<vec>(n);
+  df_sim_w.row(0)  = w.t();
 
   // Iterate
   colvec mu0vec = as<colvec>(mu0);
@@ -596,15 +607,14 @@ iterate_t_vvv(
 
     // Update mu
     mat mu_i(q, d);
-    List lambda_prev = df_sim_lambda[i - 1];
     NumericVector Ysums;
     for (int k = 1; k <= q; k++) {
-      uvec index_1k = find(df_sim_z.row(i - 1) == k);
+      uvec index_1k = find(z == k);
       double n_i    = sum(w(index_1k));
       mat Yrows     = Y.rows(index_1k);
       Yrows.each_col() %= w(index_1k);
       Ysums        = sum(Yrows, 0);
-      mat lambda_k = lambda_prev[k - 1];
+      mat lambda_k = lambda_list[k - 1];
       vec mean_i =
           inv(lambda0 + n_i * lambda_k) *
           (lambda0 * mu0vec + lambda_k * as<colvec>(Ysums));   // posterior mean
@@ -612,37 +622,33 @@ iterate_t_vvv(
       mu_i.row(k - 1) =
           rmvnorm(1, mean_i, var_i);   // sample from posterior for mu
     }
-    df_sim_mu.row(i) = vectorise(mu_i, 1);
 
     // Update lambda
     mat mu_i_long(n, d);
     for (int j = 0; j < n; j++) {
-      mu_i_long.row(j) = mu_i.row(df_sim_z(i - 1, j) - 1);
+      mu_i_long.row(j) = mu_i.row(z(j) - 1);
     }
     vec beta_d(d);
     beta_d.fill(beta);
     mat Vinv = diagmat(beta_d);
     for (int k = 1; k <= q; k++) {
-      uvec index_1k = find(df_sim_z.row(i - 1) == k);
+      uvec index_1k = find(z == k);
       int n_i       = index_1k.n_elem;
       mat sumofsq   = (Y.rows(index_1k) - mu_i_long.rows(index_1k)).t() *
                     diagmat(w(index_1k)) *
                     (Y.rows(index_1k) - mu_i_long.rows(index_1k));
       mat lambda_i       = rwish(n_i + alpha, inv(Vinv + sumofsq));
-      mat sigma_i        = inv(lambda_i);
       lambda_list[k - 1] = lambda_i;
-      sigma_list[k - 1]  = sigma_i;
+      sigma_list[k - 1]  = inv(lambda_i);
     }
-    df_sim_lambda[i] = lambda_list;
 
     // Update z and w
     double w_alpha = (d + 4) / 2;   // shape parameter
     double w_beta;
-    df_sim_z.row(i)    = df_sim_z.row(i - 1);
     IntegerVector qvec = seq_len(q);
     NumericVector plogLikj(n, NA_REAL);
     for (int j = 0; j < n; j++) {
-      int z_j_prev = df_sim_z(i, j);
+      int z_j_prev = z(j);
       mat lambda_i = lambda_list[z_j_prev - 1];
       mat sigma_i  = sigma_list[z_j_prev - 1];
       w_beta       = as_scalar(
@@ -656,18 +662,15 @@ iterate_t_vvv(
       int z_j_new          = sample(qlessk, 1)[0];
       mat sigma_i_new      = sigma_list[z_j_new - 1];
       uvec j_vector        = df_j[j];
-      uvec i_vector(1);
-      i_vector.fill(i);
       double h_z_prev;
       double h_z_new;
       if (j_vector.size() != 0) {
-        h_z_prev = gamma / j_vector.size() * 2 *
-                       accu((df_sim_z(i_vector, j_vector) == z_j_prev)) +
-                   dmvnrm_arma_fast(
-                       Y.row(j), mu_i.row(z_j_prev - 1), sigma_i / w[j], true
-                   )[0];
-        h_z_new = gamma / j_vector.size() * 2 *
-                      accu((df_sim_z(i_vector, j_vector) == z_j_new)) +
+        h_z_prev =
+            gamma / j_vector.size() * 2 * accu((z(j_vector) == z_j_prev)) +
+            dmvnrm_arma_fast(
+                Y.row(j), mu_i.row(z_j_prev - 1), sigma_i / w[j], true
+            )[0];
+        h_z_new = gamma / j_vector.size() * 2 * accu((z(j_vector) == z_j_new)) +
                   dmvnrm_arma_fast(
                       Y.row(j), mu_i.row(z_j_new - 1), sigma_i_new / w[j], true
                   )[0];
@@ -685,14 +688,22 @@ iterate_t_vvv(
       }
       IntegerVector zsample = {z_j_prev, z_j_new};
       NumericVector probs   = {1 - prob_j, prob_j};
-      df_sim_z(i, j)        = sample(zsample, 1, true, probs)[0];
+      z(j)                  = sample(zsample, 1, true, probs)[0];
       plogLikj[j]           = h_z_prev;
     }
     plogLik[i] = sum(plogLikj);
+
+    // Save samples for every a few iterations.
+    if ((i + 1) % thin == 0) {
+      df_sim_mu.row((i + 1) / thin) = vectorise(mu_i, 1);
+      df_sim_lambda[(i + 1) / thin] = lambda_list;
+      df_sim_w.row((i + 1) / thin)  = w.t();
+      df_sim_z.row((i + 1) / thin)  = z.t();
+    }
   }
   List out = List::create(
       _["z"] = df_sim_z, _["mu"] = df_sim_mu, _["lambda"] = df_sim_lambda,
-      _["weights"] = w, _["plogLik"] = plogLik
+      _["weights"] = df_sim_w, _["plogLik"] = plogLik
   );
   return (out);
 }
@@ -732,7 +743,7 @@ List
 iterate_deconv(
     const arma::mat &subspot_positions, const double dist,
     const CharacterVector &spot_neighbors, arma::mat &Y, bool tdist, int nrep,
-    int n, int n0, int d, double gamma, int q, const arma::uvec &init,
+    int thin, int n, int n0, int d, double gamma, int q, const arma::uvec &init,
     int subspots, bool verbose, double jitter_scale, int adapt_before, double c,
     const NumericVector &mu0, const arma::mat &lambda0, double alpha,
     double beta, int thread_num = 1
@@ -769,11 +780,11 @@ iterate_deconv(
                                    // on subspot level.
   DoubleStatesVector<double> log_likelihoods(n
   );   // The log-likelihoods on subspot level.
-  umat df_sim_z(nrep / 100 + 1, n, fill::zeros);
-  mat df_sim_mu(nrep, d * q, fill::zeros);
-  List df_sim_lambda(nrep / 100 + 1);
-  List df_sim_Y(nrep / 100 + 1);
-  mat df_sim_w(nrep / 100 + 1, n);
+  umat df_sim_z(nrep / thin + 1, n, fill::zeros);
+  mat df_sim_mu(nrep / thin + 1, d * q, fill::zeros);
+  List df_sim_lambda(nrep / thin + 1);
+  List df_sim_Y(nrep / thin + 1);
+  mat df_sim_w(nrep / thin + 1, n);
   NumericVector Ychange(nrep, NA_REAL);
   NumericVector plogLik(nrep, NA_REAL);
 
@@ -883,7 +894,7 @@ iterate_deconv(
               var_i * (lambda0 * mu0vec + lambda_i * as<colvec>(Ysums));
           mu_i.row(k - 1) = rmvnorm(1, mean_i, var_i);
         }
-        df_sim_mu.row(i) = vectorise(mu_i, 1);
+        // df_sim_mu.row(i) = vectorise(mu_i, 1);
 
         // Update lambda
         for (int j = 0; j < n; j++) {
@@ -1069,12 +1080,13 @@ iterate_deconv(
 
 #pragma omp single
       {
-        // Save samples for every 100 iterations.
-        if ((i + 1) % 100 == 0) {
-          df_sim_lambda[(i + 1) / 100] = lambda_i;
-          df_sim_Y[(i + 1) / 100]      = Y;
-          df_sim_w.row((i + 1) / 100)  = w.t();
-          df_sim_z.row((i + 1) / 100)  = z.t();
+        // Save samples for every a few iterations.
+        if ((i + 1) % thin == 0) {
+          df_sim_mu.row((i + 1) / thin) = vectorise(mu_i, 1);
+          df_sim_lambda[(i + 1) / thin] = lambda_i;
+          df_sim_Y[(i + 1) / thin]      = Y;
+          df_sim_w.row((i + 1) / thin)  = w.t();
+          df_sim_z.row((i + 1) / thin)  = z.t();
         }
 
         // #ifdef _OPENMP
@@ -1095,7 +1107,7 @@ iterate_deconv(
         // #endif
       }
 
-      if ((i + 1) % 100 == 0 && early_stop > 0)
+      if ((i + 1) % thin == 0 && early_stop > 0)
         i = nrep;
 
 #pragma omp barrier

@@ -111,7 +111,7 @@ NULL
 #' @keywords internal
 #' @importFrom stats cov
 #' @importFrom purrr discard
-deconvolve <- function(Y, positions, xdist, ydist, scalef, q, spot_neighbors, init, nrep = 1000,
+deconvolve <- function(Y, positions, xdist, ydist, scalef, q, spot_neighbors, init, nrep = 1000, thin = 100,
                        model = "normal", platform = c("Visium", "VisiumHD", "ST"), verbose = TRUE,
                        jitter_scale = 5, jitter_prior = 0.01, adapt.before = 100, mu0 = colMeans(Y), gamma = 2,
                        lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01, cores = 1) {
@@ -144,7 +144,7 @@ deconvolve <- function(Y, positions, xdist, ydist, scalef, q, spot_neighbors, in
     subspot_positions = positions2,
     dist = as.numeric(shift$dist),
     spot_neighbors = spot_neighbors,
-    Y = Y2, tdist = tdist, nrep = nrep, n = n, n0 = n0,
+    Y = Y2, tdist = tdist, nrep = nrep, thin = thin, n = n, n0 = n0,
     d = d, gamma = gamma, q = q, init = init1, subspots = subspots, verbose = verbose,
     jitter_scale = jitter_scale, adapt_before = adapt.before, c = c, mu0 = mu0,
     lambda0 = lambda0, alpha = alpha, beta = beta, thread_num = cores
@@ -464,26 +464,27 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "VisiumHD", "ST"),
     rowData = rowData(sce), colData = cdata
   )
 
-  ## Scale burn.in period to thinned intervals, and
-  ## add one to skip initialization values stored before first iteration
-  burn.in <- (burn.in %/% thin) + 1
+  ## Scale burn.in period to thinned intervals
+  .burn.in <- burn.in %/% thin
+  .nrep <- nrep %/% thin
 
   ## Average PCs, excluding burn-in
-  deconv_PCs <- Reduce(`+`, deconv$Y[-seq_len(burn.in)]) / (length(deconv$Y) - burn.in)
+  deconv_PCs <- Reduce(`+`, deconv$Y[-seq_len(.burn.in + 1)]) / (.nrep - .burn.in)
   colnames(deconv_PCs) <- paste0("PC", seq_len(ncol(deconv_PCs)))
   reducedDim(enhanced, "PCA") <- deconv_PCs
 
   ## Choose modal cluster label, excluding burn-in
   message(
-    "Calculating labels using iterations ", (burn.in - 1) * thin,
+    "Calculating labels using iterations ", burn.in + 1,
     " through ", nrep, "."
   )
-  zs <- deconv$z[seq(burn.in, (nrep %/% thin) + 1), ]
-  if (burn.in == (nrep %/% thin) + 1) {
+  zs <- deconv$z[seq(.burn.in + 2, .nrep + 1), ]
+  if (.burn.in + 1 == .nrep) {
     labels <- matrix(zs, nrow = 1)
-  } else {
+  } # if only one iteration kept, return it
+  else {
     labels <- apply(zs, 2, Mode)
-  }
+  } # else take modal assignment
 
   enhanced$spatial.cluster <- unname(labels)
 

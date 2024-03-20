@@ -14,6 +14,7 @@ deconvolve(
   spot_neighbors,
   init,
   nrep = 1000,
+  thin = 100,
   model = "normal",
   platform = c("Visium", "VisiumHD", "ST"),
   verbose = TRUE,

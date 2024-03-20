@@ -16,6 +16,7 @@ spatialCluster(
   precision = c("equal", "variable"),
   nrep = 50000,
   burn.in = 1000,
+  thin = 100,
   gamma = NULL,
   mu0 = NULL,
   lambda0 = NULL,

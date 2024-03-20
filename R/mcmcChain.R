@@ -178,16 +178,6 @@ NULL
 .clean_chain <- function(out, method = c("cluster", "enhance"), thin=100) 
 {
     method <- match.arg(method)
-    n_iter <- nrow(out$z)  # this is technically n_iters / 100 for enhance
-
-    ## Only one iteration included; need to cast vectors back to matrices
-    if (is.null(n_iter)) {
-        out$z <- matrix(out$z, nrow=1)
-        out$mu <- matrix(out$mu, nrow=1)
-        if ("weights" %in% names(out)) {
-            out$weights <- matrix(out$mu, nrow=1)
-        }
-    }
 
     n <- ncol(out$z)
     d <- ncol(out$lambda[[1]])
@@ -209,20 +199,6 @@ NULL
         
         out$Ychange <- as.matrix(out$Ychange)
         colnames(out$Ychange) <- c("Ychange")
-    }
-    
-    if (method == "enhance") {
-        ## manually thin mu until updated in c++; 
-        ## keep init values for consistency with others
-        thinned_idx <- c(1, seq(thin, (n_iter - 1) * thin, thin))
-        out$mu <- out$mu[thinned_idx, ]
-        
-        ## Subset of a one-column matrix is a vector, not a matrix
-        out$Ychange <- as.matrix(out$Ychange[thinned_idx, ])
-        colnames(out$Ychange) <- c("Ychange")
-        
-        out$plogLik <- as.matrix(out$plogLik[thinned_idx, ])
-        colnames(out$plogLik) <- c("pLogLikelihood")
     }
     
     out

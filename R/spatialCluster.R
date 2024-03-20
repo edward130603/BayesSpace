@@ -70,7 +70,7 @@ cluster <- function(
     Y, q, df_j, init = rep(1, nrow(Y)),
     model = c("t", "normal"), precision = c("equal", "variable"),
     mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)),
-    gamma = 3, alpha = 1, beta = 0.01, nrep = 1000) {
+    gamma = 3, alpha = 1, beta = 0.01, nrep = 1000, thin = 100) {
     Y <- as.matrix(Y)
     d <- ncol(Y)
     n <- nrow(Y)
@@ -105,7 +105,7 @@ cluster <- function(
     }
 
     cluster.FUN(
-        Y = as.matrix(Y), df_j = df_j, nrep = nrep, n = n, d = d, gamma = gamma,
+        Y = as.matrix(Y), df_j = df_j, nrep = nrep, thin = thin, n = n, d = d, gamma = gamma,
         q = q, init = init, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta
     )
 }
@@ -122,14 +122,14 @@ spatialCluster <- function(
     platform = c("Visium", "VisiumHD", "ST"),
     init = NULL, init.method = c("mclust", "kmeans"),
     model = c("t", "normal"), precision = c("equal", "variable"),
-    nrep = 50000, burn.in = 1000, gamma = NULL, mu0 = NULL, lambda0 = NULL,
+    nrep = 50000, burn.in = 1000, thin = 100, gamma = NULL, mu0 = NULL, lambda0 = NULL,
     alpha = 1, beta = 0.01, save.chain = FALSE, chain.fname = NULL) {
     if (!(use.dimred %in% reducedDimNames(sce))) {
         stop("reducedDim \"", use.dimred, "\" not found in input SCE.")
     }
 
     ## Require at least one iteration and non-negative burn-in
-    assert_that(nrep >= 1)
+    assert_that(nrep >= 100)
     assert_that(burn.in >= 0)
     if (burn.in >= nrep) {
         stop("Please specify a burn-in period shorter than the total number of iterations.")
@@ -152,11 +152,11 @@ spatialCluster <- function(
     .neighbors <- .find_neighbors(sce, platform)
     sce <- .neighbors[[1]]
     df_j <- .neighbors[[2]]
-    
+
     ## Initialize cluster assignments
     init <- .init_cluster(Y, q, init, init.method)
     if (is.null(init)) {
-      stop("Empty initialization. Please use a different initialization method.")
+        stop("Empty initialization. Please use a different initialization method.")
     }
 
     ## Set model parameters
@@ -185,7 +185,7 @@ spatialCluster <- function(
 
     ## Save MCMC chain
     if (save.chain) {
-        results <- .clean_chain(results)
+        results <- .clean_chain(results, thin = thin)
         metadata(sce)$chain.h5 <- .write_chain(results, chain.fname)
     }
 
@@ -198,9 +198,11 @@ spatialCluster <- function(
     metadata(sce)$BayesSpace.data$is.enhanced <- FALSE
 
     ## Save modal cluster assignments, excluding burn-in
-    message("Calculating labels using iterations ", burn.in, " through ", nrep, ".")
-    zs <- results$z[seq(burn.in + 1, nrep), ]
-    if (burn.in + 1 == nrep) {
+    message("Calculating labels using iterations ", burn.in + 1, " through ", nrep, ".")
+    .burn.in <- burn.in %/% thin
+    .nrep <- nrep %/% thin
+    zs <- results$z[seq(.burn.in + 2, .nrep + 1), ]
+    if (.burn.in + 1 == .nrep) {
         labels <- matrix(zs, nrow = 1)
     } # if only one iteration kept, return it
     else {
@@ -267,20 +269,20 @@ spatialCluster <- function(
     ## this makes it easier to keep empty lists for spots with no neighbors
     ## (as expected by C++ code)
     df_j <- map(df_j, function(nbrs) discard(nbrs, function(x) is.na(x)))
-    
+
     ## Save spot neighbors to sce for later usage in enhancement
     sce$spot.neighbors <- vapply(
-      df_j,
-      function(x) {
-        if (length(x) == 0) {
-          return(NA_character_)
-        } else {
-          return(paste0(x, collapse = ","))
-        }
-      },
-      FUN.VALUE = character(1)
+        df_j,
+        function(x) {
+            if (length(x) == 0) {
+                return(NA_character_)
+            } else {
+                return(paste0(x, collapse = ","))
+            }
+        },
+        FUN.VALUE = character(1)
     )
-    
+
     ## Shift to zero-indexing for C++
     df_j <- map(df_j, function(x) x - 1)
 
@@ -290,10 +292,10 @@ spatialCluster <- function(
         "Neighbors were identified for ", n_with_neighbors, " out of ",
         ncol(sce), " spots."
     )
-    
+
     list(
-      sce,
-      unname(df_j)
+        sce,
+        unname(df_j)
     )
 }
 
