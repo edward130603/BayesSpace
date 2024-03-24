@@ -80,7 +80,8 @@ is set to a diagonal matrix \eqn{0.01 I}.}
 \item{burn.in}{Number of iterations to exclude as burn-in period. The MCMC
 iterations are currently thinned to every 100; accordingly \code{burn.in}
 is rounded down to the nearest multiple of 100. If a value no larger than 1
-is set, it is considered as a percentage.}
+is set, it is considered as a percentage. It is always considered as
+percentage for \code{adjustClusterLabels}.}
 
 \item{jitter_scale}{Controls the amount of jittering. Small amounts of
 jittering are more likely to be accepted but result in exploring the space

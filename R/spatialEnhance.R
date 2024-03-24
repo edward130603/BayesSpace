@@ -30,7 +30,8 @@
 #' @param burn.in Number of iterations to exclude as burn-in period. The MCMC
 #'   iterations are currently thinned to every 100; accordingly \code{burn.in}
 #'   is rounded down to the nearest multiple of 100. If a value no larger than 1
-#'   is set, it is considered as a percentage.
+#'   is set, it is considered as a percentage. It is always considered as
+#'   percentage for \code{adjustClusterLabels}.
 #' @param jitter_scale Controls the amount of jittering. Small amounts of
 #'   jittering are more likely to be accepted but result in exploring the space
 #'   more slowly. We suggest tuning \code{jitter_scale} so that Ychange is on
@@ -578,15 +579,15 @@ coreTune <- function(sce, test.cores = detectCores(), test.times = 1, ...) {
 #' @rdname spatialEnhance
 adjustClusterLabels <- function(sce, burn.in) {
   zsamples <- mcmcChain(sce, "z")
-  n_iter <- nrow(zsamples) - 1 # this is technically n_iters / 100
 
-  assert_that(burn.in >= 0)
-  if (burn.in < 1) {
-    burn.in <- as.integer(n_iter * burn.in)
-  }
+  assert_that(
+    burn.in >= 0,
+    burn.in < 1
+  )
+  burn.in <- as.integer((nrow(zsamples) - 1) * burn.in)
 
-  zs <- zsamples[seq(burn.in, n_iter + 1), ]
-  if (burn.in == n_iter + 1) {
+  zs <- zsamples[seq(burn.in + 2, nrow(zsamples)), ]
+  if (burn.in + 2 == nrow(zsamples)) {
     labels <- matrix(zs, nrow = 1)
   } else {
     labels <- apply(zs, 2, Mode)
