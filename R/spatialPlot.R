@@ -13,6 +13,8 @@
 #'   for each platform will be plotted.\cr
 #'   NOTE: specifying this argument is only necessary if \code{sce} was not
 #'   created by \code{spatialCluster()} or \code{spatialEnhance()}.
+#' @param nsubspots.per.edge Number of subspots per edge of the square. Only
+#'   valid when \code{platform} is 'ST' or 'VisiumHD'.
 #'
 #' @keywords internal
 #' @name spatialPlot
@@ -44,6 +46,7 @@ palette <- c("#0173b2", "#de8f05", "#029e73", "#d55e00", "#cc78bc",
 clusterPlot <- function(sce, label="spatial.cluster",
                         palette=NULL, color=NULL,
                         platform=NULL, is.enhanced=NULL,
+                        nsubspots.per.edge = 3,
                         ...) {
     
     if (is.null(platform))
@@ -51,7 +54,8 @@ clusterPlot <- function(sce, label="spatial.cluster",
     if (is.null(is.enhanced))
         is.enhanced <- .bsData(sce, "is.enhanced", FALSE)
     
-    vertices <- .make_vertices(sce, label, platform, is.enhanced)
+    vertices <- .make_vertices(sce, label, platform, is.enhanced,
+                               nsubspots.per.edge)
     
     ## No borders around subspots by default
     if (is.null(color)) {
@@ -104,6 +108,7 @@ featurePlot <- function(sce, feature,
                         low=NULL, high=NULL, mid=NULL,
                         color=NULL,
                         platform=NULL, is.enhanced=NULL,
+                        nsubspots.per.edge = 3,
                         ...) {
     
     if (is.null(platform))
@@ -127,7 +132,7 @@ featurePlot <- function(sce, feature,
         fill.name <- "Expression"
     }
     
-    vertices <- .make_vertices(sce, fill, platform, is.enhanced)
+    vertices <- .make_vertices(sce, fill, platform, is.enhancedl, nsubspots.per.edge)
     
     ## No borders around subspots by default
     if (is.null(color)) {
@@ -190,7 +195,8 @@ featurePlot <- function(sce, feature,
 #'   vertices outlining the spot's border
 #' 
 #' @keywords internal
-.make_vertices <- function(sce, fill, platform, is.enhanced) {
+.make_vertices <- function(sce, fill, platform, is.enhanced,
+                           nsubspots.per.edge = 3) {
     cdata <- data.frame(colData(sce))
     coord.multiplier <- .flip_axis(sce, platform)
     
@@ -202,7 +208,7 @@ featurePlot <- function(sce, feature,
         }
     } else if (platform %in% c("VisiumHD", "ST")) {
         if (is.enhanced) {
-            vertices <- .make_square_spots(cdata, fill, scale.factor = 1/3, offset = -1/6, coord.multiplier = coord.multiplier)
+            vertices <- .make_square_spots(cdata, fill, scale.factor = 1/nsubspots.per.edge, offset = -1/(2*nsubspots.per.edge), coord.multiplier = coord.multiplier)
         } else {
             vertices <- .make_square_spots(cdata, fill, coord.multiplier = coord.multiplier)
         }

@@ -14,7 +14,7 @@
 #'   \code{reducedDims(sce)}. If provided, cluster on these features directly.
 #' @param d Number of top principal components to use when clustering.
 #' @param nsubspots.per.edge Number of subspots per edge of the square. Only
-#'   valid when \code{platform} is 'ST' and 'VisiumHD'.
+#'   valid when \code{platform} is 'ST' or 'VisiumHD'.
 #' @param init Initial cluster assignments for spots.
 #' @param init.method If \code{init} is not provided, cluster the top \code{d}
 #'   PCs with this method to obtain initial cluster assignments.
