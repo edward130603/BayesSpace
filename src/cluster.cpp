@@ -803,12 +803,7 @@ iterate_deconv(
   const colvec mu0vec = as<colvec>(mu0);
   mat mu_i(q, d);
   mat mu_i_long(n, d);
-  uvec j0_vector;
-  if (subspots == 6) {
-    j0_vector = {0, 1, 2, 3, 4, 5};
-  } else {
-    j0_vector = {0, 1, 2, 3, 4, 5, 6, 7, 8};
-  }
+  const uvec j0_vector = linspace<uvec>(0, subspots - 1, subspots);
   mat error(n, d);
   const double w_alpha     = (d + 4) / 2;   // shape parameter
   const IntegerVector qvec = seq_len(q);

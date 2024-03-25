@@ -13,6 +13,8 @@
 #' @param use.dimred Name of a reduced dimensionality result in
 #'   \code{reducedDims(sce)}. If provided, cluster on these features directly.
 #' @param d Number of top principal components to use when clustering.
+#' @param nsubspots.per.edge Number of subspots per edge of the square. Only
+#'   valid when \code{platform} is 'ST' and 'VisiumHD'.
 #' @param init Initial cluster assignments for spots.
 #' @param init.method If \code{init} is not provided, cluster the top \code{d}
 #'   PCs with this method to obtain initial cluster assignments.
@@ -32,17 +34,17 @@
 #'   is rounded down to the nearest multiple of 100. If a value no larger than 1
 #'   is set, it is considered as a percentage. It is always considered as
 #'   percentage for \code{adjustClusterLabels}.
-#' @param jitter_scale Controls the amount of jittering. Small amounts of
+#' @param jitter.scale Controls the amount of jittering. Small amounts of
 #'   jittering are more likely to be accepted but result in exploring the space
-#'   more slowly. We suggest tuning \code{jitter_scale} so that Ychange is on
+#'   more slowly. We suggest tuning \code{jitter.scale} so that Ychange is on
 #'   average around 25\%-40\%. Ychange can be accessed via \code{mcmcChain()}.
 #'   Alternatively, set it to 0 to activate adaptive MCMC.
 #' @param adapt.before Adapting the MCMC chain before the specified number
 #'   or proportion of iterations (by default equal to \code{burn.in}; set to 0
-#'   to always adapt). Only valid when \code{jitter_scale} is 0.
-#' @param jitter_prior Scale factor for the prior variance, parameterized as the
+#'   to always adapt). Only valid when \code{jitter.scale} is 0.
+#' @param jitter.prior Scale factor for the prior variance, parameterized as the
 #'   proportion (default = 0.3) of the mean variance of the PCs.
-#'   We suggest making \code{jitter_prior} smaller if the jittered values are
+#'   We suggest making \code{jitter.prior} smaller if the jittered values are
 #'   not expected to vary much from the overall mean of the spot.
 #' @param cores The number of threads to use. The results are invariate to the
 #'   value of \code{cores}.
@@ -113,25 +115,25 @@ NULL
 #' @importFrom stats cov
 #' @importFrom purrr discard
 deconvolve <- function(Y, positions, xdist, ydist, scalef, q, spot_neighbors, init, nrep = 1000, thin = 100,
-                       model = "normal", platform = c("Visium", "VisiumHD", "ST"), verbose = TRUE,
-                       jitter_scale = 5, jitter_prior = 0.01, adapt.before = 100, mu0 = colMeans(Y), gamma = 2,
+                       model = "normal", platform = c("Visium", "VisiumHD", "ST"), nsubspots.per.edge = 3, verbose = TRUE,
+                       jitter.scale = 5, jitter.prior = 0.01, adapt.before = 100, mu0 = colMeans(Y), gamma = 2,
                        lambda0 = diag(0.01, nrow = ncol(Y)), alpha = 1, beta = 0.01, cores = 1) {
   d <- ncol(Y)
   n0 <- nrow(Y)
   Y <- as.matrix(Y)
-  c <- jitter_prior * 1 / (2 * mean(diag(cov(Y))))
+  c <- jitter.prior * 1 / (2 * mean(diag(cov(Y))))
 
   positions <- as.matrix(positions)
   colnames(positions) <- c("x", "y")
 
   platform <- match.arg(platform)
-  subspots <- ifelse(platform == "Visium", 6, 9)
+  subspots <- ifelse(platform == "Visium", 6, nsubspots.per.edge^2)
 
   init1 <- rep(init, subspots)
-  Y2 <- Y[rep(seq_len(n0), subspots), ] # rbind 6 or 9 times
-  positions2 <- positions[rep(seq_len(n0), subspots), ] # rbind 7 times
+  Y2 <- Y[rep(seq_len(n0), subspots), ]
+  positions2 <- positions[rep(seq_len(n0), subspots), ]
   
-  shift <- .make_subspots(platform, xdist, ydist, scalef)
+  shift <- .make_subspots(platform, xdist, ydist, nsubspots.per.edge = nsubspots.per.edge)
   shift_long <- shift$shift[rep(seq_len(subspots), each = n0), ]
   positions2[, "x"] <- positions2[, "x"] + shift_long[, "x"]
   positions2[, "y"] <- positions2[, "y"] + shift_long[, "y"]
@@ -147,7 +149,7 @@ deconvolve <- function(Y, positions, xdist, ydist, scalef, q, spot_neighbors, in
     spot_neighbors = spot_neighbors,
     Y = Y2, tdist = tdist, nrep = nrep, thin = thin, n = n, n0 = n0,
     d = d, gamma = gamma, q = q, init = init1, subspots = subspots, verbose = verbose,
-    jitter_scale = jitter_scale, adapt_before = adapt.before, c = c, mu0 = mu0,
+    jitter_scale = jitter.scale, adapt_before = adapt.before, c = c, mu0 = mu0,
     lambda0 = lambda0, alpha = alpha, beta = beta, thread_num = cores
   )
 
@@ -179,7 +181,7 @@ deconvolve <- function(Y, positions, xdist, ydist, scalef, q, spot_neighbors, in
 #'
 #' @importFrom assertthat assert_that
 .make_subspots <- function(
-    platform, xdist, ydist, force = FALSE, num_subspots_per_edge = 3, tolerance = 1.05
+    platform, xdist, ydist, force = FALSE, nsubspots.per.edge = 3, tolerance = 1.05
 ) {
   if (platform == "Visium") {
     if (abs(xdist) >= abs(ydist) && !force) {
@@ -201,7 +203,7 @@ deconvolve <- function(Y, positions, xdist, ydist, scalef, q, spot_neighbors, in
       )
     )
   } else if (platform %in% c("VisiumHD", "ST")) {
-    vec <- .make_square_vec(3, tolerance)
+    vec <- .make_square_vec(nsubspots.per.edge, tolerance)
 
     shift <- expand.grid(
       list(
@@ -230,16 +232,16 @@ deconvolve <- function(Y, positions, xdist, ydist, scalef, q, spot_neighbors, in
 }
 
 #' @keywords internal
-.make_square_vec <- function(num_subspots_per_edge, tolerance = 1.05) {
+.make_square_vec <- function(nsubspots.per.edge, tolerance = 1.05) {
   stopifnot(tolerance > 1)
 
   list(
     vec = seq(
-      1 / (2 * num_subspots_per_edge),
+      1 / (2 * nsubspots.per.edge),
       1,
-      by = 1 / num_subspots_per_edge
+      by = 1 / nsubspots.per.edge
     ) - 1 / 2,
-    dist = tolerance / num_subspots_per_edge
+    dist = tolerance / nsubspots.per.edge
   )
 }
 
@@ -291,13 +293,13 @@ deconvolve <- function(Y, positions, xdist, ydist, scalef, q, spot_neighbors, in
 #' @keywords internal
 #' @importFrom assertthat assert_that
 .make_subspot_coldata <- function(
-    cdata, sce, subspot_neighbors, platform, num_subspots_per_edge = 3
+    cdata, sce, subspot_neighbors, platform, nsubspots.per.edge = 3
 ) {
   if (platform == "Visium") {
     n_subspots_per <- 6
     colnames(cdata) <- c("pxl_col_in_fullres", "pxl_row_in_fullres")
   } else if (platform %in% c("VisiumHD", "ST")) {
-    n_subspots_per <- num_subspots_per_edge ^ 2
+    n_subspots_per <- nsubspots.per.edge ^ 2
     colnames(cdata) <- c("array_col", "array_row")
   } else {
     stop("Only Visium, VisumHD, and ST are supported.")
@@ -318,7 +320,7 @@ deconvolve <- function(Y, positions, xdist, ydist, scalef, q, spot_neighbors, in
   rownames(cdata) <- paste0("subspot_", spot_idxs, ".", subspot_idxs)
 
   # w.r.t. the coordinate system of array
-  array_offsets <- .make_subspots(platform, 1, 1, TRUE, num_subspots_per_edge)$shift
+  array_offsets <- .make_subspots(platform, 1, 1, TRUE, nsubspots.per.edge)$shift
   
   cdata$spot.row <- rep(sce$array_row, n_subspots_per)
   cdata$spot.col <- rep(sce$array_col, n_subspots_per)
@@ -342,7 +344,7 @@ deconvolve <- function(Y, positions, xdist, ydist, scalef, q, spot_neighbors, in
       dist <- .compute_interspot_distances(sce)
       
       # w.r.t. the coordinate system of the full resolution image
-      pxl_offsets <- .make_subspots(platform, dist$xdist, dist$ydist, num_subspots_per_edge)$shift
+      pxl_offsets <- .make_subspots(platform, dist$xdist, dist$ydist, nsubspots.per.edge = nsubspots.per.edge)$shift
       
       cdata$pxl_col_in_fullres <- cdata$spot.pxl.col + rep(pxl_offsets[, "x"], each = n_spots)
       cdata$pxl_row_in_fullres <- cdata$spot.pxl.row + rep(pxl_offsets[, "y"], each = n_spots)
@@ -364,12 +366,12 @@ deconvolve <- function(Y, positions, xdist, ydist, scalef, q, spot_neighbors, in
 #' @importFrom SummarizedExperiment rowData
 #' @importFrom assertthat assert_that
 spatialEnhance <- function(sce, q, platform = c("Visium", "VisiumHD", "ST"),
-                           use.dimred = "PCA", d = 15,
+                           use.dimred = "PCA", d = 15, nsubspots.per.edge = 3,
                            init = NULL, init.method = c("spatialCluster", "mclust", "kmeans"),
-                           model = c("t", "normal"), nrep = 200000, gamma = NULL,
+                           model = c("t", "normal"), nrep = 100000, gamma = NULL,
                            mu0 = NULL, lambda0 = NULL, alpha = 1, beta = 0.01,
                            save.chain = FALSE, chain.fname = NULL, burn.in = 10000,
-                           jitter_scale = 5, jitter_prior = 0.3, adapt.before = burn.in, cores = 1,
+                           jitter.scale = 5, jitter.prior = 0.3, adapt.before = burn.in, cores = 1,
                            verbose = FALSE) {
   assert_that(nrep >= 100) # require at least one iteration after thinning
   assert_that(burn.in >= 0)
@@ -379,7 +381,7 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "VisiumHD", "ST"),
     burn.in <- as.integer(nrep * burn.in)
   }
 
-  if (jitter_scale == 0) {
+  if (jitter.scale == 0) {
     assert_that(adapt.before >= 0)
 
     if (adapt.before >= nrep) {
@@ -450,15 +452,15 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "VisiumHD", "ST"),
     nrep = nrep, gamma = gamma,
     xdist = inputs$xdist, ydist = inputs$ydist, scalef = .bsData(sce, "scalef"),
     q = q, spot_neighbors = sce$spot.neighbors, init = init, model = model,
-    platform = platform, verbose = verbose, jitter_scale = jitter_scale,
-    jitter_prior = jitter_prior, adapt.before = adapt.before, mu0 = mu0,
-    lambda0 = lambda0, alpha = alpha, beta = beta, cores = cores
+    platform = platform, nsubspots.per.edge = nsubspots.per.edge,
+    verbose = verbose, jitter.scale = jitter.scale, jitter.prior = jitter.prior,
+    adapt.before = adapt.before, mu0 = mu0, lambda0 = lambda0, alpha = alpha,
+    beta = beta, cores = cores
   )
 
   ## Create enhanced SCE
-  n_subspots_per <- ifelse(platform == "Visium", 6, 9)
   cdata <- .make_subspot_coldata(
-    as.data.frame(deconv$positions), sce, deconv$df_j, platform, 3
+    as.data.frame(deconv$positions), sce, deconv$df_j, platform, nsubspots.per.edge
   )
   enhanced <- SingleCellExperiment(
     assays = list(),

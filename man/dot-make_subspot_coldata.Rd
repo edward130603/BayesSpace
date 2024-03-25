@@ -42,7 +42,7 @@ Add subspot labels and offset row/col locations before making enhanced SCE.}
   sce,
   subspot_neighbors,
   platform,
-  num_subspots_per_edge = 3
+  nsubspots.per.edge = 3
 )
 }
 \arguments{

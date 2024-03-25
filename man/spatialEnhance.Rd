@@ -12,10 +12,11 @@ spatialEnhance(
   platform = c("Visium", "VisiumHD", "ST"),
   use.dimred = "PCA",
   d = 15,
+  nsubspots.per.edge = 3,
   init = NULL,
   init.method = c("spatialCluster", "mclust", "kmeans"),
   model = c("t", "normal"),
-  nrep = 2e+05,
+  nrep = 1e+05,
   gamma = NULL,
   mu0 = NULL,
   lambda0 = NULL,
@@ -24,8 +25,8 @@ spatialEnhance(
   save.chain = FALSE,
   chain.fname = NULL,
   burn.in = 10000,
-  jitter_scale = 5,
-  jitter_prior = 0.3,
+  jitter.scale = 5,
+  jitter.prior = 0.3,
   adapt.before = burn.in,
   cores = 1,
   verbose = FALSE
@@ -51,6 +52,9 @@ metadata.}
 \code{reducedDims(sce)}. If provided, cluster on these features directly.}
 
 \item{d}{Number of top principal components to use when clustering.}
+
+\item{nsubspots.per.edge}{Number of subspots per edge of the square. Only
+valid when \code{platform} is 'ST' and 'VisiumHD'.}
 
 \item{init}{Initial cluster assignments for spots.}
 
@@ -83,20 +87,20 @@ is rounded down to the nearest multiple of 100. If a value no larger than 1
 is set, it is considered as a percentage. It is always considered as
 percentage for \code{adjustClusterLabels}.}
 
-\item{jitter_scale}{Controls the amount of jittering. Small amounts of
+\item{jitter.scale}{Controls the amount of jittering. Small amounts of
 jittering are more likely to be accepted but result in exploring the space
-more slowly. We suggest tuning \code{jitter_scale} so that Ychange is on
+more slowly. We suggest tuning \code{jitter.scale} so that Ychange is on
 average around 25\%-40\%. Ychange can be accessed via \code{mcmcChain()}.
 Alternatively, set it to 0 to activate adaptive MCMC.}
 
-\item{jitter_prior}{Scale factor for the prior variance, parameterized as the
+\item{jitter.prior}{Scale factor for the prior variance, parameterized as the
 proportion (default = 0.3) of the mean variance of the PCs.
-We suggest making \code{jitter_prior} smaller if the jittered values are
+We suggest making \code{jitter.prior} smaller if the jittered values are
 not expected to vary much from the overall mean of the spot.}
 
 \item{adapt.before}{Adapting the MCMC chain before the specified number
 or proportion of iterations (by default equal to \code{burn.in}; set to 0
-to always adapt). Only valid when \code{jitter_scale} is 0.}
+to always adapt). Only valid when \code{jitter.scale} is 0.}
 
 \item{cores}{The number of threads to use. The results are invariate to the
 value of \code{cores}.}
