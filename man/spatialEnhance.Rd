@@ -54,7 +54,7 @@ metadata.}
 \item{d}{Number of top principal components to use when clustering.}
 
 \item{nsubspots.per.edge}{Number of subspots per edge of the square. Only
-valid when \code{platform} is 'ST' and 'VisiumHD'.}
+valid when \code{platform} is 'ST' or 'VisiumHD'.}
 
 \item{init}{Initial cluster assignments for spots.}
 
@@ -123,7 +123,8 @@ the latter case, a list of values (power of 2) will be created}
 \code{coresTune} returns the output of \code{microbenchmark}.
 
 \code{adjustClusterLabels} adjusts the cluster labels from the MCMC samples
-  via \code{burn.in}. The MCMC chain must be retained.
+  via \code{burn.in}, the percentage of samples to drop. The MCMC chain
+  must be retained.
 }
 \description{
 Enhanced clustering of a spatial expression dataset to subspot resolution.

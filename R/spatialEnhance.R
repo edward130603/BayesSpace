@@ -63,7 +63,8 @@
 #' \code{coresTune} returns the output of \code{microbenchmark}.
 #'
 #' \code{adjustClusterLabels} adjusts the cluster labels from the MCMC samples
-#'   via \code{burn.in}. The MCMC chain must be retained.
+#'   via \code{burn.in}, the percentage of samples to drop. The MCMC chain
+#'   must be retained.
 #'
 #' @details
 #' The enhanced \code{SingleCellExperiment} has most of the properties of the

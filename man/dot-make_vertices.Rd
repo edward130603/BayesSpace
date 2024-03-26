@@ -4,7 +4,7 @@
 \alias{.make_vertices}
 \title{Make vertices outlining spots/subspots for geom_polygon()}
 \usage{
-.make_vertices(sce, fill, platform, is.enhanced)
+.make_vertices(sce, fill, platform, is.enhanced, nsubspots.per.edge = 3)
 }
 \arguments{
 \item{sce}{SingleCellExperiment with row/col in colData}
