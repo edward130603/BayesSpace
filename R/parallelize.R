@@ -107,7 +107,7 @@ paraLapply <- function(X, FUN, BPPARAM = NULL, cores = 1L, type = c("serial", "f
   if (verbose) {
     message(sprintf("[DEBUG] Provided effective arguments for the customized function: %s", .list2vec(.extra.args)))
   }
-
+  
   do.call(
     bplapply,
     c(

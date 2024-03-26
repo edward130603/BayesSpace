@@ -3,22 +3,35 @@
 \name{readVisium}
 \alias{readVisium}
 \alias{read10Xh5}
+\alias{counts2h5}
 \title{Load a Visium spatial dataset as a SingleCellExperiment.}
 \usage{
-readVisium(dirname)
+readVisium(
+  dirname,
+  rm.feats.pat = c("^NegControl.*", "^BLANK.*", "^DEPRECATED.*")
+)
 
-read10Xh5(dirname, fname = "filtered_feature_bc_matrix.h5")
+read10Xh5(
+  dirname,
+  fname = "filtered_feature_bc_matrix.h5",
+  rm.feats.pat = c("^NegControl.*", "^BLANK.*", "^DEPRECATED.*")
+)
+
+counts2h5(dirname)
 }
 \arguments{
 \item{dirname}{Path to spaceranger output directory (e.g. "sampleID/outs/").
 This directory must contain the counts matrix and feature/barcode TSVs in
 \code{filtered_feature_bc_matrix/} for \code{readVisium}, or in
 \code{filtered_feature_bc_matrix.h5} for \code{read10Xh5}. Besides, it
-must also contain a file for spot positions at
+must also contain a file for spot positions named
 \code{spatial/tissue_positions_list.csv} (before Space Ranger V2.0) or
-\code{spatial/tissue_positions.csv} (since Space Ranger V2.0).
+\code{spatial/tissue_positions.csv} (since Space Ranger V2.0), as well as
+a file containing scale factors named \code{spatial/scalefactors_json.json}.
 (To understand the output directory, refer to the corresponding
 \href{https://support.10xgenomics.com/spatial-gene-expression/software/pipelines/latest/output/overview}{10X Genomics help page}.)}
+
+\item{rm.feats.pat}{Patterns for features (genes) to remove.}
 
 \item{fname}{File name of the h5 file. It should be inside \code{dirname}.
 (By default "filtered_feature_bc_matrix.h5")}

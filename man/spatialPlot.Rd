@@ -20,6 +20,9 @@ spots. Spatial sequencing platform. If true, the respective subspot lattice
 for each platform will be plotted.\cr
 NOTE: specifying this argument is only necessary if \code{sce} was not
 created by \code{spatialCluster()} or \code{spatialEnhance()}.}
+
+\item{nsubspots.per.edge}{Number of subspots per edge of the square. Only
+valid when \code{platform} is 'ST' or 'VisiumHD'.}
 }
 \description{
 Spatial plotting functions

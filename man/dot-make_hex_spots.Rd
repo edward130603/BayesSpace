@@ -4,7 +4,7 @@
 \alias{.make_hex_spots}
 \title{Make vertices for each hex spot}
 \usage{
-.make_hex_spots(cdata, fill)
+.make_hex_spots(cdata, fill, coord.multiplier = list(x = 1, y = 1))
 }
 \value{
 Table of (x.pos, y.pos, spot, fill); where \code{spot} groups the

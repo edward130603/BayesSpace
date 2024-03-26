@@ -4,13 +4,19 @@
 \alias{.make_square_spots}
 \title{Make vertices for each square spot}
 \usage{
-.make_square_spots(cdata, fill = "spatial.cluster", scale.factor = 1)
+.make_square_spots(
+  cdata,
+  fill = "spatial.cluster",
+  scale.factor = 1,
+  offset = 0,
+  coord.multiplier = list(x = 1, y = 1)
+)
 }
 \value{
 Table of (x.pos, y.pos, spot, fill); where \code{spot} groups the
   vertices outlining the spot's border
 }
 \description{
-Squares are simple, just mae a unit square at each array coordinate
+Squares are simple, just make a unit square at each array coordinate
 }
 \keyword{internal}

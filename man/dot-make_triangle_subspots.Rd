@@ -4,7 +4,11 @@
 \alias{.make_triangle_subspots}
 \title{Make vertices for each triangle subspot of a hex}
 \usage{
-.make_triangle_subspots(cdata, fill = "spatial.cluster")
+.make_triangle_subspots(
+  cdata,
+  fill = "spatial.cluster",
+  coord.multiplier = list(x = 1, y = 1)
+)
 }
 \value{
 Table of (x.pos, y.pos, spot, fill); where \code{spot} groups the

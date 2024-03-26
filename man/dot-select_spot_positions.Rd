@@ -4,7 +4,12 @@
 \alias{.select_spot_positions}
 \title{Helper to extract x, y, fill ID from colData}
 \usage{
-.select_spot_positions(cdata, x = "col", y = "row", fill = "spatial.cluster")
+.select_spot_positions(
+  cdata,
+  x = "array_col",
+  y = "array_row",
+  fill = "spatial.cluster"
+)
 }
 \value{
 Dataframe of (x.pos, y.pos, fill) for each spot

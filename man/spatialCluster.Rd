@@ -9,13 +9,14 @@ spatialCluster(
   q,
   use.dimred = "PCA",
   d = 15,
-  platform = c("Visium", "ST"),
+  platform = c("Visium", "VisiumHD", "ST"),
   init = NULL,
   init.method = c("mclust", "kmeans"),
   model = c("t", "normal"),
   precision = c("equal", "variable"),
   nrep = 50000,
   burn.in = 1000,
+  thin = 100,
   gamma = NULL,
   mu0 = NULL,
   lambda0 = NULL,
@@ -36,10 +37,11 @@ spatialCluster(
 \item{d}{Number of top principal components to use when clustering.}
 
 \item{platform}{Spatial transcriptomic platform. Specify 'Visium' for hex
-lattice geometry or 'ST' for square lattice geometry. Specifying this
-parameter is optional when analyzing SingleCellExperiments processed using
-\code{\link{readVisium}} or \code{\link{spatialPreprocess}}, as this
-information is included in their metadata.}
+lattice geometry or 'ST' and 'VisiumHD' for square lattice geometry.
+Specifying this parameter is optional when analyzing SingleCellExperiments
+processed using \code{\link{readVisium}}, \code{\link{spatialPreprocess}},
+or \code{\link{spatialCluster}}, as this information is included in their
+metadata.}
 
 \item{init}{Initial cluster assignments for spots.}
 

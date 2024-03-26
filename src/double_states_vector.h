@@ -35,7 +35,7 @@ public:
 template <class T>
 DoubleStatesVector<T>::DoubleStatesVector(int n_row)
     : __col_idx(n_row, arma::fill::zeros), values(n_row, 2) {
-  std::vector<u_int32_t> tmp(n_row);
+  std::vector<arma::uword> tmp(n_row);
   std::iota(tmp.begin(), tmp.end(), 0);
   __row_idx = arma::uvec(tmp);
 }
