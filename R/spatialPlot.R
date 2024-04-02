@@ -132,7 +132,7 @@ featurePlot <- function(sce, feature,
         fill.name <- "Expression"
     }
     
-    vertices <- .make_vertices(sce, fill, platform, is.enhancedl, nsubspots.per.edge)
+    vertices <- .make_vertices(sce, fill, platform, is.enhanced, nsubspots.per.edge)
     
     ## No borders around subspots by default
     if (is.null(color)) {
