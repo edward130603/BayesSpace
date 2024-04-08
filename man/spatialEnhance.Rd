@@ -4,6 +4,8 @@
 \alias{spatialEnhance}
 \alias{coreTune}
 \alias{adjustClusterLabels}
+\alias{mapSubspot2Ref}
+\alias{computeCorr}
 \title{Enhance spot resolution}
 \usage{
 spatialEnhance(
@@ -35,6 +37,10 @@ spatialEnhance(
 coreTune(sce, test.cores = detectCores(), test.times = 1, ...)
 
 adjustClusterLabels(sce, burn.in)
+
+mapSubspot2Ref(sce, sce.ref, cores = 1)
+
+computeCorr(m1, m2, cores = 1)
 }
 \arguments{
 \item{sce}{A SingleCellExperiment object containing the spatial data.}

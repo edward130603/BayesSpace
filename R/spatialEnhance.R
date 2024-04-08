@@ -600,3 +600,23 @@ adjustClusterLabels <- function(sce, burn.in) {
 
   sce
 }
+
+#' @export
+#' @rdname spatialEnhance
+mapSubspot2Ref <- function(sce, sce.ref, cores = 1) {
+  map_subspot2ref(
+    as.matrix(colData(sce)[c("pxl_col_in_fullres", "pxl_row_in_fullres")]),
+    as.matrix(colData(sce.ref)[c("pxl_col_in_fullres", "pxl_row_in_fullres")]),
+    cores
+  )
+}
+
+#' @export
+#' @rdname spatialEnhance
+computeCorr <- function(m1, m2, cores = 1) {
+  compute_corr(
+    m1,
+    m2,
+    cores
+  )
+}

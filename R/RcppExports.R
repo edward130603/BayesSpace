@@ -21,3 +21,11 @@ iterate_deconv <- function(subspot_positions, dist, spot_neighbors, Y, tdist, nr
     .Call(`_BayesSpace_iterate_deconv`, subspot_positions, dist, spot_neighbors, Y, tdist, nrep, thin, n, n0, d, gamma, q, init, subspots, verbose, jitter_scale, adapt_before, c, mu0, lambda0, alpha, beta, thread_num)
 }
 
+map_subspot2ref <- function(subspot_coords, ref_coords, thread_num = 1L) {
+    .Call(`_BayesSpace_map_subspot2ref`, subspot_coords, ref_coords, thread_num)
+}
+
+compute_corr <- function(m1, m2, thread_num = 1L) {
+    .Call(`_BayesSpace_compute_corr`, m1, m2, thread_num)
+}
+

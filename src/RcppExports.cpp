@@ -136,6 +136,32 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// map_subspot2ref
+arma::mat map_subspot2ref(const arma::mat& subspot_coords, const arma::mat& ref_coords, int thread_num);
+RcppExport SEXP _BayesSpace_map_subspot2ref(SEXP subspot_coordsSEXP, SEXP ref_coordsSEXP, SEXP thread_numSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type subspot_coords(subspot_coordsSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type ref_coords(ref_coordsSEXP);
+    Rcpp::traits::input_parameter< int >::type thread_num(thread_numSEXP);
+    rcpp_result_gen = Rcpp::wrap(map_subspot2ref(subspot_coords, ref_coords, thread_num));
+    return rcpp_result_gen;
+END_RCPP
+}
+// compute_corr
+arma::mat compute_corr(const arma::mat& m1, const arma::mat& m2, int thread_num);
+RcppExport SEXP _BayesSpace_compute_corr(SEXP m1SEXP, SEXP m2SEXP, SEXP thread_numSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type m1(m1SEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type m2(m2SEXP);
+    Rcpp::traits::input_parameter< int >::type thread_num(thread_numSEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_corr(m1, m2, thread_num));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_BayesSpace_iterate", (DL_FUNC) &_BayesSpace_iterate, 13},
@@ -143,6 +169,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BayesSpace_iterate_t", (DL_FUNC) &_BayesSpace_iterate_t, 13},
     {"_BayesSpace_iterate_t_vvv", (DL_FUNC) &_BayesSpace_iterate_t_vvv, 13},
     {"_BayesSpace_iterate_deconv", (DL_FUNC) &_BayesSpace_iterate_deconv, 23},
+    {"_BayesSpace_map_subspot2ref", (DL_FUNC) &_BayesSpace_map_subspot2ref, 3},
+    {"_BayesSpace_compute_corr", (DL_FUNC) &_BayesSpace_compute_corr, 3},
     {NULL, NULL, 0}
 };
 
