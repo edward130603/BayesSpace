@@ -627,7 +627,7 @@ iterate_deconv(
   }
   omp_set_num_threads(thread_num);
 
-  std::vector<u_int64_t> thread_hits(thread_num, 0);
+  std::vector<uint64_t> thread_hits(thread_num, 0);
 
   // Initalize matrices storing iterations
   const mat Y0        = Y.rows(0, n0 - 1);   // The input PCs on spot level.
