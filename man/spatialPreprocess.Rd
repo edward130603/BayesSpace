@@ -6,20 +6,21 @@
 \usage{
 spatialPreprocess(
   sce,
-  platform = c("Visium", "ST"),
+  platform = c("Visium", "VisiumHD", "ST"),
   n.PCs = 15,
   n.HVGs = 2000,
   skip.PCA = FALSE,
   log.normalize = TRUE,
   assay.type = "logcounts",
-  BSPARAM = ExactParam()
+  BSPARAM = ExactParam(),
+  BPPARAM = SerialParam()
 )
 }
 \arguments{
 \item{sce}{SingleCellExperiment to preprocess}
 
 \item{platform}{Spatial sequencing platform. Used to determine spot layout
-and neighborhood structure (Visium = hex, ST = square).}
+and neighborhood structure (Visium = hex, VisiumHD = square, ST = square).}
 
 \item{n.PCs}{Number of principal components to compute. We suggest using the
 top 15 PCs in most cases.}
@@ -43,6 +44,11 @@ performed, as current spatial datasets are generally small (<10,000 spots).
 To perform a faster approximate PCA, please specify
 \code{FastAutoParam()} and set a random seed to ensure
 reproducibility.}
+
+\item{BPPARAM}{A \linkS4class{BiocParallelParam} object specifying whether
+to model the gene variation in parallel or not
+(default to \code{SerialParam()}). To perform faster modeling, please
+specify \code{SnowParam()} or \code{MulticoreParam()}.}
 }
 \value{
 SingleCellExperiment with PCA and BayesSpace metadata

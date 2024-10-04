@@ -5,7 +5,7 @@
 #' 
 #' @param sce SingleCellExperiment to preprocess
 #' @param platform Spatial sequencing platform. Used to determine spot layout
-#'   and neighborhood structure (Visium = hex, ST = square).
+#'   and neighborhood structure (Visium = hex, VisiumHD = square, ST = square).
 #' @param n.PCs Number of principal components to compute. We suggest using the
 #'   top 15 PCs in most cases.
 #' @param n.HVGs Number of highly variable genes to run PCA upon.
@@ -23,6 +23,10 @@
 #'   To perform a faster approximate PCA, please specify
 #'   \code{FastAutoParam()} and set a random seed to ensure
 #'   reproducibility.
+#' @param BPPARAM A \linkS4class{BiocParallelParam} object specifying whether
+#'   to model the gene variation in parallel or not
+#'   (default to \code{SerialParam()}). To perform faster modeling, please
+#'   specify \code{SnowParam()} or \code{MulticoreParam()}.
 #' 
 #' @return SingleCellExperiment with PCA and BayesSpace metadata
 #' 
@@ -34,14 +38,15 @@
 #' @importFrom scater logNormCounts runPCA
 #' @importFrom scran modelGeneVar getTopHVGs
 #' @importFrom SummarizedExperiment rowData<-
-#' @importFrom BiocSingular ExactParam
-spatialPreprocess <- function(sce, platform=c("Visium", "ST"),
+#' @importFrom BiocSingular ExactParam IrlbaParam RandomParam FastAutoParam
+#' @importFrom BiocParallel SerialParam MulticoreParam SnowParam
+spatialPreprocess <- function(sce, platform=c("Visium", "VisiumHD", "ST"),
                               n.PCs=15, n.HVGs=2000, skip.PCA=FALSE,
                               log.normalize=TRUE, assay.type="logcounts",
-                              BSPARAM=ExactParam()) {
+                              BSPARAM=ExactParam(), BPPARAM = SerialParam()) {
     
     ## Set BayesSpace metadata
-    metadata(sce)$BayesSpace.data <- list()
+    metadata(sce)$BayesSpace.data <- .bsData(sce, name = NULL, default = list())
     metadata(sce)$BayesSpace.data$platform <- match.arg(platform)
     metadata(sce)$BayesSpace.data$is.enhanced <- FALSE
     # metadata(sce)$BayesSpace.data$use_dimred <- use.dimred
@@ -52,7 +57,7 @@ spatialPreprocess <- function(sce, platform=c("Visium", "ST"),
         if (log.normalize)
             sce <- logNormCounts(sce)
    
-        dec <- modelGeneVar(sce, assay.type=assay.type)
+        dec <- modelGeneVar(sce, assay.type=assay.type, BPPARAM=BPPARAM)
         top <- getTopHVGs(dec, n=n.HVGs)
         sce <- runPCA(sce, subset_row=top, ncomponents=n.PCs, 
                       exprs_values=assay.type, BSPARAM=BSPARAM)

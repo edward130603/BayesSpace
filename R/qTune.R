@@ -115,7 +115,7 @@ qTune <- function(sce, qs = seq(3, 7), burn.in = 100, nrep = 1000, cores = 1L, .
     },
     cores = cores,
     type = "fork",
-    verbose = FALSE
+    verbose = TRUE
   )
 
   attr(sce, "q.logliks") <- do.call(rbind, logliks)

@@ -15,6 +15,7 @@ featurePlot(
   color = NULL,
   platform = NULL,
   is.enhanced = NULL,
+  nsubspots.per.edge = 3,
   ...
 )
 }
@@ -48,6 +49,9 @@ spots. Spatial sequencing platform. If true, the respective subspot lattice
 for each platform will be plotted.\cr
 NOTE: specifying this argument is only necessary if \code{sce} was not
 created by \code{spatialCluster()} or \code{spatialEnhance()}.}
+
+\item{nsubspots.per.edge}{Number of subspots per edge of the square. Only
+valid when \code{platform} is 'ST' or 'VisiumHD'.}
 
 \item{...}{Additional arguments for \code{geom_polygon()}. \code{size}, to
 specify the linewidth of these borders, is likely the most useful.}
