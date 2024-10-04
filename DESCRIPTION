@@ -37,6 +37,7 @@ Imports:
     dplyr,
     ggplot2,
     tibble,
+    rjson,
     tidyr,
     scales,
 	microbenchmark,
