@@ -38,6 +38,7 @@ Imports:
     tibble,
     tidyr,
     scales,
+	microbenchmark,
     BiocFileCache,
     BiocSingular,
     BiocParallel
