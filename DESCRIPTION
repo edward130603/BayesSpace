@@ -28,6 +28,7 @@ Imports:
     S4Vectors,
     Matrix,
     assertthat,
+    arrow,
     mclust,
     RCurl,
     DirichletReg,
