@@ -61,3 +61,5 @@ docs/
 
 *.nb.html
 *.rds
+
+src/indicators

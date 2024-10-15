@@ -4,7 +4,7 @@
 \alias{.read_spot_pos}
 \title{Load spot positions.}
 \usage{
-.read_spot_pos(dirname)
+.read_spot_pos(dirname, barcodes = NULL)
 }
 \arguments{
 \item{dirname}{Path to spaceranger outputs of spatial pipeline, i.e., "outs/spatial".

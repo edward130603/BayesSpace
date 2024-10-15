@@ -2,6 +2,7 @@
 % Please edit documentation in R/BayesSpace.R
 \docType{package}
 \name{BayesSpace}
+\alias{BayesSpace-package}
 \alias{BayesSpace}
 \title{BayesSpace: A package for processing spatial transcriptomes}
 \description{
@@ -16,5 +17,28 @@ gene expression or cell type composition can be imputed.
 For an overview of the functionality provided by the package, please see the
 vignette:
 \code{vignette("BayesSpace", package="BayesSpace")}
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{edward130603.github.io/BayesSpace}
+  \item Report bugs at \url{https://github.com/edward130603/BayesSpace/issues}
+}
+
+}
+\author{
+\strong{Maintainer}: Matt Stone \email{mstone@fredhutch.org}
+
+Authors:
+\itemize{
+  \item Edward Zhao \email{ezhao@fredhutch.org}
+}
+
+Other contributors:
+\itemize{
+  \item Xing Ren \email{xren2@fredhutch.org} [contributor]
+  \item Raphael Gottardo \email{rgottard@fredhutch.org} [contributor]
+}
+
 }
 \keyword{internal}
