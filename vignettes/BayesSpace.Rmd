@@ -180,7 +180,7 @@ decreased if acceptance is too low. After tuning, proceed to a full run of
 ```{r enhance, eval=TRUE}
 melanoma.enhanced <- spatialEnhance(melanoma, q=4, platform="ST", d=7,
                                     model="t", gamma=2,
-                                    jitter_prior=0.3, jitter_scale=3.5,
+                                    jitter.prior=0.3, jitter.scale=3.5,
                                     nrep=1000, burn.in=100,
                                     save.chain=TRUE, cores = 1)
 ```

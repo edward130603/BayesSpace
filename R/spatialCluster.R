@@ -105,7 +105,7 @@ cluster <- function(
     }
 
     cluster.FUN(
-        Y = as.matrix(Y), df_j = df_j, nrep = nrep, thin = thin, n = n, d = d, gamma = gamma,
+        Y = Y, df_j = df_j, nrep = nrep, thin = thin, n = n, d = d, gamma = gamma,
         q = q, init = init, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta
     )
 }
