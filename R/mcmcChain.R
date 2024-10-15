@@ -111,7 +111,12 @@ NULL
 #' @importFrom purrr map
 .read_chain <- function(h5.fname, params = NULL, is.enhanced = FALSE) {
     if (is.null(params)) {
+      if (is.enhanced)
+        params <- c("z", "mu", "lambda", "weights", "Y")
+      else {
         params <- h5ls(h5.fname)$name
+        params <- params[params != "plogLik"]
+      }
     }
     
     .read_param <- function(par.name) {

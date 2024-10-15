@@ -45,7 +45,7 @@ Imports:
     BiocSingular,
     BiocParallel
 License: MIT + file LICENSE
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
 LinkingTo: 
     Rcpp,
     RcppArmadillo,
