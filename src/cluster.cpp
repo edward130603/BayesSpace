@@ -9,8 +9,8 @@
 #include <chrono>
 #include <cmath>
 #include <csignal>
-#include <indicators/cursor_control.hpp>
-#include <indicators/progress_bar.hpp>
+// #include <indicators/cursor_control.hpp>
+// #include <indicators/progress_bar.hpp>
 #include <iostream>
 #include <vector>
 
@@ -31,16 +31,17 @@ void
 print_thread_hits(const std::vector<T> &arr) {
   if (arr.size() > 0) {
     for (size_t i = 0; i < arr.size(); i++)
-      std::cout << "[DEBUG] Thread " << i << " is hit " << arr[i]
+      Rcpp::Rcout << "[DEBUG] Thread " << i << " is hit " << arr[i]
                 << " times.\n";
-    std::cout << std::endl;
+
+    Rcpp::Rcout << std::endl;
   }
 }
 
 static void
 sig_handler(int _) {
   (void) _;
-  std::cerr << "\nStopping..." << std::endl;
+  Rcpp::Rcerr << "\nStopping..." << std::endl;
 
   early_stop = 1;
 }
@@ -758,13 +759,13 @@ iterate_deconv(
     thread_hits.emplace_back(0);
 
   if (verbose) {
-    std::cout << "[DEBUG] The number of threads is " << thread_num << std::endl;
+    Rcpp::Rcout << "[DEBUG] The number of threads is " << thread_num << std::endl;
   }
 #endif
 
   // To identify neighbors of subspots.
   if (verbose) {
-    std::cout << "[DEBUG] Identifying neighbors of subspots..." << std::endl;
+    Rcpp::Rcout << "[DEBUG] Identifying neighbors of subspots..." << std::endl;
   }
   std::vector<Neighbor> __spot_neighbors, __subspot_neighbors;
   convert_neighbors(spot_neighbors, __spot_neighbors);
@@ -818,12 +819,12 @@ iterate_deconv(
   std::vector<mat> adaptive_mtx(n);
   if (jitter_scale == 0.0) {
     if (verbose) {
-      std::cout << "[DEBUG] Turning on adaptive MCMC ";
+      Rcpp::Rcout << "[DEBUG] Turning on adaptive MCMC ";
 
       if (adapt_before == 0) {
-        std::cout << "throughout the entire chain." << std::endl;
+        Rcpp::Rcout << "throughout the entire chain." << std::endl;
       } else {
-        std::cout << "only in the first " << adapt_before << " iterations."
+        Rcpp::Rcout << "only in the first " << adapt_before << " iterations."
                   << std::endl;
       }
     }
@@ -834,24 +835,24 @@ iterate_deconv(
     }
   }
 
-  // Progress bar
-  indicators::show_console_cursor(false);
-  indicators::ProgressBar pb{
-      indicators::option::MaxProgress{nrep - 1},
-      indicators::option::BarWidth{50},
-      indicators::option::Start{" ["},
-      indicators::option::Fill{"█"},
-      indicators::option::Lead{"█"},
-      indicators::option::Remainder{"-"},
-      indicators::option::End{"]"},
-      indicators::option::PrefixText{"Enhancing"},
-      indicators::option::ForegroundColor{indicators::Color::blue},
-      indicators::option::ShowElapsedTime{true},
-      indicators::option::ShowRemainingTime{true},
-      indicators::option::FontStyles{
-          std::vector<indicators::FontStyle>{indicators::FontStyle::bold}
-      }
-  };
+  // // Progress bar
+  // indicators::show_console_cursor(false);
+  // indicators::ProgressBar pb{
+  //     indicators::option::MaxProgress{nrep - 1},
+  //     indicators::option::BarWidth{50},
+  //     indicators::option::Start{" ["},
+  //     indicators::option::Fill{"█"},
+  //     indicators::option::Lead{"█"},
+  //     indicators::option::Remainder{"-"},
+  //     indicators::option::End{"]"},
+  //     indicators::option::PrefixText{"Enhancing"},
+  //     indicators::option::ForegroundColor{indicators::Color::blue},
+  //     indicators::option::ShowElapsedTime{true},
+  //     indicators::option::ShowRemainingTime{true},
+  //     indicators::option::FontStyles{
+  //         std::vector<indicators::FontStyle>{indicators::FontStyle::bold}
+  //     }
+  // };
 
   // Keyboard interruption
   signal(SIGTERM, sig_handler);
@@ -875,7 +876,7 @@ iterate_deconv(
         // t_start = omp_get_wtime();
         // #endif
 
-        pb.tick();
+        // pb.tick();
 
         // Update mu
         NumericVector Ysums;
@@ -1091,7 +1092,7 @@ iterate_deconv(
         //           if (verbose) {
         //             const double t_per_iter = t_end - t_start;
 
-        //             std::cout << "[DEBUG] " << std::setprecision(2) <<
+        //             Rcpp::Rcout << "[DEBUG] " << std::setprecision(2) <<
         //             t_per_iter
         //                       << "s per iteration (expecting "
         //                       << t_per_iter * nrep / 3600 << " hours in
@@ -1115,7 +1116,7 @@ iterate_deconv(
   //   if (verbose) {
   //     const double t_all = t_end - t_start;
 
-  //     std::cout << "[DEBUG] Finished in " << std::setprecision(2) << t_all /
+  //     Rcpp::Rcout << "[DEBUG] Finished in " << std::setprecision(2) << t_all /
   //     3600
   //               << " hours." << std::endl;
   //   }
@@ -1128,7 +1129,7 @@ iterate_deconv(
       _["df_j"]    = convert_neighbors2mtx(__subspot_neighbors)
   );
 
-  indicators::show_console_cursor(true);
+  // indicators::show_console_cursor(true);
 
 #ifdef _OPENMP
   if (verbose) {

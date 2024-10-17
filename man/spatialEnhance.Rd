@@ -4,8 +4,6 @@
 \alias{spatialEnhance}
 \alias{coreTune}
 \alias{adjustClusterLabels}
-\alias{mapSubspot2Ref}
-\alias{computeCorr}
 \title{Enhance spot resolution}
 \usage{
 spatialEnhance(
@@ -27,6 +25,7 @@ spatialEnhance(
   save.chain = FALSE,
   chain.fname = NULL,
   burn.in = 10000,
+  thin = 100,
   jitter.scale = 5,
   jitter.prior = 0.3,
   adapt.before = burn.in,
@@ -37,10 +36,6 @@ spatialEnhance(
 coreTune(sce, test.cores = detectCores(), test.times = 1, ...)
 
 adjustClusterLabels(sce, burn.in)
-
-mapSubspot2Ref(sce, sce.ref, cores = 1)
-
-computeCorr(m1, m2, cores = 1)
 }
 \arguments{
 \item{sce}{A SingleCellExperiment object containing the spatial data.}
@@ -92,6 +87,8 @@ iterations are currently thinned to every 100; accordingly \code{burn.in}
 is rounded down to the nearest multiple of 100. If a value no larger than 1
 is set, it is considered as a percentage. It is always considered as
 percentage for \code{adjustClusterLabels}.}
+
+\item{thin}{Thinning rate.}
 
 \item{jitter.scale}{Controls the amount of jittering. Small amounts of
 jittering are more likely to be accepted but result in exploring the space

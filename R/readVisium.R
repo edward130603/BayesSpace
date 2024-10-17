@@ -104,6 +104,7 @@ readVisium <- function(
 #' @importFrom rhdf5 h5read
 #' @importFrom dplyr %>% group_by mutate select n case_when
 #' @importFrom tibble column_to_rownames
+#' @importFrom rlang .data
 #' @rdname readVisium
 read10Xh5 <- function(
     dirname,
@@ -133,7 +134,7 @@ read10Xh5 <- function(
       gene_name = h5read(h5_file, "matrix/features/name")
     ) %>%
       group_by(
-        gene_name
+        .data$gene_name
       ) %>%
       mutate(
         idx = 1:n(),
@@ -144,7 +145,7 @@ read10Xh5 <- function(
       ) %>%
       column_to_rownames("row_name") %>%
       select(
-        -idx
+        -.data$idx
       )
 
     .counts <- sparseMatrix(
@@ -252,9 +253,12 @@ counts2h5 <- function(dirname) {
 #'
 #' @importFrom utils read.csv
 #' @importFrom magrittr %>%
-#' @importFrom dplyr inner_join
+#' @importFrom dplyr inner_join rename
 #' @importFrom tidyr uncount
 #' @importFrom arrow read_parquet
+#' @importFrom stats cor
+#' @importFrom methods as
+#' @importFrom rlang .data
 .read_spot_pos <- function(dirname, barcodes = NULL) {
   if (file.exists(file.path(dirname, "tissue_positions_list.csv"))) {
       message("Loading Visium with SpaceRanger version < V2.0")
@@ -286,10 +290,9 @@ counts2h5 <- function(dirname) {
   ) {
     message("Warning! The coordinates with indices and pixels do not match. Swapping the pixel values between the row and column...")
     
-    colData <- transform(
-      colData,
-      pxl_row_in_fullres = pxl_col_in_fullres,
-      pxl_col_in_fullres = pxl_row_in_fullres
+    colData <- colData %>% rename(
+      pxl_row_in_fullres = .data$pxl_col_in_fullres,
+      pxl_col_in_fullres = .data$pxl_row_in_fullres
     )
   }
   

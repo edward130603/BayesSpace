@@ -11,10 +11,10 @@ CXXFLAGS=`"${R_HOME}/bin/R" CMD config CXX17FLAGS`
 CPPFLAGS=`"${R_HOME}/bin/R" CMD config CPPFLAGS`
 LDFLAGS=`"${R_HOME}/bin/R" CMD config LDFLAGS`
 
-(
-    cd src/ || exit 1
-    
-    if test ! -r "indicators"; then
-        git clone https://github.com/p-ranav/indicators.git
-    fi
-)
+# (
+#     cd src/ || exit 1
+#     
+#     if test ! -r "indicators"; then
+#         git clone https://github.com/p-ranav/indicators.git
+#     fi
+# )

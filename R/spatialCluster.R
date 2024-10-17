@@ -22,6 +22,7 @@
 #'   VVV covariance models, respectively.)
 #' @param nrep The number of MCMC iterations.
 #' @param burn.in The number of MCMC iterations to exclude as burn-in period.
+#' @param thin Thinning rate.
 #' @param gamma Smoothing parameter. Defaults to 2 for \code{platform="ST"} and
 #'   3 for \code{platform="Visium"}. (Values in range of 1-3 seem to work well.)
 #' @param mu0 Prior mean hyperparameter for mu. If not provided, mu0 is set to
@@ -180,12 +181,13 @@ spatialCluster <- function(
     results <- cluster(Y, q, df_j,
         init = init,
         model = model, precision = precision, mu0 = mu0,
-        lambda0 = lambda0, gamma = gamma, alpha = alpha, beta = beta, nrep = nrep
+        lambda0 = lambda0, gamma = gamma, alpha = alpha, beta = beta,
+        nrep = nrep, thin = thin
     )
 
     ## Save MCMC chain
     if (save.chain) {
-        results <- .clean_chain(results, thin = thin)
+        results <- .clean_chain(results)
         metadata(sce)$chain.h5 <- .write_chain(results, chain.fname)
     }
 
@@ -301,9 +303,8 @@ spatialCluster <- function(
 
 #' Initialize cluster assignments
 #'
-#' @param sce SingleCellExperiment
+#' @param Y Representation of reduced dimensions
 #' @param q Number of clusters
-#' @param inputs Results from \code{.prepare_inputs()}
 #' @param init Vector of initial cluster assignments
 #' @param init.method Initialization clustering algorithm
 #'

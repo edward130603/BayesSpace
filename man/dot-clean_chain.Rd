@@ -4,16 +4,13 @@
 \alias{.clean_chain}
 \title{Tidy C++ outputs before writing to disk.}
 \usage{
-.clean_chain(out, method = c("cluster", "enhance"), thin = 100)
+.clean_chain(out, method = c("cluster", "enhance"))
 }
 \arguments{
 \item{out}{List returned by \code{cluster()} or \code{deconvolve()}.}
 
 \item{method}{Whether the output came from clustering or enhancement.
 (Different params are included in each.)}
-
-\item{thin}{Thinning rate. Some enhanced parameters are thinned within C++
-loop, others (\code{mu} and \code{Ychange}) need to be thinned afterwards.}
 }
 \value{
 List with standardized parameters

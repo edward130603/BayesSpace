@@ -85,7 +85,7 @@ map_subspot2ref(
 #ifdef _OPENMP
   t2 = omp_get_wtime();
 
-  std::cout << "[DEBUG] Mapping takes " << t2 - t1 << " seconds." << std::endl;
+  Rcpp::Rcout << "[DEBUG] Mapping takes " << t2 - t1 << " seconds." << std::endl;
 #endif
 
   return ret.get_mat();
@@ -99,8 +99,7 @@ compute_corr(
     int thread_num = 1
 ) {
   if (m1.n_rows != m2.n_rows || m1.n_cols != m2.n_cols) {
-    std::cerr << "Input matrices should be of the same shape." << std::endl;
-    exit(1);
+    Rcpp::stop("Input matrices should be of the same shape.");
   }
 
   RedMat<double> ret(0, 2);
@@ -126,7 +125,7 @@ compute_corr(
 #ifdef _OPENMP
   t2 = omp_get_wtime();
 
-  std::cout << "[DEBUG] Computing correlation takes " << t2 - t1 << " seconds." << std::endl;
+  Rcpp::Rcout << "[DEBUG] Computing correlation takes " << t2 - t1 << " seconds." << std::endl;
 #endif
 
   return ret.get_mat();

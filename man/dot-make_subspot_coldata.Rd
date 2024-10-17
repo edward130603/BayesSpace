@@ -2,40 +2,7 @@
 % Please edit documentation in R/spatialEnhance.R
 \name{.make_subspot_coldata}
 \alias{.make_subspot_coldata}
-\title{#' Define offsets for each subspot layout.
-#'
-#' Hex spots are divided into 6 triangular subspots, square spots are divided
-#' into 9 squares. Offsets are relative to the spot center.
-#'
-#' @param n_subspots_per Number of subspots per spot
-#' @return Matrix of x and y offsets, one row per subspot
-#'
-#' @keywords internal
-.make_subspot_offsets <- function(n_subspots_per) {
-  if (n_subspots_per == 6) {
-    rbind(
-      expand.grid(
-        list(
-          x = c(1 / 3, -1 / 3),
-          y = c(1 / 3, -1 / 3)
-        )
-      ),
-      expand.grid(
-        list(
-          x = c(2 / 3, -2 / 3),
-          y = 0
-        )
-      )
-    )
-    # } else if (n_subspots_per == 7) {
-    #     rbind(expand.grid(c(1/3, -1/3), c(1/3, -1/3)), expand.grid(c(2/3, -2/3, 0), 0))
-  } else if (n_subspots_per == 9) {
-    rbind(expand.grid(c(1 / 3, -1 / 3, 0), c(1 / 3, -1 / 3, 0)))
-  } else {
-    stop("Only 6 and 9 subspots currently supported.")
-  }
-}
-Add subspot labels and offset row/col locations before making enhanced SCE.}
+\title{Add subspot labels and offset row/col locations before making enhanced SCE.}
 \usage{
 .make_subspot_coldata(
   cdata,
@@ -50,7 +17,11 @@ Add subspot labels and offset row/col locations before making enhanced SCE.}
 
 \item{sce}{Original sce (to obtain number of spots and original row/col)}
 
-\item{n_subspots_per}{Number of subspots per spot}
+\item{subspot_neighbors}{Neighbors for subspots}
+
+\item{platform}{Spatial transcriptomic platform}
+
+\item{nsubspots.per.edge}{Number of subspots per edge if the spot is squared}
 }
 \value{
 Data frame with added subspot names, parent spot indices, and offset

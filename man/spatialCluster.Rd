@@ -57,6 +57,8 @@ VVV covariance models, respectively.)}
 
 \item{burn.in}{The number of MCMC iterations to exclude as burn-in period.}
 
+\item{thin}{Thinning rate.}
+
 \item{gamma}{Smoothing parameter. Defaults to 2 for \code{platform="ST"} and
 3 for \code{platform="Visium"}. (Values in range of 1-3 seem to work well.)}
 

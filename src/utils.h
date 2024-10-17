@@ -36,13 +36,9 @@ str_split(const std::string &str, const std::string &separator) {
         auto [ptr, ec] = std::from_chars(word.data(), word.data() + word.size(), conv);
 
         if (ec == std::errc::invalid_argument) {
-          std::cerr << "Unconvertable value: " << word << std::endl;
-
-          exit(1);
+          Rcpp::stop("Unconvertable value: %c\n", word);
         } else if (ec == std::errc::result_out_of_range) {
-          std::cerr << "Value out of range: " << word << std::endl;
-
-          exit(1);
+          Rcpp::stop("Value out of range: %c\n", word);
         }
     
         ret.emplace_back(conv);

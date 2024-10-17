@@ -13,14 +13,6 @@
   tolerance = 1.05
 )
 }
-\arguments{
-\item{platform}{The platform from which the data comes.}
-
-\item{scalef}{Scale factors of Visium data.}
-}
-\value{
-Matrix of x and y offsets, one row per subspot
-}
 \description{
 Hex spots are divided into 6 triangular subspots, square spots are divided
 into 9 squares. Offsets are relative to the spot center. A unit corresponds

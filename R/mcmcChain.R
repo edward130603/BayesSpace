@@ -172,15 +172,13 @@ NULL
 #' @param out List returned by \code{cluster()} or \code{deconvolve()}.
 #' @param method Whether the output came from clustering or enhancement.
 #'   (Different params are included in each.)
-#' @param thin Thinning rate. Some enhanced parameters are thinned within C++
-#'   loop, others (\code{mu} and \code{Ychange}) need to be thinned afterwards.
 #'   
 #' @return List with standardized parameters
 #'   
 #' @keywords internal
 #' 
 #' @importFrom purrr map
-.clean_chain <- function(out, method = c("cluster", "enhance"), thin=100) 
+.clean_chain <- function(out, method = c("cluster", "enhance")) 
 {
     method <- match.arg(method)
 

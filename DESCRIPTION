@@ -19,6 +19,7 @@ Depends:
 Imports:
     Rcpp (>= 1.0.4.6),
     stats,
+    methods,
     purrr,
     scater,
     scran,
@@ -36,12 +37,13 @@ Imports:
     xgboost,
     utils,
     dplyr,
+    rlang,
     ggplot2,
     tibble,
-	rjson,
+	  rjson,
     tidyr,
     scales,
-	microbenchmark,
+	  microbenchmark,
     BiocFileCache,
     BiocSingular,
     BiocParallel

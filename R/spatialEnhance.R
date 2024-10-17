@@ -34,6 +34,7 @@
 #'   is rounded down to the nearest multiple of 100. If a value no larger than 1
 #'   is set, it is considered as a percentage. It is always considered as
 #'   percentage for \code{adjustClusterLabels}.
+#' @param thin Thinning rate.
 #' @param jitter.scale Controls the amount of jittering. Small amounts of
 #'   jittering are more likely to be accepted but result in exploring the space
 #'   more slowly. We suggest tuning \code{jitter.scale} so that Ychange is on
@@ -174,10 +175,6 @@ deconvolve <- function(Y, positions, xdist, ydist, scalef, q, spot_neighbors, in
 #' Manhattan distance is used here instead of Euclidean to avoid numerical
 #' issues.
 #'
-#' @param platform The platform from which the data comes.
-#' @param scalef Scale factors of Visium data.
-#' @return Matrix of x and y offsets, one row per subspot
-#'
 #' @keywords internal
 #'
 #' @importFrom assertthat assert_that
@@ -246,47 +243,15 @@ deconvolve <- function(Y, positions, xdist, ydist, scalef, q, spot_neighbors, in
   )
 }
 
-#' #' Define offsets for each subspot layout.
-#' #'
-#' #' Hex spots are divided into 6 triangular subspots, square spots are divided
-#' #' into 9 squares. Offsets are relative to the spot center.
-#' #'
-#' #' @param n_subspots_per Number of subspots per spot
-#' #' @return Matrix of x and y offsets, one row per subspot
-#' #'
-#' #' @keywords internal
-#' .make_subspot_offsets <- function(n_subspots_per) {
-#'   if (n_subspots_per == 6) {
-#'     rbind(
-#'       expand.grid(
-#'         list(
-#'           x = c(1 / 3, -1 / 3),
-#'           y = c(1 / 3, -1 / 3)
-#'         )
-#'       ),
-#'       expand.grid(
-#'         list(
-#'           x = c(2 / 3, -2 / 3),
-#'           y = 0
-#'         )
-#'       )
-#'     )
-#'     # } else if (n_subspots_per == 7) {
-#'     #     rbind(expand.grid(c(1/3, -1/3), c(1/3, -1/3)), expand.grid(c(2/3, -2/3, 0), 0))
-#'   } else if (n_subspots_per == 9) {
-#'     rbind(expand.grid(c(1 / 3, -1 / 3, 0), c(1 / 3, -1 / 3, 0)))
-#'   } else {
-#'     stop("Only 6 and 9 subspots currently supported.")
-#'   }
-#' }
-
 #' Add subspot labels and offset row/col locations before making enhanced SCE.
 #'
 #' Subspots are stored as (1.1, 2.1, 3.1, ..., 1.2, 2.2, 3.2, ...)
 #'
 #' @param cdata Table of colData (imagerow and imagecol; from deconv$positions)
 #' @param sce Original sce (to obtain number of spots and original row/col)
-#' @param n_subspots_per Number of subspots per spot
+#' @param subspot_neighbors Neighbors for subspots
+#' @param platform Spatial transcriptomic platform
+#' @param nsubspots.per.edge Number of subspots per edge if the spot is squared
 #'
 #' @return Data frame with added subspot names, parent spot indices, and offset
 #'   row/column coordinates
@@ -371,7 +336,7 @@ spatialEnhance <- function(sce, q, platform = c("Visium", "VisiumHD", "ST"),
                            init = NULL, init.method = c("spatialCluster", "mclust", "kmeans"),
                            model = c("t", "normal"), nrep = 100000, gamma = NULL,
                            mu0 = NULL, lambda0 = NULL, alpha = 1, beta = 0.01,
-                           save.chain = FALSE, chain.fname = NULL, burn.in = 10000,
+                           save.chain = FALSE, chain.fname = NULL, burn.in = 10000, thin = 100,
                            jitter.scale = 5, jitter.prior = 0.3, adapt.before = burn.in, cores = 1,
                            verbose = FALSE) {
   assert_that(nrep >= 100) # require at least one iteration after thinning
@@ -601,8 +566,7 @@ adjustClusterLabels <- function(sce, burn.in) {
   sce
 }
 
-#' @export
-#' @rdname spatialEnhance
+#' @keywords internal
 mapSubspot2Ref <- function(sce, sce.ref, cores = 1) {
   map_subspot2ref(
     as.matrix(colData(sce)[c("pxl_col_in_fullres", "pxl_row_in_fullres")]),
@@ -611,8 +575,7 @@ mapSubspot2Ref <- function(sce, sce.ref, cores = 1) {
   )
 }
 
-#' @export
-#' @rdname spatialEnhance
+#' @keywords internal
 computeCorr <- function(m1, m2, cores = 1) {
   compute_corr(
     m1,
