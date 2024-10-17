@@ -1,20 +1,32 @@
-# BayesSpace 1.15.0
 
-## New Bioconductor release (3.20)
+# BayesSpace 1.15.2
 
-### Major updates
+## Minor improvements and fixes
+
+- Minor bugfixes related to R install, build, check
+- Documentation improvements
+
+# BayesSpace 1.15.1
+
+## Major updates
 
 - Accelerate resolution enhancement with multithreaded `spatialEnhance`
 - Improve mixing of MCMC for `spatialEnhance` with adaptive MCMC
 - Support VisiumHD
 
-### Minor improvements and fixes
+## Minor improvements and fixes
 
 - Support SpaceRanger v2.0+
 - Find the optimal number of cores with `coreTune` before enhancing resolution
 - Adjust the proportion of samples to be removed during burnin using `adjustClusterLabels`
 - Faster neighbor finding for subspots
 - Customize resolution enhancement for VisiumHD data
+
+# BayesSpace 1.15.0
+
+## New Bioconductor devel (3.20)
+
+- Version numbering change with Bioconductor version bump
 
 # BayesSpace 1.5.1
 
