@@ -2,18 +2,23 @@
 % Please edit documentation in R/spatialEnhance.R
 \name{spatialEnhance}
 \alias{spatialEnhance}
+\alias{coreTune}
+\alias{adjustClusterLabels}
+\alias{mapSubspot2Ref}
+\alias{computeCorr}
 \title{Enhance spot resolution}
 \usage{
 spatialEnhance(
   sce,
   q,
-  platform = c("Visium", "ST"),
+  platform = c("Visium", "VisiumHD", "ST"),
   use.dimred = "PCA",
   d = 15,
+  nsubspots.per.edge = 3,
   init = NULL,
   init.method = c("spatialCluster", "mclust", "kmeans"),
   model = c("t", "normal"),
-  nrep = 2e+05,
+  nrep = 1e+05,
   gamma = NULL,
   mu0 = NULL,
   lambda0 = NULL,
@@ -22,11 +27,20 @@ spatialEnhance(
   save.chain = FALSE,
   chain.fname = NULL,
   burn.in = 10000,
-  jitter_scale = 5,
-  jitter_prior = 0.3,
+  jitter.scale = 5,
+  jitter.prior = 0.3,
+  adapt.before = burn.in,
   cores = 1,
   verbose = FALSE
 )
+
+coreTune(sce, test.cores = detectCores(), test.times = 1, ...)
+
+adjustClusterLabels(sce, burn.in)
+
+mapSubspot2Ref(sce, sce.ref, cores = 1)
+
+computeCorr(m1, m2, cores = 1)
 }
 \arguments{
 \item{sce}{A SingleCellExperiment object containing the spatial data.}
@@ -34,16 +48,19 @@ spatialEnhance(
 \item{q}{The number of clusters.}
 
 \item{platform}{Spatial transcriptomic platform. Specify 'Visium' for hex
-lattice geometry or 'ST' for square lattice geometry. Specifying this
-parameter is optional when analyzing SingleCellExperiments processed using
-\code{\link{readVisium}}, \code{\link{spatialPreprocess}}, or
-\code{\link{spatialCluster}}, as this information is included in their
+lattice geometry or 'ST' and 'VisiumHD' for square lattice geometry.
+Specifying this parameter is optional when analyzing SingleCellExperiments
+processed using \code{\link{readVisium}}, \code{\link{spatialPreprocess}},
+or \code{\link{spatialCluster}}, as this information is included in their
 metadata.}
 
 \item{use.dimred}{Name of a reduced dimensionality result in
 \code{reducedDims(sce)}. If provided, cluster on these features directly.}
 
 \item{d}{Number of top principal components to use when clustering.}
+
+\item{nsubspots.per.edge}{Number of subspots per edge of the square. Only
+valid when \code{platform} is 'ST' or 'VisiumHD'.}
 
 \item{init}{Initial cluster assignments for spots.}
 
@@ -72,28 +89,48 @@ is set to a diagonal matrix \eqn{0.01 I}.}
 
 \item{burn.in}{Number of iterations to exclude as burn-in period. The MCMC
 iterations are currently thinned to every 100; accordingly \code{burn.in}
-is rounded down to the nearest multiple of 100.}
+is rounded down to the nearest multiple of 100. If a value no larger than 1
+is set, it is considered as a percentage. It is always considered as
+percentage for \code{adjustClusterLabels}.}
 
-\item{jitter_scale}{Controls the amount of jittering. Small amounts of
+\item{jitter.scale}{Controls the amount of jittering. Small amounts of
 jittering are more likely to be accepted but result in exploring the space
-more slowly. We suggest tuning \code{jitter_scale} so that Ychange is on
-average around 25\%-40\%. Ychange can be accessed via \code{mcmcChain()}.}
+more slowly. We suggest tuning \code{jitter.scale} so that Ychange is on
+average around 25\%-40\%. Ychange can be accessed via \code{mcmcChain()}.
+Alternatively, set it to 0 to activate adaptive MCMC.}
 
-\item{jitter_prior}{Scale factor for the prior variance, parameterized as the
+\item{jitter.prior}{Scale factor for the prior variance, parameterized as the
 proportion (default = 0.3) of the mean variance of the PCs.
-We suggest making \code{jitter_prior} smaller if the jittered values are
+We suggest making \code{jitter.prior} smaller if the jittered values are
 not expected to vary much from the overall mean of the spot.}
+
+\item{adapt.before}{Adapting the MCMC chain before the specified number
+or proportion of iterations (by default equal to \code{burn.in}; set to 0
+to always adapt). Only valid when \code{jitter.scale} is 0.}
 
 \item{cores}{The number of threads to use. The results are invariate to the
 value of \code{cores}.}
 
 \item{verbose}{Log progress to stderr.}
+
+\item{test.cores}{Either a list of, or a maximum number of cores to test. In
+the latter case, a list of values (power of 2) will be created}
+
+\item{test.times}{Times to repeat the benchmarking with microbenchmark.}
+
+\item{...}{Arguments for \code{spatialEnhance} (except for cores).}
 }
 \value{
-Returns a new SingleCellExperiment object. By default, the
-  \code{assays} of this object are empty, and the enhanced resolution PCs
-  are stored as a reduced dimensionality result accessible with
-  \code{reducedDim(sce, 'PCA')}.
+\code{spatialEnhance} returns a new SingleCellExperiment object.
+  By default, the \code{assays} of this object are empty, and the enhanced
+  resolution PCs are stored as a reduced dimensionality result accessible
+  with \code{reducedDim(sce, 'PCA')}.
+
+\code{coresTune} returns the output of \code{microbenchmark}.
+
+\code{adjustClusterLabels} adjusts the cluster labels from the MCMC samples
+  via \code{burn.in}, the percentage of samples to drop. The MCMC chain
+  must be retained.
 }
 \description{
 Enhanced clustering of a spatial expression dataset to subspot resolution.
@@ -114,13 +151,13 @@ The \code{colData} of the enhanced \code{SingleCellExperiment} includes the
   \item \code{subspot.idx}: Index of the subspot within its parent spot.
   \item \code{spot.row}: Array row of the subspot's parent spot.
   \item \code{spot.col}: Array col of the subspot's parent spot.
-  \item \code{row}: Array row of the subspot. This is the parent spot's row
+  \item \code{array_row}: Array row of the subspot. This is the parent spot's row
     plus an offset based on the subspot's position within the spot.
-  \item \code{col}: Array col of the subspot. This is the parent spot's col
+  \item \code{array_col}: Array col of the subspot. This is the parent spot's col
     plus an offset based on the subspot's position within the spot.
-  \item \code{imagerow}: Pixel row of the subspot. This is the parent spot's
+  \item \code{pxl_row_in_fullres}: Pixel row of the subspot. This is the parent spot's
     row plus an offset based on the subspot's position within the spot.
-  \item \code{imagecol}: Pixel col of the subspot. This is the parent spot's
+  \item \code{pxl_col_in_fullres}: Pixel col of the subspot. This is the parent spot's
     col plus an offset based on the subspot's position within the spot.
   }
 }
