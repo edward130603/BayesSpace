@@ -153,8 +153,8 @@ exampleSCE <- function(nrow = 8, ncol = 12, n_genes = 100, n_PCs = 10) {
 
     ## Scale and jitter image coordinates
     scale.factor <- rnorm(1, 8)
-    cdata$pxl_row_in_fullres <- scale.factor * cdata$row + rnorm(n_spots)
-    cdata$pxl_col_in_fullres <- scale.factor * cdata$col + rnorm(n_spots)
+    cdata$pxl_row_in_fullres <- scale.factor * cdata$array_row + rnorm(n_spots)
+    cdata$pxl_col_in_fullres <- scale.factor * cdata$array_col + rnorm(n_spots)
 
     ## Make SCE
     ## note: scater::runPCA throws warning on our small sim data, so use prcomp

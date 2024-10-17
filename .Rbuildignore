@@ -12,3 +12,7 @@
 ^\.vscode$
 ^__tools$
 ^\.clang-format$
+
+^src/indicators/.appveyor.yml$
+^src/indicators/.clang-format$
+^src/indicators/.travis.yml$
