@@ -4,11 +4,13 @@
 #'
 #' @param sce A SingleCellExperiment object containing the spatial data.
 #' @param q The number of clusters.
+
 #' @param platform Spatial transcriptomic platform. Specify 'Visium' for hex
-#'   lattice geometry or 'ST' for square lattice geometry. Specifying this
-#'   parameter is optional when analyzing SingleCellExperiments processed using
-#'   \code{\link{readVisium}} or \code{\link{spatialPreprocess}}, as this
-#'   information is included in their metadata.
+#'   lattice geometry or 'ST' and 'VisiumHD' for square lattice geometry.
+#'   Specifying this parameter is optional when analyzing SingleCellExperiments
+#'   processed using \code{\link{readVisium}}, \code{\link{spatialPreprocess}},
+#'   or \code{\link{spatialCluster}}, as this information is included in their
+#'   metadata.
 #' @param use.dimred Name of a reduced dimensionality result in
 #'   \code{reducedDims(sce)}. If provided, cluster on these features directly.
 #' @param d Number of top principal components to use when clustering.
@@ -68,7 +70,7 @@ cluster <- function(
     Y, q, df_j, init = rep(1, nrow(Y)),
     model = c("t", "normal"), precision = c("equal", "variable"),
     mu0 = colMeans(Y), lambda0 = diag(0.01, nrow = ncol(Y)),
-    gamma = 3, alpha = 1, beta = 0.01, nrep = 1000) {
+    gamma = 3, alpha = 1, beta = 0.01, nrep = 1000, thin = 100) {
     Y <- as.matrix(Y)
     d <- ncol(Y)
     n <- nrow(Y)
@@ -103,7 +105,7 @@ cluster <- function(
     }
 
     cluster.FUN(
-        Y = as.matrix(Y), df_j = df_j, nrep = nrep, n = n, d = d, gamma = gamma,
+        Y = Y, df_j = df_j, nrep = nrep, thin = thin, n = n, d = d, gamma = gamma,
         q = q, init = init, mu0 = mu0, lambda0 = lambda0, alpha = alpha, beta = beta
     )
 }
@@ -117,17 +119,17 @@ cluster <- function(
 #' @rdname spatialCluster
 spatialCluster <- function(
     sce, q, use.dimred = "PCA", d = 15,
-    platform = c("Visium", "ST"),
+    platform = c("Visium", "VisiumHD", "ST"),
     init = NULL, init.method = c("mclust", "kmeans"),
     model = c("t", "normal"), precision = c("equal", "variable"),
-    nrep = 50000, burn.in = 1000, gamma = NULL, mu0 = NULL, lambda0 = NULL,
+    nrep = 50000, burn.in = 1000, thin = 100, gamma = NULL, mu0 = NULL, lambda0 = NULL,
     alpha = 1, beta = 0.01, save.chain = FALSE, chain.fname = NULL) {
     if (!(use.dimred %in% reducedDimNames(sce))) {
         stop("reducedDim \"", use.dimred, "\" not found in input SCE.")
     }
 
     ## Require at least one iteration and non-negative burn-in
-    assert_that(nrep >= 1)
+    assert_that(nrep >= 100)
     assert_that(burn.in >= 0)
     if (burn.in >= nrep) {
         stop("Please specify a burn-in period shorter than the total number of iterations.")
@@ -146,9 +148,16 @@ spatialCluster <- function(
         platform <- match.arg(platform)
     }
 
-    ## Get indices of neighboring spots, and initialize cluster assignments
-    df_j <- .find_neighbors(sce, platform)
+    ## Get indices of neighboring spots
+    .neighbors <- .find_neighbors(sce, platform)
+    sce <- .neighbors[[1]]
+    df_j <- .neighbors[[2]]
+
+    ## Initialize cluster assignments
     init <- .init_cluster(Y, q, init, init.method)
+    if (is.null(init)) {
+        stop("Empty initialization. Please use a different initialization method.")
+    }
 
     ## Set model parameters
     model <- match.arg(model)
@@ -162,7 +171,7 @@ spatialCluster <- function(
     if (is.null(gamma)) {
         if (platform == "Visium") {
             gamma <- 3
-        } else if (platform == "ST") {
+        } else if (platform %in% c("VisiumHD", "ST")) {
             gamma <- 2
         }
     }
@@ -176,7 +185,7 @@ spatialCluster <- function(
 
     ## Save MCMC chain
     if (save.chain) {
-        results <- .clean_chain(results)
+        results <- .clean_chain(results, thin = thin)
         metadata(sce)$chain.h5 <- .write_chain(results, chain.fname)
     }
 
@@ -189,9 +198,11 @@ spatialCluster <- function(
     metadata(sce)$BayesSpace.data$is.enhanced <- FALSE
 
     ## Save modal cluster assignments, excluding burn-in
-    message("Calculating labels using iterations ", burn.in, " through ", nrep, ".")
-    zs <- results$z[seq(burn.in + 1, nrep), ]
-    if (burn.in + 1 == nrep) {
+    message("Calculating labels using iterations ", burn.in + 1, " through ", nrep, ".")
+    .burn.in <- burn.in %/% thin
+    .nrep <- nrep %/% thin
+    zs <- results$z[seq(.burn.in + 2, .nrep + 1), ]
+    if (.burn.in + 1 == .nrep) {
         labels <- matrix(zs, nrow = 1)
     } # if only one iteration kept, return it
     else {
@@ -218,7 +229,7 @@ spatialCluster <- function(
             x.offset = c(-2, 2, -1, 1, -1, 1),
             y.offset = c(0, 0, -1, -1, 1, 1)
         )
-    } else if (platform == "ST") {
+    } else if (platform %in% c("VisiumHD", "ST")) {
         ## L1 radius of 1 (spots above, right, below, and left)
         offsets <- data.frame(
             x.offset = c(0, 1, 0, -1),
@@ -229,8 +240,8 @@ spatialCluster <- function(
     }
 
     ## Get array coordinates (and label by index of spot in SCE)
-    spot.positions <- colData(sce)[, c("array_col", "array_row")]
-    spot.positions$spot.idx <- seq_len(nrow(spot.positions))
+    sce$spot.idx <- seq_len(ncol(sce))
+    spot.positions <- colData(sce)[, c("spot.idx", "array_col", "array_row")]
 
     ## Compute coordinates of each possible spot neighbor
     neighbor.positions <- merge(spot.positions, offsets)
@@ -245,9 +256,6 @@ spatialCluster <- function(
         all.x = TRUE
     )
 
-    ## Shift to zero-indexing for C++
-    neighbors$spot.idx.neighbor <- neighbors$spot.idx.neighbor - 1
-
     ## Group neighbor indices by spot
     ## (sort first for consistency with older implementation)
     neighbors <- neighbors[order(
@@ -255,13 +263,28 @@ spatialCluster <- function(
         neighbors$spot.idx.neighbor
     ), ]
     df_j <- split(neighbors$spot.idx.neighbor, neighbors$spot.idx.primary)
-    df_j <- unname(df_j)
 
     ## Discard neighboring spots without spot data
     ## This can be implemented by eliminating `all.x=TRUE` above, but
     ## this makes it easier to keep empty lists for spots with no neighbors
     ## (as expected by C++ code)
     df_j <- map(df_j, function(nbrs) discard(nbrs, function(x) is.na(x)))
+
+    ## Save spot neighbors to sce for later usage in enhancement
+    sce$spot.neighbors <- vapply(
+        df_j,
+        function(x) {
+            if (length(x) == 0) {
+                return(NA_character_)
+            } else {
+                return(paste0(x, collapse = ","))
+            }
+        },
+        FUN.VALUE = character(1)
+    )
+
+    ## Shift to zero-indexing for C++
+    df_j <- map(df_j, function(x) x - 1)
 
     ## Log number of spots with neighbors
     n_with_neighbors <- length(keep(df_j, function(nbrs) length(nbrs) > 0))
@@ -270,7 +293,10 @@ spatialCluster <- function(
         ncol(sce), " spots."
     )
 
-    df_j
+    list(
+        sce,
+        unname(df_j)
+    )
 }
 
 #' Initialize cluster assignments

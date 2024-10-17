@@ -1,3 +1,21 @@
+# BayesSpace 1.15.0
+
+## New Bioconductor release (3.20)
+
+### Major updates
+
+- Accelerate resolution enhancement with multithreaded `spatialEnhance`
+- Improve mixing of MCMC for `spatialEnhance` with adaptive MCMC
+- Support VisiumHD
+
+### Minor improvements and fixes
+
+- Support SpaceRanger v2.0+
+- Find the optimal number of cores with `coreTune` before enhancing resolution
+- Adjust the proportion of samples to be removed during burnin using `adjustClusterLabels`
+- Faster neighbor finding for subspots
+- Customize resolution enhancement for VisiumHD data
+
 # BayesSpace 1.5.1
 
 ## Minor improvements and fixes
@@ -81,10 +99,10 @@
 ## Minor improvements and fixes
 
 - Addressed reviewer concerns (https://github.com/Bioconductor/Contributions/issues/1624)
-    * Updated stop/warning/message statements to remove redundancies and
-      unnecessary use of `paste()`.
-    * Removed inline conditional statements.
-    * Cache downloaded RDS in `getRDS()` (see above).
+  - Updated stop/warning/message statements to remove redundancies and
+    unnecessary use of `paste()`.
+  - Removed inline conditional statements.
+  - Cache downloaded RDS in `getRDS()` (see above).
 - `spatialCluster()` and `spatialEnhance()` handle the edge case where only one
   iteration is kept after excluding burn-in.
 - The `coda::mcmc` object returned by `mcmcChain()` now specifies the thinning

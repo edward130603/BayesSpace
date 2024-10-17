@@ -16,7 +16,8 @@ cluster(
   gamma = 3,
   alpha = 1,
   beta = 0.01,
-  nrep = 1000
+  nrep = 1000,
+  thin = 100
 )
 }
 \value{
