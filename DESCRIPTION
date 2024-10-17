@@ -28,6 +28,7 @@ Imports:
     S4Vectors,
     Matrix,
     assertthat,
+	arrow,
     mclust,
     RCurl,
     DirichletReg,
@@ -36,8 +37,10 @@ Imports:
     dplyr,
     ggplot2,
     tibble,
+	rjson,
     tidyr,
     scales,
+	microbenchmark,
     BiocFileCache,
     BiocSingular,
     BiocParallel
