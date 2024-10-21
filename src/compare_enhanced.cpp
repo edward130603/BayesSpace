@@ -52,9 +52,9 @@ map_subspot2ref(
 ) {
   RedMat<double> ret(0, 3);
 
+#ifdef _OPENMP
   double t1 = 0, t2 = 0;
 
-#ifdef _OPENMP
   omp_set_max_active_levels(2);
   omp_set_num_threads(thread_num);
 
@@ -104,9 +104,9 @@ compute_corr(
 
   RedMat<double> ret(0, 2);
 
+#ifdef _OPENMP
   double t1, t2;
 
-#ifdef _OPENMP
   omp_set_max_active_levels(2);
   omp_set_num_threads(thread_num);
 
