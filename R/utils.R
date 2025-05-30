@@ -208,16 +208,22 @@ exampleSCE <- function(nrow = 8, ncol = 12, n_genes = 100, n_PCs = 10) {
 #' @importFrom assertthat assert_that
 #' @importFrom BiocFileCache BiocFileCache bfcrpath
 getRDS <- function(dataset, sample, cache = TRUE) {
-    url <- "https://fh-pi-gottardo-r-eco-public.s3.amazonaws.com/SpatialTranscriptomes/%s/%s.rds"
-    url <- sprintf(url, dataset, sample)
-    assert_that(url.exists(url), msg = "Dataset/sample not available")
+    # url <- "https://fh-pi-gottardo-r-eco-public.s3.amazonaws.com/SpatialTranscriptomes/%s/%s.rds"
+    # url <- sprintf(url, dataset, sample)
+    url <- .getDlUrl(dataset, sample)
+    # assert_that(url.exists(url), msg = "Dataset/sample not available")
 
     if (cache) {
         bfc <- BiocFileCache()
         local.path <- bfcrpath(bfc, url)
     } else {
         local.path <- tempfile(fileext = ".rds")
-        download.file(url, local.path, quiet = TRUE, mode = "wb")
+        tryCatch(
+          download.file(url, local.path, quiet = TRUE, mode = "wb"),
+          error = function(cond) {
+            message(paste0("Dataset/sample not available: ", conditionMessage(cond)))
+          }
+        )
     }
 
     ret <- readRDS(local.path)
@@ -231,6 +237,17 @@ getRDS <- function(dataset, sample, cache = TRUE) {
     }
     
     ret
+}
+
+#' @keywords internal
+.getDlUrl <- function(dataset, sample) {
+  if (dataset == "2018_thrane_melanoma") {
+    if (sample == "ST_mel1_rep2") {
+      url <- "https://figshare.com/ndownloader/files/54896042"
+    }
+  }
+  
+  return(url)
 }
 
 #' Access BayesSpace metadata
