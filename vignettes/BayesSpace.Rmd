@@ -87,12 +87,10 @@ in the `SingleCellExperiment` for downstream analyses. If you do not wish to
 rerun PCA, running `spatialPreprocess()` with the flag `skip.PCA=TRUE` will only
 add the metadata BayesSpace requires.
 
-Here, we omit log-normalization as all datasets available through `getRDS()`
-already include log-normalized counts.
 ```{r preprocess}
 set.seed(102)
 melanoma <- spatialPreprocess(melanoma, platform="ST", 
-                              n.PCs=7, n.HVGs=2000, log.normalize=FALSE)
+                              n.PCs=7, n.HVGs=2000, log.normalize=TRUE)
 ```
 
 ## Clustering
@@ -118,7 +116,7 @@ qPlot(melanoma)
 The `spatialCluster()` function clusters the spots, and adds the predicted
 cluster labels to the `SingleCellExperiment`. Typically, as we did for the
 analyses in the paper, we suggest running with at least 10,000 iterations
-(`nrep=10000`), but we use 1,000 iteration in this demonstration for the sake of
+(`nrep=10000`), but we use 2,000 iteration in this demonstration for the sake of
 runtime. (Note that a random seed must be set in order for the results to be
 reproducible.)
 
@@ -126,7 +124,7 @@ reproducible.)
 set.seed(149)
 melanoma <- spatialCluster(melanoma, q=4, platform="ST", d=7,
                            init.method="mclust", model="t", gamma=2,
-                           nrep=1000, burn.in=100,
+                           nrep=2000, burn.in=100,
                            save.chain=TRUE)
 ```
 
@@ -168,21 +166,29 @@ The `spatialEnhance()` function will enhance the resolution of the principal
 components, and add these PCs as well as predicted cluster labels at subspot
 resolution to a new `SingleCellExperiment`. As with our demonstration of
 `spatialCluster()` above, we are using fewer iterations for the purpose of this
-example (`nrep=1000`) than we recommend in practice (`nrep=100000` or greater).
+example (`nrep=2000`) than we recommend in practice (`nrep=100000` or greater).
+
 Note that the `jitter_scale` parameter should be tuned so that proposals for 
 updating subspot-level expression are accepted around 30% of the time. This can
 be evaluated using `mcmcChain(melanoma.enhanced, "Ychange")`, where the chain 
 should stabilize to 0.25-0.40. Typically 1000-2500 iterations are sufficient to 
 evaluate if `jitter_scale` should be increased if acceptance is too high or 
-decreased if acceptance is too low. After tuning, proceed to a full run of 
-`spatialEnhance` with more iterations.
+decreased if acceptance is too low.
+
+We have implemented another way to avoid manually tuning `jitter_scale`, which 
+uses adaptive MCMC. To use this feature, simply set `jitter.scale=0`. 
+BayesSpace will automatically tune this parameter to achieve the best 
+acceptance rate. Note that such tuning by default only happens in the burn-in 
+phase.
+
+After tuning, proceed to a full run of `spatialEnhance` with more iterations.
 
 ```{r enhance, eval=TRUE}
 melanoma.enhanced <- spatialEnhance(melanoma, q=4, platform="ST", d=7,
                                     model="t", gamma=2,
-                                    jitter.prior=0.3, jitter.scale=3.5,
-                                    nrep=1000, burn.in=100,
-                                    save.chain=TRUE, cores = 1)
+                                    jitter.prior=0.3, jitter.scale=0,
+                                    nrep=2000, burn.in=100,
+                                    save.chain=TRUE, cores=2)
 ```
 
 The enhanced `SingleCellExperiment` includes an index to the parent spot in the
@@ -217,11 +223,12 @@ pre-specified `nrounds` in practice).
 
 `enhanceFeatures()` can be used to impute subspot-level expression for all
 genes, or for a subset of genes of interest. Here, we'll demonstrate by
-enhancing the expression of four marker genes: PMEL (melanoma), CD2 (T-cells),
-CD19 (B-cells), and COL1A1 (fibroblasts). 
+enhancing the expression of four marker genes: PMEL (ENSG00000185664, melanoma),
+CD2 (ENSG00000116824, T-cells), CD19 (ENSG00000177455, B-cells), and 
+COL1A1 (ENSG00000108821, fibroblasts). 
 
 ```{r enhanceFeatures}
-markers <- c("PMEL", "CD2", "CD19", "COL1A1")
+markers <- c("ENSG00000185664", "ENSG00000116824", "ENSG00000177455", "ENSG00000108821")
 melanoma.enhanced <- enhanceFeatures(melanoma.enhanced, melanoma,
                                      feature_names=markers,
                                      nrounds=0)
@@ -244,7 +251,7 @@ rowData(melanoma.enhanced)[markers, ]
 
 Spatial gene expression is visualized with `featurePlot()`.
 ```{r enhanced.featurePlot}
-featurePlot(melanoma.enhanced, "PMEL")
+featurePlot(melanoma.enhanced, "ENSG00000185664")
 ```
 
 Here, we compare the spatial expression of the imputed marker genes.
