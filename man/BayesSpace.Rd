@@ -27,11 +27,12 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Matt Stone \email{mstone@fredhutch.org}
+\strong{Maintainer}: Senbai Kang \email{senbai.kang@chuv.ch}
 
 Authors:
 \itemize{
-  \item Edward Zhao \email{ezhao@fredhutch.org}
+  \item Edward Zhao \email{edward130603@gmail.com}
+  \item Matt Stone \email{mstone@fredhutch.org}
 }
 
 Other contributors:
