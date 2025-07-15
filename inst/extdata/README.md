@@ -8,6 +8,8 @@ dependency issues, so we provide cached labels here.
 * 2018_thrane_melanoma:  
     * ST_mel1_rep2.Giotto_HMRF.csv  
       Giotto cluster assignments for Thrane melanoma sample 1.2
+    * ST_mel1_rep2.rds
+      Pre-built SingleCellExperiment object for Thrane melanoma sample 1.2
 
 * 2020_maynard_prefrontal-cortex:
     * 151673.Giotto_HMRF.csv  
