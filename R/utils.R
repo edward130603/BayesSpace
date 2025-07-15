@@ -213,20 +213,22 @@ getRDS <- function(dataset, sample, cache = TRUE) {
     url <- .getDlUrl(dataset, sample)
     # assert_that(url.exists(url), msg = "Dataset/sample not available")
 
-    if (cache) {
-        bfc <- BiocFileCache()
-        local.path <- bfcrpath(bfc, url)
-    } else {
-        local.path <- tempfile(fileext = ".rds")
-        tryCatch(
-          download.file(url, local.path, quiet = TRUE, mode = "wb"),
-          error = function(cond) {
-            message(paste0("Dataset/sample not available: ", conditionMessage(cond)))
-          }
-        )
-    }
-
-    ret <- readRDS(local.path)
+    # if (cache) {
+    #     bfc <- BiocFileCache()
+    #     local.path <- bfcrpath(bfc, url)
+    # } else {
+    #     local.path <- tempfile(fileext = ".rds")
+    #     tryCatch(
+    #       download.file(url, local.path, quiet = TRUE, mode = "wb"),
+    #       error = function(cond) {
+    #         message(paste0("Dataset/sample not available: ", conditionMessage(cond)))
+    #       }
+    #     )
+    # }
+    # ret <- readRDS(local.path)
+    
+    assert_that(file.exists(url), msg = "Dataset/sample not available")
+    ret <- readRDS(url)
     
     # Rename columns of colData of `ret` for compatibility reasons.
     if (any(c("row", "col") %in% colnames(colData(ret)))) {
@@ -241,11 +243,13 @@ getRDS <- function(dataset, sample, cache = TRUE) {
 
 #' @keywords internal
 .getDlUrl <- function(dataset, sample) {
-  if (dataset == "2018_thrane_melanoma") {
-    if (sample == "ST_mel1_rep2") {
-      url <- "https://figshare.com/ndownloader/files/54896042"
-    }
-  }
+  # if (dataset == "2018_thrane_melanoma") {
+  #   if (sample == "ST_mel1_rep2") {
+  #     url <- "https://figshare.com/ndownloader/files/54896042"
+  #   }
+  # }
+  
+  url <- system.file("extdata", dataset, paste0(sample, ".rds"), package = "BayesSpace")
   
   return(url)
 }
