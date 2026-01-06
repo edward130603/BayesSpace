@@ -146,10 +146,10 @@ NULL
                                       label=Y.ref[feature, -train.index])
             watchlist <- list(train=data.train, test=data.test)
             
-            fit.train <- xgb.train(data=data.train, max_depth=2, 
+            fit.train <- xgb.train(data=data.train, max_depth=2,
                                    watchlist=watchlist, eta=0.03, nrounds=500,
                                    objective="reg:squarederror",
-                                   verbose=FALSE)
+                                   nthread=1, verbose=FALSE)
             nrounds <- which.min(fit.train$evaluation_log$test_rmse)
         }
         
