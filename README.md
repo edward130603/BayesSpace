@@ -1,10 +1,10 @@
 # BayesSpace <img src="inst/logo/logo.png" align="right" width="115" />
 
   <!-- badges: start -->
-  [![Bioconductor build status](http://bioconductor.org/shields/build/release/bioc/BayesSpace.svg)](https://bioconductor.org/checkResults/3.14/bioc-LATEST/BayesSpace/)
+  [![Bioconductor build status](http://bioconductor.org/shields/build/release/bioc/BayesSpace.svg)](https://bioconductor.org/checkResults/devel/bioc-LATEST/BayesSpace/)
   <!-- badges: end -->
 
-## Overview 
+## Overview
 
 BayesSpace provides tools for clustering and enhancing the resolution of spatial
 gene expression experiments.
@@ -67,6 +67,7 @@ Installing from source on macOS (such as when installing via
 code.
 
 Download links for the appropriate macOS versions can be found here:
+
 * Mojave (10.14) and Catalina (10.15) - [gfortran8.2](https://github.com/fxcoudert/gfortran-for-macOS/releases/download/8.2/gfortran-8.2-Mojave.dmg)
 * Sierra (10.12) and High Sierra (10.13) - [gfortran6.3](https://github.com/fxcoudert/gfortran-for-macOS/releases/download/6.3/gfortran-6.3-Sierra.dmg)
 

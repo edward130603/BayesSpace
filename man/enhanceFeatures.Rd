@@ -47,13 +47,16 @@ runtime.}
 
 \item{train.n}{Number of spots to use in the training dataset for tuning
 nrounds. By default, 2/3 the total number of spots are used.}
+
+\item{nthread}{Number of threads to use for xgboost. By default, 1 thread is
+used.}
 }
 \value{
 If \code{assay.type} or \code{altExp.type} are specified, the
   enhanced features are stored in the corresponding slot of
   \code{sce.enhanced} and the modified SingleCellExperiment object is
   returned.
-  
+
   If \code{feature.matrix} is specified, or if a subset of features are
   requested, the enhanced features are returned directly as a matrix.
 }
@@ -80,8 +83,8 @@ Note that feature matrices will be returned and are expected to be input as
 \examples{
 set.seed(149)
 sce <- exampleSCE()
-sce <- spatialCluster(sce, 7, nrep=100, burn.in=10)
-enhanced <- spatialEnhance(sce, 7, init=sce$spatial.cluster, nrep=100, burn.in=10)
-enhanced <- enhanceFeatures(enhanced, sce, feature_names=c("gene_1", "gene_2"))
+sce <- spatialCluster(sce, 7, nrep = 100, burn.in = 10)
+enhanced <- spatialEnhance(sce, 7, init = sce$spatial.cluster, nrep = 100, burn.in = 10)
+enhanced <- enhanceFeatures(enhanced, sce, feature_names = c("gene_1", "gene_2"))
 
 }
