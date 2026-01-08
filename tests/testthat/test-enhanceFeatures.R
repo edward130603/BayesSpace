@@ -37,7 +37,7 @@ test_that("genes are predicted with xgboost", {
   )
   new <- predict(fit, newdata = X.enhanced)
 
-  Y.enhanced <- .xgboost_enhance(X.ref, X.enhanced, Y.ref, c(gene), nrounds = 100)
+  Y.enhanced <- .xgboost_enhance(X.ref, X.enhanced, Y.ref, c(gene), nrounds = 100, nthread = 1)
 
   expect_equal(new, Y.enhanced[gene, ], check.names = FALSE)
   expect_true("diagnostic" %in% names(attributes(Y.enhanced)))
@@ -79,7 +79,7 @@ test_that("genes are predicted with tuned xgboost", {
 
   set.seed(100)
   Y.enhanced <- .xgboost_enhance(X.ref, X.enhanced, Y.ref, c(gene),
-    nrounds = 0, train.n = 64
+    nrounds = 0, train.n = 64, nthread = 1
   )
 
   expect_equal(new, Y.enhanced[gene, ], check.names = FALSE)
