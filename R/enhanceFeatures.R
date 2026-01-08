@@ -62,7 +62,7 @@ NULL
 .enhance_features <- function(
   X.enhanced, X.ref, Y.ref,
   feature_names = rownames(Y.ref), model = c("xgboost", "dirichlet", "lm"),
-  nrounds, train.n, nthread = 1
+  nrounds, train.n, nthread
 ) {
     assert_that(ncol(X.enhanced) == ncol(X.ref))
     assert_that(ncol(Y.ref) == nrow(X.ref))
@@ -127,7 +127,7 @@ NULL
 
 #' @importFrom xgboost xgboost xgb.DMatrix xgb.train xgb.params
 .xgboost_enhance <- function(X.ref, X.enhanced, Y.ref, feature_names,
-                             nrounds, train.n, nthread = 1) {
+                             nrounds, train.n, nthread) {
     Y.enhanced <- matrix(nrow = length(feature_names), ncol = nrow(X.enhanced))
     rownames(Y.enhanced) <- feature_names
     colnames(Y.enhanced) <- rownames(X.enhanced)
@@ -201,7 +201,7 @@ enhanceFeatures <- function(
   sce.enhanced, sce.ref, feature_names = NULL,
   model = c("xgboost", "dirichlet", "lm"), use.dimred = "PCA",
   assay.type = "logcounts", altExp.type = NULL, feature.matrix = NULL,
-  nrounds = 0, train.n = round(ncol(sce.ref) * 2 / 3)
+  nrounds = 0, train.n = round(ncol(sce.ref) * 2 / 3), nthread = 1L
 ) {
     X.enhanced <- reducedDim(sce.enhanced, use.dimred)
     X.ref <- reducedDim(sce.ref, use.dimred)
@@ -235,7 +235,7 @@ enhanceFeatures <- function(
 
     Y.enhanced <- .enhance_features(
         X.enhanced, X.ref, Y.ref, feature_names,
-        model, nrounds, train.n
+        model, nrounds, train.n, nthread
     )
 
     ## Clip negative predicted expression
