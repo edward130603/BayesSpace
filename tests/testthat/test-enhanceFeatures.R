@@ -31,8 +31,8 @@ test_that("genes are predicted with linear model", {
 
 test_that("genes are predicted with xgboost", {
   gene <- "gene_4"
-  fit <- xgboost(data=X.ref, label=Y.ref[gene, ], objective="reg:squarederror",
-                 max_depth=2, eta=0.03, nrounds=100, nthread=1, verbose=FALSE)
+  fit <- xgboost(x=X.ref, y=Y.ref[gene, ], objective="reg:squarederror",
+                 max_depth=2, learning_rate=0.03, nrounds=100, nthreads=1, verbosity=0)
   new <- predict(fit, newdata=X.enhanced)
   
   Y.enhanced <- .xgboost_enhance(X.ref, X.enhanced, Y.ref, c(gene), nrounds = 100)
@@ -51,17 +51,17 @@ test_that("genes are predicted with tuned xgboost", {
                             label=Y.ref[gene, train.index])
   data.test  <- xgb.DMatrix(data=X.ref[-train.index, ],
                             label=Y.ref[gene, -train.index])
-  watchlist <- list(train=data.train, test=data.test)
-  
-  fit.train <- xgb.train(data=data.train, max_depth=2, watchlist=watchlist,
+  evals <- list(train=data.train, test=data.test)
+
+  fit.train <- xgb.train(data=data.train, max_depth=2, evals=evals,
                          eta=0.03, nrounds=500, objective="reg:squarederror",
-                         verbose=FALSE)
+                         verbosity=0)
   
   nrounds <- which.min(fit.train$evaluation_log$test_rmse)
   
-  fit <- xgboost(data=X.ref, label=Y.ref[gene, ], objective="reg:squarederror",
-                 max_depth=2, eta=0.03, nrounds=nrounds, nthread=1, 
-                 verbose=FALSE)
+  fit <- xgboost(x=X.ref, y=Y.ref[gene, ], objective="reg:squarederror",
+                 max_depth=2, learning_rate=0.03, nrounds=nrounds, nthreads=1,
+                 verbosity=0)
   new <- predict(fit, newdata=X.enhanced)
   
   set.seed(100)

@@ -35,7 +35,7 @@ Imports:
     mclust,
     RCurl,
     DirichletReg,
-    xgboost (< 2.0.0),
+    xgboost (>= 3),
     utils,
     dplyr,
     rlang,

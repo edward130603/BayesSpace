@@ -146,18 +146,18 @@ NULL
                                       label=Y.ref[feature, train.index])
             data.test  <- xgb.DMatrix(data=X.ref[-train.index, ], 
                                       label=Y.ref[feature, -train.index])
-            watchlist <- list(train=data.train, test=data.test)
-            
+            evals <- list(train=data.train, test=data.test)
+
             fit.train <- xgb.train(data=data.train, max_depth=2,
-                                   watchlist=watchlist, eta=0.03, nrounds=500,
+                                   evals=evals, eta=0.03, nrounds=500,
                                    objective="reg:squarederror",
-                                   nthread=nthread, verbose=FALSE)
+                                   nthread=nthread, verbosity=0)
             nrounds <- which.min(fit.train$evaluation_log$test_rmse)
         }
         
-        fit <- xgboost(data=X.ref, label=Y.ref[feature, ],
-            objective="reg:squarederror", max_depth=2, eta=0.03,
-            nrounds=nrounds, nthread=nthread, verbose=FALSE)
+        fit <- xgboost(x=X.ref, y=Y.ref[feature, ],
+            objective="reg:squarederror", max_depth=2, learning_rate=0.03,
+            nrounds=nrounds, nthreads=nthread, verbosity=0)
         
         Y.enhanced[feature, ] <- predict(fit, X.enhanced)
         rmse[feature] <- fit$evaluation_log$train_rmse[nrounds]
